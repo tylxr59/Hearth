@@ -1,0 +1,58 @@
+[
+  {
+    "name": "aiohttp",
+    "version": "3.14.5",
+    "license": "Apache-2.0 AND MIT"
+  },
+  {
+    "name": "aiohappyeyeballs",
+    "version": "2.7.1",
+    "license": "PSF-2.0"
+  },
+  {
+    "name": "aiosignal",
+    "version": "1.4.0",
+    "license": "Apache 2.0"
+  },
+  {
+    "name": "attrs",
+    "version": "26.1.0",
+    "license": "MIT"
+  },
+  {
+    "name": "frozenlist",
+    "version": "1.8.0",
+    "license": "Apache-2.0"
+  },
+  {
+    "name": "multidict",
+    "version": "7.2.1",
+    "license": "Apache-2.0"
+  },
+  {
+    "name": "propcache",
+    "version": "0.5.4",
+    "license": "Apache-2.0"
+  },
+  {
+    "name": "yarl",
+    "version": "1.25.1",
+    "license": "Apache-2.0"
+  },
+  {
+    "name": "idna",
+    "version": "3.20",
+    "license": "BSD-3-Clause"
+  },
+  {
+    "name": "paho-mqtt",
+    "version": "2.1.0",
+    "license": "EPL-2.0 OR BSD-3-Clause"
+  },
+  {
+    "name": "typing_extensions",
+    "version": "4.16.0",
+    "license": "PSF-2.0",
+    "marker": "python_version < 3.13"
+  }
+]

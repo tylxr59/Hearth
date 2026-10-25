@@ -1,0 +1,68 @@
+{
+  "backend": {
+    "files": {
+      "LICENSE": "9e7c23bc8e01c33fa03a0c73607beb6b63511bbe4608be178b29fb2aca1a162f",
+      "src/nolongerevil/integrations/mqtt/mqtt_integration.py": "e68fe16f4d0f83bea3727d056a55914521f76f9ba9751688d10f9c3a3b255582",
+      "src/nolongerevil/lib/serial_parser.py": "30815c196e485fea147bb97a4b8a5c1f1d31b85e8f84ba652fc85361c73447b5",
+      "src/nolongerevil/main.py": "12d7127d05983949228cacbf6bfe06fece4234e56cd4c0e290f5246953244bf3",
+      "src/nolongerevil/middleware/api_key_auth.py": "dd068680356d7cc2dc50a55d22f1da385dd94eac3989cf5e7773868726e99b9f",
+      "src/nolongerevil/middleware/device_auth.py": "f9350397b0bdbb5d725737f5916ea38431aa174dae9d664699fd668b6ab06936",
+      "src/nolongerevil/routes/nest/entry.py": "6cf376df0256b9c82ec4f4524196b254752799bc616322b7cd9b26abbe41275d",
+      "src/nolongerevil/routes/nest/transport.py": "925cc4e8b92ab9b92a2f2727d076e96492db6cae2e438022751a31d2c3b5d076",
+      "src/nolongerevil/services/weather_service.py": "bf48bbb01056b14ddd76b68ae6658e4ae7d204b31fb036aaefe52af775e6c58b"
+    },
+    "repository": "https://github.com/codykociemba/NoLongerEvil-SelfHosted",
+    "revision": "bca8781012639c1cefc4a08c103fc892158fb630"
+  },
+  "ha": {
+    "files": {
+      "LICENSE": "9e7c23bc8e01c33fa03a0c73607beb6b63511bbe4608be178b29fb2aca1a162f",
+      "nolongerevil/Dockerfile": "c77600d79ebe6712dd4e69d2cd740bd73dfb30358bf45abad2dba827531a6979",
+      "nolongerevil/config.yaml": "31345a5c3b727212180bd6a5b66a6a173a962c7513520dabb63d9665547d51a6",
+      "nolongerevil/run.sh": "0cd430bb3834c7da3867e361c2202debbf3250a9cb5d591f07150d30d6f7b03e"
+    },
+    "repository": "https://github.com/codykociemba/NoLongerEvil-HomeAssistant",
+    "revision": "39a344087c679a36ebfe6d2b37f26f8eb04cae47"
+  },
+  "nestdfu": {
+    "files": {
+      "Dev/linux/Makefile": "42cada4d9ed5729eba4d2f665207472644eb0a304f8ea61b7a1b49b68bb757d8",
+      "Dev/linux/arch/arm/configs/gtvhacker_defconfig": "fbb0aa474123dcaab697d5d1ffe0b4e7dcec7422be95f8ecb2566173c9c08c18",
+      "Dev/linux/arch/arm/mach-omap2/board-diamond-backplate.c": "2867fb412631729d251457d6b94c89bbc2ffd67261d1aa112afc9a74ce3d32e7",
+      "Dev/root/etc/dbus-1/system.d/nlclient.conf": "e62ae3a55d50e37c4f8da204d07ba22d3bfed4ab9311a3ba4e38418e8bd7c9c5",
+      "Dev/root/etc/fstab": "c447a2e9880b950d8b0691d66f7ab5b35c524d7053de89540304c170775e5701",
+      "Dev/root/etc/init.d/nestlabs": "eabc09ccc27543557e38330fea3695da8c29ff2fcf36c140af8d611fc84e7447",
+      "Dev/root/etc/init.d/rcS": "a8d1a5e9ced9e9dd0fa4adc252805af0cad4b31a5d2e7272d21e4e47c5374cf5",
+      "Dev/root/etc/init.d/rootme": "37c332a33666b2e9016964e93bea7c41c8116979f2636a7364c7fc7c5f3af107",
+      "Dev/root/etc/init.d/scpm": "fa100e81009ed46ae6cf6625483540d9bf5af1041201994cb6650b8fb41188c1",
+      "Dev/root/etc/init.d/start": "0cc986d0787811ec4eef73563bf5d480958b92c517202232fc9467891e0421b4",
+      "Dev/root/etc/inittab": "0fa969121b56422f46a1ea4c00adc0dd5c38f0e303c47d0aa712fa2d5f081b03",
+      "Dev/root/etc/nestlabs/client.config": "90443c6e759ccd1c685f70f988758ddd488aafddabd9a6bf0383e5bdce2eb2b3"
+    },
+    "repository": "https://github.com/exploiteers/NestDFUAttack",
+    "revision": "930b834b7f1f082b8761aa5c5af765b4b3e99dc9"
+  },
+  "thermostat": {
+    "files": {
+      "README.md": "5e2dc9d4970ae3c890a8ba09e7f5fde3106c8772f0090c73881c2066a739b999",
+      "firmware/builder/build.sh": "1ccb3e97656866deda7439a549274f8d38626df4c5c6a5f3ceb2b09a375fee7d",
+      "firmware/builder/deps/nleapi": "2d0b101b5a866944ac9751e1597b716cb5ec279bc67dfb6219defdc2dc3b8372",
+      "firmware/builder/deps/settings": "43f3b87e4e12413143d6039a4c6d38cfae1aed4998c276c7303a0000c0d99b2d",
+      "firmware/builder/deps/update": "b8f195da69a7bcad1720cbf709075d911182439728110acee844a90e1dd28223",
+      "firmware/builder/scripts/build-kernel.sh": "9bf3e44e7ea74f2c1b4ab3f78ac5781d13a56296b5362d4f4b1bbfc410d7c68d",
+      "firmware/builder/scripts/download-deps.sh": "c99b806cbb02e8274e3410f204f8de909d284765ff2b1a807a812600b3df74b6"
+    },
+    "repository": "https://github.com/codykociemba/NoLongerEvil-Thermostat",
+    "revision": "fabbe034f01cefdabe06b93d1c312068f563a177"
+  },
+  "valetudo": {
+    "files": {
+      "LICENSE": "b4b7824fd075586c6e042a314397c4979e944ef0a94a9f27423c166d1b798d12",
+      "backend/lib/Valetudo.js": "4b0ce672a36f61c67a19cd76792e0a080902a039e5f409fe067526c5a2fa9702",
+      "backend/lib/core/ValetudoRobot.js": "bd3fb23a14b4bc72948f09d912f1d2236a1e87f7c8b387fcb4af0adb2dbe4bb6",
+      "package.json": "e6c2236bf2adf00d190bab651f6f02e390c6bbecd7254b0044b10e7600c53e19"
+    },
+    "repository": "https://github.com/Hypfer/Valetudo",
+    "revision": "69c60625b8d48f5f62f02299cfd326c24bb3df2b"
+  }
+}

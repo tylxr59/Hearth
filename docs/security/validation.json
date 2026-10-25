@@ -1,0 +1,65 @@
+{
+  "timestamp_utc": "2026-10-25T03:06:06.738688+00:00",
+  "python": "3.13.16",
+  "tools": {
+    "pytest": "9.1.1",
+    "hypothesis": "6.170.9",
+    "ruff": "0.17.2",
+    "bandit": "1.9.4",
+    "pip-audit": "2.10.1",
+    "setuptools": "84.2.1"
+  },
+  "tests": {
+    "command": "HEARTH_BROKER_TEST=1 HEARTH_CONTAINER_TEST=1 .venv/bin/pytest -q",
+    "passed": 39,
+    "failed": 0,
+    "skipped": 0
+  },
+  "ruff": {
+    "lint": "passed",
+    "format": "passed"
+  },
+  "bandit": {
+    "findings": 0,
+    "errors": [],
+    "scope": [
+      "backend",
+      "firmware",
+      "provisioning",
+      "tools"
+    ],
+    "reviewed_suppressions": [
+      "B104 TLS container bind",
+      "B310 pinned HTTPS research fetch"
+    ]
+  },
+  "dependency_scan": {
+    "runtime": "no known advisories in active Python 3.13 dependency set",
+    "build_backend": "no known advisories",
+    "previous_build_pin": "setuptools 80.10.2 advisories resolved by 84.2.1"
+  },
+  "artifacts": {
+    "container_amd64_build": "passed",
+    "unprivileged_container_https_smoke": "passed",
+    "python_wheel": "passed with hash-locked build backend",
+    "addon_assembly": "passed",
+    "inert_archive_reproducibility": "passed",
+    "source_archive_reproducibility": "passed",
+    "pinned_research_fetch": "passed"
+  },
+  "nft_kernel_check": {
+    "status": "blocked",
+    "reason": "netlink cache initialization denied; no rules applied"
+  },
+  "unverified": [
+    "physical Gen 1/Gen 2",
+    "stock client authentication/TLS installation",
+    "full native protocol",
+    "HA Core/Supervisor runtime",
+    "aarch64 runtime",
+    "router firewall enforcement",
+    "old firmware/OS CVE coverage",
+    "HVAC safety/offline power behavior"
+  ],
+  "hardware_flashing_or_control_performed": false
+}

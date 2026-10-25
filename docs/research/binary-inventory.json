@@ -1,0 +1,26 @@
+{
+  "u-boot.bin": {
+    "bytes": 246572,
+    "executed": false,
+    "provenance": "Unverified upstream prebuilt, not redistributed",
+    "sha256": "6740018d17d2b707b9cfb0ea6d7eaff781404fe4c2e29b7448666624f13f214a"
+  },
+  "uImage": {
+    "bytes": 6995300,
+    "executed": false,
+    "provenance": "Unverified upstream prebuilt, not redistributed",
+    "sha256": "4a1392c2c867a15e52cdee2eaadd252289f68aa60ab2b70a1fe79f48a2e89c52"
+  },
+  "x-load-gen1.bin": {
+    "bytes": 27876,
+    "executed": false,
+    "provenance": "Unverified upstream prebuilt, not redistributed",
+    "sha256": "8111158f78473c4b060a4961c5c1f7cc8e5e3210b2b1571db205914cd1a90a25"
+  },
+  "x-load-gen2.bin": {
+    "bytes": 27876,
+    "executed": false,
+    "provenance": "Unverified upstream prebuilt, not redistributed",
+    "sha256": "5522651ed6a11f7c88e08e72231939b44849af99e524b04d88da2f4b9e368154"
+  }
+}

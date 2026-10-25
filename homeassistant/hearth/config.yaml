@@ -1,0 +1,20 @@
+name: Hearth Laboratory
+version: "0.1.0"
+slug: hearth
+stage: experimental
+description: Local thermostat protocol laboratory; physical Nest support unverified
+arch:
+  - amd64
+  - aarch64
+startup: services
+boot: manual
+init: false
+map:
+  - type: addon_config
+    read_only: false
+ports:
+  8443/tcp: null
+ports_description:
+  8443/tcp: "Authenticated TLS laboratory API; enable only on an isolated test network"
+options: {}
+schema: {}

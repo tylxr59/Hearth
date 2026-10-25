@@ -1,0 +1,10 @@
+{
+  "dependencies": [
+    {
+      "name": "setuptools",
+      "version": "84.2.1",
+      "vulns": []
+    }
+  ],
+  "fixes": []
+}
