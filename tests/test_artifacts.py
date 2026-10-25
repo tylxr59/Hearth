@@ -27,6 +27,7 @@ def test_reproducible_source_archive(tmp_path):
     one, two = tmp_path / "one", tmp_path / "two"
     assert release(one) == release(two)
     with tarfile.open(one / "hearth-0.1.0-source.tar") as archive:
+        assert "hearth-0.1.0/AGENTS.md" in archive.getnames()
         assert all(info.uid == 0 and info.mtime == 0 for info in archive.getmembers())
         assert all(
             "private/" not in name and "__pycache__" not in name for name in archive.getnames()

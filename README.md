@@ -44,6 +44,8 @@ Generation is a user claim, **not** detection or verification. See [local setup]
 
 ## Read next
 
+- [Next-agent handoff and instructions](AGENTS.md)
+
 - [Implementation plan and status](docs/implementation-plan.md)
 - [Research and evidence](docs/research/findings.md), [pinned upstream sources](docs/research/upstreams.json)
 - [Architecture decision](docs/architecture/0001-local-transport.md), [protocol](docs/protocol/nest.md)

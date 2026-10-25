@@ -30,6 +30,7 @@ def release(output):
     paths += [
         root / name
         for name in (
+            "AGENTS.md",
             "README.md",
             "LICENSE",
             "THIRD_PARTY.md",
