@@ -24,6 +24,21 @@ HEARTBEAT = (
 )
 
 
+def require_native(port, sysfs=Path("/sys/bus/usb/devices")):
+    """Reject a stale ROM handshake before starting a fresh controlled attempt."""
+    if not re.fullmatch(r"[0-9]+-[0-9]+(?:\.[0-9]+)*", port):
+        raise ValueError("known USB port required")
+    usb = Path(sysfs) / port
+    identity = ((usb / "idVendor").read_text().strip(), (usb / "idProduct").read_text().strip())
+    if identity == ("0451", "d00e"):
+        raise ValueError(
+            "ROM already active; restart to native startup with the loader exited first"
+        )
+    if identity != ("2464", "0002"):
+        raise ValueError("expected normal Nest USB mode on the known port before a new attempt")
+    return {"status": "native-usb-mode-observed", "port": port}
+
+
 def receive(fd, deadline):
     data = b""
     while (remaining := deadline - time.monotonic()) > 0:
@@ -93,8 +108,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--port", default="1-1")
     parser.add_argument("--seconds", type=int, default=30)
+    parser.add_argument("--require-native", action="store_true")
     args = parser.parse_args()
     try:
-        print(json.dumps(observe(args.port, args.seconds), indent=2))
+        result = (
+            require_native(args.port) if args.require_native else observe(args.port, args.seconds)
+        )
+        print(json.dumps(result, indent=2))
     except (OSError, ValueError) as exc:
         parser.exit(1, "Probe observation failed: " + str(exc) + "\n")

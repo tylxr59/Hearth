@@ -2,12 +2,12 @@
 
 Release-blocking:
 
-- Identity intake and authorized ROM enumeration complete: enclosure `02A`, reported `Display-2.6`, firmware `5.9.4-5`, normal USB `2464:0002`, brief OMAP `0451:d00e` during restart; see docs/research/device-intake-2026-10-30.md. Obtain base/board identity and reviewed Gen 2 firmware acquisition/MTD/boot/recovery evidence. No payload was sent. Actual nlclient/osm binaries remain unavailable; static configuration is not API evidence.
+- Identity intake and authorized ROM enumeration complete: enclosure `02A`, reported `Display-2.6`, firmware `5.9.4-5`, normal USB `2464:0002`, brief OMAP `0451:d00e` during restart; see docs/research/device-intake-2026-10-30.md. Obtain base/board identity and reviewed Gen 2 firmware acquisition/MTD/boot/recovery evidence. A later diagnostic RAM heartbeat boot succeeded; no firmware was acquired. Actual nlclient/osm binaries remain unavailable; static configuration is not API evidence.
 - Determine reliable local IPC control feasibility; revise ADR if an on-device bridge is justified. No bridge currently exists.
 - Verify private CA, hostname/time checks and unique stock-client credential installation; design safe bootstrap and rollback. No plaintext production fallback.
 - Implement/validate full native entry, pairing and revision/CAS/chunked subscribe transport, with power/schedule regression fixtures, or replace it with a verified local bridge. Experimental decoder is incomplete and default-disabled.
 - Build a revision-specific deployable firmware image and complete service hardening profile. Deployment artifacts remain inert review bundles and partial offline replacements; the separate experimental RAM probe is diagnostic boot code only.
-- Execute and document the separately prepared `Display-2.6` RAM heartbeat probe only after advance risk notice; its local build passes offline integrity checks but has not booted on hardware. Confirm native startup afterward. It has no flash access, acquisition or restoration functionality; deployment remains blocked. See firmware/probe/README.md and docs/research/acquisition-review-2026-10-30.md.
+- Diagnostic RAM heartbeat boot and native startup return observed once using the paced loader and owner-installed ROM/tty ACL rule. Next review a separately guarded NAND geometry/acquisition kernel; the current probe has no flash access or backup/restore functionality. Do not grant diagnostic disk writes for automation. Evidence: docs/research/usb-handshake-2026-10-30.md.
 - Establish recovery before any authorized write. No flash/provision apply command exists and no device service verification has been performed.
 - Implement/test device firewall compatible with measured kernel/tools; external VLAN restrictions are mandatory in the interim.
 - Complete separately authorized dummy-load HVAC regulation, native scheduling, protective behavior, restart/power, sleep/battery, outage and interrupted-write tests. No live HVAC claims.

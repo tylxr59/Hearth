@@ -13,11 +13,26 @@ if [ "$#" -ne 1 ] || [ "$1" != '--execute-experimental-ram-probe' ]; then
 fi
 echo 'EXPERIMENTAL RAM BOOT: not a flash backup or verified recovery procedure.'
 echo 'Keep the display detached from its unwired base. No HVAC connection.'
+python3 "$work/observe.py" --port 1-1 --require-native
 echo 'Waiting up to 90 seconds for ROM mode; use the reviewed manual restart.'
-timeout 90 "$work/artifacts/omap_loader" \
+if timeout 90 "$work/artifacts/omap_loader" \
     -f "$work/artifacts/x-load-gen2.bin" \
     -f "$work/artifacts/u-boot.bin" -a 0x80100000 \
-    -f "$work/artifacts/uImage" -a 0x80a00000 -j 0x80100000
+    -f "$work/artifacts/uImage" -a 0x80a00000 -j 0x80100000; then
+    :
+else
+    result=$?
+    echo 'Upload stopped. After this command exits, manually restart to native startup.' >&2
+    echo 'Report the output before another attempt; this script never retries a boot.' >&2
+    exit "$result"
+fi
 echo 'Upload finished. This does not prove the kernel booted. Observe the USB heartbeat next.'
-python3 "$work/observe.py" --port 1-1 --seconds 30
+if python3 "$work/observe.py" --port 1-1 --seconds 30; then
+    :
+else
+    result=$?
+    echo 'Heartbeat not confirmed. After this command exits, manually restart to native startup.' >&2
+    echo 'Report the output before another attempt.' >&2
+    exit "$result"
+fi
 echo 'Heartbeat received. Use the manual restart to return to the original Nest software.'

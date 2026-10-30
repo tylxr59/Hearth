@@ -6,8 +6,11 @@ Further 2026-10-30 work: an authorized restart confirmed brief OMAP ROM
 enumeration. The [acquisition review](acquisition-review-2026-10-30.md) statically
 inspects the pinned NLE image's embedded initramfs, records why it writes
 persistent files, and documents a separate, source-built diagnostic RAM probe.
-That probe's physical execution remains pending. The newly reviewed native
-host loader requires the checked-in memory-safety/privacy patch before use.
+That probe subsequently booted with the paced loader and emitted its expected
+USB heartbeat; native startup returned after a manual restart. NAND acquisition
+and restoration remain pending. The newly reviewed native host loader requires
+the checked-in memory-safety/privacy and pacing patch before use. See the
+[physical handshake/boot evidence](usb-handshake-2026-10-30.md).
 
 Inspected 2026-10-24/25. No existing workspace audit was available. [upstreams.json](upstreams.json) pins all five repositories and hashes the principal inspected files; `python -m tools.fetch_research build/references` retrieves those files without executing them. The additional NestDFUAttack source is necessary because NLE's builder obtains its historical kernel and initramfs there. Do not run its installers or rootme scripts.
 

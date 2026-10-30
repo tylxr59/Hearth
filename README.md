@@ -6,8 +6,8 @@ A local-first laboratory for Nest Learning Thermostat Gen 2, with Gen 1 as a sec
 
 An authorized restart exposed OMAP ROM mode on the unit reporting `Display-2.6` /
 `5.9.4-5`. A separate [experimental RAM heartbeat probe](firmware/probe/README.md)
-has been built and checked offline; it has not been executed on the device and
-does not acquire flash or provide recovery. [Current evidence and next test](docs/research/acquisition-review-2026-10-30.md).
+has now booted on this unit, emitted its expected USB heartbeat and returned to
+native startup after a manual restart. It does not acquire flash or provide recovery. [Current evidence and next test](docs/research/acquisition-review-2026-10-30.md).
 
 Implemented:
 

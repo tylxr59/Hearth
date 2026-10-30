@@ -12,7 +12,7 @@ import pytest
 
 from firmware.probe.check import FILES, HOST_FILES, check
 from firmware.probe.configure import DISABLED, configure, initramfs, verify
-from firmware.probe.observe import HEARTBEAT, receive
+from firmware.probe.observe import HEARTBEAT, receive, require_native
 from firmware.probe.stage import patch_model, verify_loader
 
 
@@ -197,3 +197,19 @@ def test_probe_heartbeat_receiver_does_not_echo_other_device_bytes():
     finally:
         os.close(read_fd)
         os.close(write_fd)
+
+
+@pytest.mark.parametrize(
+    "vendor,product,accepted",
+    [("2464", "0002", True), ("0451", "d00e", False), ("18d1", "4e11", False)],
+)
+def test_probe_requires_native_mode_before_new_attempt(tmp_path, vendor, product, accepted):
+    port = tmp_path / "1-1"
+    port.mkdir()
+    (port / "idVendor").write_text(vendor)
+    (port / "idProduct").write_text(product)
+    if accepted:
+        assert require_native("1-1", tmp_path)["status"] == "native-usb-mode-observed"
+    else:
+        with pytest.raises(ValueError):
+            require_native("1-1", tmp_path)

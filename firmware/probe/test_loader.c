@@ -10,6 +10,17 @@
 static int usb_calls, packet, write_calls;
 static uint8_t fake_bus = 1, fake_ports[2] = {1, 1};
 static int fake_depth = 1;
+static int rom_mode, rom_stage, rom_offset, fail_length, settle_delays;
+static useconds_t last_delay;
+
+int __wrap_usleep(useconds_t delay)
+{
+    assert(delay == 1000 || delay == 20000);
+    last_delay = delay;
+    if (delay == 20000)
+        settle_delays++;
+    return 0;
+}
 
 uint8_t LIBUSB_CALL __wrap_libusb_get_bus_number(libusb_device *dev)
 {
@@ -40,6 +51,40 @@ int LIBUSB_CALL __wrap_libusb_bulk_transfer(libusb_device_handle *handle,
     (void)handle;
     (void)timeout;
     usb_calls++;
+    assert(last_delay >= 1000); /* Every physical transfer must be paced. */
+    last_delay = 0;
+    if (rom_mode) {
+        if (endpoint == OMAP_USB_BULK_IN) {
+            assert(rom_stage == 0 && length == 512);
+            memset(data, 0x5a, 69);
+            *transferred = 69;
+            rom_stage = 1;
+            return 0;
+        }
+        assert(endpoint == OMAP_USB_BULK_OUT && length <= 512);
+        if (rom_stage == 1) {
+            assert(length == 4);
+            assert(data[0] == 2 && data[1] == 0 && data[2] == 3 && data[3] == 0xf0);
+            rom_stage = 2;
+        } else if (rom_stage == 2) {
+            assert(length == 4);
+            assert(data[0] == 6 && data[1] == 4 && data[2] == 0 && data[3] == 0);
+            if (fail_length) {
+                *transferred = 0;
+                return LIBUSB_ERROR_TIMEOUT;
+            }
+            rom_stage = 3;
+        } else {
+            int i;
+            assert(rom_stage == 3);
+            assert(length == ((1030 - rom_offset) > 512 ? 512 : (1030 - rom_offset)));
+            for (i = 0; i < length; i++)
+                assert(data[i] == 0xa5);
+            rom_offset += length;
+        }
+        *transferred = length;
+        return 0;
+    }
     if (endpoint == OMAP_USB_BULK_OUT) {
         write_calls++;
         if (write_calls == 1)
@@ -83,7 +128,9 @@ int main(void)
         "-f", "/hearth-test-nonexistent-input", "-a", "0x80100000",
         "-f", "/hearth-test-nonexistent-input", "-a", "0x80a00000",
         "-j", "0x80100000", NULL};
-    struct file_upload first = {0};
+    unsigned char first_payload[1030];
+    struct file_upload first = {.size = sizeof(first_payload), .data = first_payload,
+        .basename = "synthetic-first"};
     unsigned char payload[4] = {0, 1, 2, 3};
     struct file_upload next = {.size = 4, .data = payload,
         .addr = 0x80100000, .basename = "synthetic"};
@@ -103,6 +150,15 @@ int main(void)
     fake_ports[0] = 1;
     assert(upstream_main(13, argv) == 1);
     assert(usb_calls == 0);
+    memset(first_payload, 0xa5, sizeof(first_payload));
+    rom_mode = 1;
+    assert(transfer_first_stage(NULL, &args) == 1);
+    assert(rom_offset == 1030 && settle_delays == 1 && last_delay == 20000);
+    rom_stage = rom_offset = 0;
+    fail_length = 1;
+    assert(transfer_first_stage(NULL, &args) == 0);
+    assert(rom_stage == 2 && rom_offset == 0 && settle_delays == 1);
+    rom_mode = 0;
     assert(transfer_other_files(NULL, &args) == 1);
     assert(write_calls == 3); /* size/address, four data bytes, jump */
     puts("Synthetic loader regression checks passed; no real USB access.");

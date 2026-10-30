@@ -1,0 +1,77 @@
+{
+  "artifact_manifest": {
+    "files": {
+      "kernel.config": "273e5d6a27617982e7d450167bef42eba4dbabc081868b790f341c14bdde7826",
+      "omap_loader": "e3411270efa3af21a284e780571f6f3d4270ad2e7e9c6d047c3c2128a8b14531",
+      "probe-init": "5004278472b8623995c05e9b4c4c55c69ad422a09cb0676b853710cc61653557",
+      "u-boot.bin": "5f924a02508eb0360645ea71228934f854f8310370808b82108a58fa672b443f",
+      "uImage": "538d9da6c78b671a1261413fd0ab45678a4d7191bdc86ab365b8f55c8cf59ebb",
+      "x-load-gen2.bin": "e9f543e77636961a9acd6723e6b6cf7392a7a33b02ad6f61b97ab85157d8939e"
+    },
+    "final_loader_patch_sha256": "03b5c76c713688b16994cdb40b042e80e47fb64942e829e49643dfb7791fddc6",
+    "final_loader_source_sha256": "4adeb564306fc63c645a9a0f2e5dd3dd33bcceddbc6d8eee979df89ecc5347ac",
+    "host_files": {
+      "boot.sh": "c31914fbf775c8356538878af29433fab219e54a2b3f79bfa897b456c9d1977d",
+      "check.py": "e5a1c03f7b06c75fe205a589516289fa3fa5e9bd2f60a5a7e2dea2b11844bbe8",
+      "configure.py": "051997792790f4d818210cd0327ca9d3afc6af9187801ffd381e5fd06c6b4064",
+      "observe.py": "305f821c9af8ea04e5e75cf42ec4af26821dc2a52625b4fe34babd0164406bd6"
+    },
+    "kernel_build_origin": "build/ram-probe-final-20261030",
+    "prior_manifest_sha256": "6ae441c2b8e9e3220aa9bd3a405660d9e5742fdfa133497b5630082d2baa0e33",
+    "profile": "Display-2.6",
+    "status": "experimental-unexecuted-ram-probe",
+    "transport_revision": 2
+  },
+  "date": "2026-10-30",
+  "host_validation": {
+    "container_engine": "rootless Podman",
+    "make_check": "passed",
+    "native_sanitizers": "ASan/UBSan passed with all used USB calls and sleeps mocked",
+    "release_tests_after_gitattributes": "3 passed",
+    "rule_syntax": "udevadm verify passed",
+    "tests_passed": 97,
+    "tests_skipped": 0
+  },
+  "not_demonstrated": [
+    "NAND/firmware acquisition",
+    "bootloader absence of persistent side effects",
+    "firmware backup or restoration",
+    "native HVAC control/protection/schedule behavior",
+    "battery/power characterization",
+    "secure native IPC/transport",
+    "HAOS runtime",
+    "aarch64"
+  ],
+  "permission_rule": {
+    "installed_by": "owner",
+    "installed_bytes_and_root_ownership": "verified",
+    "scope": "current owner UID only; port 1-1 ROM USB and expected serial tty; no normal disk or block rule"
+  },
+  "physical_attempts": [
+    {
+      "kind": "original unpaced root loader",
+      "native_return": "home icon reported and normal USB observed",
+      "result": "length-field timeout before first-stage file-data path"
+    },
+    {
+      "kind": "paced unprivileged loader with piped output",
+      "owner_report": "performed restart; home icon returned",
+      "result": "90 second timeout; insufficient buffered stage output"
+    },
+    {
+      "exit_code": 0,
+      "first_stage_bytes": 27856,
+      "kind": "paced unprivileged loader with PTY",
+      "native_return": "owner reported home icon; follow-up sysfs read observed 2464:0002",
+      "probe_usb_identity": "0525:a4a7",
+      "result": "three files transferred; expected USB heartbeat observed"
+    }
+  ],
+  "publishing": "No uploads, pushes or owner photos included.",
+  "scope": "Paced native USB loader, scoped access and first diagnostic RAM boot on the identified unit",
+  "transport_reference": {
+    "pr": "https://github.com/grant-h/omap_loader/pull/7",
+    "repository": "https://github.com/dougg3/omap_loader",
+    "revision": "a33d75376f56f54285cdf6933e312b856146593b"
+  }
+}

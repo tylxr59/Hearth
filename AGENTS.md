@@ -4,7 +4,7 @@
 
 Build a local-first Nest Learning Thermostat modification that preserves native hardware/HVAC control. Gen 2 is the primary target; Gen 1 is secondary. Prefer a verified local on-device interface if feasible; otherwise retain the native transport behind a minimal local backend. Do not rewrite HVAC control loops.
 
-The user's unit has arrived and received USB intake on their PC. Arrival/ownership alone does not authorize flashing or physical control. The owner has explicitly authorized device investigation and requests advance notification for potentially dangerous actions such as flashing; preserve the backup/recovery gates below. The [2026-10-30 intake](docs/research/device-intake-2026-10-30.md) records enclosure `02A`, reported `Display-2.6`, firmware `5.9.4-5`, normal-mode USB `2464:0002` and an authorized manual restart briefly exposing OMAP `0451:d00e`. No payload execution, flashing, HVAC operation or recovery test has been performed. No firmware dump or proprietary nlclient/osm executable is available.
+The user's unit has arrived and received USB intake on their PC. Arrival/ownership alone does not authorize flashing or physical control. The owner has explicitly authorized device investigation and requests advance notification for potentially dangerous actions such as flashing; preserve the backup/recovery gates below. The [2026-10-30 intake](docs/research/device-intake-2026-10-30.md) records enclosure `02A`, reported `Display-2.6`, firmware `5.9.4-5`, normal-mode USB `2464:0002` and an authorized manual restart briefly exposing OMAP `0451:d00e`. A later paced diagnostic RAM boot succeeded and returned to native startup. No flashing, HVAC operation or firmware recovery test has been performed. No firmware dump or proprietary nlclient/osm executable is available.
 
 Implementation baseline: commit `30c82f5`. It contains an authenticated host-side laboratory, not deployable thermostat firmware:
 
@@ -17,21 +17,39 @@ Implementation baseline: commit `30c82f5`. It contains an authenticated host-sid
 The canonical `/v1/device/*` contract is new; stock Nest does not implement it. `backend/nest.py` is a strict partial PUT decoder, disabled in the normal runtime. Pairing, revision/CAS reconciliation, chunked subscriptions and physical command delivery remain incomplete. A passing simulator is not Nest compatibility.
 
 The [2026-10-30 acquisition review](docs/research/acquisition-review-2026-10-30.md)
-adds a source-built, unexecuted diagnostic RAM probe under `firmware/probe/`.
-The finalized local build is `build/ram-probe-final-20261030`; it is ignored and
-will not travel with a clone. Its kernel has no MTD/block/network support and
-its only userspace emits a fixed USB heartbeat. Preceding bootloader hardware
-initialization is not proven harmless. Its explicit boot.sh execution path is
-never invoked by normal build/test/runtime targets. The next user action is the
-documented single manual restart while the guarded loader waits, then confirming
-heartbeat and native startup afterward. Notify the owner before this experimental
-RAM execution under their existing authorization; do not re-ask general device
-permission. No payload has been sent, firmware acquired or recovery demonstrated.
+adds the diagnostic RAM probe under `firmware/probe/`. The first unpaced upload
+failed at the ROM length field. A paced loader then successfully transferred the
+three generated files, and the expected USB heartbeat was observed without sudo.
+The owner restarted with the loader exited; the home icon and `2464:0002` returned.
+The working build is `build/ram-probe-reliability-20261030`; the original remains
+at `build/ram-probe-final-20261030`. Both are ignored and will not travel with a
+clone. The probe kernel has no MTD/block/network support, and its only userspace
+emits a fixed heartbeat. No NAND acquisition or restoration has occurred.
+
+The owner installed/reloaded the scoped ROM/tty udev ACL rule prepared under
+ignored `build/usb-access-20261030`; installed bytes/root ownership were verified.
+It grants access only to the current owner UID for ROM USB and the expected
+probe tty on physical port `1-1`. Do not make the diagnostic disk writable for
+automation. The native loader now uses 1 ms pacing, 512-byte output chunks and a
+20 ms post-upload interval, adapted from the pinned upstream reliability PR.
+Its wrapper requires normal Nest mode before a fresh attempt and never retries
+a boot automatically. Use a PTY when launching it so native output is immediate.
+A prior piped wait timed out without enough buffered stage evidence.
+
+Next: review/build a separately guarded NAND-geometry-only acquisition kernel,
+with hardware write protection and reviewed scan/write paths, before requesting
+another manual restart. Notify the owner before experimental RAM execution under
+their existing authorization; do not re-ask general device permission. Continue
+to enforce backup/recovery gates before persistent writes and separate HVAC
+authorization/equipment requirements. See [handshake evidence](docs/research/usb-handshake-2026-10-30.md)
+and the separate dated USB validation report. Heartbeat plus native startup is
+not firmware recovery, battery/HVAC validation or product compatibility.
 
 This PC is CachyOS with Python 3.14.8 and rootless Podman 6.1.4, installed by the
-owner. Fresh validation: 94 tests passed including simulated TLS broker/container
-tests using `HEARTH_CONTAINER_ENGINE=podman`; make check/audit passed. See the
-separate dated validation report. The original Docker/amd64 results remain
+owner. Fresh validation: 97 tests passed including simulated TLS broker/container
+tests using `HEARTH_CONTAINER_ENGINE=podman`; make check passed. The earlier
+same-day dependency audit passed. Separate dated reports preserve both scopes.
+The original Docker/amd64 results remain
 historical. No HAOS, aarch64, flashing, firmware recovery or HVAC claims were added.
 
 ## Read before implementation

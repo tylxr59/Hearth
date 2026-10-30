@@ -56,6 +56,14 @@
     "repository": "https://github.com/ajb142/omap_loader",
     "revision": "dc0758f91a4698054b0629a05f1b38b9b8b13de3"
   },
+  "omap_loader_reliability": {
+    "files": {
+      "omap_loader.c": "3235bc1d8217103425922cf04b1b5fa4d334fc9456ead4f4c7614bce76a941f4"
+    },
+    "pull_request": "https://github.com/grant-h/omap_loader/pull/7",
+    "repository": "https://github.com/dougg3/omap_loader",
+    "revision": "a33d75376f56f54285cdf6933e312b856146593b"
+  },
   "thermostat": {
     "files": {
       "README.md": "5e2dc9d4970ae3c890a8ba09e7f5fde3106c8772f0090c73881c2066a739b999",

@@ -42,6 +42,7 @@ def release(output):
             "requirements-dev.lock",
             "requirements-build.lock",
             ".gitignore",
+            ".gitattributes",
             ".dockerignore",
         )
     ]

@@ -13,6 +13,13 @@ unwired base, observe a heartbeat if it boots, and confirm native startup after
 the loader exits. Never write probe images to flash or confuse them with the
 inert review tar/partial replacements. [Review and source pins](research/acquisition-review-2026-10-30.md).
 
+The first upload attempt subsequently stalled at the ROM length word, before
+the first-stage file-data call. Native home icon and normal USB mode returned
+after the owner restarted with the loader exited. A paced host-loader retry subsequently booted the diagnostic kernel; its USB
+heartbeat and return to native startup were observed. The image bytes were unchanged. [Failure evidence and scoped automation
+permissions](research/usb-handshake-2026-10-30.md). No NAND acquisition or firmware restoration has been demonstrated.
+The heartbeat establishes only this one diagnostic boot/USB path.
+
 Physical device flashing, modification or control requires fresh explicit human authorization for that action. Actual HVAC switching tests additionally require explicit authorization, appropriate isolated equipment and a person qualified for the wiring/system. The project request does not authorize those actions. Do not connect a production HVAC system for initial tests. Do not use a thermostat safety limit as the sole safeguard.
 
 ## 1. Establish identity and recovery before writes

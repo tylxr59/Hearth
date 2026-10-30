@@ -1,0 +1,2 @@
+# Patch data must preserve the reviewed upstream file's exact whitespace.
+firmware/probe/omap-loader.patch whitespace=-blank-at-eol

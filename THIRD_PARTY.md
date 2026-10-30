@@ -26,6 +26,11 @@ have separate licenses and unresolved OS vulnerability coverage. Preserve the
 generated source archives, patch, build configuration and notices alongside any
 later owner-approved binary transfer; a SHA manifest is not GPL compliance by itself.
 
+The host-loader patch now also adapts Doug Brown's GPL reliability changes from
+`dougg3/omap_loader` revision `a33d75376f56f54285cdf6933e312b856146593b`
+([upstream PR #7](https://github.com/grant-h/omap_loader/pull/7)). The original
+base pin is unchanged; both revisions and source hashes are retained in the locks.
+
 ## Runtime dependencies
 
 Full versions and package metadata: [python-dependencies.json](docs/security/python-dependencies.json). Hash-locked distributions: requirements.lock. Runtime directly uses aiohttp (Apache-2.0 AND MIT) and paho-mqtt (EPL-2.0 OR BSD-3-Clause per distribution metadata; retain notices when distributing). Transitives include aiohappyeyeballs (PSF-2.0), aiosignal/frozenlist/multidict/propcache/yarl (Apache-2.0), attrs (MIT) idna (BSD-3-Clause) and conditional typing_extensions (PSF-2.0); see each distribution's license files for authoritative terms. Metadata inventory is not a substitute for retaining the installed licenses. No dependencies are vendored.

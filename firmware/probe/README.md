@@ -3,7 +3,12 @@
 This is a diagnostic boot experiment for the particular unit in
 [the intake record](../../docs/research/device-intake-2026-10-30.md). It is not
 Hearth firmware, a flash backup, a recovery tool, or a thermostat controller.
-It has been built and checked offline; device execution remains pending.
+It has been built and checked offline. The first physical upload attempt stalled
+at the ROM length field before sending the first-stage file. The owner then
+restored the home icon and normal Nest USB mode. A paced transport subsequently booted
+the custom diagnostic kernel, its heartbeat was observed without sudo, and the
+owner returned it to the native home icon and normal USB mode. See the
+[handshake investigation](../../docs/research/usb-handshake-2026-10-30.md).
 Do not flash these files or use this profile for another model/revision.
 
 The Linux kernel has MTD, block storage and networking disabled. Its entire
@@ -75,6 +80,13 @@ closes successfully read input files, binds uploads to observed USB port `1-1`,
 and pads the jump frame to the twelve bytes required by Google's 5.9.4 x-loader.
 That source declares NAND dump opcode names but implements no NAND dump handler;
 those constants do not establish a backup capability.
+The updated patch additionally backports USB pacing from Doug Brown's
+[upstream reliability PR](https://github.com/grant-h/omap_loader/pull/7), pinned
+in inputs.json: a 1 ms pause before each bulk transfer, 512-byte output chunks,
+and a 20 ms interval after sending the first-stage file. Its hardware effectiveness
+on this Nest remains unverified. The host-only harness now tests the complete
+ROM header/data exchange, packet bounds, pacing, settling, and a length-field
+timeout that must prevent any first-stage data send.
 These changes have no physical USB
 validation yet. The source retains its upstream GPL notice and LICENSE.md.
 The patch and combined sanitizer harness are GPL-2.0-or-later; Hearth's separate
@@ -98,9 +110,12 @@ It never executes image contents. The manifest is an unsigned local integrity
 record, not a trust root. Copy check.py/configure.py/observe.py/boot.sh from this
 directory alongside the generated artifacts before finalizing the helper hashes.
 
-## Device test — pending
+## Device test — observed once; acquisition still pending
 
-The locally prepared build is `build/ram-probe-final-20261030`. Without arguments,
+The current local retry build is `build/ram-probe-reliability-20261030`. The failed
+first attempt's original build remains preserved at `build/ram-probe-final-20261030`.
+The retry uses identical kernel/bootloader/init bytes and updated host transport
+and helpers. Without arguments,
 its boot.sh only checks integrity and exits; it does not open USB.
 Execution requires the explicit `--execute-experimental-ram-probe` flag.
 
@@ -108,9 +123,11 @@ The exact sequence for this prepared build is:
 
 1. Review the risks above and keep the display on USB, detached from the unwired
    base. Close other installers/loaders. Keep its current USB port `1-1`.
-2. Run the build's boot.sh with the explicit execution flag using the host's
+2. Start from the home icon and normal Nest mass-storage mode. Run the build's
+   boot.sh with the explicit execution flag using the host's
    authorized device-access identity (currently sudo is needed). It waits up to
-   90 seconds for `0451:d00e`.
+   90 seconds for `0451:d00e`. The wrapper refuses a stale, already-active ROM
+   handshake; restore native startup with the loader exited before trying again.
 3. While it waits, use the previously observed hold-until-black, release,
    single-press restart sequence once. The loader transfers the generated
    x-loader, U-Boot at RAM `0x80100000`, and kernel at RAM `0x80a00000`, then jumps

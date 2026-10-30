@@ -30,19 +30,35 @@
 @@ -341 +359 @@
 -    if(!f->data)
 +    if(!f->data || f->size == 0 || f->size > 32u * 1024u * 1024u)
-@@ -412,0 +431 @@
+@@ -390,6 +408 @@
+-  /* Note: this is a race between the target's processor getting X-loader 
+-   * running and our processor. If we fail to communicate with the X-loader, 
+-   * it's possible that it hasn't been fully initialized. I'm not going to put
+-   * some stupid, arbitrary sleep value here. The transfer_other_files function
+-   * should be robust enough to handle some errors.
+-   */
++  /* transfer_first_stage includes the upstream x-loader settling interval. */
+@@ -412,0 +426 @@
 +  libusb_release_interface(dev, 0);
-@@ -417,0 +437 @@
+@@ -417,0 +432 @@
 +  libusb_release_interface(dev, 0);
-@@ -461,0 +482,2 @@
+@@ -438,0 +454 @@
++    usleep(1000); /* OMAP BootROM pacing; upstream reliability PR #7. */
+@@ -461,0 +478,2 @@
 +
 +      if (actualRead == 0) return false;
-@@ -514,0 +537 @@
+@@ -492,2 +510,3 @@
+-    int writeAmt = sizeLeft;
+-
++    int writeAmt = sizeLeft > 512 ? 512 : sizeLeft;
++
++    usleep(1000); /* Space USB transfers even on fast xHCI controllers. */
+@@ -514,0 +534 @@
 +      if (actualWrite == 0) return false;
-@@ -537,2 +559,0 @@
+@@ -537,2 +556,0 @@
 -  int i;
 -
-@@ -560,30 +581 @@
+@@ -560,30 +578,2 @@
 -  /* optionally, print some ASIC ID info */
 -  if(g_verbose)
 -  {
@@ -74,10 +90,23 @@
 -    fprintf(stdout, "\n");
 -  }
 +  /* Device-specific ASIC data is intentionally not logged. */
-@@ -641,0 +634,2 @@
++  log_info("ROM ASIC reply received (%d bytes; identifying data omitted)\n", transLen);
+@@ -600,0 +591,2 @@
++  log_info("ROM boot command transferred\n");
++
+@@ -604 +596 @@
+-    log_error("failed to length specifier of %u to OMAP BootROM\n", filelen);
++    log_error("failed to send first-stage length of %u bytes to OMAP BootROM\n", filelen);
+@@ -606,0 +599,2 @@
++
++  log_info("ROM first-stage length transferred (%u bytes)\n", filelen);
+@@ -615,0 +610,2 @@
++  log_info("ROM first-stage payload transferred (%zu bytes)\n", file->size);
++  usleep(20000); /* Allow x-loader to initialize before another USB request. */
+@@ -641,0 +638,2 @@
 +    memset(buffer, 0, bufSize);
 +
-@@ -722,7 +716 @@
+@@ -722,7 +720 @@
 -      size_t len = strlen((char *)extra);
 -
 -      if(len > (bufSize - sizeof(opcode) - 1))
@@ -86,17 +115,17 @@
 -      else
 -        fprintf(stdout, "X-loader Debug: %s\n", extra);
 +      /* Device-provided debug bytes are neither parsed nor logged. */
-@@ -742,2 +730,3 @@
+@@ -742,2 +734,3 @@
 -
 -  if(!omap_usb_write(handle, (unsigned char *)buffer, sizeof(*buffer)*2))
 +  buffer[2] = 0; /* Google 5.9.4 USBLOAD_CMD_RESPONSE_LEN is 12 bytes. */
 +
 +  if(!omap_usb_write(handle, (unsigned char *)buffer, sizeof(*buffer)*3))
-@@ -925 +914,2 @@
+@@ -925 +918,2 @@
 -        args->files = realloc(args->files, fileCount);
 +        args->files = realloc(args->files, fileCount * sizeof(*args->files));
 +      if (!args->files) return 1;
-@@ -951 +941,2 @@
+@@ -951 +945,2 @@
 -      args->files = realloc(args->files, fileCount);
 +      args->files = realloc(args->files, fileCount * sizeof(*args->files));
 +      if (!args->files) return 1;
