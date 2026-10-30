@@ -93,6 +93,11 @@ caught and corrected this kernel's non-const OTP-write signature before executio
 the initial build log is preserved separately. The final build has no warnings
 in the Hearth guard. Historical upstream kernel/config warnings remain.
 
+The first host launch stopped before USB access because staging had not preserved
+the native loader executable bit. Staging now preserves modes and finalization
+rejects a non-executable loader. No device restart or transfer occurred in that
+launch. The prior manifest is preserved alongside the corrected one locally.
+
 The explicit execution flag is `--execute-read-only-nand-metadata`. Start only
 from normal native USB mode on physical port `1-1`, after advance risk notice,
 with the reviewed owner-installed ROM/tty ACL rule. Use a PTY for loader output.

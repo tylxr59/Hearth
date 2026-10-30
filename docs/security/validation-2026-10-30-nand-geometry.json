@@ -23,14 +23,15 @@
     },
     "profile": "Display-2.6",
     "recipe_sha256": {
+      "README.md": "0c1afe347b15e34e09978656f1b79150f15cf8fe0b713d8d327070a163197d2e",
       "build.sh": "6dab15a53769049ef303ef5831186f02425c01a9285a8126b95fa0f8f09a533e",
       "configure.py": "c04d50769d3cdaf4f6226d208be67e169ba82b6fac570eba1196d1217a8a3de5",
-      "finalize.py": "903ebd46153118cb2ba8c2933ee4f03645ffe1a2a041698b7db8ae5f0108b55a",
+      "finalize.py": "fc6275a2090cbdc14710c1c8df9a034c89dab69496bcbf4c41e7aa6b7becc79f",
       "init.c": "5b40d1112dc505b5a41f2e267f8f803e7b19bc1c3f602ca230e9611264db2b2b",
       "observe.py": "79129137a32ffa524c9b1f7a362c44aad80397947dd45bae8b9468a7ca04163f",
       "readonly.h": "ad89989ecf9477616898ee0aba09cd2e4db547d6eaf94b611d6bcddf36ac795d",
       "report.py": "f6984e640d09155495ce6e4709d4620d6332d2ea5d60fee2a0c7ee69215c9366",
-      "stage.py": "6d3e6ef66bf5fcee5d82298e58c2ab413350facb480a2e1d78d15281dab468ed"
+      "stage.py": "99ce042d81e5ce825272d22bc5a2f94ef4333ec2d3b6d2382d967be7eb4d2030"
     },
     "recovery": "unverified",
     "status": "experimental-nand-geometry-only"
@@ -44,6 +45,11 @@
     "upstream_kernel_warnings": "present; no general vulnerability or safety clearance"
   },
   "date": "2026-10-30",
+  "host_preflight": {
+    "fix": "preserve bootstrap file modes when staging; finalizer rejects non-executable loader",
+    "initial_result": "exit 126: staged native loader lacked executable permission; no USB transfer",
+    "verification": "make check and 27 geometry tests passed after fix"
+  },
   "host_validation": {
     "container_engine": "rootless Podman; broker/container tests enabled",
     "geometry_tests": 27,

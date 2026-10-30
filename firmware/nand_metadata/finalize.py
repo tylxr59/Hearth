@@ -3,6 +3,7 @@
 import argparse
 import hashlib
 import json
+import os
 from pathlib import Path
 
 from firmware.nand_metadata import configure, stage
@@ -19,6 +20,8 @@ def finalize(root, base):
     if target.exists():
         raise ValueError("refusing to replace an existing manifest")
     probe_check.check(base)
+    if not os.access(root / "artifacts/omap_loader", os.X_OK):
+        raise ValueError("native host loader must be executable before finalization")
     assets = Path(__file__).resolve().parent
     kernel = root / "src/Dev/linux"
     driver = kernel / "drivers/mtd/nand/omap2.c"

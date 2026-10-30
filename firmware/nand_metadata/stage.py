@@ -72,7 +72,7 @@ def stage(nestdfu, xloader, loader, base_build, output):
         data = (base_build / "artifacts" / name).read_bytes()
         if hashlib.sha256(data).hexdigest() != old["files"][name]:
             raise ValueError("validated bootstrap artifact changed")
-        shutil.copyfile(base_build / "artifacts" / name, output / "artifacts" / name)
+        shutil.copy2(base_build / "artifacts" / name, output / "artifacts" / name)
     (output / "geometry-sources.json").write_text(
         json.dumps(
             {
