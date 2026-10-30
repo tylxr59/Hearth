@@ -4,12 +4,17 @@ A local-first laboratory for Nest Learning Thermostat Gen 2, with Gen 1 as a sec
 
 **Status: functional host-side prototype, not deployable thermostat firmware.** A physical unit has received [read-only USB identity intake](docs/research/device-intake-2026-10-30.md); no flashing, recovery or HVAC tests have been performed. The complete Nest pairing/subscribe protocol and device credential/TLS installation are unresolved. Do not connect this prototype to live HVAC equipment. This iteration does not meet the physical firmware compatibility portion of the definition of done.
 
+An authorized restart exposed OMAP ROM mode on the unit reporting `Display-2.6` /
+`5.9.4-5`. A separate [experimental RAM heartbeat probe](firmware/probe/README.md)
+has been built and checked offline; it has not been executed on the device and
+does not acquire flash or provide recovery. [Current evidence and next test](docs/research/acquisition-review-2026-10-30.md).
+
 Implemented:
 
 - TLS local API, separate device/management authentication, registration, rotation and revocation.
 - Validated state, constrained commands, reported-state separation, availability and command expiry.
 - MQTT climate discovery and commands, tested with a real authenticated TLS Mosquitto broker and simulated devices.
-- Linux credential preparation, read-only USB inventory, SHA-256 input verification, deterministic inert firmware review bundles and offline hardening replacements.
+- Linux credential preparation, read-only USB inventory/watch, allowlisted diagnostic metadata, SHA-256 input verification, deterministic inert firmware review bundles and offline hardening replacements.
 - Unprivileged container, locally assembled HAOS add-on, hash-locked dependencies, scans, regression and property tests.
 
 Nothing implements HVAC control loops. No proprietary firmware or upstream executables are bundled. No telemetry, weather provider, cloud registration, remote support, public defaults, executable upload or automatic update mechanism is included.

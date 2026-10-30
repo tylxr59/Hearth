@@ -2,6 +2,13 @@
 
 Physical evidence update, 2026-10-30: [read-only device intake](device-intake-2026-10-30.md) records a unit reporting `Display-2.6`, software `5.9.4-5` and normal-mode USB `2464:0002`. This adds identity metadata only; firmware acquisition, recovery and control compatibility remain unverified. The historical source findings below retain their original scope.
 
+Further 2026-10-30 work: an authorized restart confirmed brief OMAP ROM
+enumeration. The [acquisition review](acquisition-review-2026-10-30.md) statically
+inspects the pinned NLE image's embedded initramfs, records why it writes
+persistent files, and documents a separate, source-built diagnostic RAM probe.
+That probe's physical execution remains pending. The newly reviewed native
+host loader requires the checked-in memory-safety/privacy patch before use.
+
 Inspected 2026-10-24/25. No existing workspace audit was available. [upstreams.json](upstreams.json) pins all five repositories and hashes the principal inspected files; `python -m tools.fetch_research build/references` retrieves those files without executing them. The additional NestDFUAttack source is necessary because NLE's builder obtains its historical kernel and initramfs there. Do not run its installers or rootme scripts.
 
 ## Evidence classification

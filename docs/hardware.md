@@ -2,6 +2,17 @@
 
 **A physical unit has received read-only USB intake; firmware compatibility and recovery remain unverified. No flash/apply command is implemented.** See the [2026-10-30 intake](research/device-intake-2026-10-30.md): enclosure `02A`, reported `Display-2.6`, software `5.9.4-5`, normal USB `2464:0002`. Preparation artifacts are not bootable images and must not be sent to a USB loader. Gen 1 remains a separate, unvalidated profile; never select a generation from USB vendor/product alone.
 
+An authorized manual restart subsequently exposed `0451:d00e` briefly. The
+separate [RAM probe](../firmware/probe/README.md) now compiles experimental boot
+code for this reported model, with no MTD/block/network support in its Linux
+kernel. It has passed offline checks only and has not been sent to the device.
+Its bootloaders still initialize hardware; this is not an observational sysfs
+read, a NAND backup or a recovery test. Notify the owner before execution under
+their existing device-work authorization. Keep the display detached from its
+unwired base, observe a heartbeat if it boots, and confirm native startup after
+the loader exits. Never write probe images to flash or confuse them with the
+inert review tar/partial replacements. [Review and source pins](research/acquisition-review-2026-10-30.md).
+
 Physical device flashing, modification or control requires fresh explicit human authorization for that action. Actual HVAC switching tests additionally require explicit authorization, appropriate isolated equipment and a person qualified for the wiring/system. The project request does not authorize those actions. Do not connect a production HVAC system for initial tests. Do not use a thermostat safety limit as the sole safeguard.
 
 ## 1. Establish identity and recovery before writes

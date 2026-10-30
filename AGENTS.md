@@ -16,6 +16,24 @@ Implementation baseline: commit `30c82f5`. It contains an authenticated host-sid
 
 The canonical `/v1/device/*` contract is new; stock Nest does not implement it. `backend/nest.py` is a strict partial PUT decoder, disabled in the normal runtime. Pairing, revision/CAS reconciliation, chunked subscriptions and physical command delivery remain incomplete. A passing simulator is not Nest compatibility.
 
+The [2026-10-30 acquisition review](docs/research/acquisition-review-2026-10-30.md)
+adds a source-built, unexecuted diagnostic RAM probe under `firmware/probe/`.
+The finalized local build is `build/ram-probe-final-20261030`; it is ignored and
+will not travel with a clone. Its kernel has no MTD/block/network support and
+its only userspace emits a fixed USB heartbeat. Preceding bootloader hardware
+initialization is not proven harmless. Its explicit boot.sh execution path is
+never invoked by normal build/test/runtime targets. The next user action is the
+documented single manual restart while the guarded loader waits, then confirming
+heartbeat and native startup afterward. Notify the owner before this experimental
+RAM execution under their existing authorization; do not re-ask general device
+permission. No payload has been sent, firmware acquired or recovery demonstrated.
+
+This PC is CachyOS with Python 3.14.8 and rootless Podman 6.1.4, installed by the
+owner. Fresh validation: 94 tests passed including simulated TLS broker/container
+tests using `HEARTH_CONTAINER_ENGINE=podman`; make check/audit passed. See the
+separate dated validation report. The original Docker/amd64 results remain
+historical. No HAOS, aarch64, flashing, firmware recovery or HVAC claims were added.
+
 ## Read before implementation
 
 1. `README.md` and `TODO.md` for scope and outstanding work.

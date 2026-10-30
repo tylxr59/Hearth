@@ -17,6 +17,7 @@ import pytest
 
 from backend.registry import Registry, private_json
 from tests.conftest import SERIAL
+from tests.containers import ENGINE, command
 
 pytestmark = pytest.mark.skipif(
     os.environ.get("HEARTH_CONTAINER_TEST") != "1", reason="opt-in built image"
@@ -24,7 +25,7 @@ pytestmark = pytest.mark.skipif(
 
 
 def run(*args):
-    return subprocess.run(args, check=True, capture_output=True, text=True).stdout.strip()
+    return subprocess.run(command(args), check=True, capture_output=True, text=True).stdout.strip()
 
 
 def test_unprivileged_container_tls_api():
@@ -68,7 +69,7 @@ def test_unprivileged_container_tls_api():
         # First prove the image defaults to its documented unprivileged identity.
         assert (
             run(
-                "docker",
+                ENGINE,
                 "run",
                 "--rm",
                 "--network",
@@ -85,7 +86,7 @@ def test_unprivileged_container_tls_api():
         )
         # Match the private host fixture's uid without changing permissions/ownership.
         run(
-            "docker",
+            ENGINE,
             "run",
             "--rm",
             "-d",
@@ -104,7 +105,7 @@ def test_unprivileged_container_tls_api():
             f"{root}:/config:rw",
             "hearth:dev",
         )
-        port = int(run("docker", "port", name, "8443/tcp").split(":")[-1])
+        port = int(run(ENGINE, "port", name, "8443/tcp").split(":")[-1])
         context = ssl.create_default_context(cafile=str(tls / "server.pem"))
         origin = f"https://127.0.0.1:{port}"
 
@@ -139,5 +140,5 @@ def test_unprivileged_container_tls_api():
             request("/v1/manage/devices", "Bearer incorrect")
         assert error.value.code == 401
     finally:
-        subprocess.run(["docker", "rm", "-f", name], capture_output=True, check=False)
+        subprocess.run([ENGINE, "rm", "-f", name], capture_output=True, check=False)
         shutil.rmtree(root)

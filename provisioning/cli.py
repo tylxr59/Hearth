@@ -4,11 +4,13 @@ import argparse
 import ipaddress
 import json
 import secrets
+import sys
 from pathlib import Path
 from urllib.parse import urlsplit
 
 from backend.registry import Registry, private_json
 from backend.validation import Invalid, serial
+from provisioning.intake import MAX_INFO_BYTES, inspect_info, usb_events, usb_inventory
 
 
 def endpoint(value):
@@ -69,30 +71,6 @@ def prepare(registry_path, output, ident, generation, origin, modes, fan=False, 
     return report
 
 
-def usb_inventory(sysfs=Path("/sys/bus/usb/devices")):
-    result = []
-    for path in sorted(Path(sysfs).glob("*")):
-        try:
-            vendor, product = (
-                (path / "idVendor").read_text().strip(),
-                (path / "idProduct").read_text().strip(),
-            )
-        except (OSError, UnicodeError):
-            continue
-        if vendor == "0451":
-            result.append(
-                {
-                    "bus_path": path.name,
-                    "vendor": vendor,
-                    "product": product,
-                    "generation": "unknown",
-                    "compatible": False,
-                    "note": "TI USB identity alone cannot establish Nest compatibility",
-                }
-            )
-    return result
-
-
 def main():
     parser = argparse.ArgumentParser()
     sub = parser.add_subparsers(dest="action", required=True)
@@ -102,7 +80,9 @@ def main():
     rotate_admin = sub.add_parser("rotate-admin")
     rotate_admin.add_argument("--registry", required=True)
     rotate_admin.add_argument("--output", required=True)
-    sub.add_parser("detect")
+    detect = sub.add_parser("detect")
+    detect.add_argument("--watch", type=int, choices=range(1, 301), metavar="SECONDS")
+    sub.add_parser("inspect-info", help="read a plist from stdin; emit allowlisted metadata only")
     prep = sub.add_parser("prepare")
     prep.add_argument("--registry", required=True)
     prep.add_argument("--output", required=True)
@@ -136,6 +116,11 @@ def main():
             Registry(args.registry).rotate_admin(args.output)
         elif args.action == "revoke":
             Registry(args.registry).revoke(serial(args.serial))
+        elif args.action == "inspect-info":
+            print(json.dumps(inspect_info(sys.stdin.buffer.read(MAX_INFO_BYTES + 1)), indent=2))
+        elif args.watch:
+            for event in usb_events(args.watch):
+                print(json.dumps(event), flush=True)
         else:
             print(json.dumps(usb_inventory(), indent=2))
     except (Invalid, OSError) as exc:

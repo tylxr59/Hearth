@@ -1,13 +1,14 @@
 PYTHON ?= .venv/bin/python
+CONTAINER_ENGINE ?= docker
 
 .PHONY: test integration container-test check audit demo addon release image wheel
 
 test:
 	$(PYTHON) -m pytest -q
 integration:
-	HEARTH_BROKER_TEST=1 $(PYTHON) -m pytest -q
+	HEARTH_CONTAINER_ENGINE=$(CONTAINER_ENGINE) HEARTH_BROKER_TEST=1 $(PYTHON) -m pytest -q
 container-test: image
-	HEARTH_CONTAINER_TEST=1 $(PYTHON) -m pytest -q tests/test_container.py
+	HEARTH_CONTAINER_ENGINE=$(CONTAINER_ENGINE) HEARTH_CONTAINER_TEST=1 $(PYTHON) -m pytest -q tests/test_container.py
 
 check:
 	$(PYTHON) -m ruff check backend firmware provisioning tools tests
@@ -29,4 +30,4 @@ wheel:
 	.venv/bin/pip wheel --no-deps --no-build-isolation --wheel-dir build/wheels .
 
 image:
-	docker build -t hearth:dev .
+	$(CONTAINER_ENGINE) build -t hearth:dev .

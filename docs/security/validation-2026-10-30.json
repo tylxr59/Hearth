@@ -1,0 +1,96 @@
+{
+  "artifact_manifest": {
+    "files": {
+      "kernel.config": "273e5d6a27617982e7d450167bef42eba4dbabc081868b790f341c14bdde7826",
+      "omap_loader": "8a821dcf4a82d7cca27391f57f88c7f445abf7276e305adf502014046d3f6dbd",
+      "probe-init": "5004278472b8623995c05e9b4c4c55c69ad422a09cb0676b853710cc61653557",
+      "u-boot.bin": "5f924a02508eb0360645ea71228934f854f8310370808b82108a58fa672b443f",
+      "uImage": "538d9da6c78b671a1261413fd0ab45678a4d7191bdc86ab365b8f55c8cf59ebb",
+      "x-load-gen2.bin": "e9f543e77636961a9acd6723e6b6cf7392a7a33b02ad6f61b97ab85157d8939e"
+    },
+    "final_loader_patch_sha256": "24a820e13e707db03e88e55ba2c5668f865a48455dfb12be676a7ee7203f04ca",
+    "final_loader_source_sha256": "4f22cc9239b600250c6b8de7b3b151b08c7e5f27271c455b0c6d0c66006f7887",
+    "host_files": {
+      "boot.sh": "0a009f1ada041427a0855134407cd1726a49e8f6d10f8a565f14ea5c217e91b0",
+      "check.py": "e5a1c03f7b06c75fe205a589516289fa3fa5e9bd2f60a5a7e2dea2b11844bbe8",
+      "configure.py": "051997792790f4d818210cd0327ca9d3afc6af9187801ffd381e5fd06c6b4064",
+      "observe.py": "0cf6aa89676e9fdc0a0dd0680bd54c4673a0b579828d263d3a8dc0bfa790fc7c"
+    },
+    "host_helpers_finalized_after_kernel_build": true,
+    "host_loader_finalized_after_kernel_build": true,
+    "profile": "Display-2.6",
+    "status": "experimental-unexecuted-ram-probe"
+  },
+  "checks": [
+    {
+      "command": "make check",
+      "result": "passed",
+      "tools": [
+        "Ruff lint",
+        "Ruff format",
+        "Bandit"
+      ]
+    },
+    {
+      "command": "HEARTH_CONTAINER_ENGINE=podman HEARTH_BROKER_TEST=1 HEARTH_CONTAINER_TEST=1 .venv/bin/python -m pytest -q",
+      "passed": 94,
+      "result": "passed",
+      "scope": "simulated TLS API/MQTT, loopback broker, backend container, credentials/security/artifacts and new intake/probe gates",
+      "skipped": 0
+    },
+    {
+      "command": "make audit",
+      "result": "passed",
+      "scope": "hash-locked Python runtime and build dependencies; no known vulnerabilities reported"
+    },
+    {
+      "check": "native USB loader ASan/UBSan harness",
+      "leak_detection": false,
+      "real_usb_access": false,
+      "result": "passed on patched pinned source; original pointer-array overflow reproduced",
+      "scope": "three-file parser, full-size unterminated debug message, 12-byte jump frame and exact USB-port binding; synthetic libusb wrappers only"
+    },
+    {
+      "check": "fresh isolated diagnostic boot-chain build",
+      "decompressed_kernel_bytes": 2672800,
+      "initramfs_bytes": 2440,
+      "kernel": "2.6.37 GPL historical source",
+      "network": "none during compile",
+      "result": "passed",
+      "usb_passthrough": false
+    },
+    {
+      "check": "final boot.sh without execution flag",
+      "real_usb_access": false,
+      "result": "offline integrity checks passed; dry run only"
+    },
+    {
+      "check": "sh -n on probe build.sh and boot.sh",
+      "result": "passed"
+    }
+  ],
+  "date": "2026-10-30",
+  "environment": {
+    "container_engine": "Podman 6.1.4 rootless",
+    "host_laboratory_image": "e65055dbc7313ab3f00aa0fe487081069bdbe82b74116e881db67e93605672ce",
+    "host_os": "CachyOS",
+    "host_python": "3.14.8",
+    "probe_builder_image": "b65f005605ac5ca0942723dc3d6b1278803f1dae7d0ab172104ead78c15a382e"
+  },
+  "not_verified": [
+    "experimental RAM payload boot/heartbeat",
+    "firmware acquisition or raw NAND/OOB backups",
+    "restoration/recovery",
+    "stock MTD layout",
+    "TLS/bootstrap or complete stock transport/local IPC",
+    "native HVAC/regulation/protection/schedule/power behavior",
+    "HA Core/Supervisor installation",
+    "aarch64",
+    "container OS/compiler/legacy firmware CVE clearance",
+    "independent historical compiler signature verification",
+    "binary byte reproducibility"
+  ],
+  "physical_evidence": "Normal USB identity, owner-provided diagnostic metadata and authorized restart with brief 0451:d00e enumeration are in docs/research/device-intake-2026-10-30.md.",
+  "publishing": "No push, upload, publication, proprietary firmware or owner photo inclusion.",
+  "scope": "Fresh host and offline experimental RAM-probe validation; no physical payload execution"
+}

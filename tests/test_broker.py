@@ -20,16 +20,17 @@ from backend.api import create_app
 from backend.mqtt import install
 from backend.registry import private_json
 from tests.conftest import SERIAL
+from tests.containers import ENGINE, command
 from tests.test_security import auth
 
 IMAGE = "eclipse-mosquitto:2.0.22@sha256:09b62ff32c2e7b64d4b431b9a89236073289b68db273de2b089edeb9b0d92b5c"
 pytestmark = pytest.mark.skipif(
-    os.environ.get("HEARTH_BROKER_TEST") != "1", reason="opt-in Docker broker"
+    os.environ.get("HEARTH_BROKER_TEST") != "1", reason="opt-in container broker"
 )
 
 
 def run(*args):
-    return subprocess.run(args, check=True, capture_output=True, text=True).stdout.strip()
+    return subprocess.run(command(args), check=True, capture_output=True, text=True).stdout.strip()
 
 
 @pytest.fixture
@@ -61,7 +62,7 @@ def broker(tmp_path):
     # Both local processes and the container use the current unprivileged uid.
     uid = f"{os.getuid()}:{os.getgid()}"
     run(
-        "docker",
+        ENGINE,
         "run",
         "--rm",
         "--user",
@@ -77,7 +78,7 @@ def broker(tmp_path):
         password,
     )
     run(
-        "docker",
+        ENGINE,
         "run",
         "--rm",
         "--user",
@@ -114,7 +115,7 @@ persistence false
 """)
     try:
         run(
-            "docker",
+            ENGINE,
             "run",
             "--rm",
             "-d",
@@ -131,11 +132,11 @@ persistence false
             "-c",
             "/test/mosquitto.conf",
         )
-        port = int(run("docker", "port", name, "8883/tcp").split(":")[-1])
+        port = int(run(ENGINE, "port", name, "8883/tcp").split(":")[-1])
         time.sleep(0.5)
         yield root, port, password
     finally:
-        subprocess.run(["docker", "rm", "-f", name], capture_output=True, check=False)
+        subprocess.run([ENGINE, "rm", "-f", name], capture_output=True, check=False)
         import shutil
 
         shutil.rmtree(root)

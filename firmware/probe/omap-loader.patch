@@ -1,0 +1,102 @@
+--- a/omap_loader.c
++++ b/omap_loader.c
+@@ -152,0 +153,9 @@
++/* This experimental probe targets only the observed Nest port 1-1. */
++static bool hearth_target_port(libusb_device *dev)
++{
++  uint8_t ports[8];
++  if (libusb_get_bus_number(dev) != 1)
++    return false;
++  return libusb_get_port_numbers(dev, ports, sizeof(ports)) == 1 && ports[0] == 1;
++}
++
+@@ -184 +193,2 @@
+-      if(desc.idVendor == vendor && desc.idProduct == product)
++      if(desc.idVendor == vendor && desc.idProduct == product &&
++         hearth_target_port(devlist[i]))
+@@ -206,0 +217,6 @@
++  if ((ret = libusb_claim_interface(handle, 0)) < 0) {
++    log_error("cannot claim ROM interface: %s\n", libusb_error_name(ret));
++    libusb_close(handle);
++    return NULL;
++  }
++
+@@ -290 +306 @@
+-    if(iter >= iter)
++    if(iter >= allocSize)
+@@ -319,0 +336,2 @@
++  fclose(fp);
++
+@@ -341 +359 @@
+-    if(!f->data)
++    if(!f->data || f->size == 0 || f->size > 32u * 1024u * 1024u)
+@@ -412,0 +431 @@
++  libusb_release_interface(dev, 0);
+@@ -417,0 +437 @@
++  libusb_release_interface(dev, 0);
+@@ -461,0 +482,2 @@
++
++      if (actualRead == 0) return false;
+@@ -514,0 +537 @@
++      if (actualWrite == 0) return false;
+@@ -537,2 +559,0 @@
+-  int i;
+-
+@@ -560,30 +581 @@
+-  /* optionally, print some ASIC ID info */
+-  if(g_verbose)
+-  {
+-    char * fields[] = { "Num Subblocks", "Device ID Info", "Reserved",
+-      "Ident Data", "Reserved", "CRC (4 bytes)"};
+-    int fieldLen[] = {1, 7, 4, 23, 23, 11};
+-    int field = 0;
+-    int nextSep = 0;
+-
+-    log_info("got ASIC ID - ");
+-
+-    for(i = 0; i < transLen; i++)
+-    {
+-      if(i == nextSep)
+-      {
+-        fprintf(stdout, "%s%s ", (field > 0) ? ", " : "", fields[field]);
+-        nextSep += fieldLen[field];
+-        field++;
+-
+-        fprintf(stdout, "[");
+-      }
+-
+-      fprintf(stdout, "%02x", buffer[i]);
+-
+-      if(i+1 == nextSep)
+-        fprintf(stdout, "]");
+-    }
+-
+-    fprintf(stdout, "\n");
+-  }
++  /* Device-specific ASIC data is intentionally not logged. */
+@@ -641,0 +634,2 @@
++    memset(buffer, 0, bufSize);
++
+@@ -722,7 +716 @@
+-      size_t len = strlen((char *)extra);
+-
+-      if(len > (bufSize - sizeof(opcode) - 1))
+-        log_error("X-loader debug message not NUL terminated (size %zu)\n",
+-            len);
+-      else
+-        fprintf(stdout, "X-loader Debug: %s\n", extra);
++      /* Device-provided debug bytes are neither parsed nor logged. */
+@@ -742,2 +730,3 @@
+-
+-  if(!omap_usb_write(handle, (unsigned char *)buffer, sizeof(*buffer)*2))
++  buffer[2] = 0; /* Google 5.9.4 USBLOAD_CMD_RESPONSE_LEN is 12 bytes. */
++
++  if(!omap_usb_write(handle, (unsigned char *)buffer, sizeof(*buffer)*3))
+@@ -925 +914,2 @@
+-        args->files = realloc(args->files, fileCount);
++        args->files = realloc(args->files, fileCount * sizeof(*args->files));
++      if (!args->files) return 1;
+@@ -951 +941,2 @@
+-      args->files = realloc(args->files, fileCount);
++      args->files = realloc(args->files, fileCount * sizeof(*args->files));
++      if (!args->files) return 1;

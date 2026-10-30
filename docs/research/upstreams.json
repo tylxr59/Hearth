@@ -29,6 +29,9 @@
       "Dev/linux/Makefile": "42cada4d9ed5729eba4d2f665207472644eb0a304f8ea61b7a1b49b68bb757d8",
       "Dev/linux/arch/arm/configs/gtvhacker_defconfig": "fbb0aa474123dcaab697d5d1ffe0b4e7dcec7422be95f8ecb2566173c9c08c18",
       "Dev/linux/arch/arm/mach-omap2/board-diamond-backplate.c": "2867fb412631729d251457d6b94c89bbc2ffd67261d1aa112afc9a74ce3d32e7",
+      "Dev/linux/drivers/mtd/nand/nand_bbt.c": "78c533986cf1ac6715efbe6d1d803cbd8fa05e2dc6f567480f73847fba93deca",
+      "Dev/linux/drivers/mtd/nand/omap2.c": "11a7613442cc30c15b79df4cf9f4e660cc858d2ae83fa2c80c135669ec31f583",
+      "Dev/linux/drivers/usb/gadget/serial.c": "bba30eaa4bf659529ea411855d4613e0db386eccb25230fc112869f7c6b8dbad",
       "Dev/root/etc/dbus-1/system.d/nlclient.conf": "e62ae3a55d50e37c4f8da204d07ba22d3bfed4ab9311a3ba4e38418e8bd7c9c5",
       "Dev/root/etc/fstab": "c447a2e9880b950d8b0691d66f7ab5b35c524d7053de89540304c170775e5701",
       "Dev/root/etc/init.d/nestlabs": "eabc09ccc27543557e38330fea3695da8c29ff2fcf36c140af8d611fc84e7447",
@@ -37,14 +40,26 @@
       "Dev/root/etc/init.d/scpm": "fa100e81009ed46ae6cf6625483540d9bf5af1041201994cb6650b8fb41188c1",
       "Dev/root/etc/init.d/start": "0cc986d0787811ec4eef73563bf5d480958b92c517202232fc9467891e0421b4",
       "Dev/root/etc/inittab": "0fa969121b56422f46a1ea4c00adc0dd5c38f0e303c47d0aa712fa2d5f081b03",
-      "Dev/root/etc/nestlabs/client.config": "90443c6e759ccd1c685f70f988758ddd488aafddabd9a6bf0383e5bdce2eb2b3"
+      "Dev/root/etc/nestlabs/client.config": "90443c6e759ccd1c685f70f988758ddd488aafddabd9a6bf0383e5bdce2eb2b3",
+      "Dev/u-boot/board/nest/diamond/diamond.c": "2951999c58207d9491f2a3ad81d5d134a92c947dccd8cbb93611745e1735c103",
+      "Dev/u-boot/include/configs/diamond.h": "82fc2703c934482ff2420e447cc347ec10297ba39afadc8634fd376978eba1ce"
     },
     "repository": "https://github.com/exploiteers/NestDFUAttack",
     "revision": "930b834b7f1f082b8761aa5c5af765b4b3e99dc9"
   },
+  "omap_loader": {
+    "files": {
+      "LICENSE.md": "24b9075aaa15fc189697883aa0af869f4c5e3cc9a116fc091368ce5194ce9ecf",
+      "Makefile": "f23a1ad8d6abe88e54a8264f6e94d5e15aa5a85aee81d5da777b8445fd82b631",
+      "omap_loader.c": "79f23556169dabbad150c140c6a4f00af2c07459d2ff23d04dbf188485f238a1"
+    },
+    "repository": "https://github.com/ajb142/omap_loader",
+    "revision": "dc0758f91a4698054b0629a05f1b38b9b8b13de3"
+  },
   "thermostat": {
     "files": {
       "README.md": "5e2dc9d4970ae3c890a8ba09e7f5fde3106c8772f0090c73881c2066a739b999",
+      "firmware/builder/Dockerfile": "c18ff7368e207aefcb196a4793670321363dd17ae502fa88ec0eee6a35b5f4ab",
       "firmware/builder/build.sh": "1ccb3e97656866deda7439a549274f8d38626df4c5c6a5f3ceb2b09a375fee7d",
       "firmware/builder/deps/nleapi": "2d0b101b5a866944ac9751e1597b716cb5ec279bc67dfb6219defdc2dc3b8372",
       "firmware/builder/deps/settings": "43f3b87e4e12413143d6039a4c6d38cfae1aed4998c276c7303a0000c0d99b2d",

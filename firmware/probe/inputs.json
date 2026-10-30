@@ -1,0 +1,27 @@
+{
+  "nestdfu": {
+    "repository": "https://github.com/exploiteers/NestDFUAttack",
+    "revision": "930b834b7f1f082b8761aa5c5af765b4b3e99dc9",
+    "paths": ["Dev/linux", "Dev/u-boot"]
+  },
+  "xloader": {
+    "repository": "https://nest-open-source.googlesource.com/nest-learning-thermostat/5.9.4/x-loader",
+    "revision": "9b7bb7281b715544e6f5201390d8dac416a4a494",
+    "paths": ["x-loader"]
+  },
+  "loader": {
+    "repository": "https://github.com/ajb142/omap_loader",
+    "revision": "dc0758f91a4698054b0629a05f1b38b9b8b13de3",
+    "files": {
+      "omap_loader.c": "79f23556169dabbad150c140c6a4f00af2c07459d2ff23d04dbf188485f238a1",
+      "Makefile": "f23a1ad8d6abe88e54a8264f6e94d5e15aa5a85aee81d5da777b8445fd82b631",
+      "LICENSE.md": "24b9075aaa15fc189697883aa0af869f4c5e3cc9a116fc091368ce5194ce9ecf"
+    }
+  },
+  "toolchain": {
+    "url": "https://files.embeddedts.com/ftp/ts-socket-macrocontrollers/ts-4200-linux/cross-toolchains/arm-2008q3-72-arm-none-linux-gnueabi-i686-pc-linux-gnu.tar.bz2",
+    "bytes": 77137543,
+    "sha256": "d09f1580a9179a3c8346bde44d6c7d828937d7afcab0ec41207f24e65aa71dca",
+    "authentication": "HTTPS mirror referenced by NLE; no independent signature verification"
+  }
+}

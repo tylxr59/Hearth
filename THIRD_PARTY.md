@@ -1,6 +1,6 @@
 # Licensing and provenance
 
-Hearth's original source is MIT licensed (see LICENSE). This does not grant rights to any Nest firmware. No NLE, Valetudo, NestDFUAttack source implementation, firmware executable, bootloader, kernel image or host loader is copied into runtime/build outputs here. Small protocol identifiers and behavioral observations inform independently written code. Sources retained in `/tmp` during research were not executed or committed.
+Hearth's original source is MIT licensed (see LICENSE). This does not grant rights to any Nest firmware. The host runtime contains no NLE, Valetudo or proprietary firmware implementation. The separate experimental RAM probe now compiles GPL kernel/bootloader sources and a patched GPL native USB loader into ignored local build outputs; no third-party executable or proprietary root is committed or included in source releases. Small protocol identifiers and behavioral observations inform independently written code. Initial sources retained in `/tmp` were not executed or committed.
 
 ## References
 
@@ -10,9 +10,21 @@ Hearth's original source is MIT licensed (see LICENSE). This does not grant righ
 | codykociemba/NoLongerEvil-SelfHosted | bca8781012639c1cefc4a08c103fc892158fb630 | MIT, Cody Kociemba 2025. | Protocol/security research; no implementation copied. |
 | codykociemba/NoLongerEvil-HomeAssistant | 39a344087c679a36ebfe6d2b37f26f8eb04cae47 | MIT, Cody Kociemba 2025. | Packaging/security reference; no scripts copied. |
 | Hypfer/Valetudo | 69c60625b8d48f5f62f02299cfd326c24bb3df2b | Apache-2.0 in inspected package/source. | Philosophical inspiration and capability separation; no implementation/assets copied. |
-| exploiteers/NestDFUAttack | 930b834b7f1f082b8761aa5c5af765b4b3e99dc9 | Mixed components. Linux GPL-2.0, bootloader/toolchain and proprietary root content need per-file review. Nest root scripts explicitly retain Nest copyright. No blanket firmware redistribution grant established. | Static boot/kernel/root-config research only; no code or binary reuse. |
+| exploiteers/NestDFUAttack | 930b834b7f1f082b8761aa5c5af765b4b3e99dc9 | Mixed components. Linux GPL-2.0, GPL U-Boot notices; proprietary root scripts retain Nest copyright. No blanket firmware redistribution grant established. | Static research; only GPL Linux/U-Boot source subtrees compiled for the local experimental probe. No proprietary root or prebuilt reused. |
+| Google Nest 5.9.4 x-loader | 9b7bb7281b715544e6f5201390d8dac416a4a494 | GPL notices/COPYING in the published source; retain complete corresponding source/notices for any later redistribution. | Compiled locally for the model-specific RAM probe; no binary committed or published. |
+| ajb142/omap_loader (also grant-h) | dc0758f91a4698054b0629a05f1b38b9b8b13de3 | GPL-2.0-or-later in source; LICENSE.md contains GPLv2. | Source reviewed, patched and compiled locally. Checked-in patch and combined C sanitizer harness are GPL-2.0-or-later. No upstream full source or executable vendored. |
 
 [upstreams.json](docs/research/upstreams.json) includes URLs, revisions and individual hashes for reproducible inspection. [binary-inventory.json](docs/research/binary-inventory.json) identifies NLE prebuilts without redistributing them. No source-to-prebuilt correspondence, signature chain, vendor authenticity or legal permission is asserted by matching a Git blob or SHA-256. Any future firmware input must be lawfully obtained by the owner, independently identified and kept out of source/releases.
+
+[The probe inputs](firmware/probe/inputs.json) additionally pin Google's source,
+the historical CodeSourcery compiler mirror/archive and the reviewed host loader.
+The compiler archive is used only inside a rootless build container, not installed
+or executed directly on the host. It contains components with their own licenses;
+no independent signature verification or source reconstruction is established.
+It is not redistributed. The probe builder's pinned Ubuntu image and packages
+have separate licenses and unresolved OS vulnerability coverage. Preserve the
+generated source archives, patch, build configuration and notices alongside any
+later owner-approved binary transfer; a SHA manifest is not GPL compliance by itself.
 
 ## Runtime dependencies
 

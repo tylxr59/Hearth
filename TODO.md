@@ -6,7 +6,8 @@ Release-blocking:
 - Determine reliable local IPC control feasibility; revise ADR if an on-device bridge is justified. No bridge currently exists.
 - Verify private CA, hostname/time checks and unique stock-client credential installation; design safe bootstrap and rollback. No plaintext production fallback.
 - Implement/validate full native entry, pairing and revision/CAS/chunked subscribe transport, with power/schedule regression fixtures, or replace it with a verified local bridge. Experimental decoder is incomplete and default-disabled.
-- Build a revision-specific bootable firmware image and complete service hardening profile; current artifacts are inert review bundles and partial offline replacements only.
+- Build a revision-specific deployable firmware image and complete service hardening profile. Deployment artifacts remain inert review bundles and partial offline replacements; the separate experimental RAM probe is diagnostic boot code only.
+- Execute and document the separately prepared `Display-2.6` RAM heartbeat probe only after advance risk notice; its local build passes offline integrity checks but has not booted on hardware. Confirm native startup afterward. It has no flash access, acquisition or restoration functionality; deployment remains blocked. See firmware/probe/README.md and docs/research/acquisition-review-2026-10-30.md.
 - Establish recovery before any authorized write. No flash/provision apply command exists and no device service verification has been performed.
 - Implement/test device firewall compatible with measured kernel/tools; external VLAN restrictions are mandatory in the interim.
 - Complete separately authorized dummy-load HVAC regulation, native scheduling, protective behavior, restart/power, sleep/battery, outage and interrupted-write tests. No live HVAC claims.
@@ -22,3 +23,8 @@ Host/software follow-up:
 - Automatically scrub retained discovery for offline-revoked devices across bridge restarts; current manual broker cleanup documented.
 - OS/container and legacy firmware CVE/SBOM analysis; pip-audit covers Python only. Verify binary/source correspondence and redistribution permissions before any release.
 - Sign release manifests using an owner-controlled trust root when a real release exists; current manifests are unsigned integrity records.
+
+Completed 2026-10-30: normal Nest USB detection, bounded transition watch and
+allowlisted plist diagnostics; source-built offline RAM probe and patched native
+loader with synthetic sanitizer checks; rootless Podman laboratory support and
+94 passing host tests. This does not close the release-blocking device work above.

@@ -21,7 +21,15 @@ Iteration 0.1.0, inspected 2026-10-24/25. This is a source review and host-side 
 
 The final measured results are recorded in validation.json. Tests include real TLS server and broker sockets, device/manager authorization, enrollment/rotation/revocation, credential role uniqueness, cross-device denial, old CGI paths, command schema/range enforcement, malformed/duplicate/non-finite/oversized JSON, retained MQTT commands, raw MQTT bypass, state/intent separation, command expiry, restart state loss, secret-file permissions, root-input symlink rejection, digest mismatch, offline hardening preservation, package assembly and deterministic source/inert archives. Hypothesis exercises arbitrary byte/text inputs and command values; this is bounded property testing, not exhaustive parser fuzzing.
 
-Ruff and Bandit run on original host code/tools. The only Bandit source suppressions are: B104 for the required TLS container bind (host port disabled by default); B310 for the pinned HTTPS research fetcher's checked-in URL construction. Neither is a general suppression of authentication/input issues. Tests intentionally start loopback laboratory services and are not included in Bandit's runtime scan.
+Ruff and Bandit run on original host code/tools. At the initial review, Bandit source suppressions were B104 for the required TLS container bind (host port disabled by default) and B310 for the pinned HTTPS research fetcher's checked-in URL construction. Neither is a general suppression of authentication/input issues. Tests intentionally start loopback laboratory services and are not included in Bandit's runtime scan.
+
+2026-10-30 addition: the experimental RAM probe's source staging tool uses
+narrow B404/B603/B607 suppressions for fixed `git archive` and `patch` argv,
+without a shell. Revisions and patch paths come from checked-in assets; only
+public source is materialized, and no target/build executable is run by staging.
+The native loader's synthetic ASan/UBSan regression checks supplement Bandit;
+neither scans nor a compiled minimal kernel establish hardware safety. See the
+[dated validation report](validation-2026-10-30.json).
 
 pip-audit inspects the hash-locked Python runtime dependency graph against available advisories; saved report is runtime-dependency-audit.json. It does not cover CPython itself, Debian packages, Mosquitto, bootloaders, kernel or missing proprietary userspace. No claim of comprehensive dependency/firmware vulnerability clearance is made. An additional build-backend scan found advisories in the initial setuptools 80.10.2 pin; it was replaced with hash-pinned 84.2.1, rebuilt and rescanned. The final build scan is build-dependency-audit.json.
 

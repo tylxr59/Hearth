@@ -74,3 +74,34 @@ The first command emits a deterministic archive of declarative edits, blockers a
 `make wheel` installs the separately hash-locked build backend and builds a Python wheel. `make image` builds an unprivileged backend image from a pinned multi-architecture Python base digest and hash-locked packages. `make addon` assembles a local add-on directory. `make release` creates a deterministic source tar, per-file provenance manifest and SHA256SUMS; no publishing or signing occurs. Re-running into existing output directories refuses overwrite. Remove only generated output you deliberately intend to regenerate.
 
 Source and inert tar content is reproducible for identical input; Docker image identity is not claimed byte-reproducible (builder metadata, pip bytecode/install metadata and base build history can vary). Python, kernel and container OS security require ongoing patch review. `make audit` checks both runtime and build dependencies against advisory services and therefore needs internet during development; runtime needs none. A clean scan is not a proof of firmware or HVAC safety.
+
+Rootless Podman is also supported for the host laboratory:
+
+```sh
+make image CONTAINER_ENGINE=podman
+HEARTH_CONTAINER_ENGINE=podman HEARTH_BROKER_TEST=1 HEARTH_CONTAINER_TEST=1 .venv/bin/pytest -q
+```
+
+Tests preserve the invoking UID for private fixture bind mounts under rootless
+Podman. They still verify the backend image's default UID 10001 separately.
+These are simulated loopback services; they do not access the thermostat.
+
+Read-only intake now recognizes normal Nest USB `2464:0002` as well as TI
+candidates. Neither detection nor ROM enumeration verifies a generation or
+payload compatibility. Watch changed sysfs snapshots with:
+
+```sh
+.venv/bin/python -m provisioning.cli detect --watch 60
+```
+
+To share a diagnostic plist, pipe its bytes to
+`.venv/bin/python -m provisioning.cli inspect-info`. The tool emits only
+allowlisted model/version/partition/update fields, never serial, MAC or network
+sections. It reads at most 16 KiB, rejects malformed/ambiguous XML and does not
+mount or write a device. Reading the USB volume itself still needs separately
+authorized access and a freshly verified device path.
+
+The separate [experimental RAM probe](../firmware/probe/README.md) builds a minimal
+diagnostic kernel, not a thermostat firmware or acquisition/recovery image.
+Its device execution is pending; its explicit execution command is never called
+by normal build, test, artifact or runtime targets.
