@@ -83,12 +83,11 @@ those constants do not establish a backup capability.
 The updated patch additionally backports USB pacing from Doug Brown's
 [upstream reliability PR](https://github.com/grant-h/omap_loader/pull/7), pinned
 in inputs.json: a 1 ms pause before each bulk transfer, 512-byte output chunks,
-and a 20 ms interval after sending the first-stage file. Its hardware effectiveness
-on this Nest remains unverified. The host-only harness now tests the complete
+and a 20 ms interval after sending the first-stage file. One successful boot on
+this Nest is now observed. The host-only harness now tests the complete
 ROM header/data exchange, packet bounds, pacing, settling, and a length-field
 timeout that must prevent any first-stage data send.
-These changes have no physical USB
-validation yet. The source retains its upstream GPL notice and LICENSE.md.
+This is one device result, not general compatibility validation. The source retains its upstream GPL notice and LICENSE.md.
 The patch and combined sanitizer harness are GPL-2.0-or-later; Hearth's separate
 original probe/build/inspection code is MIT licensed. Do not redistribute a
 combined executable without its corresponding source and license notices.
@@ -125,7 +124,8 @@ The exact sequence for this prepared build is:
    base. Close other installers/loaders. Keep its current USB port `1-1`.
 2. Start from the home icon and normal Nest mass-storage mode. Run the build's
    boot.sh with the explicit execution flag using the host's
-   authorized device-access identity (currently sudo is needed). It waits up to
+   authorized device-access identity (the scoped owner-installed ACL now permits
+   this without sudo). It waits up to
    90 seconds for `0451:d00e`. The wrapper refuses a stale, already-active ROM
    handshake; restore native startup with the loader exited before trying again.
 3. While it waits, use the previously observed hold-until-black, release,

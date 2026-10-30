@@ -9,6 +9,11 @@ An authorized restart exposed OMAP ROM mode on the unit reporting `Display-2.6` 
 has now booted on this unit, emitted its expected USB heartbeat and returned to
 native startup after a manual restart. It does not acquire flash or provide recovery. [Current evidence and next test](docs/research/acquisition-review-2026-10-30.md).
 
+A separate [NAND geometry-only RAM profile](firmware/nand_metadata/README.md)
+has passed offline checks; its supervised physical test is pending. It reads
+master geometry through sysfs with layered write guards, without acquiring
+firmware contents or establishing recovery.
+
 Implemented:
 
 - TLS local API, separate device/management authentication, registration, rotation and revocation.

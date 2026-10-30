@@ -36,9 +36,13 @@ Its wrapper requires normal Nest mode before a fresh attempt and never retries
 a boot automatically. Use a PTY when launching it so native output is immediate.
 A prior piped wait timed out without enough buffered stage evidence.
 
-Next: review/build a separately guarded NAND-geometry-only acquisition kernel,
-with hardware write protection and reviewed scan/write paths, before requesting
-another manual restart. Notify the owner before experimental RAM execution under
+The separate [geometry-only kernel](firmware/nand_metadata/README.md) is built at
+`build/nand-geometry-20261030` and passed offline integrity/configuration checks.
+It asserts hardware WP, checks protected status, skips BBT scanning, denies write
+callbacks and exposes only master sysfs geometry (no MTD char/block interface).
+It has not yet run on the device. Next: notify the owner, start one PTY-backed
+`--execute-read-only-nand-metadata` attempt, request the manual restart while
+waiting, and record geometry or failure plus native return. Notify the owner before experimental RAM execution under
 their existing authorization; do not re-ask general device permission. Continue
 to enforce backup/recovery gates before persistent writes and separate HVAC
 authorization/equipment requirements. See [handshake evidence](docs/research/usb-handshake-2026-10-30.md)
@@ -46,7 +50,7 @@ and the separate dated USB validation report. Heartbeat plus native startup is
 not firmware recovery, battery/HVAC validation or product compatibility.
 
 This PC is CachyOS with Python 3.14.8 and rootless Podman 6.1.4, installed by the
-owner. Fresh validation: 97 tests passed including simulated TLS broker/container
+owner. Fresh validation: 124 tests passed including simulated TLS broker/container
 tests using `HEARTH_CONTAINER_ENGINE=podman`; make check passed. The earlier
 same-day dependency audit passed. Separate dated reports preserve both scopes.
 The original Docker/amd64 results remain

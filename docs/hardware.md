@@ -5,7 +5,7 @@
 An authorized manual restart subsequently exposed `0451:d00e` briefly. The
 separate [RAM probe](../firmware/probe/README.md) now compiles experimental boot
 code for this reported model, with no MTD/block/network support in its Linux
-kernel. It has passed offline checks only and has not been sent to the device.
+kernel. Its first successful heartbeat boot and native return are recorded below.
 Its bootloaders still initialize hardware; this is not an observational sysfs
 read, a NAND backup or a recovery test. Notify the owner before execution under
 their existing device-work authorization. Keep the display detached from its
@@ -20,7 +20,15 @@ heartbeat and return to native startup were observed. The image bytes were uncha
 permissions](research/usb-handshake-2026-10-30.md). No NAND acquisition or firmware restoration has been demonstrated.
 The heartbeat establishes only this one diagnostic boot/USB path.
 
-Physical device flashing, modification or control requires fresh explicit human authorization for that action. Actual HVAC switching tests additionally require explicit authorization, appropriate isolated equipment and a person qualified for the wiring/system. The project request does not authorize those actions. Do not connect a production HVAC system for initial tests. Do not use a thermostat safety limit as the sole safeguard.
+A separate [NAND geometry-only profile](../firmware/nand_metadata/README.md)
+has passed offline build, source/configuration and image checks. Its first device
+test is pending. It adds NAND ID/geometry initialization with hardware WP asserted,
+protected-status verification, BBT scanning disabled and write callbacks denied.
+There are no MTD char/block interfaces, partitions, firmware reads or storage
+mounts. It is still an experimental RAM boot with unverified whole-chain side
+effects, not a backup or recovery procedure.
+
+Physical device flashing, modification or control requires explicit human authorization covering that action. Honor existing authorization without repeating permission requests; notify this owner before experimental RAM execution and preserve the backup/recovery gates before persistent writes. Actual HVAC switching tests additionally require explicit authorization, appropriate isolated equipment and a person qualified for the wiring/system. The project request does not authorize those actions. Do not connect a production HVAC system for initial tests. Do not use a thermostat safety limit as the sole safeguard.
 
 ## 1. Establish identity and recovery before writes
 

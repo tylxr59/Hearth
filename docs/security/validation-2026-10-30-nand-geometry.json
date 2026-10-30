@@ -1,0 +1,65 @@
+{
+  "artifact_manifest": {
+    "base_manifest_sha256": "781b90f64d61b9dfb8ece215fb30e2364cf802b26cf0a71ce4c4824a90f488ba",
+    "device_executed": false,
+    "files": {
+      "kernel.config": "364f83c8acf166e8ab84920346293ca95b1528103ef6483e1916ac80b5905d29",
+      "omap_loader": "e3411270efa3af21a284e780571f6f3d4270ad2e7e9c6d047c3c2128a8b14531",
+      "probe-init": "8477a92795ed0dd3bacae1ff288c9f8903059ba2a1e2d4d114edbeb6a3cf06d6",
+      "u-boot.bin": "5f924a02508eb0360645ea71228934f854f8310370808b82108a58fa672b443f",
+      "uImage": "6680f44573be457a38c1dd357e46cc015762f6bfd465b195b9856ae87bcebd41",
+      "x-load-gen2.bin": "e9f543e77636961a9acd6723e6b6cf7392a7a33b02ad6f61b97ab85157d8939e"
+    },
+    "generated_driver_sha256": "2754b21f886f6563a1f7907d6f9ca5ac63928e3619df221a8a00d7db8bb4eb15",
+    "generated_guard_sha256": "ad89989ecf9477616898ee0aba09cd2e4db547d6eaf94b611d6bcddf36ac795d",
+    "host_files": {
+      "boot.sh": "27264f1a7c8790cd8b434887ba5395a29334856c7d17419dcb9f7df578c0d35d",
+      "check.py": "7e18ecf32388606444df929b169f2f7ba8ac27951734e01a0938aa8f2ef828d2",
+      "configure.py": "c04d50769d3cdaf4f6226d208be67e169ba82b6fac570eba1196d1217a8a3de5",
+      "metadata_report.py": "f6984e640d09155495ce6e4709d4620d6332d2ea5d60fee2a0c7ee69215c9366",
+      "observe.py": "79129137a32ffa524c9b1f7a362c44aad80397947dd45bae8b9468a7ca04163f",
+      "probe_configure.py": "051997792790f4d818210cd0327ca9d3afc6af9187801ffd381e5fd06c6b4064",
+      "serial_observe.py": "305f821c9af8ea04e5e75cf42ec4af26821dc2a52625b4fe34babd0164406bd6"
+    },
+    "profile": "Display-2.6",
+    "recipe_sha256": {
+      "build.sh": "6dab15a53769049ef303ef5831186f02425c01a9285a8126b95fa0f8f09a533e",
+      "configure.py": "c04d50769d3cdaf4f6226d208be67e169ba82b6fac570eba1196d1217a8a3de5",
+      "finalize.py": "903ebd46153118cb2ba8c2933ee4f03645ffe1a2a041698b7db8ae5f0108b55a",
+      "init.c": "5b40d1112dc505b5a41f2e267f8f803e7b19bc1c3f602ca230e9611264db2b2b",
+      "observe.py": "79129137a32ffa524c9b1f7a362c44aad80397947dd45bae8b9468a7ca04163f",
+      "readonly.h": "ad89989ecf9477616898ee0aba09cd2e4db547d6eaf94b611d6bcddf36ac795d",
+      "report.py": "f6984e640d09155495ce6e4709d4620d6332d2ea5d60fee2a0c7ee69215c9366",
+      "stage.py": "6d3e6ef66bf5fcee5d82298e58c2ab413350facb480a2e1d78d15281dab468ed"
+    },
+    "recovery": "unverified",
+    "status": "experimental-nand-geometry-only"
+  },
+  "build_review": {
+    "builder": "localhost/hearth-probe-builder:20261030",
+    "device_access": "none in builder",
+    "final_guard_warnings": 0,
+    "initial_callback_warning": "OTP write expects non-const buffer; corrected before device execution",
+    "network": "disabled during compilation",
+    "upstream_kernel_warnings": "present; no general vulnerability or safety clearance"
+  },
+  "date": "2026-10-30",
+  "host_validation": {
+    "container_engine": "rootless Podman; broker/container tests enabled",
+    "geometry_tests": 27,
+    "make_check": "passed",
+    "offline_image_check": "passed; exact 3288-byte initramfs; 2742432-byte decompressed kernel",
+    "tests_passed": 124,
+    "tests_skipped": 0
+  },
+  "not_demonstrated": [
+    "geometry on physical NAND",
+    "flash-content acquisition or ECC/OOB correctness",
+    "stock partition layout",
+    "whole-boot-chain absence of writes",
+    "backup/restoration",
+    "native IPC/HVAC/power behavior"
+  ],
+  "publishing": "No uploads, pushes, owner identifiers or photos included.",
+  "scope": "Offline build and source review of geometry-only RAM profile; no device execution yet"
+}
