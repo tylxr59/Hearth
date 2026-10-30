@@ -51,11 +51,14 @@ and no MTD character interface. Cached CRC-framed transfer goes only to a fresh
 private output directory. The first wait expired before transfer. A later upload reached binary streaming
 but collection failed closed: the gadget tty inherited OPOST/ONLCR translation.
 A bounded private cached trace supports that finding; no complete validated sample
-was saved. Home icon and normal USB returned afterward. A fresh build at
-`build/nand-sample-rawtty-20261030` disables input/output/canonical/echo processing
-in the pinned gadget source; source/configuration/image checks passed. Next:
-notify owner and run one supervised fixed-tty sample boot into a fresh private
-directory, then verify native return.
+was saved. Home icon and normal USB returned afterward. The corrected build at
+`build/nand-sample-rawtty-20261030` disables gadget tty processing and successfully
+captured two matching passes: 64 pages, 135168 bytes per pass including OOB.
+Private file permissions, lengths and SHA-256 records were verified without
+logging bytes/hashes. Loader exited 0; owner instructed to restore native home
+icon. Next: confirm native return, then prepare a bounded-memory, full-chip
+read-only exporter using the verified binary transport. Both matching first-block
+samples are private; no whole-chip capture or restore exists.
 No complete validated flash capture, stock partition map or restoration is
 available. Unvalidated sample fragments remain private. Notify the owner before experimental RAM execution under
 their existing authorization; do not re-ask general device permission. Continue

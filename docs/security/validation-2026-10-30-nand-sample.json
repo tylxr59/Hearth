@@ -105,9 +105,21 @@
     },
     "native_before_retry": "owner confirmed home icon; sysfs 2464:0002",
     "new_guard_warnings": 0,
+    "physical_result": {
+      "bytes_per_pass": 135168,
+      "firmware_backup": false,
+      "loader_files_transferred": 3,
+      "native_return": "owner instructed to restart after loader exit; confirmation pending",
+      "pages_per_pass": 64,
+      "passes": 2,
+      "private_verification": "both regular 0600 files have expected size and match their private SHA-256 records; hashes equal",
+      "restoration": "unverified",
+      "status": "raw-sample-matched",
+      "wrapper_exit_code": 0
+    },
     "real_pty_regression": "ONLCR reproduced corruption; zero output processing preserved exact frame bytes",
     "sample_tests": 17,
-    "status": "offline checked; not yet device-executed",
+    "status": "one supervised device boot and matching raw sample observed",
     "tests_passed": 141
   },
   "date": "2026-10-30",
@@ -124,7 +136,6 @@
     "upstream_warnings": "present; no general safety/vulnerability clearance"
   },
   "not_demonstrated": [
-    "successful complete physical sample transfer",
     "sample offset/data/OOB correspondence on real chip",
     "ECC correctness/bad-block map",
     "whole-chip acquisition",

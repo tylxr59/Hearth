@@ -4,7 +4,8 @@ This profile is a separate diagnostic experiment for the owner's Display-2.6,
 after the [geometry test](../../docs/research/nand-geometry-2026-10-30.md) observed
 256 MiB NAND, 128 KiB erase blocks, 2 KiB pages and 64-byte OOB. It passed offline
 build/integrity checks and host tests. Its first actual upload reached binary
-streaming but the host rejected translated tty bytes; the fixed-tty retry is pending.
+streaming but the host rejected translated tty bytes. The corrected binary-tty
+boot subsequently captured two matching first-block raw/OOB samples privately.
 It is not a whole-chip acquisition, backup, restore or deployment image.
 
 ## Fixed scope and protection
@@ -109,7 +110,8 @@ ASan/UBSan C harness exercises the actual callback's read bounds, WP/flag gates,
 raw mode/data/OOB lengths and errors, plus the actual producer's CRC/header code
 against the Python wire format. The harness mocks NAND/sysfs and never accesses
 hardware. All 141 host tests passed with Podman broker/container tests enabled;
-Ruff/format/Bandit passed. Complete physical sample transport remains unverified.
+Ruff/format/Bandit passed. Complete first-block sample transport is now observed once; whole-chip acquisition
+and restoration remain unverified.
 
 Original `sample.h` and its combined kernel harness are GPL-2.0-or-later, with
 the [GPLv2 text](../probe/COPYING.GPL-2.0) and [provenance](../../THIRD_PARTY.md).
@@ -142,3 +144,14 @@ actual patched file. Three further tests include a real pseudo-terminal
 regression reproducing corruption with ONLCR and byte-exact transport without it.
 Old build/partial private outputs are preserved. The retry needs a fresh private
 output directory and the same advance notice/manual restart.
+
+## Corrected sample result
+
+The owner restarted while the fresh loader was waiting. Three files transferred,
+then the collector returned `raw-sample-matched`: two passes of 64 records,
+135168 bytes per pass. The wrapper exited 0. Both private files are regular 0600
+files with the expected lengths and matching private SHA-256 values; their
+recorded hashes were independently recomputed. No payload bytes/hashes were
+logged or added to Git. This establishes repeatability only for the first block.
+The owner was instructed to restore native startup with the loader exited;
+confirmation is pending. Full-chip acquisition and restoration remain separate.
