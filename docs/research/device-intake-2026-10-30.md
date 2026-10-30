@@ -28,6 +28,20 @@ These are device-reported metadata, not independent firmware verification.
 is not a measured board revision. The filesystem's year-2000 timestamp is not
 evidence of firmware age or a correctly set device clock.
 
+## Base photographs
+
+The owner supplied front/back photographs and reports no printed model or serial
+label. The photographs show the base loose on a table, with no HVAC wiring
+attached. Visible left terminals are `Y1`, `Y2`, `G`, `O/B`, `Rc`; right terminals
+are `W1`, `W2/AUX`, `C`, `*`, `Rh`. A bubble level and display connector are
+visible. No model identifier is legible on either pictured face. Terminal layout
+alone does not establish an exact base revision or functional compatibility.
+
+The original photographs are outside the repository and are not committed.
+The owner requires EXIF removal before any future photo inclusion; use sanitized
+copies with all embedded metadata and any appended motion-photo content removed
+and verified. This is not authorization to upload or publish photos.
+
 ## Interpretation and remaining work
 
 - The enclosure and display metadata are consistent with the Gen 2 research
@@ -42,9 +56,49 @@ evidence of firmware age or a correctly set device clock.
   pinned NestDFUAttack rootme research already establishes persistent writes.
   Neither is an approved acquisition-only procedure. Firmware version alone
   does not establish loader compatibility or recovery.
-- Next: establish whether the matching base is available and disconnected from
-  HVAC, then review a model-specific boot/acquisition procedure and its payload
-  before seeking authorization to execute it. Keep persistent deployment blocked.
+- The supplied base is available and visibly unwired. Exact pairing remains
+  unverified. Next: obtain explicit authorization for the limited restart and
+  USB observation below, then continue model-specific acquisition/payload review.
+  Keep persistent deployment blocked.
+
+## Proposed restart and USB observation — not yet authorized or performed
+
+Purpose: observe USB enumeration across one manual restart of this display. This
+does not establish firmware acquisition or a recovery path.
+
+1. Leave the display detached from the unwired base and connected by USB. Close
+   any installer/loader software; no payload transfer tool should be running.
+2. Observe only sysfs vendor/product identifiers for up to 60 seconds, filtering
+   Nest `2464` and TI `0451`. Keep serial/device descriptor contents out of logs.
+   Sysfs sampling can miss a short event; absence is inconclusive.
+3. The owner performs one manual restart: hold the thermostat down until its
+   screen turns off (about ten seconds), release, then press and release the
+   ring to complete the restart, as documented by
+   [Google](https://support.google.com/googlehome/answer/9247296?hl=en-GB)
+   (consulted 2026-10-30). Google cautions that unsaved information can be lost.
+4. Record observed IDs and the owner's display observations. Stop after this
+   single attempt. Do not claim a ROM-mode result unless it was actually seen;
+   do not send a payload even if an OMAP identity appears.
+
+This requires explicit authorization under AGENTS.md's physical-device control
+boundary. It excludes a factory reset, writes initiated by host tools, custom
+payload execution and HVAC operation. A normal reboot may itself update native
+persistent state; it is not a guarantee of unchanged flash contents.
+
+Additional static review at the existing NLE pin
+`fabbe034f01cefdabe06b93d1c312068f563a177`, fetched as text only:
+
+- `firmware/installer/electron/usb-handler.js` expects `0451:d00e` and calls
+  `flashOmap` with first/second-stage bootloader and kernel inputs.
+  SHA-256: `34b8c5e085491539668881f8f501d1b0172f1a086da63145f03bf1d1026352f8`.
+- `firmware/installer/electron/omapLoaderUsb.ts` sends peripheral-boot commands,
+  transfers inputs, then sends a jump command. This is code execution, not USB
+  enumeration. A RAM destination does not establish absence of persistent writes
+  by subsequently executed code.
+  SHA-256: `83716ebe33abfe37aba6ef9e203d55b0e87ba07f80610b7e0100394da051254d`.
+
+Neither file nor any downloaded executable was run. No new upstream revision
+was selected.
 
 No reboot, ROM-mode entry, payload execution, filesystem write, flashing,
 HVAC operation or recovery test was performed during this intake. No complete
