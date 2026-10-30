@@ -14,6 +14,12 @@ has booted once and reported 256 MiB NAND with 2 KiB pages. It reads
 master geometry through sysfs with layered write guards, without acquiring
 firmware contents or establishing recovery.
 
+Two full raw NAND reads are now preserved privately. Their raw bit differences
+were resolved in separate offline BCH-derived data views, which match; four boot
+image payload CRCs pass and native `nlclient`/`osm` were reconstructed for static
+inspection. This is acquisition evidence, not verified restoration or a usable
+native control API. [Measurement and limits](docs/research/nand-capture-2026-10-30.md).
+
 Implemented:
 
 - TLS local API, separate device/management authentication, registration, rotation and revocation.

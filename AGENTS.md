@@ -4,7 +4,7 @@
 
 Build a local-first Nest Learning Thermostat modification that preserves native hardware/HVAC control. Gen 2 is the primary target; Gen 1 is secondary. Prefer a verified local on-device interface if feasible; otherwise retain the native transport behind a minimal local backend. Do not rewrite HVAC control loops.
 
-The user's unit has arrived and received USB intake on their PC. Arrival/ownership alone does not authorize flashing or physical control. The owner has explicitly authorized device investigation and requests advance notification for potentially dangerous actions such as flashing; preserve the backup/recovery gates below. The [2026-10-30 intake](docs/research/device-intake-2026-10-30.md) records enclosure `02A`, reported `Display-2.6`, firmware `5.9.4-5`, normal-mode USB `2464:0002` and an authorized manual restart briefly exposing OMAP `0451:d00e`. A later paced diagnostic RAM boot succeeded and returned to native startup. No flashing, HVAC operation or firmware recovery test has been performed. No firmware dump or proprietary nlclient/osm executable is available.
+The user's unit has arrived and received USB intake on their PC. Arrival/ownership alone does not authorize flashing or physical control. The owner has explicitly authorized device investigation and requests advance notification for potentially dangerous actions such as flashing; preserve the backup/recovery gates below. The [2026-10-30 intake](docs/research/device-intake-2026-10-30.md) records enclosure `02A`, reported `Display-2.6`, firmware `5.9.4-5`, normal-mode USB `2464:0002` and an authorized manual restart briefly exposing OMAP `0451:d00e`. A later paced diagnostic RAM boot succeeded and returned to native startup. No flashing, HVAC operation or firmware recovery test has been performed. Two complete owner raw NAND captures and independently matching BCH-derived data views now exist privately; native nlclient/osm were reconstructed for static inspection. Restoration remains unverified.
 
 Implementation baseline: commit `30c82f5`. It contains an authenticated host-side laboratory, not deployable thermostat firmware:
 
@@ -59,12 +59,27 @@ logging bytes/hashes. Loader exited 0; owner reported done after restart instruc
 Nest USB 2464:0002 was observed. The full-chip read-only exporter is now built
 at `build/nand-capture-20261030`; see firmware/nand_capture/README.md. It retains
 the guards and streams two full raw/OOB passes after a fixed start token, using
-one page buffer and mandatory completion footer. It is not yet device-tested.
-Next: notify owner, supervise one acquisition boot with a fresh private directory,
-verify both pass files, then return to native mode once. Both matching first-block
-samples are private; no whole-chip capture or restore exists.
-No complete validated flash capture, stock partition map or restoration is
-available. Unvalidated sample fragments remain private. Notify the owner before experimental RAM execution under
+one page buffer and mandatory completion footer. The acquisition ran once: all 262144 records and footer passed transport checks,
+but raw hashes differed by 79 single data bits; every OOB byte matched. The
+collector correctly exited 1 and preserved both 276824064-byte raw files under
+`private/nand-capture-20261030` (0600). Offline BCH4 processing independently
+produced identical 256 MiB data views under `private/nand-analysis-20261030`.
+Four embedded image payload CRCs pass; 2567 root0 regular files reconstructed
+with zero scanned inode/data/dirent CRC failures, including
+`root0-extracted/nestlabs/sbin/{nlclient,osm}`. No native binary was executed.
+Four chunks per pass retain unclassified ECC; no restoration/complete-backup
+claim is made. Owner said returning to home icon; normal USB 2464:0002 was then
+observed. No further mode switch is needed for static inspection.
+
+Next: statically inspect these actual binaries/libraries/startup files for a
+usable local interface, then revisit the ADR. Initial bus identifiers concern
+heartbeat/SCPM; they do not evidence a thermostat setter. Keep all private files,
+identifiers, credentials, bytes and their hashes out of source/public logs.
+Machine-local offline scripts are `build/{infer-private-bch4-layout,decode-private-bch4,extract-private-jffs2}-20261030.py`;
+the public BCH source is pinned in docs/research/bchlib-2.1.3.json. These scripts
+are experimental research recipes, not portable recovery tooling. Preserve both
+raw inputs and separate derived views. See docs/research/nand-capture-2026-10-30.md.
+ Notify the owner before experimental RAM execution under
 their existing authorization; do not re-ask general device permission. Continue
 to enforce backup/recovery gates before persistent writes and separate HVAC
 authorization/equipment requirements. See [handshake evidence](docs/research/usb-handshake-2026-10-30.md)

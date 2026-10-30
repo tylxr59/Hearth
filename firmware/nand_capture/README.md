@@ -2,7 +2,7 @@
 
 This extends the [measured raw sample](../nand_sample/README.md) for the owner's
 Display-2.6: exactly two whole-chip passes, in one RAM boot. It is built and
-checked offline, not yet measured on hardware. It is not a restore/deployment tool.
+checked offline, and its first supervised acquisition has completed. It is not a restore/deployment tool.
 
 The same reviewed driver, hardware WP, per-read protected-status check, zero MTD
 capability flags, disabled BBT scanning and denied write callbacks remain. MTD
@@ -64,3 +64,14 @@ Sources/toolchain/bootstrap pins and licensing remain those of the sample profil
 Generated kernel reader and its combined harness are GPL-2.0-or-later; original
 standalone exporter/framing/host tooling are MIT. Preserve source/notices for any
 later authorized binary distribution. No new third-party dependency was added.
+
+## Measured acquisition and offline result
+
+The full transport completed with all record CRCs/footer, but raw passes differed
+by 79 single data bits and no OOB bytes. The wrapper correctly reported mismatch
+and preserved both originals. Offline BCH4-derived data views independently
+match; all four embedded image payload CRCs pass. Root0 JFFS2 reconstruction
+recovered nlclient/osm for static analysis, with zero scanned node/data/dirent
+CRC failures. Four ECC chunks remain unclassified, and restoration is unverified.
+Normal Nest USB returned after the owner restarted. See the
+[measurement and private preservation record](../../docs/research/nand-capture-2026-10-30.md).

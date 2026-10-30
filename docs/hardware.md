@@ -39,7 +39,10 @@ Data and OOB captures remain private and cannot be treated as a full backup.
 
 The [full-chip raw reader](../firmware/nand_capture/README.md) now passes offline
 checks. It requests two fixed whole-chip passes in one RAM boot and keeps the
-same write guards. Its first physical capture is pending. Raw acquisition does
+same write guards. Its first physical capture completed with a raw mismatch; both inputs were
+preserved. Offline BCH-derived views independently match, embedded image CRCs
+pass and root0 files are available privately. Four chunks retain unclassified
+ECC; native normal USB returned. Raw acquisition does
 not demonstrate restorability or close the backup/recovery gates.
 
 Physical device flashing, modification or control requires explicit human authorization covering that action. Honor existing authorization without repeating permission requests; notify this owner before experimental RAM execution and preserve the backup/recovery gates before persistent writes. Actual HVAC switching tests additionally require explicit authorization, appropriate isolated equipment and a person qualified for the wiring/system. The project request does not authorize those actions. Do not connect a production HVAC system for initial tests. Do not use a thermostat safety limit as the sole safeguard.
