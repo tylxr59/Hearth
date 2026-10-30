@@ -3,7 +3,8 @@
 This profile is a separate diagnostic experiment for the owner's Display-2.6,
 after the [geometry test](../../docs/research/nand-geometry-2026-10-30.md) observed
 256 MiB NAND, 128 KiB erase blocks, 2 KiB pages and 64-byte OOB. It passed offline
-build/integrity checks and host tests. It has not yet run on the thermostat.
+build/integrity checks and host tests. Its first actual upload reached binary
+streaming but the host rejected translated tty bytes; the fixed-tty retry is pending.
 It is not a whole-chip acquisition, backup, restore or deployment image.
 
 ## Fixed scope and protection
@@ -91,7 +92,7 @@ kernel/init/configuration and unchanged bootstrap bytes. Its unsigned local
 manifest pins six artifacts and nine host helpers. The offline checker validates
 the configuration, static ARM ELF, image CRCs, bounded decompression and exact
 minimal CPIO. A no-argument dry run opens no device. Current local build:
-`build/nand-sample-20261030`; generated initramfs 3460 bytes, kernel 2742464 bytes
+`build/nand-sample-rawtty-20261030`; generated initramfs 3460 bytes, kernel 2742464 bytes
 uncompressed. No new Hearth guard warnings were emitted; historical upstream
 warnings remain. There is no whole-image safety or vulnerability clearance.
 
@@ -107,8 +108,8 @@ bounded resynchronization, failure/timeout and storage sync errors. A host-only
 ASan/UBSan C harness exercises the actual callback's read bounds, WP/flag gates,
 raw mode/data/OOB lengths and errors, plus the actual producer's CRC/header code
 against the Python wire format. The harness mocks NAND/sysfs and never accesses
-hardware. All 138 host tests passed with Podman broker/container tests enabled;
-Ruff/format/Bandit passed. Physical sample transport remains unmeasured.
+hardware. All 141 host tests passed with Podman broker/container tests enabled;
+Ruff/format/Bandit passed. Complete physical sample transport remains unverified.
 
 Original `sample.h` and its combined kernel harness are GPL-2.0-or-later, with
 the [GPLv2 text](../probe/COPYING.GPL-2.0) and [provenance](../../THIRD_PARTY.md).
@@ -123,3 +124,21 @@ or transfer reported. A follow-up observed ROM mode and the owner reported the
 right mode, but the loader had already exited. No sample output directory was
 created. The owner was instructed to restore the home icon before a fresh wait;
 do not reuse a stale ROM handshake or claim a failed NAND read from this timeout.
+
+## Binary tty correction
+
+The next upload transferred all three files, but collection stopped at the
+synchronization bound with zero accepted records. A 65536-byte private trace
+from the cached stream showed 28 valid headers/13 complete payload CRCs; after
+accounting for CRLF translation, 30 headers/27 complete payload CRCs validated.
+This trace remains unvalidated diagnostic material, not a sample capture.
+The owner restored the home icon and normal Nest USB mode was observed.
+
+Pinned `u_serial.c` inherits `tty_std_termios`; pinned `tty_io.c` defines
+`OPOST|ONLCR`. The fresh raw-tty build explicitly zeros input, output, canonical
+and echo processing after that copy. Normal 8-bit control settings remain intact.
+The patch requires the exact gadget source digest, and finalization verifies the
+actual patched file. Three further tests include a real pseudo-terminal
+regression reproducing corruption with ONLCR and byte-exact transport without it.
+Old build/partial private outputs are preserved. The retry needs a fresh private
+output directory and the same advance notice/manual restart.

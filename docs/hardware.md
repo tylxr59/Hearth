@@ -32,8 +32,9 @@ effects, not a backup or recovery procedure.
 The separate [bounded raw sample profile](../firmware/nand_sample/README.md)
 is built and checked offline. It retains those write guards and adds only a
 fixed first-erase-block read-only sysfs content interface, read twice into RAM.
-No MTD character interface is enabled. Its physical test remains pending; data
-and OOB captures must remain private and cannot be treated as a full backup.
+No MTD character interface is enabled. Its initial transport test failed closed due to gadget tty newline translation;
+the corrected binary-tty build is checked offline, pending a supervised retry.
+Data and OOB captures remain private and cannot be treated as a full backup.
 
 Physical device flashing, modification or control requires explicit human authorization covering that action. Honor existing authorization without repeating permission requests; notify this owner before experimental RAM execution and preserve the backup/recovery gates before persistent writes. Actual HVAC switching tests additionally require explicit authorization, appropriate isolated equipment and a person qualified for the wiring/system. The project request does not authorize those actions. Do not connect a production HVAC system for initial tests. Do not use a thermostat safety limit as the sole safeguard.
 

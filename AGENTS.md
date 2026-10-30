@@ -24,7 +24,7 @@ The owner restarted with the loader exited; the home icon and `2464:0002` return
 The working build is `build/ram-probe-reliability-20261030`; the original remains
 at `build/ram-probe-final-20261030`. Both are ignored and will not travel with a
 clone. The probe kernel has no MTD/block/network support, and its only userspace
-emits a fixed heartbeat. No NAND acquisition or restoration has occurred.
+emits a fixed heartbeat. That heartbeat acquired no NAND data and did not test restoration.
 
 The owner installed/reloaded the scoped ROM/tty udev ACL rule prepared under
 ignored `build/usb-access-20261030`; installed bytes/root ownership were verified.
@@ -48,11 +48,16 @@ A separate first-erase-block sample profile is built and checked offline at
 `build/nand-sample-20261030`; see firmware/nand_sample/README.md. It reads only
 64 raw page/OOB records twice into RAM, retaining the geometry write guards
 and no MTD character interface. Cached CRC-framed transfer goes only to a fresh
-private output directory. It has not run on the device. The first wait expired (124) before any successful
-USB open/transfer; follow-up observed ROM mode and no sample output directory.
-Owner instructed to restore native home icon with the loader exited. Next:
-confirm normal USB, then start a fresh PTY wait before requesting another restart.
-No flash contents, stock partition map or restoration were acquired/verified. Notify the owner before experimental RAM execution under
+private output directory. The first wait expired before transfer. A later upload reached binary streaming
+but collection failed closed: the gadget tty inherited OPOST/ONLCR translation.
+A bounded private cached trace supports that finding; no complete validated sample
+was saved. Home icon and normal USB returned afterward. A fresh build at
+`build/nand-sample-rawtty-20261030` disables input/output/canonical/echo processing
+in the pinned gadget source; source/configuration/image checks passed. Next:
+notify owner and run one supervised fixed-tty sample boot into a fresh private
+directory, then verify native return.
+No complete validated flash capture, stock partition map or restoration is
+available. Unvalidated sample fragments remain private. Notify the owner before experimental RAM execution under
 their existing authorization; do not re-ask general device permission. Continue
 to enforce backup/recovery gates before persistent writes and separate HVAC
 authorization/equipment requirements. See [handshake evidence](docs/research/usb-handshake-2026-10-30.md)
@@ -60,7 +65,7 @@ and the separate dated USB validation report. Heartbeat plus native startup is
 not firmware recovery, battery/HVAC validation or product compatibility.
 
 This PC is CachyOS with Python 3.14.8 and rootless Podman 6.1.4, installed by the
-owner. Fresh validation: 138 tests passed including simulated TLS broker/container
+owner. Fresh validation: 141 tests passed including simulated TLS broker/container
 tests using `HEARTH_CONTAINER_ENGINE=podman`; make check passed. The earlier
 same-day dependency audit passed. Separate dated reports preserve both scopes.
 The original Docker/amd64 results remain

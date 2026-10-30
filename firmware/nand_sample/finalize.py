@@ -25,6 +25,11 @@ def finalize(root, base):
         driver.with_suffix(".hearth-original").read_text()
     ):
         raise ValueError("unexpected sample driver")
+    serial = kernel / "drivers/usb/gadget/u_serial.c"
+    if serial.read_text() != configure.patch_serial(
+        serial.with_suffix(".hearth-sample-original").read_text()
+    ):
+        raise ValueError("binary gadget tty configuration missing")
     pairs = [
         (assets / "sample.h", driver.parent / "hearth-sample.h"),
         (assets.parent / "nand_metadata/readonly.h", driver.parent / "hearth-metadata-readonly.h"),
@@ -58,6 +63,7 @@ def finalize(root, base):
         "generated_driver_sha256": digest(driver),
         "generated_guard_sha256": digest(driver.parent / "hearth-metadata-readonly.h"),
         "generated_sample_sha256": digest(driver.parent / "hearth-sample.h"),
+        "generated_serial_sha256": digest(serial),
         "range": {"first_page": 0, "pages": 64, "page_bytes": 2048, "oob_bytes": 64, "passes": 2},
     }
     with target.open("x") as stream:

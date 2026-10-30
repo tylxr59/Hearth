@@ -1,6 +1,7 @@
 """Bounded raw sample extension; retains the geometry profile's configuration."""
 
 import argparse
+import hashlib
 import shutil
 from pathlib import Path
 
@@ -11,6 +12,23 @@ else:
 
 initramfs = metadata.initramfs
 verify = metadata.verify
+SERIAL_SHA256 = "30847eca679af58ddce6075fd31ecbc1dfff8711b412713989edf8ca2d0a2277"
+
+
+def patch_serial(original):
+    if hashlib.sha256(original.encode()).hexdigest() != SERIAL_SHA256:
+        raise ValueError("unreviewed gadget tty source")
+    marker = "\tgs_tty_driver->init_termios = tty_std_termios;"
+    if original.count(marker) != 1:
+        raise ValueError("unexpected gadget tty initialization")
+    return original.replace(
+        marker,
+        marker
+        + "\n\t/* Binary-only diagnostic: no newline, flow, canonical or echo processing. */\n"
+        "\tgs_tty_driver->init_termios.c_iflag = 0;\n"
+        "\tgs_tty_driver->init_termios.c_oflag = 0;\n"
+        "\tgs_tty_driver->init_termios.c_lflag = 0;",
+    )
 
 
 def patch_driver(original):
@@ -51,6 +69,14 @@ def main():
     metadata.main()
     driver.write_text(patch_driver(saved.read_text()))
     shutil.copyfile("/work/sample.h", driver.parent / "hearth-sample.h")
+    serial = Path("drivers/usb/gadget/u_serial.c")
+    serial_original = serial.with_suffix(".hearth-sample-original")
+    if not serial_original.exists():
+        serial_original.write_bytes(serial.read_bytes())
+    desired = patch_serial(serial_original.read_text())
+    if serial.read_text() not in (serial_original.read_text(), desired):
+        raise ValueError("unexpected existing gadget tty edits")
+    serial.write_text(desired)
 
 
 if __name__ == "__main__":

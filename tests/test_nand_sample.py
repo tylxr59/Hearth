@@ -1,10 +1,14 @@
+import hashlib
 import json
 import os
+import pty
+import select
 import shutil
 import stat
 import struct
 import subprocess
 import tempfile
+import termios
 import time
 import zlib
 from pathlib import Path
@@ -46,6 +50,45 @@ def test_sample_retains_geometry_and_no_character_device_constraints():
     for forbidden in ("MTD_CHAR", "MTD_PARTITIONS", "MTD_BLKDEVS", "NET"):
         with pytest.raises(ValueError):
             configure.verify(text + f"\nCONFIG_{forbidden}=y\n")
+
+
+def test_binary_tty_patch_requires_reviewed_source(monkeypatch):
+    with pytest.raises(ValueError, match="unreviewed"):
+        configure.patch_serial("unexpected source")
+    original = "\tgs_tty_driver->init_termios = tty_std_termios;\n"
+    monkeypatch.setattr(configure, "SERIAL_SHA256", hashlib.sha256(original.encode()).hexdigest())
+    patched = configure.patch_serial(original)
+    for field in ("c_iflag", "c_oflag", "c_lflag"):
+        assert f"init_termios.{field} = 0;" in patched
+    assert patched.index("= tty_std_termios;") < patched.index(".c_oflag = 0;")
+
+
+@pytest.mark.parametrize("translate", [True, False])
+def test_binary_framing_through_real_tty_output_processing(translate):
+    master, slave = pty.openpty()
+    try:
+        attrs = termios.tcgetattr(slave)
+        attrs[0] = attrs[3] = 0
+        attrs[1] = termios.OPOST | termios.ONLCR if translate else 0
+        termios.tcsetattr(slave, termios.TCSANOW, attrs)
+        payload = (bytes(range(256)) * 9)[: receiver.RECORD]
+        original = frame(0, 0, payload)
+        expected = original.replace(b"\n", b"\r\n") if translate else original
+        assert os.write(slave, original) == len(original)
+        received = b""
+        deadline = time.monotonic() + 1
+        while len(received) < len(expected) and time.monotonic() < deadline:
+            if select.select([master], [], [], 0.1)[0]:
+                received += os.read(master, 4096)
+        assert received == expected
+        if translate:
+            assert received != original
+        else:
+            _, _, crc = receiver.header_fields(received[:32])
+            assert zlib.crc32(received[32:]) == crc
+    finally:
+        os.close(master)
+        os.close(slave)
 
 
 def test_private_two_pass_capture_and_permissions(tmp_path):
