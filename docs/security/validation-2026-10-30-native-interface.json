@@ -1,0 +1,27 @@
+{
+  "date": "2026-10-30",
+  "host_validation": {
+    "broker_container_tests": "enabled with rootless Podman",
+    "elf_review_tests": 20,
+    "make_check": "passed",
+    "tests_passed": 173,
+    "tests_skipped": 0
+  },
+  "not_demonstrated": [
+    "testaccess startup/reachability",
+    "runtime units/limits and command application",
+    "safe fragmented-request handling",
+    "native secure commissioning/TLS/transport",
+    "restoration/HVAC/power behavior"
+  ],
+  "privacy": "No binary content, binary hashes, device identifiers, credentials or private reports included.",
+  "private_binary_scan": {
+    "bus_methods": 10,
+    "bus_tables": 3,
+    "firmware_executed": false,
+    "live_device_queries_or_controls": false,
+    "runtime_verified": false,
+    "testaccess_commands": 104
+  },
+  "scope": "Offline native table inspection and bounded ELF research tooling"
+}

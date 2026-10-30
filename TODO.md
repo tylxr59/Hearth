@@ -3,7 +3,7 @@
 Release-blocking:
 
 - Identity intake and authorized ROM enumeration complete: enclosure `02A`, reported `Display-2.6`, firmware `5.9.4-5`, normal USB `2464:0002`, brief OMAP `0451:d00e` during restart; see docs/research/device-intake-2026-10-30.md. Obtain base/board identity and reviewed Gen 2 firmware acquisition/MTD/boot/recovery evidence. A later diagnostic RAM heartbeat boot succeeded; no firmware was acquired. Actual nlclient/osm now exist privately after full raw capture and offline ECC/JFFS2 reconstruction; static inspection of their usable interfaces remains next.
-- Determine reliable local IPC control feasibility; revise ADR if an on-device bridge is justified. No bridge currently exists.
+- Native static review traced D-Bus methods to power/sniffer/heartbeat and identified a loopback test-access temperature getter/setter candidate. Resolve startup reachability, units and TCP framing before runtime probes or bridge implementation. ADR remains provisional; no bridge is enabled. See docs/research/native-interface-2026-10-30.md.
 - Verify private CA, hostname/time checks and unique stock-client credential installation; design safe bootstrap and rollback. No plaintext production fallback.
 - Implement/validate full native entry, pairing and revision/CAS/chunked subscribe transport, with power/schedule regression fixtures, or replace it with a verified local bridge. Experimental decoder is incomplete and default-disabled.
 - Build a revision-specific deployable firmware image and complete service hardening profile. Deployment artifacts remain inert review bundles and partial offline replacements; the separate experimental RAM probe is diagnostic boot code only.

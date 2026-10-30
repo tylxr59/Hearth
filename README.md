@@ -20,6 +20,11 @@ image payload CRCs pass and native `nlclient`/`osm` were reconstructed for stati
 inspection. This is acquisition evidence, not verified restoration or a usable
 native control API. [Measurement and limits](docs/research/nand-capture-2026-10-30.md).
 
+The [native interface review](docs/research/native-interface-2026-10-30.md)
+identified a loopback temperature-control candidate. Startup and request framing
+remain unverified; the host transport remains provisional and no native bridge
+is enabled.
+
 Implemented:
 
 - TLS local API, separate device/management authentication, registration, rotation and revocation.

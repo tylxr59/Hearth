@@ -71,15 +71,21 @@ Four chunks per pass retain unclassified ECC; no restoration/complete-backup
 claim is made. Owner said returning to home icon; normal USB 2464:0002 was then
 observed. No further mode switch is needed for static inspection.
 
-Next: statically inspect these actual binaries/libraries/startup files for a
-usable local interface, then revisit the ADR. Initial bus identifiers concern
-heartbeat/SCPM; they do not evidence a thermostat setter. Keep all private files,
-identifiers, credentials, bytes and their hashes out of source/public logs.
+Static review now traces three direct D-Bus tables (ten sniffer/SCPM/heartbeat
+methods) and a separate 104-command loopback test-access implementation at
+127.0.0.1:1234. Native temperature getter/setter paths are present, but startup
+reachability and robust request framing are unverified. No device command was
+sent. The bounded `tools.elf_review` reproduces private table inspection without
+executing firmware; 20 new tests pass. See docs/research/native-interface-2026-10-30.md.
+The ADR retains the provisional host transport; no production bridge is enabled.
+Next: inspect actual credential/TLS/transport configuration and resolve candidate
+listener startup/framing through static review before planning any live probe.
+Keep private identifiers, credentials, bytes and binary hashes out of source/logs.
 Machine-local offline scripts are `build/{infer-private-bch4-layout,decode-private-bch4,extract-private-jffs2}-20261030.py`;
 the public BCH source is pinned in docs/research/bchlib-2.1.3.json. These scripts
 are experimental research recipes, not portable recovery tooling. Preserve both
 raw inputs and separate derived views. See docs/research/nand-capture-2026-10-30.md.
- Notify the owner before experimental RAM execution under
+Notify the owner before experimental RAM execution under
 their existing authorization; do not re-ask general device permission. Continue
 to enforce backup/recovery gates before persistent writes and separate HVAC
 authorization/equipment requirements. See [handshake evidence](docs/research/usb-handshake-2026-10-30.md)
@@ -87,7 +93,7 @@ and the separate dated USB validation report. Heartbeat plus native startup is
 not firmware recovery, battery/HVAC validation or product compatibility.
 
 This PC is CachyOS with Python 3.14.8 and rootless Podman 6.1.4, installed by the
-owner. Fresh validation: 153 tests passed including simulated TLS broker/container
+owner. Fresh validation: 173 tests passed including simulated TLS broker/container
 tests using `HEARTH_CONTAINER_ENGINE=podman`; make check passed. The earlier
 same-day dependency audit passed. Separate dated reports preserve both scopes.
 The original Docker/amd64 results remain
@@ -106,7 +112,7 @@ Do not redo completed research indiscriminately. Distinguish confirmed source fi
 
 ## Resume on another PC
 
-Use the Git repository, including this file and all committed docs. Nothing has been pushed or published as part of this handoff. Do not push/upload without user authorization.
+Use the Git repository, including this file and all committed docs. The owner explicitly authorized local commits and pushes as work progresses on 2026-10-30. Push checked source/documentation milestones using judgment; private captures, credentials, identifiers and proprietary firmware remain excluded. No further permission request is needed for this authorized source-push scope.
 
 `.venv/`, `build/` and `private/` are ignored and will not travel with a clone or Git bundle. Initial reference checkouts under `/tmp/hearth-references` are machine-local. They are not required for tests; reconstruct pinned research inputs with:
 

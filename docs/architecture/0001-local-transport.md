@@ -4,13 +4,20 @@ Status: accepted for this iteration; physical deployment blocked. Date: 2026-10-
 
 ## Evidence
 
-The historical init script starts `/nestlabs/sbin/nlclient`. Its configuration points software updates at `/nestlabs/sbin/osm`; osm must not be assumed to be the primary control app. SCPM has a D-Bus service, but its observed methods concern power/process lifecycle. A root-only nlclient D-Bus policy establishes a bus name, not any particular temperature setter. The actual proprietary executables are absent from the inspected root tree.
+The historical init script starts `/nestlabs/sbin/nlclient`. Its configuration points software updates at `/nestlabs/sbin/osm`; osm must not be assumed to be the primary control app. SCPM has a D-Bus service, but its observed methods concern power/process lifecycle. A root-only nlclient D-Bus policy establishes a bus name, not any particular temperature setter. At the initial review the proprietary executables were absent. On 2026-10-30, owner-authorized acquisition and offline reconstruction recovered actual nlclient/osm privately.
 
 NLE redirects `cloudregisterurl`, supplies an entry response with local service URLs and implements bucket PUT/long-poll subscribe. Source comments describe sleep/WoWLAN and schedule races, making poll cadence, merged-state echo and stale desired state material correctness concerns. Those comments are upstream observations, not independently measured hardware behavior.
 
+The [native static review](../research/native-interface-2026-10-30.md) traced
+three D-Bus registrations to sniffer, power/lifecycle and heartbeat methods.
+A separate loopback test-access implementation contains native temperature
+queries/setters, but startup/enablement is unproven and its short-read-based TCP
+request framing is not established as safe. No runtime setter or usable local
+bridge is verified. This narrows the critical unknown; it does not close it.
+
 ## Decision
 
-Preserve nlclient, backplate firmware, drivers, watchdog, SCPM, schedules and unknown services. Build a small host-side authenticated API and MQTT boundary with a partial legacy decoder for research. Choose a provisional local cloud-protocol backend because it has demonstrated upstream protocol evidence; reconsider an on-device bridge after obtaining executable/IPC evidence. Do not deploy a guessed IPC bridge or a permissive legacy backend.
+Preserve nlclient, backplate firmware, drivers, watchdog, SCPM, schedules and unknown services. Build a small host-side authenticated API and MQTT boundary with a partial legacy decoder for research. Choose a provisional local cloud-protocol backend because it has demonstrated upstream protocol evidence; retain the identified test-access path as a bridge candidate pending enablement, framing and separately authorized bench evidence. Do not deploy a guessed IPC bridge or a permissive legacy backend.
 
 The canonical `/v1/device/*` API is a new simulation/future-bridge contract; stock Nest does not implement it. The experimental Nest decoder accepts a strict subset of observed PUT data. It has no working pairing, revision synchronization or subscribe/control delivery to a real Nest. Default runtime does not mount its routes.
 

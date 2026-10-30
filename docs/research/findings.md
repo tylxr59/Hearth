@@ -64,3 +64,12 @@ Transport PUT uses object buckets, revisions, timestamps and CAS. Upstream comme
 ## Confirmed unknowns requiring firmware or hardware
 
 Exact Gen 2/Gen 1 firmware revisions, complete MTD map, boot fallback and recovery; nlclient/osm binaries/ABI and local IPC; backplate framing and protective behavior; active listeners and undocumented daemons; TLS trust-store behavior, hostname/time verification, client secret installation; bootstrap registration/pairing; full bucket schema/CAS/time behavior; battery cost of subscription modes; native regulation/schedule/offline/restart behavior; available firewall tools and active kernel configuration.
+
+## Actual native static review, 2026-10-30
+
+Actual nlclient/osm and libraries are now recovered privately. The
+[native-interface review](native-interface-2026-10-30.md) traces specific D-Bus
+tables and a loopback test-access command dispatcher. The latter includes
+temperature queries/setters but has unproven startup reachability and request
+framing. These are static findings, not verified runtime control. The provisional
+transport ADR and deployment gates remain in force.
