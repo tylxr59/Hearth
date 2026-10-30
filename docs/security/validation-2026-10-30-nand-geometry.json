@@ -36,6 +36,7 @@
     "recovery": "unverified",
     "status": "experimental-nand-geometry-only"
   },
+  "artifact_manifest_note": "Immutable pre-execution build manifest; device_executed=false describes finalization time, not current experiment history.",
   "build_review": {
     "builder": "localhost/hearth-probe-builder:20261030",
     "device_access": "none in builder",
@@ -59,13 +60,33 @@
     "tests_skipped": 0
   },
   "not_demonstrated": [
-    "geometry on physical NAND",
     "flash-content acquisition or ECC/OOB correctness",
     "stock partition layout",
     "whole-boot-chain absence of writes",
     "backup/restoration",
     "native IPC/HVAC/power behavior"
   ],
+  "physical_attempt": {
+    "bootstrap_files_transferred": 3,
+    "first_stage_bytes": 27856,
+    "loader_exit_code": 0,
+    "loader_privilege": "normal owner UID using scoped ACL",
+    "native_return": "owner instructed to restart after loader exit; confirmation pending",
+    "result": {
+      "erasesize": 131072,
+      "firmware_acquired": false,
+      "flags": 0,
+      "name": "omap2-nand.0",
+      "oobsize": 64,
+      "registration_guard": "required protected NAND status",
+      "restoration": "unverified",
+      "size": 268435456,
+      "source": "custom RAM kernel master, not stock partition map",
+      "status": "nand-geometry-observed",
+      "writesize": 2048
+    },
+    "serial_usb": "0525:a4a7 on port 1-1"
+  },
   "publishing": "No uploads, pushes, owner identifiers or photos included.",
-  "scope": "Offline build and source review of geometry-only RAM profile; no device execution yet"
+  "scope": "Offline build/source review and one successful supervised geometry-only RAM boot"
 }

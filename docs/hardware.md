@@ -21,8 +21,9 @@ permissions](research/usb-handshake-2026-10-30.md). No NAND acquisition or firmw
 The heartbeat establishes only this one diagnostic boot/USB path.
 
 A separate [NAND geometry-only profile](../firmware/nand_metadata/README.md)
-has passed offline build, source/configuration and image checks. Its first device
-test is pending. It adds NAND ID/geometry initialization with hardware WP asserted,
+has passed offline checks and one supervised boot, reporting 256 MiB NAND,
+128 KiB erase blocks, 2 KiB pages and 64-byte OOB with zero capability flags.
+Native return after this geometry test is pending confirmation. It adds NAND ID/geometry initialization with hardware WP asserted,
 protected-status verification, BBT scanning disabled and write callbacks denied.
 There are no MTD char/block interfaces, partitions, firmware reads or storage
 mounts. It is still an experimental RAM boot with unverified whole-chain side

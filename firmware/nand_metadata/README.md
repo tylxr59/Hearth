@@ -3,7 +3,10 @@
 This separate profile extends the successfully observed [RAM heartbeat
 probe](../probe/README.md) for the owner's Display-2.6 unit. It is not firmware
 acquisition, backup, recovery, deployment or HVAC control. It has passed offline
-build/integrity checks; physical execution has not yet been attempted.
+build/integrity checks and one supervised physical boot. The master reported
+256 MiB NAND, 128 KiB erase blocks, 2 KiB pages and 64-byte OOB with flags zero.
+The protected-status registration guard passed. Native return after this test
+is pending confirmation; see the [measurement record](../../docs/research/nand-geometry-2026-10-30.md).
 
 The experiment initializes NAND to obtain seven master-device sysfs attributes:
 name, type, flags, size, erase size, page size and OOB size. It does not read NAND
@@ -86,7 +89,7 @@ same-port serial selection, temporarily sets/restores tty attributes and sends
 no application commands. Geometry does not prove successful firmware reads or
 correct ECC/OOB interpretation.
 
-## Supervised execution, not yet measured
+## Supervised execution — one geometry result
 
 The prepared local build is `build/nand-geometry-20261030`. The callback review
 caught and corrected this kernel's non-const OTP-write signature before execution;

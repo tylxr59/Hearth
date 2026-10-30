@@ -40,9 +40,11 @@ The separate [geometry-only kernel](firmware/nand_metadata/README.md) is built a
 `build/nand-geometry-20261030` and passed offline integrity/configuration checks.
 It asserts hardware WP, checks protected status, skips BBT scanning, denies write
 callbacks and exposes only master sysfs geometry (no MTD char/block interface).
-It has not yet run on the device. Next: notify the owner, start one PTY-backed
-`--execute-read-only-nand-metadata` attempt, request the manual restart while
-waiting, and record geometry or failure plus native return. Notify the owner before experimental RAM execution under
+One supervised PTY-backed boot succeeded: 256 MiB NAND, 128 KiB erase blocks,
+2 KiB pages, 64-byte OOB, flags zero. The protected-status registration guard
+passed. Loader exited 0; the owner was instructed to restart to native startup.
+Next: confirm the home icon and normal USB before any further device execution.
+No flash contents, stock partition map or restoration were acquired/verified. Notify the owner before experimental RAM execution under
 their existing authorization; do not re-ask general device permission. Continue
 to enforce backup/recovery gates before persistent writes and separate HVAC
 authorization/equipment requirements. See [handshake evidence](docs/research/usb-handshake-2026-10-30.md)
