@@ -57,11 +57,16 @@ and verified. This is not authorization to upload or publish photos.
   Neither is an approved acquisition-only procedure. Firmware version alone
   does not establish loader compatibility or recovery.
 - The supplied base is available and visibly unwired. Exact pairing remains
-  unverified. Next: obtain explicit authorization for the limited restart and
-  USB observation below, then continue model-specific acquisition/payload review.
+  unverified. The authorized restart and USB observation below confirmed a brief
+  OMAP ROM identity. Next: continue model-specific acquisition/payload review.
   Keep persistent deployment blocked.
 
-## Proposed restart and USB observation — not yet authorized or performed
+## Restart and USB observation plan
+
+The procedure below was prepared before execution. The owner subsequently
+authorized device investigation, requesting advance notification for potentially
+dangerous actions such as flashing. This does not remove the backup/recovery
+gates for persistent changes. Execution results follow the original plan.
 
 Purpose: observe USB enumeration across one manual restart of this display. This
 does not establish firmware acquisition or a recovery path.
@@ -80,8 +85,8 @@ does not establish firmware acquisition or a recovery path.
    single attempt. Do not claim a ROM-mode result unless it was actually seen;
    do not send a payload even if an OMAP identity appears.
 
-This requires explicit authorization under AGENTS.md's physical-device control
-boundary. It excludes a factory reset, writes initiated by host tools, custom
+This procedure is within the owner's subsequent authorization under AGENTS.md's
+physical-device control boundary. It excludes a factory reset, writes initiated by host tools, custom
 payload execution and HVAC operation. A normal reboot may itself update native
 persistent state; it is not a guarantee of unchanged flash contents.
 
@@ -100,6 +105,29 @@ Additional static review at the existing NLE pin
 Neither file nor any downloaded executable was run. No new upstream revision
 was selected.
 
-No reboot, ROM-mode entry, payload execution, filesystem write, flashing,
-HVAC operation or recovery test was performed during this intake. No complete
+## Observed restart results
+
+The first 60-second host observation recorded only `2464:0002`. The owner later
+confirmed performing the hold-until-black, release, single-press restart sequence;
+its timing relative to that first capture is not established.
+
+During the second attempt, a host sysfs observer sampled Nest/TI USB identities
+approximately every 50 ms. It recorded these transitions (host local clock):
+
+| Time | Observation |
+|---|---|
+| 15:11:18 | Normal Nest `2464:0002` on port `1-1` |
+| 15:11:24 | Disconnected, then TI `0451:d00e` on port `1-1` |
+| 15:11:27 | TI identity disappeared |
+| 15:11:35 | Normal Nest `2464:0002` returned on port `1-1` |
+
+The owner reports that the display returned to the home icon. The observed TI
+identity matches the ROM-mode identity expected by the pinned NLE loader.
+This establishes that ROM entry is possible on this specific unit and sequence;
+it does not prove payload compatibility, a working acquisition tool, flash
+integrity, restoration or control safety. Timing is approximate and does not
+establish an invariant upload window.
+
+No payload was sent or executed by host tools. No host-initiated filesystem
+write, flashing, HVAC operation or restoration test was performed. No complete
 firmware image was acquired. Historical host test results were not rerun.

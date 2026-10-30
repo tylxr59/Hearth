@@ -2,7 +2,7 @@
 
 Release-blocking:
 
-- Initial read-only identity intake complete: enclosure `02A`, reported `Display-2.6`, firmware `5.9.4-5`, normal USB `2464:0002`; see docs/research/device-intake-2026-10-30.md. Obtain base/board identity and authorized Gen 2 firmware/MTD/boot/recovery evidence. Actual nlclient/osm binaries remain unavailable; static configuration is not API evidence.
+- Identity intake and authorized ROM enumeration complete: enclosure `02A`, reported `Display-2.6`, firmware `5.9.4-5`, normal USB `2464:0002`, brief OMAP `0451:d00e` during restart; see docs/research/device-intake-2026-10-30.md. Obtain base/board identity and reviewed Gen 2 firmware acquisition/MTD/boot/recovery evidence. No payload was sent. Actual nlclient/osm binaries remain unavailable; static configuration is not API evidence.
 - Determine reliable local IPC control feasibility; revise ADR if an on-device bridge is justified. No bridge currently exists.
 - Verify private CA, hostname/time checks and unique stock-client credential installation; design safe bootstrap and rollback. No plaintext production fallback.
 - Implement/validate full native entry, pairing and revision/CAS/chunked subscribe transport, with power/schedule regression fixtures, or replace it with a verified local bridge. Experimental decoder is incomplete and default-disabled.
