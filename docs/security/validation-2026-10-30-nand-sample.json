@@ -71,6 +71,17 @@
     "absence of bootloader persistent effects",
     "HVAC/power behavior"
   ],
+  "physical_attempts": [
+    {
+      "exit_code": 124,
+      "follow_up": "sysfs observed 0451:d00e after timeout; owner reported right mode",
+      "kind": "first supervised sample loader wait",
+      "loader_trace": "scanning only; no successful USB open or transfer reported",
+      "next": "loader exited; owner instructed to restore native home icon before fresh wait",
+      "sample_output_directory_created": false,
+      "sample_payload_execution": "not observed"
+    }
+  ],
   "privacy": "Future bytes/hashes/manifests only in ignored private directory; no uploads or photos.",
   "scope": "Offline first-erase-block raw/OOB sample build; not yet device-executed"
 }

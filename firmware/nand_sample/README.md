@@ -115,3 +115,11 @@ the [GPLv2 text](../probe/COPYING.GPL-2.0) and [provenance](../../THIRD_PARTY.md
 Other original standalone code is MIT. Generated public GPL sources and all
 compiled outputs remain ignored; preserve corresponding source/notices for any
 later authorized binary redistribution.
+
+## First wait expired before transfer
+
+The first supervised wait exited 124 after scanning, with no successful USB open
+or transfer reported. A follow-up observed ROM mode and the owner reported the
+right mode, but the loader had already exited. No sample output directory was
+created. The owner was instructed to restore the home icon before a fresh wait;
+do not reuse a stale ROM handshake or claim a failed NAND read from this timeout.

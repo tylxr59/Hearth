@@ -48,8 +48,10 @@ A separate first-erase-block sample profile is built and checked offline at
 `build/nand-sample-20261030`; see firmware/nand_sample/README.md. It reads only
 64 raw page/OOB records twice into RAM, retaining the geometry write guards
 and no MTD character interface. Cached CRC-framed transfer goes only to a fresh
-private output directory. It has not run on the device. Next: advance risk notice,
-one PTY-backed supervised sample boot, then confirm native return.
+private output directory. It has not run on the device. The first wait expired (124) before any successful
+USB open/transfer; follow-up observed ROM mode and no sample output directory.
+Owner instructed to restore native home icon with the loader exited. Next:
+confirm normal USB, then start a fresh PTY wait before requesting another restart.
 No flash contents, stock partition map or restoration were acquired/verified. Notify the owner before experimental RAM execution under
 their existing authorization; do not re-ask general device permission. Continue
 to enforce backup/recovery gates before persistent writes and separate HVAC
