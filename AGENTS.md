@@ -55,9 +55,13 @@ was saved. Home icon and normal USB returned afterward. The corrected build at
 `build/nand-sample-rawtty-20261030` disables gadget tty processing and successfully
 captured two matching passes: 64 pages, 135168 bytes per pass including OOB.
 Private file permissions, lengths and SHA-256 records were verified without
-logging bytes/hashes. Loader exited 0; owner instructed to restore native home
-icon. Next: confirm native return, then prepare a bounded-memory, full-chip
-read-only exporter using the verified binary transport. Both matching first-block
+logging bytes/hashes. Loader exited 0; owner reported done after restart instructions and normal
+Nest USB 2464:0002 was observed. The full-chip read-only exporter is now built
+at `build/nand-capture-20261030`; see firmware/nand_capture/README.md. It retains
+the guards and streams two full raw/OOB passes after a fixed start token, using
+one page buffer and mandatory completion footer. It is not yet device-tested.
+Next: notify owner, supervise one acquisition boot with a fresh private directory,
+verify both pass files, then return to native mode once. Both matching first-block
 samples are private; no whole-chip capture or restore exists.
 No complete validated flash capture, stock partition map or restoration is
 available. Unvalidated sample fragments remain private. Notify the owner before experimental RAM execution under
@@ -68,7 +72,7 @@ and the separate dated USB validation report. Heartbeat plus native startup is
 not firmware recovery, battery/HVAC validation or product compatibility.
 
 This PC is CachyOS with Python 3.14.8 and rootless Podman 6.1.4, installed by the
-owner. Fresh validation: 141 tests passed including simulated TLS broker/container
+owner. Fresh validation: 153 tests passed including simulated TLS broker/container
 tests using `HEARTH_CONTAINER_ENGINE=podman`; make check passed. The earlier
 same-day dependency audit passed. Separate dated reports preserve both scopes.
 The original Docker/amd64 results remain

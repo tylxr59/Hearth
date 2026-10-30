@@ -154,4 +154,5 @@ files with the expected lengths and matching private SHA-256 values; their
 recorded hashes were independently recomputed. No payload bytes/hashes were
 logged or added to Git. This establishes repeatability only for the first block.
 The owner was instructed to restore native startup with the loader exited;
-confirmation is pending. Full-chip acquisition and restoration remain separate.
+normal Nest USB 2464:0002 returned after the owner reported done. Full-chip
+acquisition and restoration remain separate.

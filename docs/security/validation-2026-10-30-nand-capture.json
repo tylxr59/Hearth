@@ -1,0 +1,72 @@
+{
+  "artifact_manifest": {
+    "base_manifest_sha256": "781b90f64d61b9dfb8ece215fb30e2364cf802b26cf0a71ce4c4824a90f488ba",
+    "device_executed": false,
+    "files": {
+      "kernel.config": "9de0dff7e4ab7e8b1d24b5963bc783144a6b5d2ad2da5af806806ca0442e4c71",
+      "omap_loader": "e3411270efa3af21a284e780571f6f3d4270ad2e7e9c6d047c3c2128a8b14531",
+      "probe-init": "af710927798e6f5b0a5f8127e71e8cc4e5846c7d6f871dd1e5d2740d1483774d",
+      "u-boot.bin": "5f924a02508eb0360645ea71228934f854f8310370808b82108a58fa672b443f",
+      "uImage": "c11eabe12bcdf2c0a442df1a715210d9af0ef7d1bd06ffd8a002fcedb7fb72ff",
+      "x-load-gen2.bin": "e9f543e77636961a9acd6723e6b6cf7392a7a33b02ad6f61b97ab85157d8939e"
+    },
+    "full_backup": false,
+    "generated_driver_sha256": "630be672251ec0316f47444fc160f9fcb92d85a5ec1da52e8ca7dc6da2a9de8e",
+    "generated_guard_sha256": "ad89989ecf9477616898ee0aba09cd2e4db547d6eaf94b611d6bcddf36ac795d",
+    "generated_sample_sha256": "61169d164c7095bdc26cd6db8ae67990cbee0bf9e038e21e46884224c87c30aa",
+    "generated_serial_sha256": "41650656906a609ad1690fb0c16f0c033e0b1364ede7fab4cca7ec659d17177f",
+    "host_files": {
+      "boot.sh": "2aae7e12979ce426e0d13ddc3df912b04af0312078564814691fa86e896590cb",
+      "check.py": "0bad5191d2c1f8615e80d30043c9fb7d33f4b4be8ea2225dd0c34ddecb15e626",
+      "configure.py": "0b434b5aab2f8993072c4d94ec3bd22ae9ff16e475a663543af69cbee1c2f161",
+      "metadata_configure.py": "c04d50769d3cdaf4f6226d208be67e169ba82b6fac570eba1196d1217a8a3de5",
+      "metadata_report.py": "f6984e640d09155495ce6e4709d4620d6332d2ea5d60fee2a0c7ee69215c9366",
+      "observe.py": "5473f5007e6bc99ec46f7e1a56853d0f9067bfac6325c260b97eee0d39c40d6b",
+      "probe_configure.py": "051997792790f4d818210cd0327ca9d3afc6af9187801ffd381e5fd06c6b4064",
+      "sample_configure.py": "ae63e331a03c8e0813d5233d8d90717c0459c7dcbb0649c6de2490462c86992b",
+      "sample_receiver.py": "937baa0813b89c97f75e6146e7cde279a40beacca8989d268b9a1ce9cfe00049",
+      "serial_observe.py": "4d64ab03c21b0c6d2cf87dcb7f151e0db189cf4e672d8aff5df30a3b223e809f"
+    },
+    "profile": "Display-2.6",
+    "range": {
+      "first_page": 0,
+      "oob_bytes": 64,
+      "page_bytes": 2048,
+      "pages": 131072,
+      "passes": 2
+    },
+    "recipe_sha256": {
+      "configure.py": "0b434b5aab2f8993072c4d94ec3bd22ae9ff16e475a663543af69cbee1c2f161",
+      "finalize.py": "f8d13b069545dd88ce54c72ba39def38c6c1835575df3b3142d040f150a9d142",
+      "init.c": "f3f52ddd8e89ad085b7186de4468b4290d437ab86c66f79cf347fbb11d6da242",
+      "observe.py": "5473f5007e6bc99ec46f7e1a56853d0f9067bfac6325c260b97eee0d39c40d6b",
+      "receiver.py": "937baa0813b89c97f75e6146e7cde279a40beacca8989d268b9a1ce9cfe00049",
+      "stage.py": "5c9cd881eda860c6f33f38624508c60518ad3e38ac9ee16f5d09cdcc2060827e",
+      "test_producer.c": "1828e6ad7a4ef79fde24d0f230d717837c257a6d36a670be9eb23b7ec153f437"
+    },
+    "restoration": "unverified",
+    "status": "experimental-nand-capture-only"
+  },
+  "date": "2026-10-30",
+  "host_validation": {
+    "container_engine": "rootless Podman; broker/container tests enabled",
+    "image_check": "exact minimal 3900-byte initramfs; 2742464-byte decompressed kernel; all configuration/CRC/source guards passed",
+    "make_check": "passed",
+    "native_sanitizers": "actual producer/reader under mocked syscalls and NAND passed ASan/UBSan",
+    "new_capture_tests": 12,
+    "new_guard_warnings": 0,
+    "tests_passed": 153,
+    "tests_skipped": 0,
+    "upstream_warnings": "present; no general safety clearance"
+  },
+  "not_demonstrated": [
+    "complete physical whole-chip reads",
+    "repeatability across whole chip",
+    "ECC correctness/bad-block/partition identity",
+    "restoration and backplate coverage",
+    "whole-boot-chain absence of persistent effects",
+    "native IPC/HVAC/power behavior"
+  ],
+  "privacy": "Capture data/hashes private only; no uploads or firmware execution on host.",
+  "scope": "Whole-chip two-pass read-only exporter; offline validation only"
+}

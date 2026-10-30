@@ -109,7 +109,7 @@
       "bytes_per_pass": 135168,
       "firmware_backup": false,
       "loader_files_transferred": 3,
-      "native_return": "owner instructed to restart after loader exit; confirmation pending",
+      "native_return": "Owner reported done after restart instructions; follow-up sysfs observed normal Nest USB 2464:0002.",
       "pages_per_pass": 64,
       "passes": 2,
       "private_verification": "both regular 0600 files have expected size and match their private SHA-256 records; hashes equal",
