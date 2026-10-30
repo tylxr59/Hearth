@@ -4,7 +4,7 @@
 
 Build a local-first Nest Learning Thermostat modification that preserves native hardware/HVAC control. Gen 2 is the primary target; Gen 1 is secondary. Prefer a verified local on-device interface if feasible; otherwise retain the native transport behind a minimal local backend. Do not rewrite HVAC control loops.
 
-The user plans to continue on their main PC once their eBay Gen 2 arrives. Arrival/ownership alone does not authorize flashing or physical control. At this handoff, no physical thermostat has been tested, flashed or controlled. No firmware dump or proprietary nlclient/osm executable was available during initial development.
+The user's unit has arrived and received read-only USB intake on their PC. Arrival/ownership alone does not authorize flashing or physical control. The [2026-10-30 intake](docs/research/device-intake-2026-10-30.md) records enclosure `02A`, reported `Display-2.6`, firmware `5.9.4-5` and normal-mode USB `2464:0002`. No ROM-mode entry, payload execution, flashing, HVAC operation or recovery test has been performed. No firmware dump or proprietary nlclient/osm executable is available.
 
 Implementation baseline: commit `30c82f5`. It contains an authenticated host-side laboratory, not deployable thermostat firmware:
 

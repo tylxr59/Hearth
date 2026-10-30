@@ -2,7 +2,7 @@
 
 A local-first laboratory for Nest Learning Thermostat Gen 2, with Gen 1 as a secondary research target. Preserve Nest's hardware control; replace remote services only where behavior is understood.
 
-**Status: functional host-side prototype, not deployable thermostat firmware. No physical device has been flashed or tested.** The complete Nest pairing/subscribe protocol and device credential/TLS installation are unresolved. Do not connect this prototype to live HVAC equipment. This iteration does not meet the physical firmware compatibility portion of the definition of done.
+**Status: functional host-side prototype, not deployable thermostat firmware.** A physical unit has received [read-only USB identity intake](docs/research/device-intake-2026-10-30.md); no flashing, recovery or HVAC tests have been performed. The complete Nest pairing/subscribe protocol and device credential/TLS installation are unresolved. Do not connect this prototype to live HVAC equipment. This iteration does not meet the physical firmware compatibility portion of the definition of done.
 
 Implemented:
 

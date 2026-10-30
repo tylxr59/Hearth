@@ -1,5 +1,7 @@
 # Research findings and component inventory
 
+Physical evidence update, 2026-10-30: [read-only device intake](device-intake-2026-10-30.md) records a unit reporting `Display-2.6`, software `5.9.4-5` and normal-mode USB `2464:0002`. This adds identity metadata only; firmware acquisition, recovery and control compatibility remain unverified. The historical source findings below retain their original scope.
+
 Inspected 2026-10-24/25. No existing workspace audit was available. [upstreams.json](upstreams.json) pins all five repositories and hashes the principal inspected files; `python -m tools.fetch_research build/references` retrieves those files without executing them. The additional NestDFUAttack source is necessary because NLE's builder obtains its historical kernel and initramfs there. Do not run its installers or rootme scripts.
 
 ## Evidence classification

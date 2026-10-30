@@ -1,6 +1,6 @@
 # Gen 2 bench validation and recovery gates
 
-**No hardware is available or verified. No flash/apply command is implemented.** Preparation artifacts are not bootable images and must not be sent to a USB loader. Gen 1 remains a separate, unvalidated profile; never select a generation from USB vendor/product alone.
+**A physical unit has received read-only USB intake; firmware compatibility and recovery remain unverified. No flash/apply command is implemented.** See the [2026-10-30 intake](research/device-intake-2026-10-30.md): enclosure `02A`, reported `Display-2.6`, software `5.9.4-5`, normal USB `2464:0002`. Preparation artifacts are not bootable images and must not be sent to a USB loader. Gen 1 remains a separate, unvalidated profile; never select a generation from USB vendor/product alone.
 
 Physical device flashing, modification or control requires fresh explicit human authorization for that action. Actual HVAC switching tests additionally require explicit authorization, appropriate isolated equipment and a person qualified for the wiring/system. The project request does not authorize those actions. Do not connect a production HVAC system for initial tests. Do not use a thermostat safety limit as the sole safeguard.
 
