@@ -36,8 +36,9 @@ independent electrical WP measurement or a destructive test of write rejection.
 The wrapper exited 0. A separate sysfs observation confirmed serial gadget
 `0525:a4a7` on physical USB port `1-1`. No raw serial bytes, device identifiers or
 firmware data were logged. The owner was then instructed to manually restart
-with the loader exited. Home icon/normal USB return after this specific test is
-pending confirmation; the earlier heartbeat's native return is separate evidence.
+with the loader exited. The owner then reported ready; a follow-up sysfs observation confirmed normal
+Nest USB mode (2464:0002). The owner did not separately describe the display
+in that reply. No firmware restoration was performed.
 
 ## Limits and next steps
 

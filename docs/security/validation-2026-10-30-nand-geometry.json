@@ -71,7 +71,7 @@
     "first_stage_bytes": 27856,
     "loader_exit_code": 0,
     "loader_privilege": "normal owner UID using scoped ACL",
-    "native_return": "owner instructed to restart after loader exit; confirmation pending",
+    "native_return": "Owner reported ready after restart instructions; follow-up sysfs observed normal Nest USB 2464:0002. Display not separately described in that reply.",
     "result": {
       "erasesize": 131072,
       "firmware_acquired": false,

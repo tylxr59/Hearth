@@ -5,8 +5,7 @@ probe](../probe/README.md) for the owner's Display-2.6 unit. It is not firmware
 acquisition, backup, recovery, deployment or HVAC control. It has passed offline
 build/integrity checks and one supervised physical boot. The master reported
 256 MiB NAND, 128 KiB erase blocks, 2 KiB pages and 64-byte OOB with flags zero.
-The protected-status registration guard passed. Native return after this test
-is pending confirmation; see the [measurement record](../../docs/research/nand-geometry-2026-10-30.md).
+The protected-status registration guard passed. Normal Nest USB mode returned after the owner reported ready; see the [measurement record](../../docs/research/nand-geometry-2026-10-30.md).
 
 The experiment initializes NAND to obtain seven master-device sysfs attributes:
 name, type, flags, size, erase size, page size and OOB size. It does not read NAND

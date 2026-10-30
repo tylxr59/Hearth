@@ -43,7 +43,8 @@ callbacks and exposes only master sysfs geometry (no MTD char/block interface).
 One supervised PTY-backed boot succeeded: 256 MiB NAND, 128 KiB erase blocks,
 2 KiB pages, 64-byte OOB, flags zero. The protected-status registration guard
 passed. Loader exited 0; the owner was instructed to restart to native startup.
-Next: confirm the home icon and normal USB before any further device execution.
+Normal Nest USB mode (2464:0002) returned after the owner reported ready.
+Next: separately review a bounded private read-only sample acquisition profile.
 No flash contents, stock partition map or restoration were acquired/verified. Notify the owner before experimental RAM execution under
 their existing authorization; do not re-ask general device permission. Continue
 to enforce backup/recovery gates before persistent writes and separate HVAC
