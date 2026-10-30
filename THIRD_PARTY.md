@@ -38,6 +38,11 @@ standalone geometry userspace, host parser and build tooling are MIT licensed.
 The GPLv2 text accompanies the probe sources; preserve the combined source and
 notices for any later authorized binary redistribution.
 
+The separate `firmware/nand_sample/sample.h` and combined synthetic kernel
+harness are original GPL-2.0-or-later code using those same pinned Linux interfaces.
+Original standalone sample framing/userspace and host/build tooling are MIT.
+No third-party binary, full kernel source or private capture is added to Git.
+
 ## Runtime dependencies
 
 Full versions and package metadata: [python-dependencies.json](docs/security/python-dependencies.json). Hash-locked distributions: requirements.lock. Runtime directly uses aiohttp (Apache-2.0 AND MIT) and paho-mqtt (EPL-2.0 OR BSD-3-Clause per distribution metadata; retain notices when distributing). Transitives include aiohappyeyeballs (PSF-2.0), aiosignal/frozenlist/multidict/propcache/yarl (Apache-2.0), attrs (MIT) idna (BSD-3-Clause) and conditional typing_extensions (PSF-2.0); see each distribution's license files for authoritative terms. Metadata inventory is not a substitute for retaining the installed licenses. No dependencies are vendored.

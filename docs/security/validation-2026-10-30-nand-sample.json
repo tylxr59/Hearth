@@ -1,0 +1,76 @@
+{
+  "artifact_manifest": {
+    "base_manifest_sha256": "781b90f64d61b9dfb8ece215fb30e2364cf802b26cf0a71ce4c4824a90f488ba",
+    "device_executed": false,
+    "files": {
+      "kernel.config": "58c5b3af35812a5408800c155fceb5b388417ba4ed0902a89153a7d628e14030",
+      "omap_loader": "e3411270efa3af21a284e780571f6f3d4270ad2e7e9c6d047c3c2128a8b14531",
+      "probe-init": "7361638c4b29e23578b4ef44d4c760345021d2d2a01295addb2fca88d853ba1f",
+      "u-boot.bin": "5f924a02508eb0360645ea71228934f854f8310370808b82108a58fa672b443f",
+      "uImage": "31acae2ec9fab9aefeec89bd8e80afb637ab17e36249c95a12e6f362f61e0fa3",
+      "x-load-gen2.bin": "e9f543e77636961a9acd6723e6b6cf7392a7a33b02ad6f61b97ab85157d8939e"
+    },
+    "full_backup": false,
+    "generated_driver_sha256": "630be672251ec0316f47444fc160f9fcb92d85a5ec1da52e8ca7dc6da2a9de8e",
+    "generated_guard_sha256": "ad89989ecf9477616898ee0aba09cd2e4db547d6eaf94b611d6bcddf36ac795d",
+    "generated_sample_sha256": "e1ffe01c60dc3db1e0cf560e81a57c1e316256cb7e8341a770d9a21365cbc9bd",
+    "host_files": {
+      "boot.sh": "cf0174ed8e49e4e0d4e3b7a2414cba4f01c5b68b54272ee65eefde587c9cda33",
+      "check.py": "75bca89168ed977587623a3bb164f530890f621401deb0677dd868507c8befba",
+      "configure.py": "f212c8a90a66855e5bc8f6440787116639da9299d6d65d6cf39d1826246f63a2",
+      "metadata_configure.py": "c04d50769d3cdaf4f6226d208be67e169ba82b6fac570eba1196d1217a8a3de5",
+      "metadata_report.py": "f6984e640d09155495ce6e4709d4620d6332d2ea5d60fee2a0c7ee69215c9366",
+      "observe.py": "97a96b00d7677de11effd85186f7c5641738e876112d2963b818a465300d497a",
+      "probe_configure.py": "051997792790f4d818210cd0327ca9d3afc6af9187801ffd381e5fd06c6b4064",
+      "sample_receiver.py": "463638af54a0c9d15f1301f29980f538af49af57c34591c041bc98971d2cccde",
+      "serial_observe.py": "305f821c9af8ea04e5e75cf42ec4af26821dc2a52625b4fe34babd0164406bd6"
+    },
+    "profile": "Display-2.6",
+    "range": {
+      "first_page": 0,
+      "oob_bytes": 64,
+      "page_bytes": 2048,
+      "pages": 64,
+      "passes": 2
+    },
+    "recipe_sha256": {
+      "boot.sh": "cf0174ed8e49e4e0d4e3b7a2414cba4f01c5b68b54272ee65eefde587c9cda33",
+      "configure.py": "f212c8a90a66855e5bc8f6440787116639da9299d6d65d6cf39d1826246f63a2",
+      "finalize.py": "e5d827a2d6af94c38405a970ca411a0c645671e3a1c62870faed0d300c9d8c82",
+      "init.c": "c71c3fc8428b9d99e2ec503d4143e030969bcde5c7fbeb640f729b60d56d81ce",
+      "observe.py": "97a96b00d7677de11effd85186f7c5641738e876112d2963b818a465300d497a",
+      "protocol.h": "3ded9d1b57ff5fdd9926dd5a82988a93716f866170ea05a00a677067ccbd76d4",
+      "receiver.py": "463638af54a0c9d15f1301f29980f538af49af57c34591c041bc98971d2cccde",
+      "sample.h": "e1ffe01c60dc3db1e0cf560e81a57c1e316256cb7e8341a770d9a21365cbc9bd",
+      "stage.py": "64ab63364c46757062f83b4dac80b7c2f7379a230e2e10d76d78760bb194ce4e",
+      "test_sample.c": "2210037e3f961232e5d9a31e80c0dfbbd45945aba3757093239093fb97caecba"
+    },
+    "restoration": "unverified",
+    "status": "experimental-nand-sample-only"
+  },
+  "date": "2026-10-30",
+  "host_validation": {
+    "builder_network": "disabled; no USB access in builder",
+    "container_engine": "rootless Podman; broker/container tests enabled",
+    "image_check": "passed; exact minimal 3460-byte CPIO, 2742464-byte decompressed kernel",
+    "make_check": "passed",
+    "native_guard_and_framing_harness": "ASan/UBSan passed with mocked NAND/sysfs; wire header compared with Python",
+    "new_guard_warnings": 0,
+    "new_sample_tests": 14,
+    "tests_passed": 138,
+    "tests_skipped": 0,
+    "upstream_warnings": "present; no general safety/vulnerability clearance"
+  },
+  "not_demonstrated": [
+    "physical sample reads or serial transfer",
+    "sample offset/data/OOB correspondence on real chip",
+    "ECC correctness/bad-block map",
+    "whole-chip acquisition",
+    "stock partition layout",
+    "backup/restoration",
+    "absence of bootloader persistent effects",
+    "HVAC/power behavior"
+  ],
+  "privacy": "Future bytes/hashes/manifests only in ignored private directory; no uploads or photos.",
+  "scope": "Offline first-erase-block raw/OOB sample build; not yet device-executed"
+}

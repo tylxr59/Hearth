@@ -44,7 +44,12 @@ One supervised PTY-backed boot succeeded: 256 MiB NAND, 128 KiB erase blocks,
 2 KiB pages, 64-byte OOB, flags zero. The protected-status registration guard
 passed. Loader exited 0; the owner was instructed to restart to native startup.
 Normal Nest USB mode (2464:0002) returned after the owner reported ready.
-Next: separately review a bounded private read-only sample acquisition profile.
+A separate first-erase-block sample profile is built and checked offline at
+`build/nand-sample-20261030`; see firmware/nand_sample/README.md. It reads only
+64 raw page/OOB records twice into RAM, retaining the geometry write guards
+and no MTD character interface. Cached CRC-framed transfer goes only to a fresh
+private output directory. It has not run on the device. Next: advance risk notice,
+one PTY-backed supervised sample boot, then confirm native return.
 No flash contents, stock partition map or restoration were acquired/verified. Notify the owner before experimental RAM execution under
 their existing authorization; do not re-ask general device permission. Continue
 to enforce backup/recovery gates before persistent writes and separate HVAC
@@ -53,7 +58,7 @@ and the separate dated USB validation report. Heartbeat plus native startup is
 not firmware recovery, battery/HVAC validation or product compatibility.
 
 This PC is CachyOS with Python 3.14.8 and rootless Podman 6.1.4, installed by the
-owner. Fresh validation: 124 tests passed including simulated TLS broker/container
+owner. Fresh validation: 138 tests passed including simulated TLS broker/container
 tests using `HEARTH_CONTAINER_ENGINE=podman`; make check passed. The earlier
 same-day dependency audit passed. Separate dated reports preserve both scopes.
 The original Docker/amd64 results remain
