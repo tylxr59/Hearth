@@ -107,3 +107,11 @@ return confirmed; no loader armed. Earlier unexecuted/pending notes above record
 preparation history and are superseded by this result. Next: live root/current
 file snapshot, durable backup receipt, interrupted-install recovery and bounded
 JFFS2 integration. No persistent commissioning or physical transport pass yet.
+
+Protected snapshot follow-up: bounded read-only file capture and host backup
+custody/receipt are implemented with sanitizer, ARM-link and failure regressions.
+The separate JFFS2 RAM profile is built/checked locally at
+build/file-snapshot-20261031-v4, unexecuted. Next owner-timed snapshot will collect
+only the nine fixed files; root0 is a custom kernel view, not native active-root
+proof. Target receipt enforcement, actual installation-plan binding and journal
+replay remain pending. No installer/device writer was added.

@@ -771,3 +771,50 @@ pinned existing stack, preserving write protection until a reviewed write step.
 Do not repeat generic raw recovery work or add router configuration requirements.
 See docs/research/file-commissioning-attempt-2026-10-31.md for historical failures
 and the successful result. No firmware/configuration installation occurred.
+
+## CURRENT: protected filesystem snapshot prepared (2026-10-31)
+
+The successful 68-case matrix remains the hardware baseline. New original
+read-only capture code is firmware/file_install/snapshot.{c,h}; it shares the
+fixed nine-target header with the file adapter, follows no symlinks, rejects
+unsafe metadata/attributes and double-reads into caller-bounded RAM. Production
+requires JFFS2 plus ST_RDONLY; host lab bypasses only filesystem/mount identity.
+The separate firmware/file_snapshot/ profile links no native firmware and no
+file mutation adapter. It mounts mtd:root0 and mtd:user-config read-only,
+noatime/nodev/nosuid/noexec, retaining hardware WP/status/NAND_ROM/write callback
+guards and skipped BBT scanning. Block/MTD char/network/RTC remain disabled.
+Xattr/ACL/security handlers are enabled rather than hiding unsupported metadata.
+The pinned platform partition table is used; command-line overrides bypassed.
+
+provisioning/file_backup.py now durably preserves the exact nine-file snapshot
+and returns a host custody receipt only after fsync and byte readback. Receipt
+binds session, collection scope, source-root label and manifest; verification
+rechecks complete inventory, metadata and all bytes. This is NOT a target-writer
+acknowledgment, actual installation plan, active-root proof or recovery proof.
+USB execution still cannot install anything. Interrupted-install replay remains
+pending. The shared target header is included in the prior RAM lab source hashes.
+
+Local profile: build/file-snapshot-20261031-v4, unexecuted. Earlier v1/v2 failed
+offline compiler/kernel linking; v3 passed offline, v4 adds exact known-patch
+rebuild support. All prior trees/logs retained, none executed. The build uses
+unchanged validated heartbeat bootstrap bytes and original freestanding init.
+Finalized checker verifies kernel image/config/CPIO and all staged host recipes.
+Run dry: python3 -m firmware.file_snapshot.run BUILD. Supervised explicit flag:
+--execute-read-only-file-snapshot with a fresh private output, PTY, normal USB
+preflight and owner-timed restart. Exclusive fsynced build execution-started
+marker prevents profile reuse; no automatic device retry. No loader armed.
+
+Before installation, obtain fresh native partition selection: our root0 mount
+and RAM cmdline cannot establish native active root. Owner was asked for a
+sanitized Technical Info.plist read (loads(stdin.buffer.read()), not load(pipe)).
+Do not enable diagnostic disk writes. Keep USB connected and base detached.
+After any future run exits, confirm home icon and normal USB independently.
+See firmware/file_snapshot/README.md and the dated snapshot-preparation note.
+
+Snapshot preparation validation: make check passed; full host suite 623 passed,
+five unchanged optional integration skips. Six artifact digests and staged host
+recipe checks match after a second isolated offline build (KBUILD_BUILD_VERSION=1).
+CPIO 7096 bytes, uncompressed kernel 2881632 bytes. Profile-v4 remains unexecuted.
+Owner supplied a fresh sanitized native plist result: primary, firmware 5.9.4-5;
+recorded privately with source attributed to the owner terminal. Normal native
+USB is still required at the eventual run preflight. No loader is armed.

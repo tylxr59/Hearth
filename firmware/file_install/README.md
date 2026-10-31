@@ -60,3 +60,9 @@ selection, fresh snapshot/export, write-bound kernel integration and actual JFFS
 write/restore remain unimplemented/unmeasured. Hardware use requires those pieces,
 a concrete reviewed capsule and advance owner notification under docs/hardware.md.
 No whole-firmware recovery or HVAC claim follows from host filesystem tests.
+
+The separate [snapshot reader](../file_snapshot/README.md) now shares the fixed
+target allowlist without linking the mutation adapter. Its production build
+requires read-only JFFS2; host sanitizer fixtures and freestanding ARM linking
+pass. Host backup custody is implemented separately, but target receipt/plan
+enforcement and interrupted-install replay remain pending.

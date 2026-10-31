@@ -52,3 +52,39 @@ a receipt tied to that exact snapshot and plan. The current transaction API's
 caller boolean is not that protocol. Interrupted-install journal inspection and
 restoration also remain to be implemented. The normal JFFS2 adapter, kernel and
 supervisor must be reviewed together before any persistent commissioning.
+
+## Implementation follow-up
+
+The original read-only reader, host custody receipt and a distinct RAM profile
+are now implemented under `firmware/file_snapshot/` and
+`provisioning/file_backup.py`. See the profile README for exact bounds and
+execution gates. The earlier static-only statements above describe the initial
+review; no snapshot has yet executed on the thermostat.
+
+The first offline build exposed a compiler-generated memset dependency, fixed
+with an original freestanding byte loop and an independent ARM-link regression.
+The second reached kernel link and exposed the already-known forced OMAP RTC
+selection; the profile now reuses the previously reviewed clock-disable patch.
+Failed build trees/logs remain separate and unexecuted. JFFS2 ACL selection emits
+a legacy Kconfig dependency warning with BLOCK disabled; actual ACL and xattr
+objects are built, and required configuration is independently checked. The
+unused partition-parser table also emits a warning after parser bypass; no
+command-line partition override is invoked. Historical upstream warnings remain.
+
+The new capture scope is the custom kernel's root0 view, not an active-root
+measurement. Fresh native USB partition selection still requires an owner
+terminal read because this account lacks diagnostic-disk read access and no
+noninteractive sudo grant is available. Diagnostic-disk writes were not enabled.
+
+Current unexecuted build is `build/file-snapshot-20261031-v4`. The generated
+checker passes after initial compilation and an isolated rebuild with fixed
+KBUILD_BUILD_VERSION=1: all six artifacts and staged host recipe digests match.
+The exact original-only initramfs is 7096 bytes; kernel decompression is 2881632
+bytes. Make check passes and the full host suite reports 623 passed, five
+unchanged optional skips. No proprietary code was executed on the host.
+
+The owner subsequently provided a sanitized fresh native plist read reporting
+primary and firmware 5.9.4-5. A private source-attributed observation preserves
+that result. The custom snapshot still labels its own root0 view explicitly;
+no filesystem writer or native application startup has been tested. No loader
+is armed and a new owner-timed restart is required for this snapshot.

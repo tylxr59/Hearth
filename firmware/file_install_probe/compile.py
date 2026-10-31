@@ -17,6 +17,7 @@ SOURCES = (
     "firmware/file_install/transaction.h",
     "firmware/file_install/posix.c",
     "firmware/file_install/posix.h",
+    "firmware/file_install/targets.h",
     "firmware/file_install_probe/lab_abi.h",
     "firmware/settings_compat_probe/init.c",
 )

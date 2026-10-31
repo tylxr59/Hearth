@@ -13,7 +13,13 @@
     },
     "include/asm-generic/fcntl.h": {
       "sha256": "d374766361cbde74898ec089fb34bd7cee5f586cbb162e6a4fb0d12af1f04f10"
+    },
+    "arch/arm/include/asm/statfs.h": {
+      "sha256": "64982fb60c839680a25e60ef2cd6ef3f0c6f1c61a1addcdad2a2a971faac6d6e"
+    },
+    "include/asm-generic/statfs.h": {
+      "sha256": "0c5e538a23302509b0d626b55ec863d61ea8d6b73269b9b6f46d2247954d8573"
     }
   },
-  "use": "ARM Linux syscall numbers, file flags and stat64 ABI layout review only. No third-party implementation copied or compiled into the file engine. Target adapter remains unexecuted."
+  "use": "ARM Linux syscall numbers, file flags, stat64 and statfs ABI layout review only. No third-party implementation copied into the original file engine or snapshot reader. File transactions measured on ARM RAM only; production JFFS2 adapters remain unexecuted."
 }

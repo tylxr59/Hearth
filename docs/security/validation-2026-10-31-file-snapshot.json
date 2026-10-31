@@ -1,0 +1,26 @@
+{
+  "scope": "Host-only original snapshot/backup tests and offline protected RAM build; no snapshot device execution",
+  "checks": {
+    "make_check": "passed",
+    "host_tests_passed": 623,
+    "optional_integration_skipped": 5,
+    "snapshot_readonly_host_sanitizer_cases": 18,
+    "freestanding_arm_link": "passed; not executed",
+    "offline_kernel_integrity": "passed",
+    "offline_rebuild_six_artifacts": "identical"
+  },
+  "device": {
+    "snapshot_executed": false,
+    "installed": false,
+    "jffs2_mount_observed": false,
+    "firmware_restoration_verified": false,
+    "native_application_verified": false,
+    "hvac_verified": false
+  },
+  "limits": [
+    "Host custody receipt is not device writer acknowledgment",
+    "Root0 custom kernel view is not native active-root proof",
+    "Same-unit whole-chain power and recovery remain unverified",
+    "JFFS2 ACL Kconfig dependency and historical upstream build warnings retained"
+  ]
+}

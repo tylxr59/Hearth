@@ -40,12 +40,7 @@ extern int *__errno_location(void);
 #define H_NOFOLLOW O_NOFOLLOW
 #endif
 struct metadata { unsigned int mode,links,owner,group; unsigned long long size; };
-static const char *const paths[HEARTH_TARGET_COUNT] = {
-    "nestlabs/lib/libnlwebservice.so", "etc/ssl/certs/ca-bundle.pem",
-    "etc/ssl/certs/nest-crl-bundle.pem", "etc/ntp.conf",
-    "nestlabs/lib/libhearth-settings-compat.so", "nestlabs/sbin/hearth-nlclient",
-    "etc/init.d/nestlabs", "settings.config", "etc/nestlabs/client.config"
-};
+#include "targets.h"
 static const char suffix[] = ".hearth-new";
 static const char restore_suffix[] = ".hearth-restore";
 static int equal(const unsigned char *a,const unsigned char *b,hearth_file_size n)
@@ -90,7 +85,7 @@ static int local_root(struct hearth_posix_context *c,int fd)
 }
 static int parent(struct hearth_posix_context *c,unsigned int target,char *name)
 {
-    const char *path=paths[target];
+    const char *path=hearth_target_paths[target];
     int fd=openat(c->roots[target==HEARTH_SETTINGS],".",H_RDONLY|H_DIRECTORY|H_NOFOLLOW|H_CLOEXEC);
     unsigned int n=0;
     if(fd<0) return -1;
