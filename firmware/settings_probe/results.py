@@ -43,6 +43,7 @@ def validate(data):
         raise ValueError("settings report limit exceeded")
     rows = [loads(line) for line in data.splitlines()]
     clean = []
+    truncated = False
     for row in rows:
         if isinstance(row, dict) and row.get("type") == "settings_stderr":
             if (
@@ -52,6 +53,16 @@ def validate(data):
             ):
                 raise ValueError("invalid private settings diagnostic")
             continue  # retain privately; never print decoded native log output
+        if isinstance(row, dict) and row.get("type") == "settings_stderr_truncated":
+            if (
+                truncated
+                or set(row) != {"type", "bytes_dropped"}
+                or type(row["bytes_dropped"]) is not int
+                or not 1 <= row["bytes_dropped"] <= 1048576
+            ):
+                raise ValueError("invalid diagnostic truncation record")
+            truncated = True
+            continue
         clean.append(row)
     if (
         len(clean) != 14

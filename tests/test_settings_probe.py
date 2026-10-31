@@ -354,3 +354,41 @@ def test_boot_defaults_to_offline_and_never_overwrites_or_retries(tmp_path, flag
     assert log.read_text().splitlines() == [f"-m firmware.settings_probe.artifact check {profile}"]
     if existing:
         assert (profile / "settings-result.jsonl").read_text() == "preserve"
+
+
+def test_diagnostic_flood_cannot_consume_the_shared_target_result_cache(tmp_path):
+    if not shutil.which("clang"):
+        pytest.skip("Clang required for original shared cache sanitizer checks")
+    root = Path(__file__).resolve().parents[1]
+    driver = tmp_path / "capture-driver"
+    subprocess.run(
+        [
+            "clang",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            "-g",
+            "-fsanitize=address,undefined",
+            "-fno-omit-frame-pointer",
+            str(root / "tests/settings_capture_harness.c"),
+            "-o",
+            str(driver),
+        ],
+        check=True,
+        capture_output=True,
+    )
+    subprocess.run([str(driver)], check=True, capture_output=True, timeout=3)
+
+
+def test_explicit_bounded_diagnostic_truncation_preserves_complete_measurements():
+    rows = matrix()
+    rows.insert(1, {"type": "settings_stderr_truncated", "bytes_dropped": 20000})
+    assert results.validate(encode(rows))["cases"] == 12
+    for invalid in (False, 0, -1, 1048577):
+        rows[1]["bytes_dropped"] = invalid
+        with pytest.raises(ValueError):
+            results.validate(encode(rows))
+    rows[1]["bytes_dropped"] = 1
+    rows.insert(2, copy.deepcopy(rows[1]))
+    with pytest.raises(ValueError):
+        results.validate(encode(rows))

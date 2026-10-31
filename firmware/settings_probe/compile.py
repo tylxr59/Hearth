@@ -8,7 +8,7 @@ from firmware.tls_probe.compile import LIBC, run
 from firmware.tls_probe.package import sha
 
 ASSETS = Path(__file__).parent
-SOURCES = ("init.c", "client.c", "faults.c", "faults.h")
+SOURCES = ("init.c", "client.c", "faults.c", "faults.h", "capture.h")
 SHARED = ("firmware/tls_probe/abi.h", "firmware/tls_probe/start.S")
 
 

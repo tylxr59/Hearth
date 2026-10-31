@@ -152,9 +152,19 @@ Private unexecuted profile: private/native-settings-probe-20261030/profile-prepa
 helpers: build/native-settings-lab-20261030/helpers-reviewed. Offline wrapper:
 sh firmware/settings_probe/boot.sh PRIVATE_PROFILE. Explicit future execution flag:
 --execute-experimental-settings-probe (PTY, owner-timed restart, no automatic retry).
-Never run it while the owner is unavailable. The owner went to bed after confirming
-TLS native return and asked for independent offline progress. Leave native startup;
-no loader is armed. See the settings probe README for gates and measurement meaning.
+The owner returned for testing. One supervised d6823ed boot uploaded successfully
+but failed collection: 15423-byte private result, five complete cases, 75 diagnostic
+rows, child SIGKILL and a partial row. Shared stdout/stderr report budget exhausted.
+Owner confirmed native home icon and normal USB returned; no automatic retry.
+Preserve profile-prepared/result and private/native-settings-probe-20261030/attempt-1.json.
+The corrected supervisor separates stdout (8 KiB) and diagnostic (2 KiB raw) caches,
+continues draining excess diagnostics and reports dropped bytes. Its original shared
+cache sanitizer stress checks and 29 settings tests pass. New private UNEXECUTED
+profile: private/native-settings-probe-20261031/profile-capped-diagnostics; helpers:
+build/native-settings-lab-20261031/helpers-capped-diagnostics. Seven artifacts match
+a fresh reproducibility profile. No kernel/bootstrap/library/writer change.
+Notify the owner before any new manually timed run; no loader is armed.
+See docs/research/settings-probe-attempt-2026-10-31.md and the probe README.
 Next: finish independent host work and native protocol/storage review while the
 prepared settings target measurement waits for the owner.
 Prepare any new bounded RAM test completely before another owner-timed restart;

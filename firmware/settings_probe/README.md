@@ -1,9 +1,11 @@
-# Native settings RAM experiment (unexecuted)
+# Native settings RAM experiment
 
 A bounded diagnostic for the privately recovered Display-2.6 / 5.9.4-5 settings
-library. It prepares one owner-supervised boot with twelve cases. **It has not
-run on the thermostat.** It is not an installation, recovery procedure or storage
-fix. The owner went offline after confirming native startup; no loader is armed.
+library. The first supervised boot produced five complete rows before native
+diagnostics exhausted the initial reporting budget. Native startup returned.
+The corrected profile is prepared and **unexecuted**; see the
+[attempt/correction record](../../docs/research/settings-probe-attempt-2026-10-31.md).
+It is not an installation, recovery procedure or storage fix.
 
 The purpose is to measure the [reviewed writer defects](../../docs/research/native-storage-2026-10-30.md)
 without touching real settings. Original helper code loads only the native base
@@ -52,7 +54,8 @@ reviewed from the private results before designing a correction. RAM sync is not
 flash durability or a power-loss test.
 
 PID 1 accepts only `BEGIN_SETTINGS_TEST_V1`, runs one unprivileged helper once,
-separates bounded private stderr from result rows and repeats the cached result.
+separates child stdout (8 KiB) from private stderr (2 KiB raw), explicitly counts
+discarded diagnostic bytes, and repeats the cached result.
 The helper has a 90-second alarm; the supervisor has a 120-second deadline and
 kills its child process group on overflow or timeout. Native logs may include
 synthetic values, so their hex-encoded diagnostics remain private and are never
@@ -77,8 +80,8 @@ sh firmware/settings_probe/boot.sh private/FRESH_SETTINGS_PROFILE
 
 The last command is offline checking only. It does not open the device. Fresh
 outputs are mandatory. Preserve the earlier TLS profiles/results unchanged.
-The actual prepared private image is 6,009,749 bytes; its RAM archive is
-10,998,520 bytes, below the existing 6 MiB upload and 24 MiB root limits. It
+The corrected prepared private image is 6,010,028 bytes; its RAM archive is
+10,999,388 bytes, below the existing 6 MiB upload and 24 MiB root limits. It
 preserves dynamic-interpreter execute mode 0555 and library mode 0444; `/state`
 is mode 0700 owned by helper UID/GID 65534. Artifacts/results stay owner-only.
 

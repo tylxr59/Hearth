@@ -2,6 +2,8 @@
  * No shell, storage mount, native application, HVAC interface or command API.
  * The only accepted USB input is a fixed start token. Results are cached in RAM.
  */
+#include "capture.h"
+
 static long sc(long nr, long a, long b, long c, long d, long e)
 {
     register long r0 __asm__("r0") = a, r1 __asm__("r1") = b;
@@ -47,9 +49,8 @@ static int run(void)
 {
     int pipefd[2], errors[2], status = -1, pid, pfd[4];
     int output_open = 1, error_open = 1;
-    long size, started, elapsed, i;
-    unsigned char diagnostic[128];
-    static const char hex[] = "0123456789abcdef";
+    long size, started, elapsed;
+    unsigned char diagnostic[128], output_chunk[512];
     char *const argv[] = {"/settings-test", 0};
     char *const env[] = {"LD_LIBRARY_PATH=/lib", "HOME=/nonexistent", "LC_ALL=C", 0};
     if (sc(42, (long)pipefd, 0, 0, 0, 0) != 0) return -201;
@@ -81,7 +82,7 @@ static int run(void)
     started = now();
     while (output_open || error_open) {
         elapsed = now();
-        if (started < 0 || elapsed < started || elapsed - started > 120 || used >= (long)sizeof(report) - 1024) {
+        if (started < 0 || elapsed < started || elapsed - started > 120) {
             sc(37, -pid, 9, 0, 0, 0); sc(37, pid, 9, 0, 0, 0);
             break;
         }
@@ -94,20 +95,17 @@ static int run(void)
         }
         if (size == 0) continue;
         if (output_open && (pfd[1] >> 16)) {
-            size = sc(3, pipefd[0], (long)(report + used), sizeof(report) - 1024 - used, 0, 0);
+            size = sc(3, pipefd[0], (long)output_chunk, sizeof(output_chunk), 0, 0);
             if (size <= 0) output_open = 0;
-            else used += size;
+            else if (!capture_output(output_chunk, size)) {
+                sc(37, -pid, 9, 0, 0, 0); sc(37, pid, 9, 0, 0, 0); break;
+            }
         }
         if (error_open && (pfd[3] >> 16)) {
             size = sc(3, errors[0], (long)diagnostic, sizeof(diagnostic), 0, 0);
             if (size <= 0) error_open = 0;
-            else {
-                append("{\"type\":\"settings_stderr\",\"hex\":\"");
-                for (i = 0; i < size; i++) {
-                    char pair[3] = {hex[diagnostic[i] >> 4], hex[diagnostic[i] & 15], 0};
-                    append(pair);
-                }
-                append("\"}\n");
+            else if (!capture_diagnostics(diagnostic, size)) {
+                sc(37, -pid, 9, 0, 0, 0); sc(37, pid, 9, 0, 0, 0); break;
             }
         }
     }
@@ -115,6 +113,28 @@ static int run(void)
     sc(6, errors[0], 0, 0, 0, 0);
     if (sc(114, pid, (long)&status, 0, 0, 0) != pid) return -205;
     return status;
+}
+static void append_captured(void)
+{
+    static const char hex[] = "0123456789abcdef";
+    long i, end;
+    _Static_assert(SETTINGS_OUTPUT_LIMIT + 2 * SETTINGS_DIAGNOSTIC_LIMIT + 16 * 64 + 512 < sizeof(report),
+        "child output, hex diagnostics and metadata must fit independently");
+    for (i = 0; i < output_used; i++) report[used++] = child_output[i];
+    if (output_used && child_output[output_used - 1] != '\n') append("\n");
+    for (i = 0; i < diagnostics_used;) {
+        append("{\"type\":\"settings_stderr\",\"hex\":\"");
+        end = i + 128 < diagnostics_used ? i + 128 : diagnostics_used;
+        while (i < end) {
+            char pair[3] = {hex[child_diagnostics[i] >> 4], hex[child_diagnostics[i] & 15], 0};
+            append(pair); i++;
+        }
+        append("\"}\n");
+    }
+    if (diagnostics_dropped) {
+        append("{\"type\":\"settings_stderr_truncated\",\"bytes_dropped\":");
+        number(diagnostics_dropped); append("}\n");
+    }
 }
 static void process_result(long status)
 {
@@ -153,6 +173,7 @@ void __attribute__((noreturn)) _start(void)
 begin:
     append("HEARTH_SETTINGS_PROBE_V1\n");
     result = run();
+    append_captured();
     process_result(result);
     append(result == 0 ?
         "{\"type\":\"settings_complete\",\"passed\":true}\n" :
