@@ -115,3 +115,10 @@ build/file-snapshot-20261031-v4, unexecuted. Next owner-timed snapshot will coll
 only the nine fixed files; root0 is a custom kernel view, not native active-root
 proof. Target receipt enforcement, actual installation-plan binding and journal
 replay remain pending. No installer/device writer was added.
+
+Observed: the first protected JFFS2 snapshot succeeded from c73904e/v4. Nine
+targets, seven existing originals all matching review, two new targets absent;
+complete private frame and host backup receipt independently verified. No
+installation. Native return pending owner confirmation; no loader remains.
+Next exact plan/receipt binding and interrupted-install recovery integration.
+See docs/research/filesystem-snapshot-result-2026-10-31.md.

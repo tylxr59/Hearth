@@ -818,3 +818,26 @@ CPIO 7096 bytes, uncompressed kernel 2881632 bytes. Profile-v4 remains unexecute
 Owner supplied a fresh sanitized native plist result: primary, firmware 5.9.4-5;
 recorded privately with source attributed to the owner terminal. Normal native
 USB is still required at the eventual run preflight. No loader is armed.
+
+## CURRENT: first protected JFFS2 snapshot succeeded (2026-10-31)
+
+Source c73904e/build file-snapshot-20261031-v4 executed ONCE. PTY session 76980
+has exited zero; no loader/collector remains. Complete private frame 81320 bytes,
+nine targets (seven existing, two absent), strict session/CRC/footer and custody
+receipt/readback accepted. Independent saved-frame decode/full backup verify
+passed; all seven fresh original byte strings match offline v2 review.
+Private output: private/file-snapshot-20261031-attempt-1/{capture.bin,backup/,
+attempt-observed.json,review-comparison.json}. Preserve all; never reuse v4 or
+remove its fsynced execution marker. No persistent configuration was installed.
+
+Owner was prompted to restart after exit; native home icon/USB return is PENDING.
+Do not arm another loader. On owner confirmation, independently require native
+USB and record a separate immutable native-return observation, then update the
+public result doc. Source label is custom root0 view; owner separately reported
+fresh primary/5.9.4-5 native plist before execution.
+
+This closes bounded read-only JFFS2 mounting/file capture and host custody
+measurement, not writer receipt enforcement, plan binding, after-reboot journal
+restore, actual installation, native app/transport, whole-firmware recovery or
+HVAC. Next implement those narrow commissioning pieces; no generic raw capture
+or repeat scratch experiment needed. See the filesystem-snapshot result doc.
