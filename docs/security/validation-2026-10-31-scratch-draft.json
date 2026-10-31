@@ -1,0 +1,40 @@
+{
+  "status": "offline-scratch-development-only",
+  "device_executed": false,
+  "persistent_operation_executed": false,
+  "restoration": "unverified",
+  "local_recovery_archive": {
+    "files_readback_verified": 37,
+    "bytes": 1091645440,
+    "encrypted": false,
+    "independent_storage": false,
+    "owner_selected_single_local_copy": true,
+    "private_contents_and_digests_published": false
+  },
+  "host_validation": {
+    "pytest_passed": 419,
+    "optional_integrations_skipped": 3,
+    "new_scratch_tests": 48,
+    "make_check": "passed",
+    "original_c_core_and_framing": "ASan and UBSan passed",
+    "original_encoder_synthetic_public_bchlib_vectors_matched": 7,
+    "firmware_executed_on_host": false
+  },
+  "compile_scope": {
+    "kernel_adapter": "compiled against pinned kernel in isolated rootless builder",
+    "standalone_supervisor": "compiled as static ARM with warnings treated as errors",
+    "supervisor_integrated_into_kernel": false,
+    "sealed_manifest": false,
+    "reproducible_current_draft": false,
+    "device_execution_wrapper": false
+  },
+  "remaining": [
+    "kernel adapter I/O fault tests",
+    "supervisor integration and review",
+    "private mask and local archive preflight before USB",
+    "source and artifact integrity verification",
+    "fresh reproducible sealed builds",
+    "advance first-write notification and owner-timed restart",
+    "physical scratch program, independent ECC and exact restoration measurement"
+  ]
+}

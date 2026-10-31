@@ -409,6 +409,42 @@ historical. No HAOS, aarch64, flashing, firmware recovery or HVAC claims were ad
 
 ## Read before implementation
 
+Owner decision 2026-10-31: one local recovery archive on this PC is sufficient
+for this unit's bounded recovery development; the owner explicitly authorized
+modifying the two-encrypted-offline-copy plan. Do not ask for two storage targets
+again. Selected unencrypted owner-only archive:
+private/local-recovery-20261031/{recovery.tar,manifest.json}, 37 members fully
+read back against source digests, four large inputs freshly matched original
+records, files/directory fsynced, permissions 0600/0700. Inputs unchanged;
+no identifiers/contents/digests published. Recipe in ignored build/. This is
+same-storage archival protection, not independent/offline storage or restoration.
+Fresh exact-region acquisition, durable backup acknowledgement, reviewed bounded
+write/erase/restore, independent ECC verification and advance danger notification
+remain required. No loader is armed or flash writer executed. See
+docs/research/local-recovery-archive-2026-10-31.md and docs/hardware.md.
+Draft fixed-block recovery code now exists under firmware/scratch_test/: original
+GPL transaction/core/kernel adapter, MIT supervisor/framing/backup/BCH/session.
+Core operates only block1312/page1 and permits one program/erase/marker restore;
+hardware bounds are not yet qualified. Host snapshot ACK follows readback and
+file/directory/parent fsync; errors never return a token. Independent degree52
+BCH encoder matches seven synthetic pinned-bchlib vectors; private storage mask
+must remain host-only. Duplex socket tests check pre-ACK storage failure and
+post-ACK uncertainty, fixed scope/content/ECC/restoration rejection. Adapter
+compiled in build/scratch-compile-20261031, but its borrowed geometry init cannot
+issue scratch commands. The new supervisor source is NOT in that kernel draft;
+there is no sealed manifest or execution wrapper (boot.sh always refuses).
+No device test requested/armed. Next: integrate/review supervisor, fault-test
+adapter I/O, verify private mask/archive preflight, then seal/reproduce and notify
+owner of exact first-write risk before a ready-timed attempt. Do not manually
+boot the compile draft or rerun an executed earlier profile.
+Current validation: 419 host tests passed, three optional integrations skipped;
+48 new scratch checks, make check passed. Standalone scratch supervisor compiled
+as static ARM with -Wall/-Wextra/-Werror in the same isolated builder at
+build/scratch-supervisor-compile-20261031; it was not executed/integrated. Original
+C core/framing tests use ASan/UBSan; kernel-adapter hardware/I/O semantics are
+still unqualified. Public scope: docs/security/validation-2026-10-31-scratch-draft.json.
+Normal Nest USB 2464:0002 was independently observed during this offline work.
+
 1. `README.md` and `TODO.md` for scope and outstanding work.
 2. `docs/architecture/0001-local-transport.md` for the provisional architecture decision.
 3. `docs/research/findings.md`, `docs/research/upstreams.json` and `docs/protocol/nest.md` for evidence and protocol limits.
