@@ -51,3 +51,30 @@ power-loss or whole-firmware recovery, physical networking/native fetch, trusted
 time bootstrap, sustained battery runtime or HVAC operation. Next is a fresh
 notified owner-timed preflight against the refreshed plan. Any persistent commit
 requires separate advance notice and timing readiness.
+
+## Second preflight and snapshot handoff correction
+
+Source `534e0b0`/install-v2 completed the same 56 cases and again refused target7
+before any commit/window/RW remount/transaction. All NAND counters stayed zero;
+cleanup sealed WP and confirmed safe restart. A second fresh nine-file capture
+and host custody validated. The command exited; the unit remains in sealed RAM
+mode with USB connected/base detached, rather than returning to native startup.
+Evidence is private/file-writer-20261031/preflight-attempt-2. Never rerun install-v2.
+
+Bounded XML inspection of the two most recent captures found identical keys and
+values despite different file bytes. Therefore another native boot can invalidate
+an exact-byte snapshot without a meaningful settings change. This is a reason to
+change the boot sequence, not weaken original-file validation.
+
+The new `--handoff-from` entry permits only an explicitly reviewed zero-write
+snapshot session and a new plan whose captured source bytes exactly match it.
+It validates all prior selftests/result/custody, refuses any prior decision or
+write attempt, requires sealed protection and accepts only known RAM USB mode.
+The owner still times a fresh ROM restart; no automatic retry or commit exists.
+Eight new host tests exercise acceptance and rejection for native/stale ROM,
+changed capture, broken custody, prior decision, uncertain result and bad selftests.
+
+Fresh v3 capsule/pin, kernel v5, helpers v6 and paired action images v3 preserve
+the second capture's exact bytes. The matching backend credential is unchanged.
+The second snapshot/result remains immutable. No native restart should occur
+between this snapshot and the next supervised RAM preflight.

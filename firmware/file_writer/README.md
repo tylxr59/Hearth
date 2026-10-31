@@ -75,3 +75,15 @@ Evidence is exclusive, owner-only and retained. Reports are CRC framed and bound
 to exact plan, backup receipt and action. CRC checks transport integrity; it does
 not defend against a malicious USB peer. Owner control of PC/device and reviewed
 images remains a trust assumption.
+
+## Snapshot handoff
+
+Stock startup may serialize unchanged settings values into different bytes. Do
+not relax exact originals or keep cycling through native startup. After a completed
+zero-write changed-file run, `--handoff-from PRIVATE_ATTEMPT` permits one fresh,
+owner-timed RAM-to-ROM install preflight. It requires all 56 prior selftests,
+matching saved execution/result, no decision files, sealed WP, zero write/remount
+counters, verified snapshot custody, and an exact byte match between the new
+capsule's source frame and that prior capture. Only the known RAM USB identity is
+accepted; native mode and already-active ROM are refused. This is an explicit
+new supervised boot, never an automatic retry or persistent commit.

@@ -164,3 +164,12 @@ Actual unit backend enrollment now matches the private credential; host syntheti
 native entry passed TLS, no physical traffic/commands. Fresh v2 capsule/images
 prepared against changed settings; next supervised preflight. No installation
 or restoration pass. See docs/research/file-writer-preflight-result-2026-10-31.md.
+
+Second run again refused changed target7 with all56 cases passing and zero writes.
+Recent XML settings keys/values are identical despite changed serialized bytes.
+Keep sealed RAM mode: a new checked --handoff-from entry binds the next private
+plan to that exact captured source and custody, avoiding another invalidating
+native boot. It rejects decisions/writes, uncertain results, wrong captures,
+broken custody, native or stale ROM. Full host suite774/five skips; new v3 pair
+checked/reproduced. Next owner-timed RAM handoff, then separate first-write notice
+if real-file preflight passes. No persistent installation or physical transport.

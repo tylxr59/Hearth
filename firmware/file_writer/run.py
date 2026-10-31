@@ -102,6 +102,71 @@ def require_entry(binding, recover_from=None, *, sysfs=Path("/sys/bus/usb/device
     return {"status": "reviewed-interrupted-session-ram-entry", "native_startup_required": False}
 
 
+def require_snapshot_handoff(record, binding, previous, *, sysfs=Path("/sys/bus/usb/devices")):
+    """One owner-timed RAM handoff from a verified zero-write changed-file run.
+
+    Native startup can rewrite identical settings values in a new byte order.
+    Keep exact byte checks, and bind the new plan to the preceding captured bytes
+    instead of requiring another native boot that invalidates its own snapshot.
+    """
+    if binding.action != 1:
+        raise ValueError("snapshot handoff is restricted to fresh install preflight")
+    previous = private_path(previous)
+    execution = json.loads(private_read(previous / "execution.json", 65536))
+    ended = json.loads(private_read(previous / "finished.json", 65536))
+    result = protocol.validate_result(private_read(previous / "result.json", 16384), 1)
+    observed = json.loads(private_read(previous / "observed.json", 65536))
+    protocol.validate_selftest(private_read(previous / "selftest.jsonl", 16384))
+    if (
+        ended != {"host_command_exited": True}
+        or observed != {"execution": execution, "result": result}
+        or execution["action"] != 1
+        or any(
+            (previous / name).exists()
+            for name in ("decision.json", "decision-sending.json", "decision-sent.json")
+        )
+        or any(
+            result[key] != value
+            for key, value in {
+                "initial_error": 2,
+                "snapshot_available": 1,
+                "commit_received": 0,
+                "window_opened": 0,
+                "rw_attempted": 0,
+                "transaction_called": 0,
+                "program": 0,
+                "erase": 0,
+                "marker": 0,
+                "failed": 0,
+                "phase": 2,
+                "protected": 1,
+                "safe_to_restart": 1,
+            }.items()
+        )
+    ):
+        raise ValueError("verified completed zero-write snapshot attempt required")
+    capsule = private_path(record["capsule"])
+    source = private_read(previous / "changed-files.bin", protocol.MAX_SNAPSHOT + 56)
+    if source != private_read(capsule / "capture.bin", protocol.MAX_SNAPSHOT + 56):
+        raise ValueError("fresh capsule is not bound to this exact RAM capture")
+    from firmware.file_snapshot.run import decode
+
+    records = decode(source, bytes.fromhex(execution["plan"]))
+    scope = {
+        "session": bytes.fromhex(execution["plan"]),
+        "plan": hashlib.sha256(
+            b"read-only-root0-snapshot-v1\n" + "\n".join(file_backup.TARGETS).encode()
+        ).digest(),
+        "native_root": "root0",
+    }
+    file_backup.verify(previous / "changed-files-backup", records, **scope)
+    usb = sysfs / "1-1"
+    identity = ((usb / "idVendor").read_text().strip(), (usb / "idProduct").read_text().strip())
+    if identity not in (("0525", "a4a7"), ("0525", "a4a6")):
+        raise ValueError("known snapshot RAM mode required; no native restart or stale ROM")
+    return {"status": "reviewed-zero-write-snapshot-handoff", "native_startup_required": False}
+
+
 def receive(fd, output, binding, execution, recheck):
     session = Session(binding, lambda name, data: save(output, name, data))
     decoder = protocol.Decoder(binding)
@@ -181,7 +246,7 @@ def decide(output, *, commit, expected_action):
     return {"status": "local-decision-recorded", "commit": commit, "device_result": "pending"}
 
 
-def run(root, recovery, output=None, *, execute=False, recover_from=None):
+def run(root, recovery, output=None, *, execute=False, recover_from=None, handoff_from=None):
     root, recovery = private_path(root), private_path(recovery)
     record, binding = checked_pair(root, recovery)
     if not execute:
@@ -191,7 +256,12 @@ def run(root, recovery, output=None, *, execute=False, recover_from=None):
     output = private_path(output)
     if output.exists() or output.is_symlink() or output.parent.stat().st_mode & 0o077:
         raise ValueError("fresh owner-only output required")
-    require_entry(binding, recover_from)
+    if handoff_from is not None:
+        if recover_from is not None:
+            raise ValueError("one explicit RAM entry reason required")
+        require_snapshot_handoff(record, binding, handoff_from)
+    else:
+        require_entry(binding, recover_from)
     output.mkdir(mode=0o700)
     execution = {
         "profile": str(root),
@@ -202,6 +272,7 @@ def run(root, recovery, output=None, *, execute=False, recover_from=None):
         "started_monotonic": time.monotonic(),
         "nonce": os.urandom(32).hex(),
         "recover_from": str(private_path(recover_from)) if recover_from is not None else None,
+        "handoff_from": str(private_path(handoff_from)) if handoff_from is not None else None,
     }
     save(root, "execution-started.json", encode(execution))
     save(output, "execution.json", encode(execution))
@@ -259,7 +330,9 @@ if __name__ == "__main__":
     boot.add_argument("recovery")
     boot.add_argument("output", nargs="?")
     boot.add_argument("--execute-writer-preflight", action="store_true")
-    boot.add_argument("--recover-from", help="reviewed exited private write attempt; restore only")
+    entry = boot.add_mutually_exclusive_group()
+    entry.add_argument("--recover-from", help="reviewed exited private write attempt; restore only")
+    entry.add_argument("--handoff-from", help="verified zero-write snapshot attempt; install only")
     decision = sub.add_parser("decide")
     decision.add_argument("output")
     flags = decision.add_mutually_exclusive_group(required=True)
@@ -275,6 +348,7 @@ if __name__ == "__main__":
                 args.output,
                 execute=args.execute_writer_preflight,
                 recover_from=args.recover_from,
+                handoff_from=args.handoff_from,
             )
         else:
             action = args.abort or (1 if args.execute_persistent_file_install else 2)

@@ -996,3 +996,34 @@ Do not restore initial registry over this newer state or rotate capsule credenti
 without rebuilding the exact private plan. Native telemetry mode still disables
 all commands. Next refreshed owner-timed RAM preflight; persistent commit needs
 its own advance notice/timing readiness. See the dated preflight result.
+
+## CURRENT: second zero-write refusal; retain sealed RAM for snapshot handoff
+
+534e0b0/install-v2 ran once: all56 selftests pass, target7 changed again,
+zero commit/window/RW remount/transaction/counters, sealed WP, safe restart.
+Fresh capture/custody saved at private/file-writer-20261031/preflight-attempt-2.
+The owner reported the ROM sequence done. **Do not request native startup now**:
+unit remains in sealed RAM with USB connected/base detached. XML inspection
+confirms identical keys/values between recent snapshots despite changed bytes.
+Native boot can invalidate exact-byte originals by rewriting serialization.
+
+New explicit --handoff-from accepts only a completed verified zero-write snapshot,
+all56 selftests, consistent execution/result, no decision files, sealed WP, exact
+new-capsule source-frame match and verified custody, with known RAM USB identity.
+No native/stale-ROM entry or automatic retry. Owner still times a fresh restart.
+Eight host tests cover it. Existing --recover-from remains restore-only for a
+recorded potentially persistent failed attempt; these are distinct entry reasons.
+
+Fresh private v3 capsule/repro and v3-pin bind attempt2's capture; kernel v5,
+helpers v6/repro and paired images v3 are checked/reproduced and unexecuted. Credential unchanged,
+backend enrollment already matches. Prior images/results are historical and
+must not be rerun. Next checked owner-timed RAM snapshot handoff, no persistent
+commit until separate advance notice/timing readiness. No installation/restore
+or live physical transport/HVAC claim. See the preflight-result follow-up.
+make check and 774 host tests pass/five optional skips; no further source test
+rerun is required for documentation-only updates. Next boot command, only after
+owner readiness, PTY: .venv/bin/python -m firmware.file_writer.run boot
+private/file-writer-20261031/install-v3 private/file-writer-20261031/restore-v3
+private/file-writer-20261031/preflight-attempt-3 --execute-writer-preflight
+--handoff-from private/file-writer-20261031/preflight-attempt-2.
+No persistent commit is part of that readiness request.
