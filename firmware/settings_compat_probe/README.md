@@ -37,7 +37,7 @@ environment and caches the result. Each child has an 8 KiB stdout and 2 KiB raw
 stderr cache, a 90-second alarm and a 120-second supervisor deadline. Excess
 stderr is drained and counted, with a 1 MiB excess-output stop limit. The original
 retains the first 2 KiB; the candidate retains the final 2 KiB and enables
-`LD_DEBUG=files,reloc` to locate the pre-initializer failure. The shared
+`LD_DEBUG=files,reloc,bindings` to locate the pre-initializer failure. The shared
 report is bounded at 32 KiB. Streaming matchers inspect **all** stderr bytes,
 including those discarded from the diagnostic cache. The original must reproduce
 the synthetic disclosure pattern; the candidate must emit none. A formatted

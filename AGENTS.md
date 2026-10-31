@@ -219,8 +219,14 @@ restart done and native USB was independently observed. Never rerun it. Startup
 fails before initializer/main diagnostics, with exact cause still unknown.
 Next diagnostic profile private/settings-compat-probe-20261031/profile-loader-v1
 adds candidate-only LD_DEBUG=files,reloc and retains its final 2 KiB stderr window;
-original first-window capture and all-byte secret scanning remain. No candidate
-correction has been validated. Owner readiness is required before arming.
+original first-window capture and all-byte secret scanning remain. This profile was executed once using source 21e2e64. Original twelve cases still
+pass; candidate SIGSEGV occurs during relocation processing of the compatibility
+DSO, before any initializer marker. Report 14247 bytes/50 rows and attempt-3.json
+are private; native USB return observed after owner restart done. Never rerun it.
+Next fresh profile private/settings-compat-probe-20261031/profile-bindings-v1
+adds loader binding diagnostics; all limits and 29 case gates are unchanged.
+No candidate correction has been validated. Owner readiness is required before
+arming.
 The owner has only this unit and explicitly accepts potentially dangerous same-unit
 work; spare-only recovery restriction is waived, advance notification before
 persistent writes and separate physical HVAC authorization remain. Continue through

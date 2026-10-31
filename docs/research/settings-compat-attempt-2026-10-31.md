@@ -52,3 +52,18 @@ host sanitizer harness checks final-window contents across chunk sizes and refus
 at the discard limit. This changes diagnostic visibility, not any case acceptance
 condition. Loader diagnostics remain private; no actual settings/native app are
 introduced and flash/network/clock restrictions remain unchanged.
+
+## Loader-relocation attempt
+
+A third supervised attempt used source `21e2e64` and fresh private
+`profile-loader-v1`. The loader again transferred all three files and exited zero;
+the collector saved 14247 bytes/50 rows and exited one. Original baseline still
+completed twelve cases with zero status. The candidate's final 2 KiB diagnostics
+end at relocation processing of `libhearth-settings-compat.so`, after dependencies
+and the fault module. It again exited through SIGSEGV before initialization.
+The precise failing relocation/symbol remains unknown; the next fresh profile
+adds the loader's binding diagnostics, with identical limits and case gates.
+
+Result, decoded private diagnostic tail and attempt-3.json are preserved. The
+owner reported restart done after command exit; normal USB was observed. No
+persistent write or automatic retry occurred. Do not rerun any executed profile.

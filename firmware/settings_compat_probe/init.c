@@ -58,7 +58,7 @@ static int run(const char *variant, int candidate)
     char *const env[] = {"LD_LIBRARY_PATH=/lib", "HOME=/nonexistent", "LC_ALL=C", candidate ?
         "LD_PRELOAD=/lib/libhearth-settings-compat.so:/lib/libhearth-settings-faults.so" :
         "LD_PRELOAD=/lib/libhearth-settings-faults.so",
-        candidate ? "LD_DEBUG=files,reloc" : "HEARTH_LAB_ORIGINAL=1", 0};
+        candidate ? "LD_DEBUG=files,reloc,bindings" : "HEARTH_LAB_ORIGINAL=1", 0};
     output_used = diagnostics_used = diagnostics_dropped = 0;
     if (!scan_init(&secrets,"synthetic_secret_") || !scan_init(&passthrough,"HEARTH_COMPAT_LOG_PASSTHROUGH 17 probe 23 29 31 1.5")) return -211;
     if (sc(42, (long)pipefd, 0, 0, 0, 0) != 0) return -201;
