@@ -134,3 +134,12 @@ private/pprio.h native-handle declaration, without copying its implementation.
 Its required ARM native exports were checked separately. The RAM permission
 measurement uses syscall/layout constants reviewed in the already pinned Linux
 ARM stat header; no third-party stat implementation or firmware runs on the host.
+
+The file transaction core, Linux adapter, startup editor and combined RAM lab are
+original MIT code. Public ARM Linux syscall/flag/stat layout references from the
+already pinned kernel are recorded in firmware/file_install/sources.json; no
+third-party file-write implementation is copied. Original host filesystem tests
+and trusted host-only preload/exec fixtures run under installed host tools. No
+proprietary ARM firmware runs on the development host. Private RAM images reuse
+the same retained native runtime libraries and GPL bootstrap/kernel; no new
+redistribution permission or complete source/binary correspondence is asserted.

@@ -79,3 +79,11 @@ permission failure preserved old values and retry, unrelated opens stayed 0666.
 No persistent installation occurred. The exact instrumented build is measured;
 standalone/full application and filesystem installation/rollback remain open.
 See docs/research/settings-permissions-result-2026-10-31.md.
+
+File commissioning follow-up: original nine-file transaction/rollback and startup
+wrapper preparation now have host/sanitizer/ARM-build coverage. Exact private
+nine-file review retained; no installer command/device writer is enabled. A single
+68-case RAM profile batches standalone storage and actual file transaction tests.
+It is prepared but unexecuted. See docs/research/file-commissioning-preparation-2026-10-31.md.
+Live snapshot/root verification, fresh settings merge, backup receipts, filesystem/
+kernel integration, interrupted-write recovery and physical native exchange remain.

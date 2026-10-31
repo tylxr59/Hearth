@@ -31,10 +31,10 @@ def source_hashes():
     )
 
 
-def compile_helpers(output, *, legacy_linker=False):
+def compile_helpers(output, *, legacy_linker=False, candidate_trace=True):
     output = Path(output).resolve()
     output.mkdir(mode=0o700, parents=True, exist_ok=False)
-    compile_library(output / "candidate", trace=True, legacy_linker=legacy_linker)
+    compile_library(output / "candidate", trace=candidate_trace, legacy_linker=legacy_linker)
     stubs = output / "stubs"
     stubs.mkdir(mode=0o700)
     common = [

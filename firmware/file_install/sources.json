@@ -1,0 +1,19 @@
+{
+  "kernel_repository": "https://github.com/exploiteers/NestDFUAttack",
+  "kernel_revision": "930b834b7f1f082b8761aa5c5af765b4b3e99dc9",
+  "files": {
+    "arch/arm/include/asm/fcntl.h": {
+      "sha256": "0b760a9d25896b27379a46fd4f6864cd4df2a40b65b9ab263a1753f12fddff89"
+    },
+    "arch/arm/include/asm/stat.h": {
+      "sha256": "753a4f5c5efd681cf27180d7ca7e182a664469abd6d7886802f71c9bc0a883c1"
+    },
+    "arch/arm/include/asm/unistd.h": {
+      "sha256": "69441c609b1286284b9885fe42b879094ef194f0f32caaf81c579aa967ec22bf"
+    },
+    "include/asm-generic/fcntl.h": {
+      "sha256": "d374766361cbde74898ec089fb34bd7cee5f586cbb162e6a4fb0d12af1f04f10"
+    }
+  },
+  "use": "ARM Linux syscall numbers, file flags and stat64 ABI layout review only. No third-party implementation copied or compiled into the file engine. Target adapter remains unexecuted."
+}

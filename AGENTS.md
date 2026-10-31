@@ -656,3 +656,43 @@ attempt-1-{prepared,observed,native-return}.json. See the dated permissions resu
 The exact instrumented GNU candidate is measured; standalone no-trace/full
 native application and filesystem install/rollback remain unverified. Next is
 that narrow filesystem commissioning path, not more generic NAND research.
+
+## File commissioning engine preparation (2026-10-31)
+
+Read docs/research/file-commissioning-preparation-2026-10-31.md and
+firmware/file_install/README.md. Original C transaction/adapter code now handles
+the nine fixed files, preflight/staging/readback/journal/rollback, symlink/hardlink
+and unsafe-mode refusal. It has host real-filesystem/sanitizer coverage and ARM
+cross-compilation. No apply CLI, mount/USB/kernel writer, live snapshot/export,
+backup receipt integration or after-reboot journal replay exists. Do not call it
+with device roots or claim installation ready. Partial/incomplete rollback is
+explicit; originals/journal stay in a private recovery directory.
+
+Native startup is prepared through provisioning/native_startup.py: only start-as
+changes to an original exec wrapper. It exports LD_PRELOAD inside the wrapper,
+then execs native nlclient; stop executable and PID identity stay unchanged.
+Do not put preload on start-stop-daemon itself. Captured native script mode is
+0750, web library 0644, settings 0644; selected originals have UID/GID 0. The
+private native-commissioning-20261031-v2 is now a nine-file review only, retaining
+v1. Credentials are not installed/enrolled. Fresh current settings must be merged;
+never blindly apply the stale capture-derived settings. Keep UniFi unchanged.
+
+Prepared combined RAM diagnostic: private/file-commissioning-ram-20261031/profile-v6,
+separate profile-v6-repro; helpers build/file-commissioning-ram-20261031/helpers-v4
+and helpers-v4-repro. Seven artifacts/full RAM inventories match. It combines
+36 checks of the exact GNU standalone no-trace settings candidate with 32 file
+transaction cases on synthetic RAM roots only. Kernel has no MTD/block/RTC or
+physical network; no native application/actual settings/credentials/mounts. The
+RAM adapter rejects JFFS2; normal JFFS2 adapter is separate and unexecuted.
+All 29 required libc imports were checked privately. No loader is armed and no
+profile has executed. Use firmware/file_install_probe/boot.sh offline; future
+PTY flag is --execute-experimental-file-ram-lab only after owner restart readiness.
+Preserve final profile/results and use a fresh attempt record; no automatic retry.
+
+Final host validation for this preparation: make check passed; full default suite
+564 passed/five unchanged optional integration skips; 62 focused new checks pass.
+Public report: docs/security/validation-2026-10-31-file-commissioning.json. The
+normal adapter refuses unsupported/nonempty extended-attribute queries; the
+future JFFS2 kernel must expose those attributes. RAM-only builds may accept
+EOPNOTSUPP on their memory filesystem. Profile-v6 remains unexecuted, with no
+file-result.jsonl. The review bundle/host tests do not enable device writes.

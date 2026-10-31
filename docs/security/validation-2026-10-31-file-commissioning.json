@@ -1,0 +1,30 @@
+{
+  "date": "2026-10-31",
+  "scope": "Original bounded file transaction/startup preparation and unexecuted combined ARM RAM lab",
+  "results": {
+    "make_check": "passed: Ruff lint/format and Bandit",
+    "default_pytest": "564 passed, 5 optional integrations skipped",
+    "new_focused_checks": "62 passed",
+    "host_filesystem_scenarios": 33,
+    "host_memory_sanitizers": "ASan/UBSan passed",
+    "arm_original_source_cross_compilation": "passed; no firmware executed on host",
+    "startup_wrapper_pid_arguments_and_preload": "passed using trusted original host fixtures",
+    "private_ram_profile_offline_check": "passed",
+    "fresh_build_reproducibility": "seven artifacts and complete RAM inventories match",
+    "required_native_libc_imports_present": 29,
+    "target_ram_cases_prepared": 68,
+    "target_ram_executed": false,
+    "device_files_modified": false,
+    "actual_unit_enrolled": false
+  },
+  "limits": [
+    "Caller backup-confirmation boolean is not a completed snapshot/export/receipt protocol",
+    "No device filesystem mount, kernel writer, apply CLI or after-reboot journal replay is implemented",
+    "Normal adapter requires JFFS2 and working extended-attribute queries; unsupported metadata is refused",
+    "ARM RAM adapter accepts only memory filesystems; the diagnostic kernel has no flash support",
+    "Host fsync/error tests do not establish JFFS2 or power-loss durability",
+    "Nine-file private review remains non-installable and capture-derived settings require a fresh merge",
+    "No native application, real device transport, restoration or HVAC claim",
+    "Backend runtime did not change; previous broker/container tests were not repeated"
+  ]
+}

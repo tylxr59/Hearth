@@ -62,7 +62,7 @@ def receive(fd, deadline, capture=None):
     raise TimeoutError("bounded SETTINGS result was not received")
 
 
-def observe(port="1-1", seconds=300, capture=None):
+def observe(port="1-1", seconds=300, capture=None, *, receive_fn=None):
     if not re.fullmatch(r"[0-9]+-[0-9]+(?:\.[0-9]+)*", port) or not 1 <= seconds <= 300:
         raise ValueError("known port and bounded duration required")
     usb = Path("/sys/bus/usb/devices") / port
@@ -101,7 +101,7 @@ def observe(port="1-1", seconds=300, capture=None):
                 raw[2] |= termios.CLOCAL | termios.CREAD
                 raw[6][termios.VMIN] = raw[6][termios.VTIME] = 0
                 termios.tcsetattr(fd, termios.TCSANOW, raw)
-                return receive(fd, deadline, capture)
+                return (receive_fn or receive)(fd, deadline, capture)
             finally:
                 if previous is not None:
                     with contextlib.suppress(OSError):
