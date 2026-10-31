@@ -2,7 +2,10 @@
 
 This original diagnostic runs the original settings library and the
 [storage candidate](../settings_compat/README.md) in separate unprivileged processes
-in one RAM boot. **Prepared, unexecuted.** Neither nlclient/osm nor real settings,
+in one RAM boot. The first attempt completed the original baseline but the
+candidate crashed before its first case; see the
+[attempt record](../../docs/research/settings-compat-attempt-2026-10-31.md).
+No passing comparison has been observed. Neither nlclient/osm nor real settings,
 credentials, production networking or flash filesystems are used.
 
 It repeats the twelve measured I/O cases for each variant (24 cases), then tests
@@ -20,6 +23,13 @@ bootstrap and 34 native baseline libraries are unchanged; only original helper,
 instrumentation and correction code is added. MTD/block/physical-network/RTC
 support remains disabled. PID 1 performs no network setup or clock change.
 Boot-stage hardware/power behavior remains unverified; keep the base detached.
+
+The next diagnostic build enables fixed, once-per-call-site phase markers in the
+single-threaded helper/candidate. They use stderr directly without native logging,
+TLS, allocation or formatting and contain no values, paths or pointers. Ordinary
+standalone candidate builds omit these markers. Diagnostic capture limits and
+full-stream secret matching remain unchanged; markers cannot substitute for any
+of the 29 required cases or successful child statuses.
 
 PID 1 accepts only `BEGIN_SETTINGS_COMPAT_V1`, runs each variant once with a fixed
 environment and caches the result. Each child has an 8 KiB stdout and 2 KiB raw

@@ -3,6 +3,7 @@
  * A frame belongs to one call/thread; no global sticky I/O failure state.
  */
 #include "core.h"
+#include "trace.h"
 extern int strcmp(const char *, const char *);
 extern int strncmp(const char *, const char *, hearth_size);
 extern hearth_size strlen(const char *);
@@ -25,9 +26,11 @@ struct setter_call {
 static __thread struct setter_call *setter;
 int hearth_storage_set(void *object, const char *key, const char *value)
 {
+    HEARTH_PHASE("set.enter");
     struct setter_call frame;
     int result;
     frame.parent = setter; frame.count = 0; setter = &frame;
+    HEARTH_PHASE("set.tls");
     result = hearth_ops.set(object,key,value);
     setter = frame.parent;
     for (unsigned int i=0;i<frame.count;i++) hearth_ops.release(frame.deferred[i]);
@@ -41,6 +44,7 @@ static int aliases(const char *input, const char *old)
 
 int hearth_storage_write(void *object)
 {
+    HEARTH_PHASE("write.enter");
     struct transaction frame;
     const char *path = hearth_ops.filename(object);
     hearth_size size = 0;
@@ -52,6 +56,7 @@ int hearth_storage_write(void *object)
     frame.path = path; frame.path_size = size;
     frame.parent = active; frame.descriptor = 0; frame.failed = 0;
     active = &frame;
+    HEARTH_PHASE("write.tls");
     result = hearth_ops.write(object);
     if (frame.failed || result != 0) {
         /* The native writer already unlocked. Take its lock before restoring,
@@ -109,7 +114,10 @@ int hearth_storage_close(void *fd)
 }
 int hearth_storage_log_blocked(void)
 {
-    if (!active) return 0;
+    HEARTH_PHASE("log.before_tls");
+    struct transaction *volatile frame = active;
+    HEARTH_PHASE("log.after_tls");
+    if (!frame) return 0;
     suppressed++;
     return 1;
 }
@@ -122,6 +130,7 @@ static int failed_add(int code)
 }
 int hearth_storage_add(void *object, const char *key, const char *value)
 {
+    HEARTH_PHASE("add.enter");
     const char *old;
     char *copied_key = 0, *copied_value;
     hearth_size key_size, value_size;

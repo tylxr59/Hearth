@@ -104,6 +104,7 @@ def package(base, helpers, review, output):
     if (
         record["source_sha256"] != source_hashes()
         or candidate_record["source_sha256"] != candidate_sources()
+        or candidate_record.get("fixed_phase_trace") is not True
         or set(record["files"])
         != {"settings-init", "settings-test", "libhearth-settings-faults.so"}
     ):

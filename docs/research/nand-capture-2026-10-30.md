@@ -82,3 +82,9 @@ No further mode change is needed for offline static inspection. Current host
 validation remains 153 passed tests with Podman integration enabled plus static
 checks; the separate manual ECC/filesystem measurements above are not CI tests.
 See the [dated validation record](../security/validation-2026-10-30-nand-capture.json).
+
+
+The [2026-10-31 supplemental padding review](nand-padding-review-2026-10-31.md)
+now resolves the four retained chunks as noncanonical unused parity-padding bits,
+with independently valid protected BCH payloads and unchanged data. Original raw
+and derived files/reports remain unchanged. Restoration remains unverified.

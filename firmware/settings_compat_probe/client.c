@@ -3,6 +3,7 @@
  * Opaque C++ ABI is specific to the privately reviewed Display-2.6 library.
  */
 #include "control.h"
+#include "../settings_compat/trace.h"
 extern void *malloc(size_t);
 extern void free(void *);
 extern int mkdir(const char *, unsigned int), open(const char *, int, ...);
@@ -26,7 +27,9 @@ static unsigned int *create(const char *path, int *result)
     if (!object) _exit(101);
     for (n = 0; n < 16; n++) object[n] = 0x5ac39e71;
     construct(object);
+    HEARTH_PHASE("helper.constructed");
     *result = initialize(object, path);
+    HEARTH_PHASE("helper.initialized");
     return object;
 }
 static int canary(const unsigned int *object)
@@ -75,6 +78,7 @@ static int run_case(int index)
     snprintf(temporary, sizeof(temporary), "%s.tmp", destination);
     if (mkdir(directory, 0700) != 0 || !baseline(destination)) return 0;
     object = create(destination, &init);
+    HEARTH_PHASE("helper.created");
     if (init != 0) { release(object); return 0; }
     for (i = 0; i < 2; i++) {
         const char *value = get(object, keys[i]);
@@ -84,6 +88,7 @@ static int run_case(int index)
         if (set(object, keys[i], new_values[i]) != 0) { release(object); return 0; }
     fault_begin((enum fault)index, directory, destination, temporary);
     first_result = save(object); fault_snapshot(&first); fault_disarm();
+    HEARTH_PHASE("helper.saved");
     reload(destination, &reload1, &new1, &old1, &guard);
     fault_begin(NORMAL, directory, destination, temporary);
     second_result = save(object); fault_snapshot(&second); fault_disarm();
@@ -140,6 +145,7 @@ static int allocation_case(int index)
 }
 int main(int argc,char **argv)
 {
+    HEARTH_PHASE("helper.main");
     void *library,*candidate;
     void (*logger)(int,const char *,const char *,...);
     int i, n;
@@ -149,6 +155,7 @@ int main(int argc,char **argv)
     umask(077); alarm(90);
     library = dlopen("/lib/libnlappcore.so",2|0x100);
     if (!library || !fault_load()) return 110;
+    HEARTH_PHASE("helper.library");
 #define LOAD(p,n) do { p = (__typeof__(p))dlsym(library,n); if (!p) return 111; } while (0)
     LOAD(construct,"_ZN10nlSettingsC1Ev"); LOAD(destroy,"_ZN10nlSettingsD1Ev");
     LOAD(initialize,"_ZN10nlSettings4InitEPKc"); LOAD(set,"_ZN10nlSettings8SetValueEPKcS1_"); LOAD(get,"_ZNK10nlSettings8GetValueEPKc");
@@ -162,6 +169,7 @@ int main(int argc,char **argv)
         candidate = dlopen("/lib/libhearth-settings-compat.so",2);
         if (!candidate || !suppressed_logs || (void *)set != dlsym(candidate,"_ZN10nlSettings8SetValueEPKcS1_") || (void *)save != dlsym(candidate,"_ZN10nlSettings5WriteEv") || dlsym(0,"_ZN8nlConfig8AddEntryEPKcS1_") != dlsym(candidate,"_ZN8nlConfig8AddEntryEPKcS1_")) return 112;
     } else if (suppressed_logs || (void *)save != dlsym(library,"_ZN10nlSettings5WriteEv")) return 112;
+    HEARTH_PHASE("helper.bindings");
     for (i=0;i<12;i++) if (!run_case(i)) return 113;
     if (suppressed_logs) for (i=0;i<5;i++) if (!allocation_case(i)) return 114;
     logger(4,0,"HEARTH_COMPAT_LOG_PASSTHROUGH %d %s %d %d %d %.1f",17,"probe",23,29,31,1.5);

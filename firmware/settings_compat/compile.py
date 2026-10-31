@@ -8,14 +8,14 @@ from firmware.tls_probe.compile import LIBC, run
 from firmware.tls_probe.package import sha
 
 ASSETS = Path(__file__).parent
-SOURCES = ("core.h", "core.c", "bind.c", "log_forward.S", "exports.map")
+SOURCES = ("core.h", "core.c", "bind.c", "trace.h", "log_forward.S", "exports.map")
 
 
 def source_hashes():
     return {n: sha((ASSETS / n).read_bytes()) for n in SOURCES}
 
 
-def compile_library(output):
+def compile_library(output, *, trace=False):
     output = Path(output).resolve()
     output.mkdir(mode=0o700, parents=True, exist_ok=False)
     common = [
@@ -53,6 +53,7 @@ def compile_library(output):
         + [
             "-shared",
             "-fPIC",
+            *(["-DHEARTH_STORAGE_TRACE"] if trace else []),
             "-Wl,-z,defs,-z,now,-soname,libhearth-settings-compat.so",
             "-Wl,--version-script=" + str(ASSETS / "exports.map"),
             str(ASSETS / "core.c"),
@@ -70,6 +71,7 @@ def compile_library(output):
         "status": "original-arm-storage-candidate-compiled-not-executed",
         "source_sha256": source_hashes(),
         "link_stubs_not_for_target": True,
+        "fixed_phase_trace": trace,
         "files": {
             "libhearth-settings-compat.so": sha(
                 (output / "libhearth-settings-compat.so").read_bytes()

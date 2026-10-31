@@ -190,22 +190,29 @@ replacement, restores dirty state after failure, and replaces AddEntry allocatio
 ordering while preserving callback input lifetimes. Native serialization/control
 are unchanged. Host NSPR/ASan/UBSan checks cover allocator ownership, failures,
 thread/nested scopes and aliased setter callbacks. Source/ABI review is private
-under private/settings-compat-review-20261031/native-abi.json. Candidate remains
-uninstalled and unexecuted on target. Original draft profiles named profile-reviewed
-and profile-callback-guard are superseded by later source changes and must not run;
-current recipe gates reject them. Final UNEXECUTED profile: private/settings-compat-probe-20261031/profile-candidate-v2.
-Helpers: build/settings-compat-20261031/comparison-candidate-v2. Earlier draft
-profiles, including v1, are stale/unexecuted and must not run. Final seven artifacts
-match profile-candidate-v2-repro; kernel/bootstrap are byte-identical to the tested
-TLS base. Image 6017381 bytes; rootfs 11017920 bytes. The comparison runs 24 I/O
-cases plus five candidate allocation/alias cases, with explicit symbol bindings,
-streamed synthetic-value log checks and an unrelated variadic-log marker. A
-runtime comparator/allocator guard delegates unknown tables to original code.
-Host checks now pass 312 tests; three unchanged optional broker/container tests
-were skipped for this firmware-only change. make check passed. No target execution
-or installation of the correction has occurred. Use the compatibility probe README
-and explicit --execute-experimental-settings-compat-probe only for a notified,
-owner-timed PTY attempt. Never rerun a profile with compat-result.jsonl. Streaming diagnostics must inspect discarded bytes as well as cached data.
+under private/settings-compat-review-20261031/native-abi.json. Candidate remains uninstalled. One supervised attempt using source 6f77863 and
+private/settings-compat-probe-20261031/profile-candidate-v2 transferred all three
+files, completed all twelve original I/O cases with zero child status, then failed
+closed because the candidate child terminated with SIGSEGV (raw wait status 11)
+before any case. The private report is 9176 bytes/33 rows; its immutable attempt
+record is private/settings-compat-probe-20261031/attempt-1.json. Native home icon
+and USB return were independently confirmed after command exit. No candidate
+correction is target validated. See docs/research/settings-compat-attempt-2026-10-31.md.
+Preserve all existing profiles/results; never rerun profile-candidate-v2 or earlier
+drafts. Current source changes add fixed, value-free phase markers for locating
+the failure; standalone candidate builds omit them. Prepare a fresh fully checked
+profile before requesting another supervised PTY-backed restart. All 29 cases,
+process statuses, binding checks and streaming log checks remain required.
+Host preparation before this attempt passed 312 tests with three unchanged optional
+broker/container skips, plus make check. Kernel/bootstrap remain the tested TLS
+base. Notify before each experimental boot; never arm a loader without owner
+readiness. Streaming diagnostics must inspect discarded bytes as well as cached
+bytes. No persistent installation has occurred.
+Prepared diagnostic profile: private/settings-compat-probe-20261031/profile-phase-v1;
+helpers build/settings-compat-20261031/comparison-phase-v1. Seven artifacts match
+its separate repro; rootfs 11020556 bytes, image 6018284 bytes. Offline wrapper,
+make check and 312 host tests pass (three unchanged optional integration skips).
+This fresh profile has no result yet. Owner readiness is required before arming.
 The owner has only this unit and explicitly accepts potentially dangerous same-unit
 work; spare-only recovery restriction is waived, advance notification before
 persistent writes and separate physical HVAC authorization remain. Continue through
@@ -230,6 +237,14 @@ normal-mode preflight and the reviewed manual sequence. After command exit, use
 a full ~10-second hold when the screen is already black, release, press/release
 once and confirm native startup. All prepared images/libraries/keys/results stay
 private. No base connection or persistent modification is authorized by a TLS pass.
+A supplemental offline review now resolves the four previously unclassified
+chunks per raw pass: each has one noncanonical unused parity-padding bit, while
+its protected 52-bit BCH payload validates without data/ECC correction. Both raw
+hashes freshly match capture records; original raw/derived files are unchanged.
+Private record: private/nand-padding-review-20261031/padding-review.json; recipe:
+build/review-private-padding-20261031.py. See the dated public padding review.
+This closes that ECC classification gap, not bad-block/boot-ROM interpretation
+or restoration. Preserve all original OOB bytes and the historical reports.
 Keep private identifiers, credentials, bytes and binary hashes out of source/logs.
 Machine-local offline scripts are `build/{infer-private-bch4-layout,decode-private-bch4,extract-private-jffs2}-20261030.py`;
 the public BCH source is pinned in docs/research/bchlib-2.1.3.json. These scripts

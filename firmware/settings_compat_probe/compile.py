@@ -34,7 +34,7 @@ def source_hashes():
 def compile_helpers(output):
     output = Path(output).resolve()
     output.mkdir(mode=0o700, parents=True, exist_ok=False)
-    compile_library(output / "candidate")
+    compile_library(output / "candidate", trace=True)
     stubs = output / "stubs"
     stubs.mkdir(mode=0o700)
     common = [
@@ -45,6 +45,7 @@ def compile_helpers(output):
         "-mfpu=vfpv3-d16",
         "-mfloat-abi=hard",
         "-Os",
+        "-DHEARTH_STORAGE_TRACE",
         "-Wall",
         "-Wextra",
         "-Werror",

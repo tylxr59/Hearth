@@ -2,6 +2,7 @@
  * Experimental helper preload only. No apply/installer or native app launch.
  */
 #include "core.h"
+#include "trace.h"
 extern void *dlsym(void *, const char *);
 extern void *memcpy(void *, const void *, hearth_size);
 _Static_assert(sizeof(void *) == 4 && sizeof(int) == 4, "exact ARM32 object ABI required");
@@ -14,6 +15,7 @@ static void *real_log, *pointer_compare, *configuration_init;
 static int (*original_add)(void *,const char *,const char *);
 static int supported_table(void *object)
 {
+    HEARTH_PHASE("table.enter");
     void *hash, *compare, *allocation, *free_entry;
     if (!object) return 0;
     memcpy(&hash,(unsigned char *)object+4,sizeof(hash));
@@ -22,6 +24,7 @@ static int supported_table(void *object)
     memcpy(&allocation,(unsigned char *)hash+24,sizeof(allocation));
     if (!allocation) return 0;
     memcpy(&free_entry,(unsigned char *)allocation+12,sizeof(free_entry));
+    HEARTH_PHASE("table.loaded");
     return compare == pointer_compare && (__UINTPTR_TYPE__)free_entry ==
         (__UINTPTR_TYPE__)configuration_init - 0x1bda4 + 0x1bd14;
 }
@@ -44,6 +47,7 @@ static const void *entry_key(const void *entry)
 static void initialize(void)
 {
     if (ready) return;
+    HEARTH_PHASE("initialize.enter");
     if (initializing) _exit(117);
     initializing = 1;
 #define LOAD(p, n) do { p = (__typeof__(p))dlsym((void *)-1L, n); if (!p) _exit(118); } while (0)
@@ -63,6 +67,7 @@ static void initialize(void)
 #undef LOAD
     hearth_ops.filename = filename; hearth_ops.mark_dirty = dirty; hearth_ops.table = table; hearth_ops.failure = notice; hearth_ops.entry_key = entry_key;
     ready = 1;
+    HEARTH_PHASE("initialize.done");
 }
 static void __attribute__((constructor)) startup(void) { initialize(); }
 int native_write(void *) __asm__("_ZN10nlSettings5WriteEv");
@@ -83,6 +88,7 @@ void *hearth_settings_log_target(void)
 {
     /* Variadic arguments are forwarded untouched by the assembly tail stub. */
     initialize();
+    HEARTH_PHASE("log.target");
     return hearth_storage_log_blocked() ? 0 : real_log;
 }
 unsigned long hearth_settings_suppressed_logs(void) { return hearth_storage_suppressed_logs(); }
