@@ -77,3 +77,12 @@ callback lifetime isolation, bounded stream matching across every split and afte
 cache overflow, strict comparison/diagnostic records, original cross-compilation,
 fixed serial start framing/private capture, and exact archive/review boundaries.
 They do not execute the ARM libraries or establish firmware restoration.
+
+The optional `--legacy-linker` compile flag uses GNU ld in the existing
+`localhost/hearth-probe-builder:20261030` Podman image to compare its output layout.
+It still compiles original objects with Clang and links only public ABI stubs.
+The immutable local builder identity is recorded in the private manifest. No image
+is pulled automatically; reconstruct the pinned probe builder if absent. The
+container mounts only the fresh helper output, has a read-only root/no network/no
+capabilities, and retains eager binding and RELRO. This comparison is unexecuted
+and does not establish that LLD layout caused the earlier startup crash.

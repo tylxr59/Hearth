@@ -31,10 +31,10 @@ def source_hashes():
     )
 
 
-def compile_helpers(output):
+def compile_helpers(output, *, legacy_linker=False):
     output = Path(output).resolve()
     output.mkdir(mode=0o700, parents=True, exist_ok=False)
-    compile_library(output / "candidate", trace=True)
+    compile_library(output / "candidate", trace=True, legacy_linker=legacy_linker)
     stubs = output / "stubs"
     stubs.mkdir(mode=0o700)
     common = [
@@ -137,4 +137,6 @@ def compile_helpers(output):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("output")
-    compile_helpers(parser.parse_args().output)
+    parser.add_argument("--legacy-linker", action="store_true")
+    args = parser.parse_args()
+    compile_helpers(args.output, legacy_linker=args.legacy_linker)

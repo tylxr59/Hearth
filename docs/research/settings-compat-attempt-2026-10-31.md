@@ -67,3 +67,41 @@ adds the loader's binding diagnostics, with identical limits and case gates.
 Result, decoded private diagnostic tail and attempt-3.json are preserved. The
 owner reported restart done after command exit; normal USB was observed. No
 persistent write or automatic retry occurred. Do not rerun any executed profile.
+
+## Binding-diagnostic attempt and linker comparison preparation
+
+A fourth supervised attempt used source `5ecabc3` and private
+`profile-bindings-v1`. All files transferred; original baseline again completed
+its twelve cases. Candidate diagnostics stop at relocation processing of the
+compatibility DSO before any of its external function bindings or initializer
+markers. The child again terminated through SIGSEGV. The 14248-byte/50-row report,
+decoded final window and attempt-4.json remain private. Candidate diagnostics
+explicitly discarded 354493 earlier bytes, below the bounded stop limit; all bytes
+were inspected by the streaming matchers. Collector exited one. Owner reported
+restart done and normal USB was independently observed. No automatic retry ran.
+
+Public glibc 2.19 relocation references were reviewed offline; their revision and
+file hashes are in [the source record](glibc-relocation-2.19.json). They do not prove
+that every native loader instruction corresponds to that source. Exact crashing
+instruction/cause remains unverified.
+
+A fresh alternative links the same original C/assembly with GNU ld 2.18.50 from the
+already prepared, rootless historical kernel-builder container. Only the new
+output directory of original objects/public ABI stubs is mounted; the container
+has no network, capabilities or writable root. Its resolved image identity is
+recorded privately and used by identity, avoiding a later tag change. No native
+library is a link input and no firmware executes on the host.
+
+The alternative retains eager binding, RELRO, exact exports, dynamic thread-local
+storage and the same storage correction/instrumentation. Its load layout differs
+from LLD's; neither layout comparison nor host success establishes a target fix.
+The old linker warns about newer EABI attribute 34; independent output attributes
+retain ARMv7, VFPv3-D16 and VFP argument ABI. All 29 cases, guards, process statuses
+and streaming log requirements remain mandatory. Draft GNU build directories v1/v2
+are superseded; only the v3 helpers/profile were fully packaged and checked.
+
+Prepared, unexecuted private profile: `profile-gnu-v3`, with rootfs 11022900 bytes
+and image 6018803 bytes. Seven artifacts reproduce exactly with a separate build;
+offline wrapper, make check and 313 host tests pass (three unchanged optional
+integration skips). This is another RAM-only diagnostic, not installed firmware,
+validated restoration or a demonstrated storage correction.

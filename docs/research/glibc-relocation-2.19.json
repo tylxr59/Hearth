@@ -1,0 +1,20 @@
+{
+  "repository": "https://github.com/bminor/glibc",
+  "revision": "9a869d822025be8e43b78234997b10bf0cf9d859",
+  "tag": "glibc-2.19",
+  "use": "Offline relocation API reference only; not compiled, executed or bundled",
+  "files": {
+    "elf/dl-reloc.c": {
+      "url": "https://raw.githubusercontent.com/bminor/glibc/glibc-2.19/elf/dl-reloc.c",
+      "sha256": "346f1860382bf3cb8771e600a4d6acf589bbb3ff3af98949d85f19b8cc7d3519"
+    },
+    "elf/do-rel.h": {
+      "url": "https://raw.githubusercontent.com/bminor/glibc/glibc-2.19/elf/do-rel.h",
+      "sha256": "dde121457e33dbcfc187e555bd22d313e42958936489391cebec6fed16da3343"
+    },
+    "ports/sysdeps/arm/dl-machine.h": {
+      "url": "https://raw.githubusercontent.com/bminor/glibc/glibc-2.19/ports/sysdeps/arm/dl-machine.h",
+      "sha256": "ee49f9de08101a7efe3d826704146d7dcd26827470218c6a2dabf5f4a66d2d19"
+    }
+  }
+}

@@ -105,6 +105,8 @@ def package(base, helpers, review, output):
         record["source_sha256"] != source_hashes()
         or candidate_record["source_sha256"] != candidate_sources()
         or candidate_record.get("fixed_phase_trace") is not True
+        or candidate_record.get("linker", {}).get("profile")
+        not in {"clang-lld", "gnu-2008q3-container"}
         or set(record["files"])
         != {"settings-init", "settings-test", "libhearth-settings-faults.so"}
     ):
@@ -163,6 +165,7 @@ def package(base, helpers, review, output):
         "native_application": False,
         "whole_boot_chain_write_free": "unverified",
         "cases": 29,
+        "candidate_linker": candidate_record["linker"],
         "files": {n: sha(d) for n, d in files.items()},
         "recipe_sha256": recipes(),
         "base_manifest_sha256": sha(base_record),

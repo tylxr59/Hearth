@@ -97,3 +97,10 @@ firmware/settings_compat/sources.json and remain under ignored build/. Original
 host fixtures use the installed host NSPR (not firmware); its headers/library are
 not bundled. The candidate, instrumentation, adapters and tests are MIT licensed.
 This adds no redistribution permission for native libraries or a deployable image.
+
+The optional storage-lab historical-linker comparison uses GNU ld 2.18.50 in the
+existing CodeSourcery builder described above, without bundling its executable or
+linking firmware on the host. GNU ld is GPL-3.0; no third-party implementation is
+copied into the original candidate. Additional public glibc 2.19 relocation
+references are pinned in docs/research/glibc-relocation-2.19.json and remain
+uncompiled reference inputs under ignored build/.

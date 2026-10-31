@@ -225,8 +225,20 @@ DSO, before any initializer marker. Report 14247 bytes/50 rows and attempt-3.jso
 are private; native USB return observed after owner restart done. Never rerun it.
 Next fresh profile private/settings-compat-probe-20261031/profile-bindings-v1
 adds loader binding diagnostics; all limits and 29 case gates are unchanged.
-No candidate correction has been validated. Owner readiness is required before
-arming.
+profile-bindings-v1 executed once using source 5ecabc3: original twelve cases pass,
+candidate SIGSEGV during compatibility relocation before any external binding or
+initializer marker. Private report 14248 bytes/50 rows, attempt-4.json and tail
+preserved. Owner restart done and native USB observed; never rerun this profile.
+Next prepared, UNEXECUTED profile: private/settings-compat-probe-20261031/profile-gnu-v3.
+Helpers: build/settings-compat-20261031/comparison-gnu-v3. It uses optional
+--legacy-linker to compare the historical GNU linker in the existing rootless
+builder; all source/storage behavior and 29 case gates remain. Only original
+objects/public stubs mounted, no firmware executed/linked on host. Kernel/base
+libraries unchanged. Seven artifacts reproduce; rootfs 11022900, image 6018803.
+make check and 313 tests pass with three unchanged integration skips. GNU draft
+v1/v2 directories stale; do not package/run them. GNU v3 offline wrapper passes.
+No candidate correction has been target validated. Notify owner and obtain
+restart readiness before arming a PTY loader; no loader is currently armed.
 While waiting for owner readiness, read-only Ghidra review traced the native
 entry callback at 0x976c0 and URL/platform-key/tier setters. Platform-key values
 have additional log paths; tier changes can call settings Write; URL processing
