@@ -1,0 +1,8 @@
+{
+  "files": {
+    "Dev/linux/drivers/mtd/nand/nand_base.c": "c3ed2a8d4c91303661c52a355ca4be8d336c7405ed5076be6cad4c165ce377d9"
+  },
+  "repository": "https://github.com/exploiteers/NestDFUAttack",
+  "revision": "930b834b7f1f082b8761aa5c5af765b4b3e99dc9",
+  "use": "static raw data/OOB write-contract review only; no raw restore executed"
+}

@@ -1,8 +1,10 @@
-# Fixed scratch recovery experiment: prepared, unexecuted
+# Fixed scratch recovery experiment
 
-**Prepared offline; no physical operation has run.** This directory
+**Observed once:** programmed ECC and exact fixed-block restoration passed,
+followed by native USB return. See the [result](../../docs/research/scratch-result-2026-10-31.md).
+This does not establish whole-firmware recovery. This directory
 contains an original transaction core, synthetic NAND fault model, durable host
-snapshot gate, independent BCH4 encoder, draft duplex session and experimental
+snapshot gate, independent BCH4 encoder, duplex session and experimental
 kernel adapter. The separate explicit execution wrapper can intentionally write
 NAND after its private backup gate. It requires advance owner notification and
 an owner-timed restart. Existing read-only profiles remain unchanged. Never flash
@@ -43,13 +45,15 @@ environment, configuration/calibration and backplate regions are outside its
 fixed address range. A future adapter/hardware fault can still defeat software
 bounds, so host simulation cannot establish physical safety.
 
-The integrated profile is sealed at `build/scratch-restore-20261031-v1`; a fresh
+The integrated profile is sealed and has executed ONCE at `build/scratch-restore-20261031-v1`; a fresh
 `-repro` build has six byte-identical artifacts and 17 byte-identical host helpers.
 Both pass offline image/configuration/minimal-initramfs integrity checks. The
 earlier `build/scratch-compile-20261031` and standalone-supervisor compile drafts
 remain preserved and must not execute. Their [historical scope](../../docs/security/validation-2026-10-31-scratch-draft.json)
 is superseded for preparation only, not physical validation. Compilation and host
 simulation cannot establish hardware safety or restoration.
+Preserve the executed profile, private output and separate observation record;
+do not rerun it or use the repro as an automatic retry.
 
 The core's host fake implements NAND one-to-zero programming, partial/error paths,
 failed/false erase, marker corruption, WP failures, changed reads, wrong/replayed
@@ -73,7 +77,7 @@ all four sectors, exact synthetic data, matching raw/normal OOB and untouched
 marker/free bytes. Tests reject every parity/padding bit change even if both read
 paths return that same damaged value. This is not target encoder qualification.
 
-The draft duplex session requires a start token, one bounded CRC-checked prepared
+The duplex session requires a start token, one bounded CRC-checked prepared
 snapshot, durable backup acknowledgement, then one terminal snapshot. It performs
 no automatic retry. Target cleanup completes before result transmission; it
 does not wait for another host command after programming. A host failure after
@@ -91,7 +95,8 @@ The [prepared validation](../../docs/security/validation-2026-10-31-scratch-prep
 records 432 passing host tests, three unchanged optional integration skips and
 passing lint/format/security checks. No loader was armed by preparation. Future
 execution requires a fresh private output directory, native USB preflight, a PTY,
-advance danger notification and owner readiness. A failed/ambiguous write report
+advance danger notification and owner readiness. The successful first execution
+is recorded separately and does not rewrite that pre-execution scope. A failed/ambiguous write report
 requires review before power interruption, retry or native restart.
 
 The wrapper's zero-argument mode performs offline integrity checks only:

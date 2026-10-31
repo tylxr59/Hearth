@@ -1,6 +1,6 @@
 # Gen 2 bench validation and recovery gates
 
-**A physical unit has received read-only USB intake; firmware compatibility and recovery remain unverified. No persistent write has run. An experimental fixed-block scratch writer is now prepared separately; no production flash/apply command exists.** See the [2026-10-30 intake](research/device-intake-2026-10-30.md): enclosure `02A`, reported `Display-2.6`, software `5.9.4-5`, normal USB `2464:0002`. Inert review archives/partial replacements are not bootable images and must not be sent to a USB loader. Gen 1 remains a separate, unvalidated profile; never select a generation from USB vendor/product alone.
+**A physical unit has received read-only USB intake and one successful fixed scratch-block write/ECC/erase/restoration test with native USB return. Whole-firmware recovery and compatibility remain unverified; no production flash/apply command exists.** See the [2026-10-30 intake](research/device-intake-2026-10-30.md) and [scratch result](research/scratch-result-2026-10-31.md): enclosure `02A`, reported `Display-2.6`, software `5.9.4-5`, normal USB `2464:0002`. Inert review archives/partial replacements are not bootable images and must not be sent to a USB loader. Gen 1 remains a separate, unvalidated profile; never select a generation from USB vendor/product alone.
 
 An authorized manual restart subsequently exposed `0451:d00e` briefly. The
 separate [RAM probe](../firmware/probe/README.md) now compiles experimental boot
@@ -72,11 +72,13 @@ restoration on fixed physical block 1312, after fresh matching raw/OOB reads,
 exact empty-block classification and a durable private region backup. Its
 independent programmed-ECC check does not trust the driver's zero read status.
 Six artifacts and 17 host helpers reproduce exactly; host/sanitizer tests pass.
-No physical write/restoration has run. Notify the owner of the exact first-write
+One supervised execution subsequently passed exact programmed ECC and original
+data/OOB restoration, followed by native USB return. Preserve that executed
+profile/result; no repeat is needed. Notify the owner of any new persistent
 operation and power-loss/recovery limits before arming it, require an owner-timed
 restart, and never automatically retry. Ambiguous execution requires reviewing
-private evidence before power interruption or native restart. Even a future pass
-will establish only this scratch primitive, not firmware recovery or installation.
+private evidence before power interruption or native restart. This result
+establishes only the scratch primitive, not firmware recovery or installation.
 
 Capture authorized local IPC metadata first: socket files, D-Bus service names/policies, configuration hierarchy and nlclient/osm ELF dependencies. Introspect only with a known non-mutating method after reviewing application behavior. SCPM lifecycle methods can stop control/power services; do not invoke them during discovery. Observe backplate communication passively using suitable high-impedance equipment and an electrical expert; do not inject MCU frames.
 

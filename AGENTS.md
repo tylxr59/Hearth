@@ -4,7 +4,7 @@
 
 Build a local-first Nest Learning Thermostat modification that preserves native hardware/HVAC control. Gen 2 is the primary target; Gen 1 is secondary. Prefer a verified local on-device interface if feasible; otherwise retain the native transport behind a minimal local backend. Do not rewrite HVAC control loops.
 
-The user's unit has arrived and received USB intake on their PC. Arrival/ownership alone does not authorize flashing or physical control. The owner has explicitly authorized device investigation and requests advance notification for potentially dangerous actions such as flashing; preserve the backup/recovery gates below. The [2026-10-30 intake](docs/research/device-intake-2026-10-30.md) records enclosure `02A`, reported `Display-2.6`, firmware `5.9.4-5`, normal-mode USB `2464:0002` and an authorized manual restart briefly exposing OMAP `0451:d00e`. A later paced diagnostic RAM boot succeeded and returned to native startup. No flashing, HVAC operation or firmware recovery test has been performed. Two complete owner raw NAND captures and independently matching BCH-derived data views now exist privately; native nlclient/osm were reconstructed for static inspection. Restoration remains unverified.
+The user's unit has arrived and received USB intake on their PC. Arrival/ownership alone does not authorize flashing or physical control. The owner has explicitly authorized device investigation and requests advance notification for potentially dangerous actions such as flashing; preserve the backup/recovery gates below. The [2026-10-30 intake](docs/research/device-intake-2026-10-30.md) records enclosure `02A`, reported `Display-2.6`, firmware `5.9.4-5`, normal-mode USB `2464:0002` and an authorized manual restart briefly exposing OMAP `0451:d00e`. A later paced diagnostic RAM boot succeeded and returned to native startup. One supervised fixed scratch-block program/ECC/erase/restoration test subsequently passed with native USB return; no firmware installation, HVAC operation or whole-firmware recovery has been tested. Two complete owner raw NAND captures and independently matching BCH-derived data views now exist privately; native nlclient/osm were reconstructed for static inspection. Programmed firmware-block and whole-chip restoration remain unverified.
 
 On 2026-10-31 the owner confirmed this is their only unit and explicitly accepted
 potentially dangerous same-unit work after asking why a spare was required. A
@@ -464,6 +464,30 @@ Earlier compile drafts remain prohibited. After ambiguous write outcome preserve
 power/evidence and review before any reset/retry. A scratch pass is not firmware
 restoration or authorization for firmware installation/HVAC. Next: ask owner timing
 only when the checked source milestone is saved, then arm one supervised attempt.
+The exact sealed v1 scratch profile subsequently executed ONCE using source
+2f28a52 after owner readiness and advance first-write notification. Loader and
+collector exited zero; fresh canonical block1312 backup was durable before ACK.
+Target reports counts1/1/1 and zero results for synthetic page1 program, erase
+and marker restoration, final WP1. Four independently encoded BCH4 sectors pass;
+all 135168 original/final data+OOB bytes and target/host digests match. Private
+post-collection re-read, lengths and 0600/0700 checks passed. Output:
+private/scratch-restore-20261031-attempt-1/{original.raw-oob,original.json,result.bin,attempt.json}.
+Separate immutable records: private/scratch-attempt-records-20261031/{prepared-1,observed-1}.json.
+Creation manifests/original inputs unchanged. Owner reported reset done with
+loader exited; normal USB2464:0002 independently returned. Do not rerun v1/output
+or its repro. No loader armed. Public result:
+docs/research/scratch-result-2026-10-31.md and scratch-observed security JSON.
+This closes only the fixed empty-scratch primitive. No whole-chip before/after,
+programmed firmware-block restore, interrupted-power recovery, install, native
+commissioning or HVAC claim. Continue programmed-region recovery planning and
+native integration/TLS/time/pairing work offline; notify before a new operation.
+Offline follow-up pinned/matched the public NAND core and reviewed RAW data/OOB
+dispatch. nand_do_write_ops can report full oobretlen after data writer failure;
+future adapters must require zero status plus both exact counts and byte readback.
+Current successful marker path is OOB-only and already requires status/exact count.
+Next synthetic full-block rehearsal/rescue requirements are design-only in
+docs/research/programmed-recovery-next-2026-10-31.md; no additional profile built,
+armed or authorized to run by that document. Native startup remains in place.
 
 1. `README.md` and `TODO.md` for scope and outstanding work.
 2. `docs/architecture/0001-local-transport.md` for the provisional architecture decision.

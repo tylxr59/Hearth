@@ -24,9 +24,11 @@ adds an explicit experimental NAND mutation path, separate from every read-only
 profile and production runtime. It has fixed addresses/content, fresh exact-empty
 classification, durable backup acknowledgement, hardware-WP checks and one-shot
 cleanup; host checks independently validate programmed BCH4 and exact restoration.
-Actual callbacks/supervisor were exercised only with original host simulators.
-All 432 host tests and make check pass, two fresh builds reproduce, but no
-physical write, durability or recovery result exists. The owner chose one local
+Actual callbacks/supervisor first passed original host simulators; one supervised
+[physical scratch test](../research/scratch-result-2026-10-31.md) then passed
+programmed ECC and exact original data/OOB restoration with native USB return.
+All 432 host tests and make check pass and two fresh builds reproduce. No
+whole-firmware restoration, interrupted-power durability or installation is proven. The owner chose one local
 unencrypted archive; PC loss/root compromise remain accepted backup limitations.
 
 | Potential issue | Evidence at inspected revision | Hearth treatment and limits |
