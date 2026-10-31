@@ -63,6 +63,14 @@ Confirm Basic auth wire format, assigned_cred_secret source and lifetime, enroll
 
 Capture full entry/pairing/subscribe/PUT/CAS traffic to an isolated local endpoint. Establish bucket schemas, session rules, timestamp authority, chunking, retries, sleep/WoWLAN timing and schedule interactions. Add sanitized fixtures and tests before enabling those paths in production. Missing fields must remain unknown rather than invented.
 
+The [offline native bootstrap review](research/native-bootstrap-2026-10-30.md)
+traces assigned credentials and a response-header update path that logs both
+values. Its private logging-removal candidate is uninstalled. Validate settings
+serialization, two-key commit/rollback, log/upload disclosure, restart readback
+and rejection of default fallback after revocation before native commissioning.
+Do not send real credentials through that path merely because the header format
+is now understood.
+
 ## 3. Review candidate modifications
 
 Pin the actual input hashes. Generate an inert review archive and private hardening replacements. Compare every edited file, prove that unknown/native services are preserved, and map every listener/startup path. The current four-file staging tool is incomplete for stock firmware: audit the historical serial debug shell, Lua bot port 8000, SSH/remote-support service monitors, crash upload paths and all actual firmware init entry points. Do not deploy the partial overlay as if it were hardened firmware.

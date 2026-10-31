@@ -2,6 +2,14 @@
 
 Iteration 0.1.0, inspected 2026-10-24/25. This is a source review and host-side test report, not a firmware certification or physical HVAC safety claim. No prior audit existed in the initial workspace. Findings below were independently examined at the exact revisions in docs/research/upstreams.json. Upstream branches may subsequently differ.
 
+The [native bootstrap review](../research/native-bootstrap-2026-10-30.md) adds
+a stock-client credential disclosure finding: its response-header update helper
+logs the newly assigned ID and secret. A private candidate skips that logging
+block, but other logs/uploads and persistence remain unaudited. Assigned-credential
+401 responses can select default credentials. Host regression tests preserve
+explicit enrollment and revocation; no default-credential bootstrap or native
+credential installation is enabled.
+
 ## Reference findings and response
 
 | Potential issue | Evidence at inspected revision | Hearth treatment and limits |

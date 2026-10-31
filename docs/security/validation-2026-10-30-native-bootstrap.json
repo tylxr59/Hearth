@@ -1,0 +1,40 @@
+{
+  "date": "2026-10-30",
+  "scope": "Offline native credential/registration review and laboratory boundary regressions",
+  "host_validation": {
+    "original_functions_exported": 25,
+    "candidate_functions_exported": 1,
+    "export_counts_and_completion_markers_checked": true,
+    "new_security_regression_tests": 3,
+    "static_checks": "make check passed",
+    "host_tests_passed": 174,
+    "optional_integration_tests_skipped": 2,
+    "runtime_implementation_changed": false
+  },
+  "native_findings": {
+    "assigned_settings_reads": true,
+    "response_header_updates_settings": true,
+    "credential_updates_not_atomic_in_reviewed_helper": true,
+    "changed_credentials_passed_to_log_call": true,
+    "assigned_401_selects_default_credentials": true,
+    "registration_form_and_v7_put_builder_reviewed": true
+  },
+  "private_candidate": {
+    "instruction_words_replaced": 1,
+    "original_preserved": true,
+    "independent_checks": ["LLVM disassembly", "fresh Ghidra import"],
+    "credential_setters_retained": true,
+    "reviewed_credential_log_removed_from_decompiled_control_flow": true,
+    "installed": false,
+    "device_executed": false
+  },
+  "not_demonstrated": [
+    "complete credential logging and upload audit",
+    "settings durability and interrupted rotation rollback",
+    "native enrollment or authenticated transport",
+    "target TLS behavior",
+    "complete entry/pairing/revision/subscription implementation",
+    "firmware restoration or HVAC safety"
+  ],
+  "privacy": "No proprietary bytes, decompiled code, binary hashes, native default secrets or actual device identifiers published."
+}

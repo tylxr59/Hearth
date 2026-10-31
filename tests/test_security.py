@@ -1,10 +1,12 @@
 import base64
 import json
+import secrets
 
+from aiohttp.test_utils import TestClient, TestServer
 from hypothesis import given
 from hypothesis import strategies as st
 
-from backend.api import basic
+from backend.api import basic, create_app
 from backend.registry import Registry
 from backend.validation import Invalid, command, loads
 from tests.conftest import OTHER, SERIAL
@@ -34,6 +36,65 @@ async def test_authentication_and_roles(client, rig):
     assert (await client.get("/v1/device/commands", headers=auth(token))).status == 200
     core.registry.revoke(SERIAL)
     assert (await client.get("/v1/device/commands", headers=auth(token))).status == 401
+
+
+async def test_native_bootstrap_claims_cannot_enroll_or_restore_revoked_device(client, rig):
+    core, token, _, _ = rig
+    before = core.registry.path.read_bytes()
+    # Native software may fall back to default credentials after a 401. Neither
+    # that fallback nor an assigned-looking username constitutes enrollment.
+    for ident in (SERIAL, OTHER):
+        for username in (f"d.{ident}.fixture", "d.bootstrap.fixture"):
+            response = await client.post(
+                "/nest/entry",
+                headers={
+                    "Authorization": "Basic "
+                    + base64.b64encode(f"{username}:{token}".encode()).decode(),
+                    "X-nl-device-id": ident,
+                },
+                data={"reset": "true", "model": "Display-2.6", "request_id": "1"},
+            )
+            assert response.status == 401
+            assert "X-nl-set-client-credentials" not in response.headers
+    assert core.registry.path.read_bytes() == before
+    core.registry.revoke(SERIAL)
+    revoked = core.registry.path.read_bytes()
+    for username in (SERIAL, f"nest.{SERIAL}", f"d.{SERIAL}.fixture", "d.bootstrap.fixture"):
+        response = await client.post(
+            "/nest/entry",
+            headers={
+                "Authorization": "Basic "
+                + base64.b64encode(f"{username}:{token}".encode()).decode()
+            },
+            data={"reset": "true"},
+        )
+        assert response.status == 401
+    assert core.registry.path.read_bytes() == revoked
+
+
+async def test_native_credential_header_is_not_a_rotation_request(client, rig, caplog):
+    core, token, _, _ = rig
+    proposed = secrets.token_hex(32)
+    before = core.registry.path.read_bytes()
+    response = await client.post(
+        "/nest/entry",
+        headers={**auth(token), "X-nl-set-client-credentials": f"{SERIAL} {proposed}"},
+    )
+    assert response.status == 200
+    assert "X-nl-set-client-credentials" not in response.headers
+    assert proposed not in await response.text()
+    assert token not in caplog.text and proposed not in caplog.text
+    assert core.registry.path.read_bytes() == before
+    assert core.registry.authenticate(SERIAL, token)
+    assert not core.registry.authenticate(SERIAL, proposed)
+
+
+async def test_native_bootstrap_stays_disabled_in_normal_runtime(rig):
+    core, token, _, _ = rig
+    async with TestClient(TestServer(create_app(core))) as normal:
+        response = await normal.post("/nest/entry", headers=auth(token), data={"reset": "true"})
+        assert response.status == 404
+        assert "X-nl-set-client-credentials" not in response.headers
 
 
 async def test_nle_regressions(client, rig):

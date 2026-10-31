@@ -22,6 +22,13 @@ provisional; CA replacement alone is insufficient. A private, uninstalled
 single-instruction default-callback candidate is statically reviewed, with target
 TLS/time/CRL and restoration/commissioning validation still required.
 
+The [credential/bootstrap follow-up](../research/native-bootstrap-2026-10-30.md)
+corroborates native assigned credentials and response-header updates, but also
+finds credential logging and default fallback after a 401. A private logging
+remediation candidate is statically reviewed. These findings narrow commissioning
+requirements; they do not establish trusted bootstrap, durable rotation or a
+production-compatible transport. Keep the same provisional architecture.
+
 ## Decision
 
 Preserve nlclient, backplate firmware, drivers, watchdog, SCPM, schedules and unknown services. Build a small host-side authenticated API and MQTT boundary with a partial legacy decoder for research. Choose a provisional local cloud-protocol backend because it has demonstrated upstream protocol evidence; retain the identified test-access path as a bridge candidate pending enablement, framing and separately authorized bench evidence. Do not deploy a guessed IPC bridge or a permissive legacy backend.

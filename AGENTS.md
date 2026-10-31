@@ -90,8 +90,16 @@ is uninstalled and unvalidated on target. Originals remain unchanged. No binary
 patch/library/hash was put in source. See docs/research/native-tls-2026-10-30.md.
 The original tools/ghidra/HearthStaticReview.java exports only below private/
 and was integration-tested, including refusal of a public output directory.
-Next: inspect credential/bootstrap persistence and native transport semantics,
-then prepare target TLS/commissioning validation subject to recovery gates.
+Native credential/bootstrap static review now traces assigned settings, Basic-auth
+request builders, response-header credential updates and 401 fallback to default
+credentials. The update helper logs both new ID and secret; a separate private
+one-instruction candidate skips that logging block, checked by LLVM and a fresh
+Ghidra import. Nothing installed; durable settings/rollback and other logging
+paths remain unverified. Three host regression tests preserve enrollment/header
+boundaries; make check passed, 174 host tests passed with two optional integration
+tests skipped. See docs/research/native-bootstrap-2026-10-30.md.
+Next: trace settings commit/log-upload behavior and finish native entry/revision/
+subscription mapping, then target validation subject to recovery gates.
 Keep private identifiers, credentials, bytes and binary hashes out of source/logs.
 Machine-local offline scripts are `build/{infer-private-bch4-layout,decode-private-bch4,extract-private-jffs2}-20261030.py`;
 the public BCH source is pinned in docs/research/bchlib-2.1.3.json. These scripts
