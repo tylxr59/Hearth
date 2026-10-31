@@ -724,7 +724,7 @@ image 6034056 bytes. Prepared-v7.json is separate and immutable. Notify and obta
 owner restart readiness before a new PTY-backed --execute-experimental-file-ram-lab
 attempt. No automatic retry. See docs/research/file-commissioning-attempt-2026-10-31.md.
 
-## Second combined attempt / CURRENT dispatch-corrected profile (2026-10-31)
+## Second combined attempt / dispatch-corrected preparation (2026-10-31)
 
 Profile-v7 executed ONCE using 7c1572c. Report transport now completed: 20816 bytes,
 77 rows saved privately. All 36 standalone storage component cases, two zero
@@ -741,7 +741,7 @@ No 68-case combined pass or ARM file-engine measurement is established yet.
 Owner confirmed home icon and normal USB independently returned. No loader armed.
 Preserve profile-v7/result/marker and immutable attempt-2 records. Never reuse it.
 
-CURRENT fresh unexecuted profile: private/file-commissioning-ram-20261031/profile-v8;
+Third-attempt profile: private/file-commissioning-ram-20261031/profile-v8;
 separate profile-v8-repro; helpers build/file-commissioning-ram-20261031/helpers-v6
 and helpers-v6-repro. Seven artifacts/inventories match, rootfs 11045344 bytes,
 image 6034042 bytes. Make check and 570 host tests pass/five optional skips.
@@ -749,3 +749,25 @@ Workload/storage candidate/kernel/boot chain/native libraries are unchanged;
 only supervisor dispatch and clearer failure classification changed. Obtain owner
 restart readiness before a new --execute-experimental-file-ram-lab PTY attempt.
 No automatic retry. Actual filesystem/kernel installer integration remains pending.
+
+## CURRENT: combined RAM commissioning matrix passed (2026-10-31)
+
+Profile-v8 executed ONCE from a0bc948: loader/collector zero, complete private
+22123-byte/108-row report independently validated, all 36 standalone settings
+and 32 file transaction cases passed, three zero child statuses. Synthetic
+secret logs absent in candidate; passthrough/bindings/canaries/readback passed.
+Owner confirmed home icon after command exit; normal USB independently observed.
+Immutable attempt-3-{prepared,observed,native-return}.json retained privately;
+creation manifests and earlier failures remain unchanged. No loader armed.
+Never reuse v6/v7/v8 or their repro copies. Host baseline remains 570 passed,
+five optional skips and make check; no source changes occurred during this run.
+
+This closes the bounded ARM RAM file-engine measurement and standalone settings
+shim comparison. It does not close actual JFFS2 durability, journal replay after
+reboot, live active-root/current-settings verification, fresh snapshot export
+and durable host receipt, native application startup/transport, or HVAC gates.
+Next: integrate a narrow filesystem snapshot/backup/commissioning path using the
+pinned existing stack, preserving write protection until a reviewed write step.
+Do not repeat generic raw recovery work or add router configuration requirements.
+See docs/research/file-commissioning-attempt-2026-10-31.md for historical failures
+and the successful result. No firmware/configuration installation occurred.

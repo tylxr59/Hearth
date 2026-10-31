@@ -1,4 +1,4 @@
-# First combined file RAM attempt and transport correction
+# Combined file RAM attempts and successful result
 
 One supervised execution used source `5ba411d` and private
 `file-commissioning-ram-20261031/profile-v6`. The owner performed the restart while
@@ -90,3 +90,29 @@ separate -repro. Seven artifacts/full inventories reproduce: rootfs 11045344,
 image 6034042 bytes. Make check and 570 host tests pass, five unchanged optional
 skips. A new owner-timed run is needed for the unmeasured 32 file cases; no new
 attempt is armed automatically. Never reuse v6, v7 or their reproduction copies.
+
+## Third attempt: all 68 cases observed
+
+One owner-timed execution of profile-v8 used source `a0bc948`. Loader and
+collector exited zero. The private complete report contains 22123 bytes and
+108 rows: all 36 standalone settings cases, all 32 file transaction cases and
+three zero child statuses. The strict validator independently accepted the saved
+report. Candidate synthetic value logging was absent; unrelated log forwarding,
+ABI bindings, canaries, permissions and file readback checks passed.
+
+This measures the exact standalone GNU settings shim and the RAM-only file
+transaction adapter on ARM with the retained native runtime libraries. The test
+uses synthetic files; the kernel has no flash or physical network support.
+Nothing was installed, and actual settings, credentials and native applications
+were absent. JFFS2 durability, interrupted-power recovery, live root selection,
+full native startup, authenticated device exchange and HVAC remain unverified.
+
+Prepared, observed and native-return records remain separate and immutable under
+the private parent. After command exit the owner confirmed the home icon, and
+normal USB on port 1-1 was independently observed. No loader remains armed.
+Never reuse profile-v8 or its reproducibility copy as another execution profile.
+
+Host preparation remains make check and 570 passed tests, with five optional
+integration skips. This hardware result adds no new host test run. The next step
+is fresh filesystem identity/snapshot and durable backup-receipt integration,
+followed by a separately reviewed bounded JFFS2 commissioning operation.

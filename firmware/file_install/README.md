@@ -2,9 +2,10 @@
 
 Original MIT C code for the nine-file Gen 2 commissioning plan. There is no CLI,
 USB command handler, filesystem mount, NAND operation, device launcher or automatic
-apply command. The engine is host-checked and cross-compiled, but its ARM runtime
-measurement and hardware integration are pending. Do not call it with device
-filesystem descriptors or install the private review payload yet.
+apply command. The engine is host-checked, cross-compiled and measured in the
+32-case ARM RAM transaction matrix. Actual JFFS2 and hardware integration remain
+pending. Do not call it with device filesystem descriptors or install the private
+review payload yet.
 
 The core requires explicit durable-host-backup confirmation from its future
 supervisor. The current API receives that confirmation as a caller-owned boolean;

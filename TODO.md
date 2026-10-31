@@ -99,3 +99,11 @@ component passed, but file helper was not launched (hardcoded settings exec path
 exit 109). Dispatch is corrected with a host execution-callback regression. Fresh
 profile-v8 is checked/reproducible and unexecuted; 32 ARM file cases still pending.
 Native home icon/USB returned. Keep failed global reports/component evidence apart.
+
+Observed third combined RAM attempt: source a0bc948/profile-v8 passed all 68
+cases (36 standalone settings, 32 file transactions), three zero child statuses,
+complete independently validated private report. Owner home icon and native USB
+return confirmed; no loader armed. Earlier unexecuted/pending notes above record
+preparation history and are superseded by this result. Next: live root/current
+file snapshot, durable backup receipt, interrupted-install recovery and bounded
+JFFS2 integration. No persistent commissioning or physical transport pass yet.

@@ -66,3 +66,10 @@ standalone storage checks. Its file process exited 109 because exec still used
 the settings-helper path despite the file argv. The supervisor now executes its
 declared argv[0], with a direct injected-exec regression. The 32 ARM file cases
 remain unmeasured pending the fresh corrected profile; see the dated attempt note.
+
+The third owner-timed run from `a0bc948` passed all 68 cases with three zero
+child statuses and a complete privately retained report. The owner confirmed
+native home icon and normal USB was independently observed afterward. See the
+[successful result](../../docs/research/file-commissioning-attempt-2026-10-31.md#third-attempt-all-68-cases-observed).
+Earlier pending notes describe preparation history. JFFS2 installation, full
+native application behavior and physical device transport remain unverified.

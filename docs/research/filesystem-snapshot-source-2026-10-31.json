@@ -1,0 +1,15 @@
+{
+  "repository": "https://github.com/exploiteers/NestDFUAttack",
+  "revision": "930b834b7f1f082b8761aa5c5af765b4b3e99dc9",
+  "scope": "Static review only; read-only JFFS2 snapshot profile not implemented or executed.",
+  "files": {
+    "drivers/mtd/mtdsuper.c": "0b0bc7027680f130bdd75984a65b7b54eb6831112c6da0b0a8781340c0f0274d",
+    "drivers/mtd/mtdpart.c": "24384e2d0bffa1fcc7eda43018b75fe0c1d80ec2eb38329ecce8f2f7aa622ab0",
+    "drivers/mtd/nand/omap2.c": "11a7613442cc30c15b79df4cf9f4e660cc858d2ae83fa2c80c135669ec31f583",
+    "arch/arm/mach-omap2/board-diamond.c": "8ac448f27c0faabf5e1cdaad48d97e6a61edacd6d08951dd378173f9debb878d",
+    "fs/jffs2/super.c": "bb4a5eb7a11934ff55e88409315a454a475c8c369a96f945693187cb9b308ee6",
+    "fs/jffs2/fs.c": "26079566bd00628927f5d949d304382a71ee7a0da50f183adb52a86c31f2e1ce",
+    "fs/jffs2/nodemgmt.c": "ac62d7ab25a7ad28df6846809ce43845f67cd268c902af7460fe196ff6857b85",
+    "fs/jffs2/Kconfig": "c4ff711233503d9a9f19ecd0e1c6a142dda9b76e7fdee3d6c5a3150df3fedcc0"
+  }
+}
