@@ -181,3 +181,10 @@ USB return independently observed. No restore test/erase/OOB/power-loss/HVAC
 claim. Backend credential matches installed settings; telemetry-only mode still
 rejects commands. First battery/unwired-base Wi-Fi setup/physical telemetry is
 pending. Never rerun install-v3. See docs/research/file-install-result-2026-10-31.md.
+
+Wi-Fi bench exposed a native UI startup stall: steady home icon/green blinking
+LED, no Wi-Fi settings or backend telemetry. Unit reconnected to USB/base detached.
+Protected read-only startup diagnostic prepared/reproduced, unexecuted: fixed9
+current files + bounded persistent log tails, unchanged RO kernel/no native code.
+Full786 host tests/five skips and make check pass. Next notified owner-timed
+diagnostic, then private evidence review. No guessed persistent fix/recovery.

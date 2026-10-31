@@ -1065,3 +1065,35 @@ startup can rewrite settings: old exact-byte restore preflight may refuse later
 changed app data. Preserve fresh read-only evidence/review recovery; do not bypass
 its checks. See docs/research/file-install-result-2026-10-31.md. Host774/five skips,
 make check passed before documentation-only result updates.
+
+## CURRENT: native UI stuck; protected startup diagnostic prepared
+
+Owner attempted unwired-base/battery Wi-Fi setup after installation; steady home
+icon persists even after their reboot, LED blinking GREEN. No Wi-Fi settings.
+Backend watch ended with no availability/state telemetry. Treat possible native
+startup regression, not successful app/network commissioning. Blinking green
+indicator reference recorded in docs/research/startup-stall-2026-10-31.md.
+Owner detached base/reconnected USB on request; native USB independently observed.
+No loader armed. Do not keep requesting native restarts or make guessed fixes.
+
+New firmware/startup_diagnostic reader is original static code, no native firmware
+execution. Reuses unchanged protected build/file-snapshot-20261031-v4 kernel with
+raw uncompressed external newc (BLK_DEV_INITRD=y,RD_GZIP=n). Reads current nine
+files and bounded mtd:log tails; no data-partition mount, symlinks, FIFOs/devices,
+network, MTD char/block or writable callbacks. WP remains asserted. Limits64files,
+64KiB each,512entries,depth4; incomplete/limit status explicit. Captures may hold
+identifiers/credentials; retain private, never print raw log lines or publish.
+
+Profile private/file-writer-20261031/startup-diagnostic-v2 and -v2-repro: eight
+artifacts match; original build/startup-diagnostic-20261031-v2. Unexecuted.
+Twelve new host checks incl ASan/UBSan real trusted-host filesystem reader,
+symlink/FIFO/tail/limits and strict private frame parsing. make check and full786
+tests pass/five optional skips. No firmware executes on host. Older draftv1 remains.
+Next obtain timing readiness, then PTY:
+.venv/bin/python -m firmware.startup_diagnostic.run
+private/file-writer-20261031/startup-diagnostic-v2
+private/file-writer-20261031/startup-diagnostic-attempt-1
+--execute-read-only-startup-diagnostic
+Notify before boot; prompt reviewed manual restart only after loader waits.
+No persistent write/restore or native app launch is part of this diagnostic.
+Inspect current file comparisons/log evidence privately before proposing a fix.

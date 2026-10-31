@@ -150,3 +150,8 @@ GPL-2.0-or-later when combined with the pinned Linux driver; the policy core is
 MIT. Critical public kernel source identities are pinned in its sources.json.
 The exact-source-checked JFFS2 remount correction modifies the same GPL source.
 No additional upstream implementation or proprietary bytes are redistributed.
+
+The startup diagnostic's static syscall supervisor, bounded read-only tree reader,
+framing and host tests are original MIT code. It reuses the unchanged pinned GPL
+snapshot kernel with a raw newc external initramfs; no additional runtime library
+or upstream implementation is copied. Acquired native logs/settings stay private.
