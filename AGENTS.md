@@ -599,3 +599,25 @@ manually, and authenticated HTTPS passed with its dedicated CA/IP certificate.
 Automatic startup is disabled. Default suite: 471 passed/five optional skips;
 fresh rebuilt-image broker/container subset: five passed. Actual HA entity
 creation and physical native exchange remain unverified.
+
+## Commissioning preparation follow-up (2026-10-31)
+
+Read docs/research/native-commissioning-preparation-2026-10-31.md before the next
+device work. Offline user-config reconstruction and root symlink metadata now
+exist privately under private/commissioning-inventory-20261031; zero scanned CRC
+failures. Live normal USB serial corroborated the captured assigned identity.
+The byte-preserving credential/NTP editors are provisioning/native_settings.py.
+The fresh private/native-commissioning-20261031-v1 contains five original and
+replacement config/trust files, generated unique credentials (not enrolled), a
+seven-day owner CRL and an explicit non-installable plan with unresolved gates.
+No device writes/restart, backend enrollment or native connection occurred.
+Do not publish private identifiers, hashes, credentials or owner network data.
+
+The owner chose public NIST NTP; native ntpd already exists. They use UniFi and
+confirmed existing IoT access to HA/MQTT. They will handle trusted-network rules
+once connected. Stop expanding router-rule work and do not alter UniFi. Keep
+certificate checks enabled. Remaining work is current-root/current-file checking,
+filesystem commit/rollback, measured TLS candidate assembly and native settings
+permissions/integration. The existing correction still forwards 0666; no new
+permission correction or persistent installer exists. Do not claim these five
+review files are ready to apply or resume general NAND research by default.

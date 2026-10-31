@@ -55,3 +55,12 @@ manually, and authenticated HTTPS passed with its dedicated CA/IP certificate.
 Automatic startup is disabled. Default suite: 471 passed/five optional skips;
 fresh rebuilt-image broker/container subset: five passed. Actual HA entity
 creation and physical native exchange remain unverified.
+
+Commissioning preparation: exact offline originals/replacements for five config/
+trust files are private and non-installable; native credentials are not enrolled.
+Byte-preserving settings/NTP editors have focused tests. Captured user config and
+symlink paths are now reconstructed/corroborated; fresh runtime/root checks,
+commit/rollback tooling and native permission/TLS integration remain. Owner chose
+public NIST NTP and existing UniFi IoT access, and will handle trusted-network
+rules after connection. No router change is requested. See
+research/native-commissioning-preparation-2026-10-31.md under docs/.

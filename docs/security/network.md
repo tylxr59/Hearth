@@ -34,3 +34,19 @@ Verification before release:
 3. Confirm no thermostat flow escapes the allowlist, even when Google's names resolve to public addresses or backend fails. Confirm local NTP/DNS are not externally proxying device identifiers.
 4. Inspect actual listeners/processes, kernel configuration and routes on the bench unit with separately authorized read-only access. Do not assume our offline replacements disabled services until runtime verification.
 5. Repeat with backend/HA internet removed. Native regulation, schedule and protective tests require the authorized hardware plan.
+
+## Owner's first bench connection (2026-10-31)
+
+For this unit, the owner explicitly chose public NTP (for example NIST) instead
+of provisioning a local time server, and confirmed existing IoT-to-HA/MQTT access.
+They will handle trusted-network access themselves after connection. Do not
+change UniFi rules or make new router-rule development a prerequisite for this
+bench milestone. Thermostat-to-Hearth uses TCP 8443 on the HAOS host, rather than
+the HA Core UI port. Actual reachability/containment is not yet measured.
+
+The prepared native time configuration uses `time.nist.gov`, minpoll 6/maxpoll 10,
+without burst polling. DNS answers can change; a fixed firewall snapshot is not
+a permanent allowlist. Ordinary NTP does not authenticate time. This owner choice
+changes the local-only NTP requirement for this bench, but it does not establish
+production isolation, trusted time or native clock-failure behavior. TLS chain,
+hostname and date checks remain required. See the dated commissioning preparation.
