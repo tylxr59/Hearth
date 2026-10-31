@@ -138,3 +138,10 @@ recovery paths, with a complete independently validated private report. Home
 icon and normal USB returned; no loader armed. Next actual plan/receipt binding
 and bounded JFFS2 writer integration. No persistent installation or power-loss
 recovery claim. See docs/research/file-recovery-result-2026-10-31.md.
+
+Exact-plan capsule/host custody binding is implemented and privately prepared:
+native-file-capsule-20261031-v1 and -v1-repro, 23 matching files; 672 host tests
+pass/five skips. Not installable; target writer/receipt enforcement pending.
+Stock UI reached Wi-Fi setup on battery with the unwired base, then returned to
+USB; Wi-Fi remains unconfigured. No additional power gear assumed for first
+short attempt. See the dated file-capsule preparation note.

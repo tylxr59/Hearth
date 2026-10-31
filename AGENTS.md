@@ -899,3 +899,36 @@ replacement-plan/host-receipt binding, capsule validation and narrowly bounded
 JFFS2 writer integration. Advance notice before persistent work remains required.
 See docs/research/file-recovery-result-2026-10-31.md. Host baseline unchanged:
 653 passed, five optional skips, make check. Unit left at native startup.
+
+## CURRENT: exact-plan private data capsule prepared (2026-10-31)
+
+provisioning/file_capsule.py now binds verified source snapshot custody to a
+canonical actual nine-file replacement plan and separate plan-bound backup
+receipt. It enforces fixed targets, modes, missing new paths, expected snapshot
+session and observed primary/5.9.4-5 profile. Check requires an external plan pin
+and revalidates complete private inventory/bytes/custody/header. This is original
+data-only preparation, no executable installer or target acknowledgment.
+Nineteen new tests; make check and 672 host tests pass/five optional skips.
+
+Actual private output: private/native-file-capsule-20261031-v1 and -v1-repro.
+All 23 files reproduce; generated data header 876529 bytes. Original/replacement
+digests and metadata match the preserved nine-file review. Fresh settings/NTP/
+startup edits independently regenerate identically. Dedicated CA/CRL validates
+current backend certificate at host time. No installation or native TLS exchange
+was performed. Machine-local original preparation recipe:
+build/prepare-bound-file-capsule-20261031.py; it refuses existing output.
+Do not publish capsule bytes, credentials, identifiers or binary digests.
+
+Owner has only display/base/USB. A stock battery-only check with the completely
+unwired base reached Wi-Fi setup; owner left Wi-Fi unconfigured, detached base
+and reconnected USB. Normal USB independently observed afterward. Private
+bench-battery-result-20261031.json preserves source attribution. Battery health
+and sustained Wi-Fi runtime remain unmeasured; no transformer is assumed needed
+for the first short attempt. Unit is back at home icon; no loader armed.
+
+Next: actual bounded filesystem writer integration and target-side plan/receipt
+enforcement, including flush/unmount/protection and exact restoration. Existing
+91-case RAM pass and read-only JFFS2 pass are separate evidence; no persistent
+JFFS2 file installation, hardware power-loss recovery, actual native transport
+or HVAC proof. Notify before persistent action under the owner's authorization.
+See docs/research/file-capsule-preparation-2026-10-31.md.
