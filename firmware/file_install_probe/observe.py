@@ -19,8 +19,10 @@ END = b"END_HEARTH_FILE_COMMISSIONING\n"
 
 def capture_private(path, data):
     path = private_path(path)
-    if path.parent.stat().st_mode & 0o077 or len(data) > MAX_REPORT:
-        raise ValueError("bounded owner-only capture required")
+    if path.parent.stat().st_mode & 0o077:
+        raise ValueError("capture parent must be owner-only")
+    if len(data) > MAX_REPORT:
+        raise ValueError("capture byte bound exceeded")
     fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
     with os.fdopen(fd, "wb") as stream:
         stream.write(data)
@@ -48,10 +50,24 @@ def receive(fd, deadline, capture=None):
         begin = data.find(BEGIN)
         end = data.find(END, begin + len(BEGIN)) if begin >= 0 else -1
         if end >= 0:
+            # A restarted cached prefix must not be concatenated with the next
+            # complete frame. Select its most recent start before this footer.
+            begin = data.rfind(BEGIN, 0, end)
             payload = data[begin + len(BEGIN) : end]
+            if len(payload) > MAX_REPORT:
+                if capture is not None:
+                    capture_private(capture, payload[-MAX_REPORT:])
+                raise ValueError("file lab frame exceeds report bound")
             if capture is not None:
                 capture_private(capture, payload)
             return validate(payload)
+        newest = data.rfind(BEGIN)
+        if newest >= 0:
+            data = data[newest:]
+            if len(data) > len(BEGIN) + MAX_REPORT + len(END):
+                if capture is not None:
+                    capture_private(capture, data[-MAX_REPORT:])
+                raise ValueError("unterminated file lab frame exceeds report bound")
     if capture is not None and data:
         capture_private(capture, data[-MAX_REPORT:])
     raise TimeoutError("bounded file lab report not received")

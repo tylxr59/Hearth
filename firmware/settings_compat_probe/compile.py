@@ -24,7 +24,15 @@ def source_hashes():
     return (
         {
             n: sha((ASSETS / n).read_bytes())
-            for n in ("init.c", "client.c", "control.c", "control.h", "scan.h", "tail.h")
+            for n in (
+                "init.c",
+                "client.c",
+                "control.c",
+                "control.h",
+                "scan.h",
+                "tail.h",
+                "transmit.h",
+            )
         }
         | {n: sha((root / n).read_bytes()) for n in SHARED}
         | {"candidate/" + n: v for n, v in candidate_sources().items()}

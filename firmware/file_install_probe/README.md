@@ -53,3 +53,10 @@ record. Same-unit whole-chain power/recovery limitations remain.
 A pass would validate this bounded ARM RAM behavior and the exact standalone
 settings build. It would not establish JFFS2 durability, installation, real
 credentials, full native startup, authenticated device transport or HVAC control.
+
+The first combined [attempt](../../docs/research/file-commissioning-attempt-2026-10-31.md)
+transferred successfully but did not deliver a complete report. The cached sender
+now retains its offset across USB backpressure, and the collector handles restarted
+prefixes without concatenation. The wrapper also creates a durable execution marker;
+never reuse a marked profile even if no result was saved. The corrected profile
+is prepared separately. No 68-case hardware pass is claimed.

@@ -62,3 +62,8 @@ startup editing/exec behavior. Ruff/format and Bandit pass. The full default hos
 suite passes 564 cases with five optional integrations skipped. Actual HAOS runtime/backend code did
 not change; prior broker/container evidence is retained without repeating it.
 No JFFS2 write, power-loss restoration, physical native exchange or HVAC claim.
+
+Subsequent status: profile-v6 executed once but collection failed; no complete
+matrix is confirmed. Native home icon/USB returned. See the separate dated
+attempt record for the sender/framer correction and current fresh profile-v7.
+Do not treat the preparation-only state above as current execution status.

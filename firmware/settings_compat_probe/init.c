@@ -5,6 +5,7 @@
 #include "../settings_probe/capture.h"
 #include "tail.h"
 #include "scan.h"
+#include "transmit.h"
 
 static long sc(long nr, long a, long b, long c, long d, long e)
 {
@@ -14,6 +15,8 @@ static long sc(long nr, long a, long b, long c, long d, long e)
     __asm__ volatile ("svc 0" : "+r"(r0) : "r"(r1), "r"(r2), "r"(r3), "r"(r4), "r"(r7) : "memory", "cc");
     return r0;
 }
+static long send_cached_bytes(long fd,const char *data,long size)
+{ return sc(4,fd,(long)data,size,0,0); }
 static void pause_one(void)
 {
     long ts[2] = {1, 0}; sc(162, (long)ts, 0, 0, 0, 0);
@@ -160,7 +163,8 @@ void __attribute__((noreturn)) _start(void)
     static const char ready[] = "HEARTH_SETTINGS_COMPAT_READY_V1\n";
     unsigned int tty[9];
     char input[64];
-    long fd = -1, n, i, matched = 0, offset;
+    long fd = -1, n, i, matched = 0;
+    struct hearth_cached_transmit transmission = {0};
     int original, candidate;
     sc(21, (long)"proc", (long)"/proc", (long)"proc", 15, 0);
     sc(21, (long)"sysfs", (long)"/sys", (long)"sysfs", 15, 0);
@@ -195,12 +199,12 @@ begin:
         "{\"type\":\"compat_complete\",\"passed\":false}\n");
     append("END_HEARTH_SETTINGS_COMPAT\n");
     for (;;) {
-        offset = 0;
-        while (offset < used) {
-            n = sc(4, fd, (long)(report + offset), used - offset, 0, 0);
-            if (n <= 0) break;
-            offset += n;
-        }
+        int status;
+        do {
+            status = hearth_cached_transmit_step(&transmission,fd,report,used,send_cached_bytes);
+        } while (status == HEARTH_TRANSMIT_MORE);
+        /* Preserve the offset across backpressure/interrupts. Reset only after
+         * the entire cached report, including its footer, reached the tty. */
         pause_one();
     }
 }

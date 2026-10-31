@@ -696,3 +696,30 @@ normal adapter refuses unsupported/nonempty extended-attribute queries; the
 future JFFS2 kernel must expose those attributes. RAM-only builds may accept
 EOPNOTSUPP on their memory filesystem. Profile-v6 remains unexecuted, with no
 file-result.jsonl. The review bundle/host tests do not enable device writes.
+
+## Combined file RAM attempt / current transport correction (2026-10-31)
+
+Profile-v6 executed ONCE using 5ba411d. Three files transferred; collector exited
+1 with bounded/owner-only capture error and no file-result.jsonl. A single bounded
+read-only cached trace (zero device writes) retained repeated report prefixes
+without footer. All private attempt-1-{prepared,observed,native-return}.json,
+cached trace and diagnostic chunks are preserved. Owner confirmed home icon;
+normal USB 2464:0002 independently returned. No loader armed or installation.
+No 68-case matrix pass is established. Never reuse v6/repro; retrospective
+execution-started marker now records the attempted profile despite no result.
+
+The corrected supervisor retains cached TX offset on EAGAIN/EINTR instead of
+restarting at byte zero. The receiver handles restarted prefixes and preserves
+bounded partial evidence. Wrapper writes/fsyncs an exclusive execution marker
+before loader launch and refuses any old marker even without a result. Workload,
+controller/kernel/boot stages/native libraries/candidate are unchanged. New host
+regressions cover 20479-byte queue backpressure, interrupted transmission,
+restarted/oversized frames and execution-marker files/symlinks. Make check and
+569 host tests pass, with five unchanged optional skips.
+
+CURRENT fresh unexecuted profile: private/file-commissioning-ram-20261031/profile-v7;
+repro profile-v7-repro; helpers build/file-commissioning-ram-20261031/helpers-v5 and
+helpers-v5-repro. Seven artifacts/full inventories reproduce, rootfs 11045344,
+image 6034056 bytes. Prepared-v7.json is separate and immutable. Notify and obtain
+owner restart readiness before a new PTY-backed --execute-experimental-file-ram-lab
+attempt. No automatic retry. See docs/research/file-commissioning-attempt-2026-10-31.md.

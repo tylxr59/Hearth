@@ -174,3 +174,128 @@ def test_original_helpers_cross_compile_without_firmware_or_container_requiremen
     assert record["ram_only_file_adapter"] and record["candidate_phase_trace"] is False
     assert 'files = run("files",2)' in supervisor_source()
     assert "static char report[49152]" in supervisor_source()
+
+
+def test_cached_sender_retains_offset_across_usb_backpressure(tmp_path):
+    import subprocess
+    from pathlib import Path
+
+    if not shutil.which("clang"):
+        pytest.skip("Clang required for original cached-transmitter sanitizer check")
+    root = Path(__file__).resolve().parents[1]
+    output = tmp_path / "sender"
+    subprocess.run(
+        [
+            "clang",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            "-g",
+            "-fsanitize=address,undefined",
+            str(root / "tests/cached_transmit_harness.c"),
+            "-o",
+            str(output),
+        ],
+        check=True,
+        capture_output=True,
+    )
+    subprocess.run([str(output)], check=True, capture_output=True, timeout=3)
+
+
+def test_receiver_discards_restarted_prefixes_before_complete_frame(tmp_path, monkeypatch):
+    from tools import elf_review
+
+    private = tmp_path / "private"
+    private.mkdir(mode=0o700)
+    monkeypatch.setattr(elf_review, "PRIVATE", private)
+    host, peer = socket.socketpair()
+    output = private / "result.jsonl"
+    payload = encode(matrix())
+
+    def sender():
+        try:
+            peer.sendall(observe.READY)
+            assert peer.recv(64) == observe.START
+            for _ in range(9):
+                peer.sendall(observe.BEGIN + payload[:6000])
+            peer.sendall(observe.BEGIN + payload + observe.END)
+        except OSError:
+            pass
+
+    thread = threading.Thread(target=sender)
+    try:
+        thread.start()
+        assert observe.receive(host.fileno(), time.monotonic() + 3, output)["file_cases"] == 32
+        assert output.read_bytes() == payload
+    finally:
+        host.close()
+        peer.close()
+        thread.join(timeout=3)
+
+
+def test_oversized_frame_saves_bounded_private_evidence(tmp_path, monkeypatch):
+    from tools import elf_review
+
+    private = tmp_path / "private"
+    private.mkdir(mode=0o700)
+    monkeypatch.setattr(elf_review, "PRIVATE", private)
+    host, peer = socket.socketpair()
+    output = private / "partial.jsonl"
+
+    def sender():
+        try:
+            peer.sendall(observe.READY)
+            assert peer.recv(64) == observe.START
+            peer.sendall(observe.BEGIN + b"x" * (observe.MAX_REPORT + 100) + observe.END)
+        except OSError:
+            pass
+
+    thread = threading.Thread(target=sender)
+    try:
+        thread.start()
+        with pytest.raises(ValueError, match="report bound"):
+            observe.receive(host.fileno(), time.monotonic() + 3, output)
+        assert output.stat().st_size == observe.MAX_REPORT
+        assert output.stat().st_mode & 0o077 == 0
+    finally:
+        host.close()
+        peer.close()
+        thread.join(timeout=3)
+
+
+@pytest.mark.parametrize("marker", ["file", "symlink"])
+def test_execution_marker_blocks_reuse_even_without_result(tmp_path, marker):
+    import os
+    import subprocess
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    profile = tmp_path / "private-profile"
+    profile.mkdir(mode=0o700)
+    if marker == "file":
+        (profile / "execution-started").write_text("prior attempt\n")
+    else:
+        (profile / "execution-started").symlink_to(profile / "missing")
+    binaries = tmp_path / "bin"
+    binaries.mkdir()
+    fake_python = binaries / "python3"
+    fake_python.write_text('#!/bin/sh\nprintf "%s\\n" "$*" >> "$HEARTH_TEST_LOG"\nexit 0\n')
+    fake_python.chmod(0o700)
+    log = tmp_path / "calls"
+    env = {"PATH": str(binaries) + os.pathsep + os.environ["PATH"], "HEARTH_TEST_LOG": str(log)}
+    result = subprocess.run(
+        [
+            "sh",
+            str(root / "firmware/file_install_probe/boot.sh"),
+            str(profile),
+            "--execute-experimental-file-ram-lab",
+        ],
+        env=env,
+        check=False,
+        capture_output=True,
+        timeout=3,
+    )
+    assert result.returncode == 2 and b"Preserve the prior attempt" in result.stderr
+    calls = log.read_text().splitlines()
+    assert len(calls) == 1 and "artifact check" in calls[0]
+    assert not (profile / "file-result.jsonl").exists()

@@ -87,3 +87,9 @@ nine-file review retained; no installer command/device writer is enabled. A sing
 It is prepared but unexecuted. See docs/research/file-commissioning-preparation-2026-10-31.md.
 Live snapshot/root verification, fresh settings merge, backup receipts, filesystem/
 kernel integration, interrupted-write recovery and physical native exchange remain.
+
+Combined file RAM attempt: v6 transferred but collection failed; no complete
+68-case observation. Native home icon/USB returned. TX backpressure reset and RX
+prefix concatenation are corrected with host regressions and durable attempt
+markers. Fresh profile-v7 is checked/reproducible but unexecuted; preserve v6 and
+all private failure evidence. See the dated file-commissioning attempt document.

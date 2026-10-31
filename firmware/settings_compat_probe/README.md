@@ -110,3 +110,10 @@ old rows plus conservative new-row allowances fit the per-child 8 KiB budget.
 The prepared privacy comparison subsequently [passed all 36 cases](../../docs/research/settings-permissions-result-2026-10-31.md)
 once using source 68edfb9/profile-v2, with loader/collector zero and native USB
 return. That executed profile/result must be preserved and never reused.
+
+The combined file lab exposed a cached-report sender issue once reports exceeded
+the gadget queue capacity. Current supervisor source uses the original transmit.h
+state helper to preserve the byte offset across EAGAIN/EINTR and reset only after
+the full footer is queued. This changes report transport only, never repeats child
+execution and does not retroactively invalidate or overwrite old observations.
+The larger combined profile still requires its own complete target result.
