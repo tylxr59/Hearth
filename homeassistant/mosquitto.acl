@@ -1,12 +1,14 @@
 # Replace these usernames with dedicated accounts; no anonymous broker access.
 user hearth-bridge
  topic write homeassistant/climate/+/config
+ topic write homeassistant/sensor/+/config
  topic write hearth/+/state
  topic write hearth/+/availability
  topic read hearth/+/command/+
 
 user homeassistant-hearth
  topic read homeassistant/climate/+/config
+ topic read homeassistant/sensor/+/config
  topic read hearth/+/state
  topic read hearth/+/availability
  topic write hearth/+/command/temperature

@@ -13,7 +13,7 @@ def package(output):
     addon.mkdir()
     shutil.copyfile(root / "homeassistant/hearth/config.yaml", addon / "config.yaml")
     shutil.copyfile(root / "homeassistant/DOCS.md", addon / "DOCS.md")
-    for name in ("Dockerfile", "requirements.lock"):
+    for name in ("Dockerfile", "requirements.lock", "LICENSE", "THIRD_PARTY.md"):
         shutil.copyfile(root / name, addon / name)
     for name in ("backend", "provisioning"):
         shutil.copytree(root / name, addon / name, ignore=shutil.ignore_patterns("__pycache__"))

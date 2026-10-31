@@ -28,7 +28,8 @@ def run(*args):
     return subprocess.run(command(args), check=True, capture_output=True, text=True).stdout.strip()
 
 
-def test_unprivileged_container_tls_api():
+@pytest.mark.parametrize("native", [False, True])
+def test_unprivileged_container_tls_api(native):
     root = Path(tempfile.mkdtemp(prefix="hearth-container-"))
     name = "hearth-container-" + secrets.token_hex(6)
     try:
@@ -66,6 +67,8 @@ def test_unprivileged_container_tls_api():
                 "ca": "/config/tls/server.pem",
             },
         )
+        if native:
+            private_json(root / "native-telemetry.json", {"origin": "https://127.0.0.1:8443"})
         # First prove the image defaults to its documented unprivileged identity.
         assert (
             run(
@@ -129,13 +132,35 @@ def test_unprivileged_container_tls_api():
                 time.sleep(0.1)
         assert not state["devices"][0]["available"]
         basic = "Basic " + base64.b64encode(f"{SERIAL}:{token}".encode()).decode()
-        assert request("/v1/device/state", basic, {"temperature": 21}) == {"accepted": True}
-        result = request(
-            f"/v1/manage/devices/{SERIAL}/commands",
-            "Bearer " + admin,
-            {"operation": "temperature", "value": 22},
-        )
-        assert request("/v1/device/commands", basic)["commands"] == [result]
+        if native:
+            entry = request("/nest/entry", basic)
+            assert entry == {"transport_url": "https://127.0.0.1:8443/nest/transport"}
+            result = request(
+                "/nest/transport/v7/put",
+                basic,
+                {
+                    "objects": [
+                        {"object_key": f"shared.{SERIAL}", "value": {"current_temperature": 21}}
+                    ]
+                },
+            )
+            assert result["objects"][0]["object_revision"] == 1
+            assert "value" not in result["objects"][0]
+            with pytest.raises(urllib.error.HTTPError) as disabled:
+                request(
+                    f"/v1/manage/devices/{SERIAL}/commands",
+                    "Bearer " + admin,
+                    {"operation": "temperature", "value": 22},
+                )
+            assert disabled.value.code == 409
+        else:
+            assert request("/v1/device/state", basic, {"temperature": 21}) == {"accepted": True}
+            result = request(
+                f"/v1/manage/devices/{SERIAL}/commands",
+                "Bearer " + admin,
+                {"operation": "temperature", "value": 22},
+            )
+            assert request("/v1/device/commands", basic)["commands"] == [result]
         with pytest.raises(urllib.error.HTTPError) as error:
             request("/v1/manage/devices", "Bearer incorrect")
         assert error.value.code == 401

@@ -569,3 +569,33 @@ Progress on independent host work while hardware investigation is blocked. Usefu
 Use the existing Python modules and pinned dependency workflow; Python currently runs on the host, not on the old ARM userspace. Share validation across HTTP/MQTT; do not introduce bypass paths. Add meaningful tests for new protocol/security behavior and run checks appropriate to the change. For artifact changes, verify deterministic outputs and secret exclusion. The source release must include `AGENTS.md`.
 
 Record new evidence under `docs/research/`, protocol fixtures/tests under `tests/`, and decisions under `docs/architecture/`. Update `TODO.md`, relevant security/hardware docs and this handoff as facts change. Preserve historical validation reports or label replacements accurately; never report unperformed flashing, recovery, HAOS or HVAC tests as passed. Use local commits for reviewable milestones and leave the next agent a precise completed/pending/blocked status.
+
+## Native telemetry handoff (2026-10-31)
+
+An opt-in `--native-telemetry` profile now implements the bounded authenticated
+NLE-style telemetry subset, separate from the older partial decoder. See
+`docs/research/native-telemetry-2026-10-31.md` and `docs/protocol/nest.md`.
+It projects only temperature/humidity/target/firmware; all commands are disabled
+across HTTP/MQTT/core and discovery uses three sensors. Default runtime remains
+canonical. HAOS selects it through private `native-telemetry.json` containing
+only origin. Account buckets are ignored/unacknowledged, unknown values are not
+backed up and native pairing/sleep/full subscription behavior remains unverified.
+Host tests are not a real device exchange.
+
+Owner deployment targets and securely entered SSH/MQTT credentials are private
+under ignored `private/native-deployment-20261031`; never print or commit them.
+HAOS SSH password authentication and modern `/local_apps`, `/app_configs` paths
+were observed. MQTT auth/TLS passed using the owner-provided CA and explicit
+legacy certificate-format compatibility (strict format flag only; all ordinary
+peer checks retained). No broker restart/change. Dedicated backend CA/server
+certificate and an empty registry are prepared privately. No thermostat loader
+is armed, and no thermostat config has changed in this host milestone. Keep
+pursuing actual HAOS/native integration rather than expanding the parked raw
+rehearsal. Installation/entity creation and concrete device file rollback remain
+pending until separately recorded.
+
+HAOS deployment update: local Hearth app built/installed on amd64, started
+manually, and authenticated HTTPS passed with its dedicated CA/IP certificate.
+Automatic startup is disabled. Default suite: 471 passed/five optional skips;
+fresh rebuilt-image broker/container subset: five passed. Actual HA entity
+creation and physical native exchange remain unverified.

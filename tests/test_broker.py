@@ -94,11 +94,13 @@ def broker(tmp_path):
     )
     (root / "acl").write_text("""user bridge
  topic write homeassistant/climate/+/config
+ topic write homeassistant/sensor/+/config
  topic write hearth/+/state
  topic write hearth/+/availability
  topic read hearth/+/command/+
 user ha
  topic read homeassistant/climate/+/config
+ topic read homeassistant/sensor/+/config
  topic read hearth/+/state
  topic read hearth/+/availability
  topic write hearth/+/command/temperature
@@ -240,6 +242,115 @@ async def test_real_broker_discovery_commands_and_auth(broker, rig, tmp_path):
         finally:
             bad.disconnect()
             bad.loop_stop()
+    finally:
+        observer.disconnect()
+        observer.loop_stop()
+
+
+async def test_native_tls_telemetry_to_read_only_sensor_discovery(broker, rig, tmp_path):
+    root, port, password = broker
+    core, token, admin, _ = rig
+    messages, connected = queue.Queue(), threading.Event()
+    observer = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+    observer.tls_set(ca_certs=str(root / "cert.pem"))
+    observer.username_pw_set("ha", password)
+
+    def connected_to_broker(client, userdata, flags, reason, properties):
+        if reason == 0:
+            for topic in (
+                "homeassistant/sensor/+/config",
+                "homeassistant/climate/+/config",
+                "hearth/+/state",
+            ):
+                client.subscribe(topic)
+            connected.set()
+
+    observer.on_connect = connected_to_broker
+    observer.on_message = lambda c, u, m: messages.put((m.topic, bytes(m.payload)))
+    observer.connect("127.0.0.1", port)
+    observer.loop_start()
+    config = tmp_path / "mqtt.json"
+    private_json(
+        config,
+        {
+            "host": "127.0.0.1",
+            "port": port,
+            "username": "bridge",
+            "password": password,
+            "ca": str(root / "cert.pem"),
+        },
+    )
+    app = create_app(core, native_telemetry=True)
+    install(app, core, config)  # The profile itself forces read-only publication.
+    received = {}
+
+    def collect():
+        while not messages.empty():
+            topic, payload = messages.get_nowait()
+            received[topic] = payload
+
+    sensor_topics = [
+        f"homeassistant/sensor/hearth_{SERIAL}_{field}/config"
+        for field in ("temperature", "humidity", "target_temperature")
+    ]
+    try:
+        await wait_for(connected.is_set)
+        tls = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        tls.load_cert_chain(root / "cert.pem", root / "key.pem")
+        server = TestServer(app, scheme="https")
+        await server.start_server(ssl=tls)
+        context = ssl.create_default_context(cafile=str(root / "cert.pem"))
+        async with TestClient(server, connector=aiohttp.TCPConnector(ssl=context)) as client:
+            response = await client.post(
+                "/nest/transport/v7/put",
+                headers=auth(token),
+                json={
+                    "objects": [
+                        {
+                            "object_key": f"device.{SERIAL}",
+                            "value": {"current_humidity": 45, "software_version": "fixture-1"},
+                        },
+                        {
+                            "object_key": f"shared.{SERIAL}",
+                            "value": {"current_temperature": 0, "target_temperature": 22},
+                        },
+                    ]
+                },
+            )
+            assert response.status == 200
+            assert all("value" not in item for item in (await response.json())["objects"])
+
+            def discovered():
+                collect()
+                state = received.get(f"hearth/{SERIAL}/state", b"{}")
+                return (
+                    all(received.get(topic) for topic in sensor_topics)
+                    and json.loads(state).get("temperature") == 0
+                )
+
+            await wait_for(discovered)
+            for topic in sensor_topics:
+                assert "command" not in received[topic].decode()
+            assert received.get(f"homeassistant/climate/hearth_{SERIAL}/config", b"") == b""
+            observer.publish(f"hearth/{SERIAL}/command/temperature", "26", qos=1)
+            await asyncio.sleep(0.3)
+            assert core.pending == {} and core.states[SERIAL]["target_temperature"] == 22
+            response = await client.post(
+                f"/v1/manage/devices/{SERIAL}/commands",
+                headers={"Authorization": "Bearer " + admin},
+                json={"operation": "temperature", "value": 26},
+            )
+            assert response.status == 409
+            core.registry.revoke(SERIAL)
+
+            def cleaned():
+                collect()
+                return (
+                    all(received.get(topic) == b"" for topic in sensor_topics)
+                    and received.get(f"hearth/{SERIAL}/state") == b""
+                )
+
+            await wait_for(cleaned)
     finally:
         observer.disconnect()
         observer.loop_stop()

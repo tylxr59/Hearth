@@ -10,6 +10,48 @@ import paho.mqtt.client as mqtt
 
 from backend.validation import Invalid, loads, serial
 
+SENSORS = (
+    ("temperature", "Temperature", "temperature", "°C"),
+    ("humidity", "Humidity", "humidity", "%"),
+    ("target_temperature", "Target temperature", "temperature", "°C"),
+)
+
+
+def tls_context(config):
+    """Keep peer verification; allow explicit legacy X.509 format compatibility."""
+    legacy = config.get("legacy_certificate_format", False)
+    if type(legacy) is not bool:
+        raise Invalid("legacy_certificate_format must be a boolean")
+    if legacy and not config.get("ca"):
+        raise Invalid("legacy certificate compatibility requires an explicit trusted CA")
+    context = ssl.create_default_context(cafile=config.get("ca"))
+    context.minimum_version = ssl.TLSVersion.TLSv1_2
+    if legacy:
+        context.verify_flags &= ~ssl.VERIFY_X509_STRICT
+    return context
+
+
+def sensor_discovery(ident, firmware="unknown"):
+    """Read-only native bench entities; no climate/control topics advertised."""
+    common = discovery(ident, {"modes": ["off"], "fan": False}, firmware)
+    result = {}
+    for field, name, device_class, unit in SENSORS:
+        config = {
+            "name": name,
+            "unique_id": f"hearth_{ident}_{field}",
+            "device": common["device"],
+            "availability": common["availability"],
+            "availability_mode": "all",
+            "state_topic": f"hearth/{ident}/state",
+            "value_template": "{{ value_json." + field + " | default('None') }}",
+            "device_class": device_class,
+            "unit_of_measurement": unit,
+        }
+        if field != "target_temperature":
+            config["state_class"] = "measurement"
+        result[f"homeassistant/sensor/hearth_{ident}_{field}/config"] = config
+    return result
+
 
 def discovery(ident, caps, firmware="unknown"):
     prefix = f"hearth/{ident}"
@@ -71,17 +113,18 @@ def accept_command(core, topic, payload, retained=False):
 
 
 class Bridge:
-    def __init__(self, core, config, loop):
+    read_only = False
+
+    def __init__(self, core, config, loop, *, read_only=False):
         self.core, self.loop = core, loop
+        self.read_only = read_only or not core.command_delivery_enabled
         self.known = set()
         self.cleaned = set()
         self.client = mqtt.Client(
             mqtt.CallbackAPIVersion.VERSION2, client_id="hearth-bridge", protocol=mqtt.MQTTv5
         )
         self.client.username_pw_set(config["username"], config["password"])
-        context = ssl.create_default_context(cafile=config.get("ca"))
-        context.minimum_version = ssl.TLSVersion.TLSv1_2
-        self.client.tls_set_context(context)
+        self.client.tls_set_context(tls_context(config))
         self.client.will_set("hearth/bridge/availability", "offline", qos=1, retain=True)
         self.client.on_connect = self.on_connect
         self.client.on_message = self.on_message
@@ -90,10 +133,11 @@ class Bridge:
 
     def on_connect(self, client, userdata, flags, reason, properties):
         if reason == 0:
-            client.subscribe(
-                "hearth/+/command/+",
-                options=mqtt.SubscribeOptions(qos=0, retainAsPublished=True, retainHandling=2),
-            )
+            if not self.read_only:
+                client.subscribe(
+                    "hearth/+/command/+",
+                    options=mqtt.SubscribeOptions(qos=0, retainAsPublished=True, retainHandling=2),
+                )
             # Publish device offline/online before declaring bridge online.
             self.loop.call_soon_threadsafe(self.connected)
 
@@ -112,6 +156,8 @@ class Bridge:
         )
 
     def receive(self, topic, payload, retained):
+        if self.read_only:
+            return
         with contextlib.suppress(Invalid):
             accept_command(self.core, topic, payload, retained)
 
@@ -129,6 +175,10 @@ class Bridge:
                 ),
                 self.client.publish(f"hearth/{ident}/state", "", qos=1, retain=True),
             ]
+            queued.extend(
+                self.client.publish(topic, "", qos=1, retain=True)
+                for topic in sensor_discovery(ident)
+            )
             # A full/disconnected queue is retried on the next tick. QoS 1 handles
             # accepted messages; the durable identifiers survive process loss and
             # are replayed after reconnect. Never erase the registry ledger on PUBACK.
@@ -141,10 +191,16 @@ class Bridge:
             )
             self.client.publish(
                 f"homeassistant/climate/hearth_{ident}/config",
-                json.dumps(config),
+                "" if self.read_only else json.dumps(config),
                 qos=1,
                 retain=True,
             )
+            for topic, sensor in sensor_discovery(
+                ident, view["state"].get("firmware", "unknown")
+            ).items():
+                self.client.publish(
+                    topic, json.dumps(sensor) if self.read_only else "", qos=1, retain=True
+                )
             self.client.publish(
                 f"hearth/{ident}/state", json.dumps(view["state"]), qos=1, retain=True
             )
@@ -169,7 +225,7 @@ class Bridge:
             self.client.loop_stop()
 
 
-def install(app, core, path):
+def install(app, core, path, *, read_only=False):
     async def lifecycle(app):
         config_path = Path(path)
         if config_path.is_symlink() or config_path.stat().st_mode & 0o077:
@@ -177,7 +233,7 @@ def install(app, core, path):
         config = loads(config_path.read_bytes())
         if not config.get("username") or not config.get("password"):
             raise Invalid("dedicated MQTT credentials required")
-        bridge = Bridge(core, config, asyncio.get_running_loop())
+        bridge = Bridge(core, config, asyncio.get_running_loop(), read_only=read_only)
         task = asyncio.create_task(bridge.run())
         yield
         task.cancel()

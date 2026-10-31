@@ -61,3 +61,37 @@ telemetry; identifiers remain so broker snapshot restoration can be cleaned agai
 Older already-forgotten orphans require explicit revocation or authorized cleanup.
 
 The broker authenticates command publishers; payloads do not carry redundant device credentials. Broker compromise or a writer with broad ACLs can control enrolled devices within allowed operations. Use one backend instance per namespace/client ID. Firmware capabilities must come from bench validation; simulation defaults are not hardware detection.
+
+## Opt-in authenticated native telemetry laboratory
+
+`--native-telemetry --origin https://192.168.50.2:8443` is a separate bench
+profile, mutually exclusive with the older partial decoder. It requires TLS and
+existing unique enrollment, including Basic-auth identity equality. Default
+runtime remains canonical. It mounts entry GET/POST, PUT and metadata device GET,
+plus bounded subscription routes under `/nest/transport` and version-7 aliases.
+Entry returns only the reviewed transport URL; it never sends credential-update,
+time, tier, update or power-management fields.
+
+The parser accepts bounded array/keyed PUT envelopes and zero-revision inline
+subscriptions. Owned device-scoped buckets must match the authenticated serial;
+foreign buckets fail closed. Account-level user/structure/where/link buckets are
+ignored without acknowledgement because ownership is not established. Updates
+merge per-field fingerprints in memory, support conditional revisions and return
+revision/timestamp/key metadata in that order, without values. Unknown field
+values are neither retained nor echoed. They are not backed up. Credential
+rotation resets cached bucket metadata. Request authentication is checked again
+after body reads, preventing in-flight rotation/revocation races.
+
+Only current temperature, humidity, target temperature and software version are
+projected into shared state. Shared temperature takes precedence over the device
+fallback, including zero. Subscription replies carry metadata only, with at most
+two held requests per device and a 30-second bounded empty hold. Revocation,
+rotation, disconnect and shutdown release held requests. Device sleep/reconnect,
+pairing, schedule persistence and full native reconciliation remain unmeasured.
+Commands are disabled across HTTP, MQTT and core while this profile is active.
+It advertises read-only MQTT sensors instead of a controllable climate entity.
+
+This original implementation follows behavior in the pinned MIT NLE backend;
+no upstream application code was copied. New source-file provenance is recorded
+in `docs/research/upstreams.json`. Host fixtures and a real TLS broker validate
+this subset, not a physical thermostat exchange or a complete NLE replacement.

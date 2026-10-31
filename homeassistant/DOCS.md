@@ -35,3 +35,34 @@ For rollback, stop the add-on and restore its previous image/source and compatib
 Authenticated GET `/v1/manage/devices` returns current state/capabilities/availability without credentials. No historical backend log/database exists. HA's recorder and MQTT persistence can store state: configure retention/exclusions separately. No secrets in ordinary logs; avoid enabling network/body debugging.
 
 Revoke devices with authenticated DELETE, keep the bridge running until retained discovery/state deletion is observed, then stop/uninstall. Offline CLI revocation requires stopping/restarting the backend; its saved identifier list now drives cleanup on the next MQTT connection and future reconnects. The bridge removes retained `homeassistant/climate/hearth_SERIAL/config` and `hearth/SERIAL/state`, keeping availability retained offline. An older release may already have forgotten an orphan: explicitly revoke its known identity once, or use an authorized broker admin tool. Manual removal is also needed if uninstalling without another broker connection; remove remaining availability if complete topic deletion is desired. Clear discovery before removing the add-on to avoid ghost entities. Broker deletion does not erase HA recorder/history or offline backups.
+
+## Native telemetry bench profile
+
+For the opt-in NLE-style telemetry lab, add a private mode-0600
+`native-telemetry.json` alongside `registry.json`:
+
+```json
+{"origin": "https://192.168.50.2:8443"}
+```
+
+Use the actual isolated backend IPv4 address, explicit port and matching TLS SAN.
+The launcher selects `--native-telemetry`. This profile publishes three MQTT
+sensors (temperature, humidity and target temperature), deletes its climate
+discovery entry, and rejects commands through HTTP, MQTT and the shared core.
+It does not install device configuration or enable physical control. It needs
+sensor discovery ACLs from the updated example. Revocation also deletes these
+sensor discovery entries. Do not use the canonical simulator's command polling
+as a native compatibility test.
+
+Newer HAOS installations expose local app source and private configuration as
+`/local_apps` and `/app_configs` in Terminal & SSH; older versions use `/addons`
+and `/addon_configs`. Inspect the available directories and actual local slug
+before copying. Keep automatic startup disabled during commissioning.
+
+MQTT uses Python's strict X.509 verification by default. An existing private PKI
+that omits legacy certificate extensions can explicitly set
+`"legacy_certificate_format": true` in its private `mqtt.json`, with an explicit
+trusted `ca` file. This clears only OpenSSL's `VERIFY_X509_STRICT` format flag.
+Trusted-chain/signature, validity, hostname/IP verification and TLS >=1.2 remain
+required; no trust-on-first-use or unverified TLS mode is provided. Prefer fixing
+the certificate during planned PKI maintenance. See [Python's SSL documentation](https://docs.python.org/3.14/library/ssl.html).

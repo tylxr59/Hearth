@@ -10,6 +10,7 @@ class Core:
     def __init__(self, registry, clock=time.monotonic):
         self.registry, self.clock = registry, clock
         self.states, self.seen, self.pending = {}, {}, {}
+        self.command_delivery_enabled = True
 
     def caps(self, ident):
         record = self.registry.data["devices"].get(ident)
@@ -39,6 +40,8 @@ class Core:
         }
 
     def enqueue(self, ident, body):
+        if not self.command_delivery_enabled:
+            raise Invalid("native telemetry mode has no command delivery")
         validated = command(body, self.caps(ident))
         if not self.available(ident):
             raise Invalid("device unavailable")
@@ -50,6 +53,8 @@ class Core:
 
     def poll(self, ident):
         self.caps(ident)
+        if not self.command_delivery_enabled:
+            return []
         return [
             item
             for deadline, item in self.pending.get(ident, {}).values()

@@ -1,0 +1,29 @@
+{
+  "date": "2026-10-31",
+  "scope": "Opt-in authenticated native telemetry host implementation and HAOS installation",
+  "results": {
+    "make_check": "passed: Ruff lint/format and Bandit",
+    "default_pytest": "471 passed, 5 optional integrations skipped",
+    "fresh_rebuilt_image": "passed, rootless Podman amd64",
+    "real_tls_broker_and_container_subset": "5 passed, zero skipped",
+    "haos_source_build_install": "passed, amd64, manual boot",
+    "haos_authenticated_https": "passed with dedicated CA and IP verification",
+    "owner_mqtt_authentication": "passed over verified TLS; no broker modification",
+    "physical_native_exchange": "not performed",
+    "haos_synthetic_native_smoke": "passed: authenticated entry, PUT metadata, telemetry projection, command rejection, temporary enrollment revocation"
+  },
+  "tls_compatibility": {
+    "default": "Python strict X.509",
+    "owner_existing_broker": "explicit CA-required legacy certificate-format compatibility",
+    "only_cleared_flag": "VERIFY_X509_STRICT",
+    "peer_chain_signature_validity_and_hostname_checks": "enabled",
+    "minimum_tls": "1.2"
+  },
+  "limits": [
+    "Host fixtures and synthetic requests do not prove thermostat compatibility",
+    "Actual HA MQTT entity discovery/UI and owner-broker ACLs not verified",
+    "No thermostat config, firmware, physical control or HVAC test performed",
+    "Pairing, full native reconciliation, sleep, clock/CRL bootstrap and device commissioning remain incomplete",
+    "Container OS and proprietary firmware vulnerabilities are outside Python/source scans"
+  ]
+}

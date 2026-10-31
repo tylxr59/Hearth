@@ -39,3 +39,19 @@ and fresh-subscriber retained-state checks pass. Older already-forgotten orphans
 still need explicit revoke or administrator cleanup; HA history remains outside
 broker cleanup scope. Full 284-test host/broker/container suite passes. See
 docs/security/validation-2026-10-31-mqtt-cleanup.json.
+
+Native telemetry follow-up (2026-10-31): the opt-in authenticated NLE-style
+entry/PUT/metadata/subscription host subset and read-only MQTT sensors are
+implemented. Unique enrollment, body-read authentication rechecks, bounded holds,
+foreign-bucket rejection and shared command disabling have regression coverage.
+HAOS private profile support is ready; actual installation/entity creation and
+physical native exchange remain pending. Dedicated owner-broker authentication
+passed with an explicit trusted CA and scoped legacy certificate-format handling;
+no broker changes. Next: HAOS installation and the narrow device commissioning/
+rollback plan. See docs/research/native-telemetry-2026-10-31.md.
+
+HAOS deployment update: local Hearth app built/installed on amd64, started
+manually, and authenticated HTTPS passed with its dedicated CA/IP certificate.
+Automatic startup is disabled. Default suite: 471 passed/five optional skips;
+fresh rebuilt-image broker/container subset: five passed. Actual HA entity
+creation and physical native exchange remain unverified.

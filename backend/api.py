@@ -1,15 +1,20 @@
 """Authenticated API; plaintext permitted only on loopback for local development."""
 
 import argparse
+import asyncio
 import base64
 import binascii
 import ipaddress
+import json
 import secrets
 import ssl
+import time
 
 from aiohttp import web
 
 from backend.core import Core
+from backend.native import MAX_BODY as NATIVE_MAX_BODY
+from backend.native import NativeTelemetry
 from backend.nest import reports
 from backend.registry import Registry
 from backend.validation import Invalid, endpoint, loads, serial
@@ -17,6 +22,11 @@ from backend.validation import Invalid, endpoint, loads, serial
 CORE = web.AppKey("core", Core)
 ORIGIN = web.AppKey("origin", str)
 IDENT = web.RequestKey("serial", str)
+NATIVE = web.AppKey("native_telemetry", NativeTelemetry)
+NATIVE_HOLD = web.AppKey("native_hold_seconds", float)
+NATIVE_ACTIVE = web.AppKey("native_active", dict)
+NATIVE_STOP = web.AppKey("native_stop", asyncio.Event)
+AUTH_GENERATION = web.RequestKey("credential_generation", str)
 
 
 def basic(header):
@@ -39,6 +49,7 @@ async def guard(request, handler):
         if request.path.startswith("/v1/manage/"):
             if not header.startswith("Bearer ") or not core.registry.admin(header[7:]):
                 raise web.HTTPUnauthorized()
+            request[AUTH_GENERATION] = core.registry.data["admin"]
         else:
             try:
                 ident, token = basic(header)
@@ -47,6 +58,7 @@ async def guard(request, handler):
             if not core.registry.authenticate(ident, token):
                 raise web.HTTPUnauthorized()
             request[IDENT] = ident
+            request[AUTH_GENERATION] = core.registry.data["devices"][ident]["hash"]
         response = await handler(request)
         response.headers["Cache-Control"] = "no-store"
         return response
@@ -54,10 +66,25 @@ async def guard(request, handler):
         return web.json_response({"error": str(exc)}, status=400)
 
 
-async def body(request):
+def require_current(request):
+    registry = request.app[CORE].registry.data
+    expected = (
+        registry["admin"]
+        if request.path.startswith("/v1/manage/")
+        else registry["devices"].get(request[IDENT], {}).get("hash", "")
+    )
+    if not secrets.compare_digest(request[AUTH_GENERATION], expected):
+        raise web.HTTPUnauthorized()
+
+
+async def body(request, limit=16384):
     if request.content_type != "application/json":
         raise web.HTTPUnsupportedMediaType()
-    return loads(await request.read())
+    raw = await request.read()
+    require_current(request)
+    if len(raw) > limit:
+        raise web.HTTPRequestEntityTooLarge(max_size=limit, actual_size=len(raw))
+    return loads(raw)
 
 
 async def report(request):
@@ -67,6 +94,10 @@ async def report(request):
 
 
 async def poll(request):
+    if NATIVE in request.app:
+        return web.json_response(
+            {"error": "native telemetry mode has no command delivery"}, status=409
+        )
     return web.json_response({"commands": request.app[CORE].poll(request[IDENT])})
 
 
@@ -81,6 +112,10 @@ async def status(request):
 
 
 async def enqueue(request):
+    if NATIVE in request.app:
+        return web.json_response(
+            {"error": "native telemetry mode has no command delivery"}, status=409
+        )
     result = request.app[CORE].enqueue(serial(request.match_info["serial"]), await body(request))
     return web.json_response(result, status=202)
 
@@ -124,11 +159,97 @@ async def nest_entry(request):
     return web.json_response({"transport_url": origin + "/nest/transport"})
 
 
-def create_app(core, origin="https://127.0.0.1:8443", experimental_nest=False):
-    if experimental_nest:
+async def native_entry(request):
+    raw = await request.read()
+    require_current(request)
+    if len(raw) > 16384:
+        raise web.HTTPRequestEntityTooLarge(max_size=16384, actual_size=len(raw))
+    return await nest_entry(request)
+
+
+async def native_put(request):
+    return web.json_response(
+        request.app[NATIVE].apply(request[IDENT], await body(request, NATIVE_MAX_BODY))
+    )
+
+
+async def native_get(request):
+    if request.match_info["serial"].removeprefix("device.") != request[IDENT]:
+        raise web.HTTPForbidden()
+    return web.json_response(request.app[NATIVE].listing(request[IDENT]))
+
+
+async def native_subscribe(request):
+    app, ident = request.app, request[IDENT]
+    incoming = await body(request, NATIVE_MAX_BODY)
+    active = app[NATIVE_ACTIVE]
+    if active.get(ident, 0) >= 2:
+        raise web.HTTPTooManyRequests(headers={"Retry-After": "30"})
+    result = app[NATIVE].apply(ident, incoming, subscription=True)
+    if not incoming.get("chunked", False):
+        return web.json_response(result)
+    response = web.StreamResponse(
+        headers={"Content-Type": "application/json", "Cache-Control": "no-store"}
+    )
+    response.enable_chunked_encoding()
+    generation = app[CORE].registry.data["devices"][ident]["hash"]
+    active[ident] = active.get(ident, 0) + 1
+    try:
+        await response.prepare(request)
+        if result["objects"]:
+            await response.write(json.dumps(result).encode())
+        else:
+            end = time.monotonic() + app[NATIVE_HOLD]
+            while time.monotonic() < end and not app[NATIVE_STOP].is_set():
+                record = app[CORE].registry.data["devices"].get(ident)
+                if not record or record["hash"] != generation:
+                    break
+                if request.transport is None or request.transport.is_closing():
+                    break
+                try:
+                    await asyncio.wait_for(
+                        app[NATIVE_STOP].wait(), min(0.25, end - time.monotonic())
+                    )
+                except TimeoutError:
+                    pass
+        await response.write_eof()
+    except ConnectionError:
+        # No payload/header or credential logging on peer disconnect.
+        pass
+    finally:
+        active[ident] -= 1
+        if not active[ident]:
+            del active[ident]
+    return response
+
+
+def create_app(
+    core,
+    origin="https://127.0.0.1:8443",
+    experimental_nest=False,
+    native_telemetry=False,
+    native_hold_seconds=30,
+):
+    if experimental_nest and native_telemetry:
+        raise Invalid("select only one native laboratory mode")
+    if experimental_nest or native_telemetry:
         origin = endpoint(origin)
-    app = web.Application(middlewares=[guard], client_max_size=16384)
+    app = web.Application(
+        middlewares=[guard], client_max_size=NATIVE_MAX_BODY if native_telemetry else 16384
+    )
     app[CORE], app[ORIGIN] = core, origin
+    if native_telemetry:
+        if type(native_hold_seconds) not in (int, float) or not 0 < native_hold_seconds <= 30:
+            raise Invalid("native bench hold must be greater than zero and at most 30 seconds")
+        app[NATIVE], app[NATIVE_HOLD] = NativeTelemetry(core), float(native_hold_seconds)
+        core.command_delivery_enabled = False
+        core.pending.clear()
+        app[NATIVE_ACTIVE], app[NATIVE_STOP] = {}, asyncio.Event()
+
+        async def shutdown(app):
+            app[NATIVE_STOP].set()
+
+        app.on_shutdown.append(shutdown)
     app.router.add_post("/v1/device/state", report)
     app.router.add_get("/v1/device/commands", poll)
     app.router.add_post("/v1/device/ack", ack)
@@ -141,6 +262,15 @@ def create_app(core, origin="https://127.0.0.1:8443", experimental_nest=False):
         app.router.add_post("/nest/transport/put", nest_put)
         app.router.add_post("/nest/transport/v7/put", nest_put)
         app.router.add_post("/nest/entry", nest_entry)
+    elif native_telemetry:
+        app.router.add_get("/nest/entry", native_entry)
+        app.router.add_post("/nest/entry", native_entry)
+        for path in ("/nest/transport/put", "/nest/transport/v7/put"):
+            app.router.add_post(path, native_put)
+        for path in ("/nest/transport/device/{serial}", "/nest/transport/v7/device/{serial}"):
+            app.router.add_get(path, native_get)
+        for path in ("/nest/transport", "/nest/transport/v7/subscribe"):
+            app.router.add_post(path, native_subscribe)
     return app
 
 
@@ -152,6 +282,12 @@ def main():
     parser.add_argument("--cert")
     parser.add_argument("--key")
     parser.add_argument("--mqtt-config")
+    parser.add_argument(
+        "--native-telemetry",
+        action="store_true",
+        help="Opt-in native telemetry bench; no command delivery",
+    )
+    parser.add_argument("--origin", default="https://127.0.0.1:8443")
     args = parser.parse_args()
     context = None
     if args.cert and args.key:
@@ -160,12 +296,14 @@ def main():
         context.load_cert_chain(args.cert, args.key)
     if context is None and not ipaddress.ip_address(args.host).is_loopback:
         parser.error("TLS certificate and key required for non-loopback listener")
+    if args.native_telemetry and context is None:
+        parser.error("native telemetry bench requires TLS certificate and key")
     core = Core(Registry(args.registry))
-    app = create_app(core)
+    app = create_app(core, origin=args.origin, native_telemetry=args.native_telemetry)
     if args.mqtt_config:
         from backend.mqtt import install
 
-        install(app, core, args.mqtt_config)
+        install(app, core, args.mqtt_config, read_only=args.native_telemetry)
     web.run_app(
         app, host=args.host, port=args.port, ssl_context=context, access_log=None, print=None
     )

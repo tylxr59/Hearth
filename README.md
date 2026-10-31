@@ -32,6 +32,8 @@ rejected all eight invalid cases. Native startup returned afterward. See the
 and full transport/configuration, credential persistence, recovery and HVAC
 remain unverified.
 
+An opt-in [authenticated native telemetry laboratory](docs/research/native-telemetry-2026-10-31.md) now accepts bounded NLE-style entry/PUT/metadata/subscription requests and publishes read-only MQTT sensors. Host validation does not establish physical Nest compatibility.
+
 Implemented:
 
 - TLS local API, separate device/management authentication, registration, rotation and revocation.
