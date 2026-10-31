@@ -1,7 +1,7 @@
 # Experimental native storage correction
 
 Original ARM compatibility code for the privately reviewed Display-2.6 / 5.9.4-5
-library. **Uninstalled and not yet target-validated.** This is not an installer,
+library. **Uninstalled; the exact GNU-linked build passed its 29-case synthetic RAM matrix.** This is not an installer,
 HVAC controller, replacement firmware or recovery procedure. Use only in the
 separate [synthetic RAM comparison](../settings_compat_probe/README.md).
 
@@ -41,7 +41,9 @@ Public hash API/ownership references are [pinned](sources.json), not vendored.
 The actual native callbacks/comparator were inspected independently; no
 source/binary-correspondence claim is made from an upstream API reference.
 
-Remaining gates include native target comparison, application startup/integration,
+The [observed result](../../docs/research/settings-compat-result-2026-10-31.md)
+validates the exact diagnostic build; earlier default LLD builds crashed during
+relocation and remain unvalidated. Remaining gates include application startup/integration,
 other credential log paths, actual permissions, two-key credential transactions,
 serialized-value limits, trusted TLS/time configuration, same-unit restoration and
 physical bench validation. This correction alone cannot establish secure

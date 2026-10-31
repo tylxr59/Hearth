@@ -229,7 +229,7 @@ profile-bindings-v1 executed once using source 5ecabc3: original twelve cases pa
 candidate SIGSEGV during compatibility relocation before any external binding or
 initializer marker. Private report 14248 bytes/50 rows, attempt-4.json and tail
 preserved. Owner restart done and native USB observed; never rerun this profile.
-Next prepared, UNEXECUTED profile: private/settings-compat-probe-20261031/profile-gnu-v3.
+Latest EXECUTED profile: private/settings-compat-probe-20261031/profile-gnu-v3.
 Helpers: build/settings-compat-20261031/comparison-gnu-v3. It uses optional
 --legacy-linker to compare the historical GNU linker in the existing rootless
 builder; all source/storage behavior and 29 case gates remain. Only original
@@ -237,8 +237,21 @@ objects/public stubs mounted, no firmware executed/linked on host. Kernel/base
 libraries unchanged. Seven artifacts reproduce; rootfs 11022900, image 6018803.
 make check and 313 tests pass with three unchanged integration skips. GNU draft
 v1/v2 directories stale; do not package/run them. GNU v3 offline wrapper passes.
-No candidate correction has been target validated. Notify owner and obtain
-restart readiness before arming a PTY loader; no loader is currently armed.
+The exact GNU v3 profile was executed ONCE using source 109c652 and PASSED all
+29 cases: 24 I/O plus five allocation/alias, both wait statuses zero, all canaries
+and binding checks passed. Original/candidate synthetic-secret matches 2/0;
+unrelated variadic marker 1/1, candidate scoped suppressions 50. Private report is
+19096 bytes/68 rows; attempt-5.json separately preserves identity/metadata. Never
+rerun this or its repro profile; preserve all original manifests/results. Owner
+reported restart done after command exit; native USB independently returned after
+a brief disappearance. No persistent installation or real settings access occurred.
+See docs/research/settings-compat-result-2026-10-31.md and dated observed JSON.
+This closes the exact base-library synthetic comparison, not full app/derived
+callbacks, credential-pair atomicity, other logs, real storage, TLS/time bootstrap,
+restoration or HVAC. Default LLD builds remain unvalidated; exact earlier crashing
+instruction unknown. No loader is armed. Continue native integration/protocol and
+concrete same-unit recovery planning before any persistent write; notify owner
+before a new diagnostic and request readiness only when fully prepared.
 While waiting for owner readiness, read-only Ghidra review traced the native
 entry callback at 0x976c0 and URL/platform-key/tier setters. Platform-key values
 have additional log paths; tier changes can call settings Write; URL processing

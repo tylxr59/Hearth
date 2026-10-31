@@ -89,3 +89,14 @@ the candidate accepts valid and rejects all eight invalid cases. Native startup
 returned after a full timed restart. Full native fetch/configuration, trusted time
 bootstrap, credential persistence, recovery and HVAC remain unverified. No library
 or CA was installed; raw results/hashes remain private.
+
+
+The [storage correction RAM comparison](../research/settings-compat-result-2026-10-31.md)
+now passed all 29 required cases with the exact GNU-linked candidate and native
+base settings library. Failed entry writes preserve old data and retry;
+directory-sync failure retries; tested allocation/alias cases and scoped
+synthetic-log checks pass. The earlier default LLD builds remain unvalidated.
+No correction is installed. Full application integration, other log paths,
+credential-pair atomicity, actual storage/permissions, restoration and HVAC remain
+open. The [observed scope record](validation-2026-10-31-storage-compat-observed.json)
+preserves these limits; historical preparation/failed attempts are unchanged.

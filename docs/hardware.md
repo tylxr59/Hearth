@@ -134,3 +134,11 @@ also completed twelve synthetic-file fault cases after a reporting-budget
 correction. It confirms original writer/retry defects; no writer fix, real
 settings access, flash durability or power-loss measurement is claimed. The
 owner-confirmed home icon and normal USB returned with the loader exited.
+
+
+The later [storage correction comparison](research/settings-compat-result-2026-10-31.md)
+passed all 29 synthetic RAM cases using the exact GNU-linked candidate, followed
+by owner-reported restart completion and independently observed normal USB.
+This supersedes the no-writer-correction-measurement status above. No actual
+settings, flash durability, interrupted power, installed correction, restoration
+or physical HVAC behavior was tested. The base remained detached throughout.

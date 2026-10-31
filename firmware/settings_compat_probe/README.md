@@ -6,7 +6,8 @@ in one RAM boot. The first attempt completed the original baseline but the
 candidate crashed before its first case; see the
 [attempt record](../../docs/research/settings-compat-attempt-2026-10-31.md).
 A phase-marker attempt reproduced the startup crash before any candidate marker.
-No passing comparison has been observed. Neither nlclient/osm nor real settings,
+The GNU-linked build subsequently passed all 29 cases on target; see the
+[observed result](../../docs/research/settings-compat-result-2026-10-31.md). Neither nlclient/osm nor real settings,
 credentials, production networking or flash filesystems are used.
 
 It repeats the twelve measured I/O cases for each variant (24 cases), then tests
@@ -84,5 +85,6 @@ It still compiles original objects with Clang and links only public ABI stubs.
 The immutable local builder identity is recorded in the private manifest. No image
 is pulled automatically; reconstruct the pinned probe builder if absent. The
 container mounts only the fresh helper output, has a read-only root/no network/no
-capabilities, and retains eager binding and RELRO. This comparison is unexecuted
-and does not establish that LLD layout caused the earlier startup crash.
+capabilities, and retains eager binding and RELRO. The exact GNU-linked comparison passed on target; this does not establish which
+ELF difference caused the earlier startup crash. Executed profiles must never
+be reused.
