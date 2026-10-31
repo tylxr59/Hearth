@@ -118,11 +118,13 @@ host guard fixture are GPL-2.0-or-later; userspace/framing/host collection are
 original project code. Preserved firmware references/captures remain private and
 are never compiled into the diagnostic or executed on the host.
 
-The draft firmware/scratch_test/ recovery experiment uses original GPL-2.0-or-later
+The experimental firmware/scratch_test/ recovery test uses original GPL-2.0-or-later
 transaction/kernel-adapter code and an original synthetic NAND harness; its
 standalone supervisor, framing, independent mathematical BCH4 encoder and host
 tooling are MIT. Only original code and trusted host OpenSSL run in host tests.
 Seven synthetic encoder vectors were independently compared against the already
 pinned public bchlib 2.1.3; no bchlib implementation is copied into the encoder.
-Its compile-only kernel draft uses the same pinned GPL kernel and toolchain,
-without including owner firmware or implementing a deployable recovery image.
+Its separately sealed RAM kernel uses the same pinned GPL kernel and toolchain.
+The actual adapter I/O functions and supervisor control flow run only against
+original host simulators in tests; no owner firmware is executed or included,
+and no deployable whole-firmware recovery image is implemented.

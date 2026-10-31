@@ -1,12 +1,12 @@
-# Fixed scratch recovery experiment: offline development
+# Fixed scratch recovery experiment: prepared, unexecuted
 
-**Not executable on the device yet. No operation has run.** This directory
+**Prepared offline; no physical operation has run.** This directory
 contains an original transaction core, synthetic NAND fault model, durable host
 snapshot gate, independent BCH4 encoder, draft duplex session and experimental
-kernel adapter. A compile-only staging recipe
-has no sealed manifest or execution wrapper. Its boot.sh always refuses execution;
-the borrowed geometry-only init cannot issue scratch commands. Do not manually
-boot or flash its draft output. Existing read-only profiles remain unchanged.
+kernel adapter. The separate explicit execution wrapper can intentionally write
+NAND after its private backup gate. It requires advance owner notification and
+an owner-timed restart. Existing read-only profiles remain unchanged. Never flash
+the diagnostic image itself or manually boot the earlier compile drafts.
 
 The proposed scope is one fixed physical block: 1312, data offset 164 MiB,
 128 KiB data / 135168 bytes including OOB. This is the start of the scratch range
@@ -43,14 +43,13 @@ environment, configuration/calibration and backplate regions are outside its
 fixed address range. A future adapter/hardware fault can still defeat software
 bounds, so host simulation cannot establish physical safety.
 
-The adapter compiled successfully in the existing isolated builder against the
-pinned kernel. The initial compile draft still uses the geometry init, so it
-does not incorporate the new supervisor. Compilation alone does not validate
-the adapter's addresses or hardware effects. Preserve that unsealed draft under
-`build/scratch-compile-20261031`; do not execute it.
-The standalone supervisor also compiles as static ARM with warnings treated as
-errors under `build/scratch-supervisor-compile-20261031`; it has not run or been
-integrated into a kernel. [Validation scope](../../docs/security/validation-2026-10-31-scratch-draft.json).
+The integrated profile is sealed at `build/scratch-restore-20261031-v1`; a fresh
+`-repro` build has six byte-identical artifacts and 17 byte-identical host helpers.
+Both pass offline image/configuration/minimal-initramfs integrity checks. The
+earlier `build/scratch-compile-20261031` and standalone-supervisor compile drafts
+remain preserved and must not execute. Their [historical scope](../../docs/security/validation-2026-10-31-scratch-draft.json)
+is superseded for preparation only, not physical validation. Compilation and host
+simulation cannot establish hardware safety or restoration.
 
 The core's host fake implements NAND one-to-zero programming, partial/error paths,
 failed/false erase, marker corruption, WP failures, changed reads, wrong/replayed
@@ -58,6 +57,13 @@ ACK and neighboring canaries. It runs only original code plus trusted host
 OpenSSL under ASan/UBSan. The fake ECC is deliberately not a valid hardware ECC
 qualification. The host gate separately checks that every storage fsync failure
 prevents acknowledgement. No proprietary firmware runs on the host.
+
+The actual adapter I/O functions also run against synthetic MTD/GPMC objects
+under sanitizers. The model asserts exact physical addresses/lengths, protected
+reads, full I/O completion and flash-BBT/refresh refusal. The actual supervisor
+control flow runs with only its ARM syscall instruction replaced by an original
+host simulator; fragmented transfers, failed reads, wrong starts, partial/bad ACK
+and missing terminal reports are covered.
 
 The original independent encoder constructs a degree-52 binary generator from
 GF(2^13), primitive polynomial 0x201b and roots alpha^1 through alpha^8. Its
@@ -75,8 +81,27 @@ any ACK byte is attempted records that a write may have executed. Socket-pair
 tests exercise storage failure before ACK and terminal state, scope, content and
 ECC failures. Original C framing matches the Python wire schema under sanitizers.
 
-Remaining before any owner-timed attempt: integrate/review the draft supervisor,
-verify the private mask and archive before USB, complete kernel-adapter fault
-testing, source/artifact integrity checks and reproducible sealed builds.
-Verify the local recovery archive, notify the owner of the exact first-write risk
-and limits, then arm only after readiness. No loader is armed by these tests.
+Before USB, preflight reads and hashes the complete owner-selected local archive,
+binds the private mask record to its archived original digest, and independently
+checks all 256 programmed reference sectors in the earlier measured block. No
+private mask, data or digest is logged or sent to the target. The scoped duplex
+observer is an exact checked derivation; the shared read-only observer is unchanged.
+
+The [prepared validation](../../docs/security/validation-2026-10-31-scratch-prepared.json)
+records 432 passing host tests, three unchanged optional integration skips and
+passing lint/format/security checks. No loader was armed by preparation. Future
+execution requires a fresh private output directory, native USB preflight, a PTY,
+advance danger notification and owner readiness. A failed/ambiguous write report
+requires review before power interruption, retry or native restart.
+
+The wrapper's zero-argument mode performs offline integrity checks only:
+
+```sh
+sh build/scratch-restore-20261031-v1/boot.sh
+```
+
+Its explicit future execution arguments are
+`--execute-experimental-scratch-restore PRIVATE_OUTPUT PRIVATE_ARCHIVE_DIRECTORY PRIVATE_MASK_RECORD`.
+Do not reuse a profile after execution or an existing output. Preserve creation
+manifests and record execution/result/native-return separately. No firmware
+installation, whole-chip restoration or HVAC gate is closed by this preparation.

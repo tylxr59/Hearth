@@ -8,9 +8,11 @@ from pathlib import Path
 if __package__:
     from firmware.nand_contract.configure import patch_build_metadata
     from firmware.nand_metadata import configure as metadata
+    from firmware.nand_sample.configure import patch_serial
 else:
     import metadata_configure as metadata
     from contract_configure import patch_build_metadata
+    from raw_sample_configure import patch_serial
 
 initramfs = metadata.initramfs
 
@@ -69,8 +71,16 @@ def main():
     driver.write_text(patch_driver(original))
     target = driver.parent / "hearth-scratch"
     target.mkdir(exist_ok=True)
-    for name in ("adapter.h", "core.c", "core.h"):
+    for name in ("adapter.h", "core.c", "core.h", "io.h"):
         shutil.copyfile(Path("/work") / name, target / name)
+    serial = Path("drivers/usb/gadget/u_serial.c")
+    saved = serial.with_suffix(".hearth-sample-original")
+    if not saved.exists():
+        saved.write_bytes(serial.read_bytes())
+    desired = patch_serial(saved.read_text())
+    if serial.read_text() not in (saved.read_text(), desired):
+        raise ValueError("unexpected existing gadget serial edits")
+    serial.write_text(desired)
     generator = Path("scripts/mkcompile_h")
     original = generator.with_suffix(".hearth-original")
     if not original.exists():

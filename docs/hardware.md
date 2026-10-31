@@ -1,6 +1,6 @@
 # Gen 2 bench validation and recovery gates
 
-**A physical unit has received read-only USB intake; firmware compatibility and recovery remain unverified. No flash/apply command is implemented.** See the [2026-10-30 intake](research/device-intake-2026-10-30.md): enclosure `02A`, reported `Display-2.6`, software `5.9.4-5`, normal USB `2464:0002`. Preparation artifacts are not bootable images and must not be sent to a USB loader. Gen 1 remains a separate, unvalidated profile; never select a generation from USB vendor/product alone.
+**A physical unit has received read-only USB intake; firmware compatibility and recovery remain unverified. No persistent write has run. An experimental fixed-block scratch writer is now prepared separately; no production flash/apply command exists.** See the [2026-10-30 intake](research/device-intake-2026-10-30.md): enclosure `02A`, reported `Display-2.6`, software `5.9.4-5`, normal USB `2464:0002`. Inert review archives/partial replacements are not bootable images and must not be sent to a USB loader. Gen 1 remains a separate, unvalidated profile; never select a generation from USB vendor/product alone.
 
 An authorized manual restart subsequently exposed `0451:d00e` briefly. The
 separate [RAM probe](../firmware/probe/README.md) now compiles experimental boot
@@ -65,6 +65,18 @@ persistent-write, recovery or HVAC gate below.
 5. Demonstrate ROM/recovery entry and a tested restoration path. A spare bench unit is preferred; on 2026-10-31 this owner confirmed they have only this unit and accepted potentially dangerous same-unit work, so a spare is not mandatory here. Before the first same-unit persistent recovery test, prepare the exact reviewed operation, verify original inputs/partition identity/write semantics and notify the owner of the recovery limits. Demonstrate restoration before installing modifications. No automatic rollback or dual-image support is assumed.
 
 ## 2. Read-only reverse engineering
+
+The separately prepared [scratch recovery experiment](../firmware/scratch_test/README.md)
+permits at most one synthetic page program, one erase and original cleanmarker
+restoration on fixed physical block 1312, after fresh matching raw/OOB reads,
+exact empty-block classification and a durable private region backup. Its
+independent programmed-ECC check does not trust the driver's zero read status.
+Six artifacts and 17 host helpers reproduce exactly; host/sanitizer tests pass.
+No physical write/restoration has run. Notify the owner of the exact first-write
+operation and power-loss/recovery limits before arming it, require an owner-timed
+restart, and never automatically retry. Ambiguous execution requires reviewing
+private evidence before power interruption or native restart. Even a future pass
+will establish only this scratch primitive, not firmware recovery or installation.
 
 Capture authorized local IPC metadata first: socket files, D-Bus service names/policies, configuration hierarchy and nlclient/osm ELF dependencies. Introspect only with a known non-mutating method after reviewing application behavior. SCPM lifecycle methods can stop control/power services; do not invoke them during discovery. Observe backplate communication passively using suitable high-impedance equipment and an electrical expert; do not inject MCU frames.
 

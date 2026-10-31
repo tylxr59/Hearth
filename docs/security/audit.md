@@ -19,6 +19,16 @@ nor demonstrates target privacy, durable rotation or complete outbound isolation
 
 ## Reference findings and response
 
+The [prepared scratch recovery experiment](validation-2026-10-31-scratch-prepared.json)
+adds an explicit experimental NAND mutation path, separate from every read-only
+profile and production runtime. It has fixed addresses/content, fresh exact-empty
+classification, durable backup acknowledgement, hardware-WP checks and one-shot
+cleanup; host checks independently validate programmed BCH4 and exact restoration.
+Actual callbacks/supervisor were exercised only with original host simulators.
+All 432 host tests and make check pass, two fresh builds reproduce, but no
+physical write, durability or recovery result exists. The owner chose one local
+unencrypted archive; PC loss/root compromise remain accepted backup limitations.
+
 | Potential issue | Evidence at inspected revision | Hearth treatment and limits |
 |---|---|---|
 | Settings CGI key disclosure | Thermostat deps/settings returns api_key when `initialize` equals hostname; also has an unconfigured first-boot setup grant. Logs raw request/token. | No CGI or initialize/setup grant in runtime. Regression tests reject old paths; firmware staging removes recognized nleapi rcS line and lists CGI/Monit removals. Not yet verified on hardware. |

@@ -1,0 +1,51 @@
+{
+  "status": "prepared-unexecuted-fixed-scratch-experiment",
+  "device_executed": false,
+  "persistent_operation_executed": false,
+  "restoration": "unverified",
+  "range": {
+    "block": 1312,
+    "data_offset": 171966464,
+    "erase_bytes": 131072,
+    "page_data_bytes": 2048,
+    "page_oob_bytes": 64,
+    "pages": 64,
+    "synthetic_program_page": 1
+  },
+  "maximum_operations": {
+    "data_page_program": 1,
+    "block_erase": 1,
+    "cleanmarker_oob_program": 1
+  },
+  "host_checks": {
+    "pytest_passed": 432,
+    "optional_integrations_skipped": 3,
+    "scratch_tests": 61,
+    "make_check": "passed",
+    "core_framing_adapter_io_supervisor_models": "ASan and UBSan passed",
+    "private_archive_full_digest_verified": true,
+    "independent_encoder_private_reference_sectors": 256,
+    "independent_encoder_public_synthetic_vectors": 7,
+    "firmware_executed_on_host": false
+  },
+  "build_checks": {
+    "same_pinned_isolated_builder": true,
+    "supervisor_integrated": true,
+    "two_fresh_builds": true,
+    "artifacts_byte_identical": 6,
+    "host_helpers_byte_identical": 17,
+    "both_offline_integrity_checks": "passed",
+    "initramfs_bytes": 4192,
+    "kernel_uncompressed_bytes": 2759424,
+    "creation_manifests_sealed": true
+  },
+  "limits": [
+    "No hardware program, erase or restoration observation yet",
+    "Current live scratch contents must match exact fresh empty-block predicate",
+    "Backup and manifest must be durable before the digest-bound ACK",
+    "No automatic retry or arbitrary flash address/content",
+    "Owner-selected unencrypted local archive does not protect against PC/storage loss",
+    "Power loss or hardware/tool fault can leave the only unit damaged",
+    "No whole-firmware recovery, commissioning, installation or HVAC claim"
+  ]
+}

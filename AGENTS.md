@@ -444,6 +444,26 @@ build/scratch-supervisor-compile-20261031; it was not executed/integrated. Origi
 C core/framing tests use ASan/UBSan; kernel-adapter hardware/I/O semantics are
 still unqualified. Public scope: docs/security/validation-2026-10-31-scratch-draft.json.
 Normal Nest USB 2464:0002 was independently observed during this offline work.
+Scratch preparation follow-up supersedes the preceding compile-only status:
+build/scratch-restore-20261031-v1 and -v1-repro are sealed and unexecuted, six
+byte-identical artifacts and 17 byte-identical host helpers, both offline image/
+config/initramfs checks pass (4192 initramfs bytes, 2759424 kernel bytes).
+Supervisor integrated, binary tty configured; original read-only observer unchanged,
+scratch-only checked derivation opens scoped tty RDWR. Actual adapter I/O and
+supervisor logic pass synthetic sanitizer models, including partial transfers and
+missing ACK/result. Full suite 432 passed/three optional skips; make check passed.
+Preflight hashes the local archive, binds the private BCH mask record to its
+archived original digest, and independently verifies 256 preserved reference
+sectors; private mask never reaches target/logs. New public scope:
+docs/security/validation-2026-10-31-scratch-prepared.json. Exact future flag:
+--execute-experimental-scratch-restore PRIVATE_OUTPUT PRIVATE_ARCHIVE_DIRECTORY
+PRIVATE_MASK_RECORD. Use fresh output, normal-mode preflight, PTY, owner readiness
+and advance first-write notification. Scope block1312/page1 only, at most one data
+program/erase/marker program. No attempt armed or persistent operation executed.
+Earlier compile drafts remain prohibited. After ambiguous write outcome preserve
+power/evidence and review before any reset/retry. A scratch pass is not firmware
+restoration or authorization for firmware installation/HVAC. Next: ask owner timing
+only when the checked source milestone is saved, then arm one supervised attempt.
 
 1. `README.md` and `TODO.md` for scope and outstanding work.
 2. `docs/architecture/0001-local-transport.md` for the provisional architecture decision.
