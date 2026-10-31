@@ -125,6 +125,15 @@ static int absent(int directory,const char *name)
     struct metadata m;int result=entry(directory,name,&m);
     return result==1 ? 1 : result==0 ? 0 : -1;
 }
+static int no_attributes(int fd)
+{
+    long count=flistxattr(fd,0,0);
+#ifdef HEARTH_RAM_LAB
+    return count==0||(count<0&&*__errno_location()==95) ? 0 : -1;
+#else
+    return count==0 ? 0 : -1;
+#endif
+}
 static int contents(int directory,const char *name,struct hearth_file_bytes bytes,
                     unsigned int mode,struct hearth_posix_context *c)
 {
@@ -136,15 +145,9 @@ static int contents(int directory,const char *name,struct hearth_file_bytes byte
     if(fd<0) return -1;
     if(metadata(fd,&m)||(m.mode&0170000)!=0100000||m.links!=1||m.owner!=c->owner||
        m.group!=c->group||(m.mode&07777)!=mode||m.size!=bytes.size) goto done;
-    { long attributes=flistxattr(fd,0,0);
-#ifdef HEARTH_RAM_LAB
-      if(attributes>0||(attributes<0&&*__errno_location()!=95)) goto done;
-#else
-      /* A writer must be able to observe attributes, not silently hide them
-       * behind a kernel/filesystem lacking xattr support. */
-      if(attributes!=0) goto done;
-#endif
-    }
+    /* Production requires observable attributes; only the explicit synthetic
+     * RAM build accepts EOPNOTSUPP from a RAM filesystem. */
+    if(no_attributes(fd)) goto done;
     while(at<bytes.size) {
         hearth_file_size amount=bytes.size-at; long n;
         if(amount>sizeof(buffer)) amount=sizeof(buffer);
@@ -201,11 +204,10 @@ static int check_original(struct hearth_posix_context *c,unsigned int index,int 
     if(!f->existed) return absent(directory,name)==1 ? 0 : -1;
     return contents(directory,name,f->original,f->original_mode,c);
 }
-static int preflight(void *opaque,unsigned int index)
+static int valid_change(struct hearth_posix_context *c,unsigned int index)
 {
-    struct hearth_posix_context *c=opaque; const struct hearth_file_change *f;
-    char name[128];int directory,result=-1;unsigned int n;
-    if(!c||!c->changes||!c->count||c->count>HEARTH_FILE_LIMIT||index>=c->count||c->recovery!=-1) return -1;
+    const struct hearth_file_change *f;unsigned int n;
+    if(!c||!c->changes||!c->count||c->count>HEARTH_FILE_LIMIT||index>=c->count) return -1;
     f=&c->changes[index];
     if(f->target>=HEARTH_TARGET_COUNT||f->replacement.size>HEARTH_FILE_BYTES||!f->replacement.size||
        !f->replacement.data||f->original.size>HEARTH_FILE_BYTES||
@@ -220,6 +222,14 @@ static int preflight(void *opaque,unsigned int index)
     if(f->target==HEARTH_STORAGE_LIBRARY&&f->replacement_mode!=0444) return -1;
     if((f->target==HEARTH_CA||f->target==HEARTH_CRL)&&f->replacement_mode!=0644) return -1;
     if((f->target==HEARTH_WEB_LIBRARY||f->target==HEARTH_NTP)&&f->replacement_mode!=f->original_mode) return -1;
+    return 0;
+}
+static int preflight(void *opaque,unsigned int index)
+{
+    struct hearth_posix_context *c=opaque;const struct hearth_file_change *f;
+    char name[128];int directory,result=-1;
+    if(valid_change(c,index)||c->recovery!=-1) return -1;
+    f=&c->changes[index];
     if(local_root(c,c->roots[0])||local_root(c,c->roots[1])||absent(c->roots[1],".hearth-rollback")!=1) return -1;
     directory=parent(c,f->target,name);if(directory<0) return -1;
     if(check_original(c,index,directory,name)) goto done;
@@ -292,13 +302,14 @@ static int activate(void *opaque,unsigned int index)
 done:
     close(directory);return result;
 }
-static int restore(void *opaque,unsigned int index)
+static int restore_checked(void *opaque,unsigned int index,int allow_missing)
 {
     struct hearth_posix_context *c=opaque;const struct hearth_file_change *f=&c->changes[index];
     char name[128],temporary[128],backup[16];unsigned int i;int directory=parent(c,f->target,name),result=-1;
     if(directory<0) return -1;
     if(!check_original(c,index,directory,name)) { result=0;goto done; }
-    if(contents(directory,name,f->replacement,f->replacement_mode,c)) goto done;
+    if(!(allow_missing&&f->existed&&absent(directory,name)==1)&&
+       contents(directory,name,f->replacement,f->replacement_mode,c)) goto done;
     if(!f->existed) {
         if(unlinkat(directory,name,0)||fsync(directory)) goto done;
     } else {
@@ -315,6 +326,8 @@ static int restore(void *opaque,unsigned int index)
 done:
     close(directory);return result;
 }
+static int restore(void *opaque,unsigned int index)
+{ return restore_checked(opaque,index,0); }
 static int discard(void *opaque,unsigned int index)
 {
     struct hearth_posix_context *c=opaque;const struct hearth_file_change *f=&c->changes[index];
@@ -335,3 +348,118 @@ static int discard(void *opaque,unsigned int index)
     close(directory);return result;
 }
 const struct hearth_file_ops hearth_posix_file_ops={preflight,journal,stage,activate,verify,restore,discard};
+
+/* A post-crash process never inherits created[] provenance. Reconstruct only
+ * exact known bytes or a bounded prefix with the expected metadata. Everything
+ * else remains untouched for private/manual inspection. */
+static int recover_temporary(struct hearth_posix_context *c,unsigned int index,
+    int directory,const char *name,struct hearth_file_bytes expected,
+    unsigned int mode,unsigned int flag)
+{
+    struct metadata m;int status=entry(directory,name,&m);
+    if(status==1) return 0;
+    if(status||m.size>expected.size||(m.mode&0170000)!=0100000||
+       m.links!=1||m.owner!=c->owner||m.group!=c->group||
+       ((m.mode&07777)!=mode&&(m.mode&07777)!=0600)) return -1;
+    expected.size=(hearth_file_size)m.size;
+    if(contents(directory,name,expected,m.mode&07777,c)) return -1;
+    c->created[index]|=flag;
+    return 0;
+}
+static int recovery_journal(struct hearth_posix_context *c,unsigned int *saved_phase,unsigned int *saved_mask)
+{
+    unsigned char record[48];hearth_file_size at=0;int fd,result=-1;
+    struct metadata m;unsigned int phase,mask,count,i;
+    if(entry(c->recovery,"journal",&m)||(m.mode&0170000)!=0100000||m.size!=sizeof(record)) return -1;
+    fd=openat(c->recovery,"journal",H_RDONLY|H_NONBLOCK|H_NOFOLLOW|H_CLOEXEC);
+    if(fd<0) return -1;
+    while(at<sizeof(record)) {
+        long n=read(fd,record+at,sizeof(record)-at);
+        if(n<0&&*__errno_location()==4) continue;
+        if(n<=0||(hearth_file_size)n>sizeof(record)-at) goto done;
+        at+=(hearth_file_size)n;
+    }
+    if(contents(c->recovery,"journal",(struct hearth_file_bytes){record,sizeof(record)},0600,c)) goto done;
+    if(record[0]!='H'||record[1]!='F'||record[2]!='I'||record[3]!='1') goto done;
+    phase=(unsigned int)record[4]|(unsigned int)record[5]<<8|
+        (unsigned int)record[6]<<16|(unsigned int)record[7]<<24;
+    mask=(unsigned int)record[8]|(unsigned int)record[9]<<8|
+        (unsigned int)record[10]<<16|(unsigned int)record[11]<<24;
+    count=(unsigned int)record[12]|(unsigned int)record[13]<<8|
+        (unsigned int)record[14]<<16|(unsigned int)record[15]<<24;
+    if(count!=c->count||phase<HEARTH_PREPARING||phase>HEARTH_RESTORE_FAILED||mask&~((1U<<count)-1)) goto done;
+    if((phase==HEARTH_PREPARING||phase==HEARTH_STAGED)&&mask) goto done;
+    if(phase==HEARTH_COMMITTED&&mask!=((1U<<count)-1)) goto done;
+    if(phase==HEARTH_COMMITTING&&(!mask||(mask&(mask+1)))) goto done;
+    for(i=0;i<32;i++) if(record[16+i]!=c->plan_id[i]) goto done;
+    *saved_phase=phase;*saved_mask=mask;result=0;
+done:
+    if(close(fd)) result=-1;
+    return result;
+}
+struct hearth_install_result hearth_posix_restore_files(struct hearth_posix_context *c)
+{
+    struct hearth_install_result r={0,0,0,0,0,0,0};
+    struct metadata m;unsigned int i,phase=0,mask=0;char name[128],temporary[128],backup[16];
+    if(!c||c->recovery!=-1||!c->count||c->count>HEARTH_FILE_LIMIT) { r.error=HEARTH_INVALID_PLAN;return r; }
+    for(i=0;i<c->count;i++) if(valid_change(c,i)) { r.error=HEARTH_INVALID_PLAN;return r; }
+    if(local_root(c,c->roots[0])||local_root(c,c->roots[1])) goto invalid;
+    c->recovery=openat(c->roots[1],".hearth-rollback",H_RDONLY|H_DIRECTORY|H_NOFOLLOW|H_CLOEXEC);
+    if(c->recovery<0||local_root(c,c->recovery)||metadata(c->recovery,&m)||
+       (m.mode&07777)!=0700||m.group!=c->group||no_attributes(c->recovery)||recovery_journal(c,&phase,&mask)) goto invalid;
+    /* Ignore old in-memory flags; recovery accepts only reconstructed evidence. */
+    for(i=0;i<HEARTH_FILE_LIMIT;i++) c->created[i]=0;
+    c->journal_temporary=0;
+    for(i=0;i<c->count;i++) {
+        const struct hearth_file_change *f=&c->changes[i];unsigned int j;
+        int directory=parent(c,f->target,name),status=-1;
+        if(directory<0) goto invalid;
+        if(check_original(c,i,directory,name)) {
+            if(f->existed&&absent(directory,name)==1&&
+               (phase==HEARTH_COMMITTING||phase==HEARTH_RESTORING)&&(mask&(1U<<i))) {
+                /* An interrupted filesystem rename may leave the old name
+                 * absent. Only durable intent plus an exact backup permits
+                 * reconstructing that specific existing target. */
+                c->created[i]|=8U;
+            } else if(contents(directory,name,f->replacement,f->replacement_mode,c)) goto checked;
+            if(f->existed) {
+                backup_name(i,backup);
+                if(contents(c->recovery,backup,f->original,0600,c)) goto checked;
+            }
+        }
+        for(j=0;(temporary[j]=name[j]);j++) {}
+        if(append(temporary,suffix)||recover_temporary(c,i,directory,temporary,
+            f->replacement,f->replacement_mode,2)) goto checked;
+        for(j=0;(temporary[j]=name[j]);j++) {}
+        if(append(temporary,restore_suffix)) goto checked;
+        if(f->existed) {
+            if(recover_temporary(c,i,directory,temporary,f->original,f->original_mode,4)) goto checked;
+        } else if(absent(directory,temporary)!=1) goto checked;
+        status=0;
+checked:
+        if(close(directory)) status=-1;
+        if(status) goto invalid;
+    }
+    /* Conservatively cover every target: a durable journal may precede an
+     * interrupted update of journal.new. Exact current bytes, not old masks,
+     * decide whether each original already exists or needs restoration. */
+    r.attempted=(1U<<c->count)-1;
+    if(journal(c,HEARTH_RESTORING,r.attempted)) r.journal_error=1;
+    for(i=c->count;i;i--) {
+        unsigned int index=i-1,staged=c->created[index]&2U;
+        /* Only clear a verified interrupted restore temporary before retry.
+         * Retain replacement staging until all originals are restored. */
+        c->created[index]&=~2U;
+        if(discard(c,index)) r.cleanup_error=1;
+        c->created[index]|=staged;
+        if(restore_checked(c,index,(c->created[index]&8U)!=0)) r.rollback_error=1;
+        else r.restored|=1U<<index;
+    }
+    if(journal(c,r.rollback_error?HEARTH_RESTORE_FAILED:HEARTH_RESTORED,r.restored)) r.journal_error=1;
+    if(!r.rollback_error) for(i=c->count;i;i--) if(discard(c,i-1)) r.cleanup_error=1;
+    if(r.rollback_error) r.error=HEARTH_ROLLBACK_FAILED;
+    return r;
+invalid:
+    r.error=HEARTH_PREFLIGHT_FAILED;
+    return r;
+}

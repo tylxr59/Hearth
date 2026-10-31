@@ -9,6 +9,7 @@ struct stat { unsigned int st_mode; long long st_size; };
 extern int open(const char *,int,...),openat(int,const char *,int,...);
 extern int mkdir(const char *,unsigned int),mkdirat(int,const char *,unsigned int);
 extern int fchmod(int,mode_t),fchown(int,uid_t,gid_t),fsync(int);
+extern int fchmodat(int,const char *,mode_t,int);
 extern int renameat(int,const char *,int,const char *),unlinkat(int,const char *,int);
 extern int linkat(int,const char *,int,const char *,int),symlinkat(const char *,int,const char *);
 extern int mkfifoat(int,const char *,mode_t);

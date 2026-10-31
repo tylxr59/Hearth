@@ -12,6 +12,7 @@ from firmware.tls_probe.package import sha
 ROOT = Path(__file__).resolve().parents[2]
 ASSETS = Path(__file__).parent
 SOURCES = (
+    "tests/file_recovery_harness.c",
     "tests/file_install_harness.c",
     "firmware/file_install/transaction.c",
     "firmware/file_install/transaction.h",
@@ -89,6 +90,7 @@ def compile_helpers(output, *, legacy_linker=True):
                 "atoi",
                 "close",
                 "fchmod",
+                "fchmodat",
                 "flistxattr",
                 "fchown",
                 "fsync",

@@ -20,7 +20,10 @@ from tests.test_settings_compat_probe import matrix as settings_matrix
 
 def matrix():
     rows = settings_matrix()
-    rows[-1:-1] = [{"type": "file_case", "case": i, "passed": True} for i in range(32)] + [
+    rows[-1:-1] = (
+        [{"type": "file_case", "case": i, "passed": True} for i in range(32)]
+        + [{"type": "recovery_case", "case": i, "passed": True} for i in range(24) if i != 14]
+    ) + [
         {
             "type": "compat_process",
             "variant": "files",
@@ -39,8 +42,36 @@ def encode(rows):
 def test_complete_ram_evidence_does_not_claim_flash_or_native_application():
     report = results.validate(encode(matrix()))
     assert report["settings_cases"] == 36 and report["file_cases"] == 32
+    assert report["recovery_cases"] == 23 and report["ram_interrupted_install_recovery_verified"]
     assert not report["installed"] and not report["flash_filesystem_verified"]
     assert not report["full_native_application_verified"]
+
+
+def test_historical_matrix_requires_explicit_legacy_scope():
+    old = [row for row in matrix() if row.get("type") != "recovery_case"]
+    with pytest.raises(ValueError, match="recovery evidence"):
+        results.validate(encode(old))
+    historical = results.validate(encode(old), require_recovery=False)
+    assert historical["recovery_cases"] == 0
+    assert not historical["ram_interrupted_install_recovery_verified"]
+
+
+@pytest.mark.parametrize("fault", ["missing", "duplicate", "bool", "unsupported", "failed"])
+def test_recovery_contract_requires_every_exact_case(fault):
+    rows = copy.deepcopy(matrix())
+    start = next(i for i, row in enumerate(rows) if row.get("type") == "recovery_case")
+    if fault == "missing":
+        rows.pop(start)
+    elif fault == "duplicate":
+        rows[start + 1] = copy.deepcopy(rows[start])
+    elif fault == "bool":
+        rows[start]["case"] = False
+    elif fault == "unsupported":
+        rows[start]["case"] = 14
+    else:
+        rows[start]["passed"] = False
+    with pytest.raises(ValueError):
+        results.validate(encode(rows))
 
 
 @pytest.mark.parametrize(
@@ -156,7 +187,7 @@ def profile(tmp_path, monkeypatch, fault=None):
 
 
 def test_exact_ram_archive_accepts_only_bounded_lab_scope(tmp_path, monkeypatch):
-    assert artifact.check(profile(tmp_path, monkeypatch))["cases"] == 68
+    assert artifact.check(profile(tmp_path, monkeypatch))["cases"] == 91
 
 
 @pytest.mark.parametrize(

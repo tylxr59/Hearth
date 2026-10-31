@@ -27,7 +27,7 @@ The supervisor derives through exact checked substitutions from the measured
 settings lab. It runs original/candidate/file helpers once with separate caches,
 process deadlines and all-byte synthetic log scanning. Child stdout remains
 8 KiB; raw diagnostic cache remains 2 KiB; the three-child report is bounded at
-48 KiB. Success requires all 68 cases, three successful child statuses, settings
+48 KiB. The current recovery revision requires all 91 cases, three successful child statuses, settings
 bindings/canaries/log checks, exact modes/readback and completion. Missing or
 ambiguous evidence fails closed after private capture. Diagnostics from the file
 helper are forbidden in a successful result.
@@ -73,3 +73,17 @@ native home icon and normal USB was independently observed afterward. See the
 [successful result](../../docs/research/file-commissioning-attempt-2026-10-31.md#third-attempt-all-68-cases-observed).
 Earlier pending notes describe preparation history. JFFS2 installation, full
 native application behavior and physical device transport remain unverified.
+
+The current unexecuted v2 contract adds 23 process-interruption recovery cases
+to the original 68. It uses the same no-flash/no-physical-network kernel and
+three-child supervisor, with recovery cases inside the file helper. Every new
+case must be reported, and all existing checks still apply. The old 68-case
+result can be independently parsed only with explicit `require_recovery=False`;
+it cannot pass the new default contract. Host-only extended-attribute storage
+case 14 is excluded from the RAM recovery set.
+
+Fresh local profile: private/file-recovery-ram-20261031/profile-v2 and a separate
+-repro. Do not execute the superseded unexecuted profile-v1. The new candidate
+settings shim and 34 base libraries remain unchanged; the file adapter/test
+helper and strict evidence contract changed. Nothing in this diagnostic enables
+a device writer or measures JFFS2 write durability.

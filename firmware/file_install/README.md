@@ -54,10 +54,11 @@ accepts only ramfs/tmpfs; HEARTH_HOST_LAB uses caller-created host fixtures. The
 lab modes cannot be combined. A lab binary must never become a device writer.
 The [RAM profile](../file_install_probe/README.md) additionally has no flash support.
 
-This is not multi-file or cross-filesystem power-loss atomicity. Journal replay,
-after-reboot rollback, native application shutdown/health, exact current root
-selection, fresh snapshot/export, write-bound kernel integration and actual JFFS2
-write/restore remain unimplemented/unmeasured. Hardware use requires those pieces,
+This is not multi-file or cross-filesystem power-loss atomicity. Exact-plan
+journal inspection and restoration are implemented and host-tested, as detailed
+below. Actual after-reboot device recovery, native application shutdown/health,
+writer-bound backup receipts and kernel integration, and actual JFFS2
+write/restore remain unimplemented or unmeasured. Hardware use requires those pieces,
 a concrete reviewed capsule and advance owner notification under docs/hardware.md.
 No whole-firmware recovery or HVAC claim follows from host filesystem tests.
 
@@ -66,3 +67,33 @@ target allowlist without linking the mutation adapter. Its production build
 requires read-only JFFS2; host sanitizer fixtures and freestanding ARM linking
 pass. Host backup custody is implemented separately, but target receipt/plan
 enforcement and interrupted-install replay remain pending.
+
+## Interrupted-install restoration
+
+`hearth_posix_restore_files` opens the existing owner-only recovery directory,
+validates the exact journal length/header/phase/mask/count/plan ID, and checks
+every target before its first mutation. Current files must match the exact
+original or replacement bytes and metadata. Missing existing targets are
+accepted only for durable committing/restoring intent covering that target,
+with an exact private original backup. Unexpected state is preserved unchanged.
+
+A fresh process reconstructs staging provenance only from exact known contents
+or bounded prefixes with expected ownership/modes. Verified partial restore
+temporaries can be retried; replacement staging stays intact if restoration
+fails. All targets are conservatively inspected/restored in reverse order,
+including an operation whose newer journal update may have been interrupted.
+Already-restored originals are idempotent. The private originals remain.
+
+An unknown `journal.new` is retained. It can prevent new journal writes while
+file restoration proceeds; the caller must check **all** result fields, including
+journal and cleanup errors, rather than treating `error == 0` as complete success.
+This module does not mount filesystems, locate a unit, select a plan, verify a
+host receipt, launch recovery after reboot or run as a device command.
+
+Twenty-four host sanitizer scenarios include abrupt child-process exit across
+transaction phases, partial temporaries, unknown late target changes, invalid
+journals/metadata, absence with/without intent, and failed-then-retried restore.
+These simulate process interruption, not actual power loss. A separate fresh
+91-case RAM profile is prepared: 36 settings, 32 transaction and 23 recovery
+cases (the positive extended-attribute fixture remains host-only). No new ARM
+recovery measurement or persistent JFFS2 restoration is claimed yet.

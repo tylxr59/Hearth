@@ -24,9 +24,9 @@ native plist selection of primary and firmware 5.9.4-5 before the run.
 
 The execution marker and original preparation manifest remain intact; never
 reuse this build as another execution profile. A private immutable observation
-and comparison record preserve the result. The owner has been prompted for the
-manual restart after command exit; native return is pending confirmation.
-No loader or collector remains running.
+and comparison record preserve the result. After command exit the owner confirmed the home icon, and normal USB on port
+1-1 was independently observed. A separate immutable private native-return
+record preserves that observation. No loader or collector remains running.
 
 Next: bind the fresh export/receipt to the exact replacement plan, implement
 interrupted-install journal inspection/restoration and integrate the bounded

@@ -841,3 +841,42 @@ measurement, not writer receipt enforcement, plan binding, after-reboot journal
 restore, actual installation, native app/transport, whole-firmware recovery or
 HVAC. Next implement those narrow commissioning pieces; no generic raw capture
 or repeat scratch experiment needed. See the filesystem-snapshot result doc.
+
+Snapshot native return confirmed: owner reported home icon after manual restart,
+and require-native independently observed normal USB on port 1-1. Separate
+private/file-snapshot-20261031-attempt-1/native-return.json is immutable. Earlier
+pending-return notes are historical and now closed. No loader is armed.
+
+## CURRENT: interrupted-install restoration prepared for RAM (2026-10-31)
+
+Snapshot native return is confirmed as above; unit is left at native startup.
+Original hearth_posix_restore_files API now validates the entire fixed journal/
+plan/current tree before mutation, reconstructs only exact/prefix-checked staged
+files, restores originals in reverse, and keeps staging if restoration fails.
+Unknown journal.new is preserved and reported through journal_error while
+otherwise possible original restoration proceeds. All result fields matter.
+Missing existing names require durable committing/restoring intent plus an exact
+backup; unrelated absence or changed bytes fails closed. No installer CLI, mount
+launcher, target receipt enforcement or device writer is implemented by this API.
+Twenty-four host ASan/UBSan interruption/retry/refusal scenarios pass. Process
+exit is not hardware power loss. Actual JFFS2 write/recovery remains unmeasured.
+
+The combined RAM profile now has a strict 91-case v2 contract: 36 settings, 32
+transaction and 23 recovery scenarios (host xattr case 14 excluded from RAM).
+Historical 68-case results can be parsed only with require_recovery=False and
+cannot satisfy the new default. The file helper includes fresh child-process
+interruption scenarios; all 32 native libc imports were statically corroborated.
+Storage shim, 34 base libraries, bootstrap and no-MTD/no-physical-network kernel
+are unchanged. Only explicit RAM mode tolerates RAM xattr EOPNOTSUPP; production
+still requires observable empty attributes and JFFS2.
+
+Fresh unexecuted profile: private/file-recovery-ram-20261031/profile-v2, separate
+profile-v2-repro. Helpers build/file-recovery-ram-20261031/helpers-v1 and -v1-repro.
+All seven artifacts/full inventories match: rootfs 11052100, image 6035848 bytes.
+Preserve superseded unexecuted profile-v1; never use a repro as an automatic retry.
+Make check and 653 host tests pass, five unchanged optional integrations skipped.
+Dry wrapper checks passed. No loader is armed; obtain owner restart readiness
+before the explicit --execute-experimental-file-ram-lab PTY run. Keep base
+detached and USB connected; after command exit confirm home icon and native USB.
+See docs/research/file-recovery-preparation-2026-10-31.md. Next target-writer
+receipt/plan binding, bounded JFFS2 integration and actual native state exchange.

@@ -25,8 +25,8 @@ from firmware.tls_probe.package import (
 )
 from tools.elf_review import private_path
 
-STATUS = "experimental-unexecuted-private-file-commissioning-ram-lab"
-CASES = 68
+STATUS = "experimental-unexecuted-private-file-commissioning-recovery-ram-lab-v2"
+CASES = 91
 
 
 def recipes():
@@ -38,6 +38,9 @@ def recipes():
                 result[p.relative_to(root).as_posix()] = sha(p.read_bytes())
     result["tests/file_install_harness.c"] = sha(
         (root / "tests/file_install_harness.c").read_bytes()
+    )
+    result["tests/file_recovery_harness.c"] = sha(
+        (root / "tests/file_recovery_harness.c").read_bytes()
     )
     return result
 

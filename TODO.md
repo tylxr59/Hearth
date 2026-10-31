@@ -122,3 +122,13 @@ complete private frame and host backup receipt independently verified. No
 installation. Native return pending owner confirmation; no loader remains.
 Next exact plan/receipt binding and interrupted-install recovery integration.
 See docs/research/filesystem-snapshot-result-2026-10-31.md.
+
+Snapshot native return now confirmed by owner home icon and independent normal
+USB observation. Next narrow commissioning work can proceed offline.
+
+Interrupted-install restoration now has a bounded journal/plan validation API
+and 24 passing host process-interruption/retry/refusal scenarios. Fresh 91-case
+RAM profile-v2 is checked/reproduced but unexecuted; 653 host tests pass/five
+optional skips. Native snapshot return confirmed. Next one owner-timed ARM run,
+then target receipt/plan binding and actual bounded JFFS2 installer integration.
+Do not confuse host/RAM process restoration with hardware power-loss recovery.

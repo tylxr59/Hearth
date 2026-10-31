@@ -26,4 +26,8 @@ struct hearth_posix_context {
     unsigned char plan_id[32];
 };
 extern const struct hearth_file_ops hearth_posix_file_ops;
+/* Explicit interrupted-install restoration from an exact caller-supplied plan.
+ * Reads/validates the whole journal/current tree before mutation. Caller closes
+ * context.recovery if >=0, including on failure. No mount or device launcher. */
+struct hearth_install_result hearth_posix_restore_files(struct hearth_posix_context *);
 #endif

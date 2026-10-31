@@ -1,0 +1,33 @@
+{
+  "scope": "Host synthetic process-interruption restoration and offline RAM profile preparation only",
+  "checks": {
+    "make_check": "passed",
+    "host_tests_passed": 653,
+    "optional_integrations_skipped": 5,
+    "recovery_host_sanitizer_scenarios": 24,
+    "native_libc_imports_correlated": 32,
+    "reproduced_artifacts": 7,
+    "full_ram_inventory_match": true,
+    "offline_wrapper": "passed"
+  },
+  "ram_prepared_cases": {
+    "settings": 36,
+    "file_transactions": 32,
+    "interrupted_install_recovery": 23,
+    "total": 91
+  },
+  "device": {
+    "new_ram_profile_executed": false,
+    "installed": false,
+    "jffs2_write_verified": false,
+    "power_loss_recovery_verified": false,
+    "whole_firmware_recovery_verified": false,
+    "hvac_verified": false
+  },
+  "limits": [
+    "Host child exit does not simulate all storage power-loss behavior",
+    "Receipt/actual replacement-plan binding and device writer remain pending",
+    "Unknown current bytes or metadata stop restoration before mutation",
+    "Journal errors remain visible even when original file restoration succeeds"
+  ]
+}
