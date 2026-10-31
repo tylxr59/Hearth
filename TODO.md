@@ -156,3 +156,11 @@ Next one notified owner-timed RAM preflight. If originals changed, preserve a
 fresh read-only snapshot in that session and rebuild the private plan. No flash
 commit, live transport, hardware power-loss or HVAC measurement yet. See
 docs/research/file-writer-preparation-2026-10-31.md.
+
+Observed first writer preflight: all56 ARM RAM cases pass; settings.config changed
+since snapshot, so real-file check refused correctly. Same-session fresh capture
+verified; no commit/RW remount/write operations, WP sealed; native USB returned.
+Actual unit backend enrollment now matches the private credential; host synthetic
+native entry passed TLS, no physical traffic/commands. Fresh v2 capsule/images
+prepared against changed settings; next supervised preflight. No installation
+or restoration pass. See docs/research/file-writer-preflight-result-2026-10-31.md.

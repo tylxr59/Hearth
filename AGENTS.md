@@ -968,3 +968,31 @@ read-only snapshot, stop and rebuild a reviewed plan. After any uncertain
 persistent result, keep USB power/base detached and review evidence before
 restart; never reflexively request native startup. No loader currently armed.
 See docs/research/file-writer-preparation-2026-10-31.md and the writer README.
+
+## CURRENT: first writer preflight refused changed settings, zero writes
+
+Source a7eff49/install-v1 ran once. All 56 ARM selftests passed with zero child
+status and no diagnostics. Real-file preflight refused target7 settings.config;
+only that target's bytes differed, selected metadata and other eight targets
+matched. No commit, window opening, RW remount or transaction; all four NAND
+counters zero. Gate sealed/WP asserted, safe restart reported. Same-session
+protected snapshot and host custody independently verified. Owner restart done;
+normal USB independently observed. No loader armed. Never rerun install-v1.
+Private evidence: file-writer-20261031/preflight-attempt-1, including native-return,
+changed-files-backup and refreshed-snapshot. Immutable originals preserved.
+
+New v2 capsule and repro regenerate only credential spans against fresh settings;
+the other eight payloads are identical. New pin native-file-capsule-20261031-v2-pin.json;
+kernel build/file-writer-kernel-20261031-v4, helpers build/file-writer-actions-20261031-v5
+and -v5-repro, paired private/file-writer-20261031/{install,restore}-v2. Unexecuted.
+The first RAM pass does not validate persistent callbacks/installation/restoration.
+
+Actual device now enrolled in HAOS's existing registry with the capsule's private
+credential. Fresh remote registry preserved, app stopped, bytes rechecked,
+replacement staged/read back/atomically moved/read back, app restarted. No broker
+restart/change. Host synthetic authenticated native entry passed TLS/HTTP200;
+not physical traffic. Private evidence native-deployment-20261031/actual-enrollment-20261031.
+Do not restore initial registry over this newer state or rotate capsule credentials
+without rebuilding the exact private plan. Native telemetry mode still disables
+all commands. Next refreshed owner-timed RAM preflight; persistent commit needs
+its own advance notice/timing readiness. See the dated preflight result.
