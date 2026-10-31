@@ -1,0 +1,34 @@
+{
+  "date": "2026-10-31",
+  "scope": "Prepared, unexecuted read-only NAND controller metadata diagnostic",
+  "host_checks": {
+    "make_check": "passed",
+    "pytest_passed": 350,
+    "unchanged_optional_integrations_skipped": 3,
+    "new_contract_checks": 25,
+    "original_c_producer_parser_asan_ubsan": "passed",
+    "actual_kernel_cross_compilation": "passed",
+    "six_artifacts_reproduced": true,
+    "bootstrap_bytes_unchanged": true,
+    "configuration_options_match_observed_geometry_profile": true,
+    "offline_wrapper": "passed; no device opened"
+  },
+  "build_metadata": "Kconfig timestamp omitted; pinned original generator patched only for fixed compile time/user/host/domain",
+  "profile": {
+    "initramfs_bytes": 2968,
+    "kernel_uncompressed_bytes": 2742464,
+    "hardware_wp_and_protected_status_required": true,
+    "mtd_mutation_callbacks_denied": true,
+    "mtd_character_block_consumers": false,
+    "bbt_scan": false,
+    "raw_nand_contents_exposed": false,
+    "identifiers_or_credentials_exposed": false,
+    "report": "custom kernel controller/ECC/marker metadata, not stock runtime partition map"
+  },
+  "target_executed": false,
+  "write_path_verified": false,
+  "restoration_verified": false,
+  "installed": false,
+  "physical_hvac_verified": false,
+  "whole_boot_chain_hardware_side_effects": "unverified"
+}

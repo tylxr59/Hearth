@@ -50,3 +50,11 @@ risks/limits, then distinguish any scratch-block write/erase test from firmware
 restoration. Boot stages, configuration/credentials, unknown filesystem contents
 and backplate firmware remain protected. No flash writer/apply command has been
 created or executed, and no installation or restoration is claimed here.
+
+A separate [controller metadata profile](../../firmware/nand_contract/README.md)
+is now fully prepared offline to measure the custom kernel's detected bus width,
+marker flags/descriptor and ECC/OOB layout before designing a writer. It includes
+no NAND contents or mutation interface, retains the geometry protection gates,
+and has not executed. Six artifacts reproduce exactly after pinning nonsemantic
+legacy build metadata. The [prepared scope](../security/validation-2026-10-31-nand-contract-prepared.json)
+distinguishes those host/build checks from a target observation or restoration.

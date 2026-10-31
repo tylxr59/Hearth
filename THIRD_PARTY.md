@@ -104,3 +104,10 @@ linking firmware on the host. GNU ld is GPL-3.0; no third-party implementation i
 copied into the original candidate. Additional public glibc 2.19 relocation
 references are pinned in docs/research/glibc-relocation-2.19.json and remain
 uncompiled reference inputs under ignored build/.
+
+The original controller-metadata extension under firmware/nand_contract/ combines
+with the same pinned GPL kernel and retains its read-only guards. Its kernel
+header is GPL-2.0-or-later; the syscall-only userspace is original MIT code. An
+exact-source-checked patch normalizes only the legacy compile metadata generator's
+time/user/host/domain, and Kconfig omits timestamps. No additional upstream
+implementation, proprietary bytes or toolchain executable is bundled.

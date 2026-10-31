@@ -281,6 +281,28 @@ writing, live map/write-ECC contract or restoration verified. See
 docs/research/recovery-layout-2026-10-31.md. Scripts remain machine-local research
 recipes, not portable recovery tools. Next: native integration/protocol and exact
 fresh-region acquisition/write-contract planning before persistent operations.
+The next original read-only NAND controller diagnostic is prepared under
+firmware/nand_contract/. Current fully checked build: build/nand-contract-20261031-v5;
+separate v5-repro has six byte-identical artifacts, including kernel/config/init.
+Earlier unexecuted draft builds v1-v4 are superseded; never run those. Controller
+fields include actual detected bus width, chip marker flags, explicit descriptor
+presence/options and BCH4/OOB/free-region layout. Eight-/sixteen-bit correlations
+are enforced. With BBT scan intentionally skipped, an absent descriptor is not
+evidence of a native bad-block policy or healthy blocks. No NAND content, chip
+serial, credentials or register dump is exposed. Original geometry HW-WP/status,
+NAND_ROM and denied mutation callbacks remain, no MTD char/block/partition/UBI or
+network consumer, no writer. Configuration choices match observed geometry;
+only compile metadata timestamps/user/host/domain are normalized via an exact-
+source-checked generator patch and KCONFIG_NOTIMESTAMP for reproducibility.
+Host validation: 350 passed/three unchanged optional integration skips, make check,
+25 new contract checks including original C producer+Python parser under sanitizers.
+Prior unchanged backend/broker/container full 328-test run remains separately scoped.
+Offline sh build/nand-contract-20261031-v5/boot.sh passes, opens no device.
+Future PTY execution flag --execute-read-only-nand-contract requires owner readiness
+and advance experimental-RAM notification. No loader armed or device execution yet.
+After it exits request full ten-second hold/release/single-press and verify native
+return. No automatic retry; this cannot establish restoration/programming.
+See docs/security/validation-2026-10-31-nand-contract-prepared.json.
 The owner has only this unit and explicitly accepts potentially dangerous same-unit
 work; spare-only recovery restriction is waived, advance notification before
 persistent writes and separate physical HVAC authorization remain. Continue through
