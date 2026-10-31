@@ -10,6 +10,13 @@ block, but other logs/uploads and persistence remain unaudited. Assigned-credent
 explicit enrollment and revocation; no default-credential bootstrap or native
 credential installation is enabled.
 
+The [storage/log follow-up](../research/native-storage-2026-10-30.md) identifies
+a second credential-value log in settings-entry write failures, missing propagation
+of those failures, and dirty clearing after directory-sync failure. Offline staging
+now prepares uploadlogs=0 for the traced queued-file sender and rejects ambiguous
+config XML. This is a partial offline artifact change; it neither fixes the writer
+nor demonstrates target privacy, durable rotation or complete outbound isolation.
+
 ## Reference findings and response
 
 | Potential issue | Evidence at inspected revision | Hearth treatment and limits |

@@ -14,7 +14,10 @@ def demo(output):
     root = output / "synthetic-root"
     files = {
         "etc/init.d/rcS": "#!/bin/sh\n${INITDIR}/nestlabs start\n${INITDIR}/nleapi start\n/bin/dropbear\n",
-        "etc/nestlabs/client.config": '<config><a key="cloudregisterurl" value="https://invalid.example/entry"/></config>\n',
+        "etc/nestlabs/client.config": (
+            '<config><cloud><a key="cloudregisterurl" value="https://invalid.example/entry"/>'
+            '</cloud><a key="uploadlogs" value="1"/></config>\n'
+        ),
         "etc/shadow": "root:synthetic-placeholder:1:0:99999:7:::\n",
         "etc/monitrc": "include /etc/monit.d/*\ninclude /etc/monit.d/httpd.monitrc\n",
     }

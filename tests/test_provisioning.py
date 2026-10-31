@@ -50,7 +50,10 @@ def fixture_root(tmp_path):
     root = tmp_path / "root"
     values = (
         b"#!/bin/sh\n${INITDIR}/nestlabs start\n${INITDIR}/nleapi start\n/bin/dropbear\n",
-        b'<config><a key="cloudregisterurl" value="https://frontdoor.nest.com/entry"/></config>',
+        (
+            b'<config><cloud><a key="cloudregisterurl" value="https://frontdoor.nest.com/entry"/>'
+            b'</cloud><a key="uploadlogs" value="1"/></config>'
+        ),
         b"root:oldhash:1:0:99999:7:::\n",
         b"include /etc/monit.d/*\n",
     )
@@ -103,9 +106,17 @@ def test_offline_hardening_preserves_controls(tmp_path):
     assert "dropbear" not in (replacement / FILES[0]).read_text()
     assert "nleapi" not in (replacement / FILES[0]).read_text()
     assert "https://192.168.50.2:8443/nest/entry" in (replacement / FILES[1]).read_text()
+    assert '<a key="uploadlogs" value="0"/>' in (replacement / FILES[1]).read_text()
+    assert result["disabled_config_keys"] == ["uploadlogs"]
     assert (replacement / FILES[1]).stat().st_mode & 0o077 == 0
     assert "cgi-bin" in result["remove_before_any_deployment"][-1]
     assert "dropbear" in (root / FILES[0]).read_text()
+    repeated = tmp_path / "overlay-again"
+    assert stage(root, repeated, hashes, "https://192.168.50.2:8443") == result
+    for name in FILES:
+        assert (repeated / "replacement-files" / name).read_bytes() == (
+            replacement / name
+        ).read_bytes()
 
 
 def test_hardening_refuses_unknown_shell(tmp_path):
@@ -117,3 +128,101 @@ def test_hardening_refuses_unknown_shell(tmp_path):
     hashes[FILES[0]] = hashlib.sha256(path.read_bytes()).hexdigest()
     with pytest.raises(Invalid):
         stage(root, tmp_path / "overlay", hashes, "https://192.168.50.2:8443")
+
+
+def test_config_hardening_preserves_unknown_settings_and_comments():
+    from firmware.harden import client_config
+
+    original = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n<config>\n'
+        '<!-- <a key="uploadlogs" value="1"/> -->\n'
+        '<cloud><a value="https://old.invalid/entry" key="cloudregisterurl" /></cloud>\n'
+        "<a value = '1' key = 'uploadlogs' />\n"
+        '<native><a key="schedule" value="preserve &amp; café"/></native>\n</config>'
+    )
+    result = client_config(original, "https://192.168.50.2:8443")
+    assert result == original.replace(
+        "https://old.invalid/entry", "https://192.168.50.2:8443/nest/entry"
+    ).replace("value = '1'", "value = '0'")
+    assert client_config(result, "https://192.168.50.2:8443") == result
+
+
+@pytest.mark.parametrize(
+    "entry",
+    [
+        "",
+        '<!-- <a key="uploadlogs" value="1"/> -->',
+        '<a key="uploadlogs" value="1"/><a key="uploadlogs" value="0"/>',
+        '<other><a key="uploadlogs" value="1"/></other>',
+        '<a key="uploadlogs" value="true"/>',
+        '<a key="uploadlogs" value="1" extra="unknown"/>',
+        '<a key="uploadlogs" value="1"></a>',
+        '<a key="uploadlogs" value="1">',
+    ],
+)
+def test_ambiguous_upload_config_leaves_no_overlay(tmp_path, entry):
+    from firmware.harden import stage
+
+    root, hashes = fixture_root(tmp_path)
+    config = root / FILES[1]
+    config.write_text(
+        '<config><cloud><a key="cloudregisterurl" value="https://old.invalid/entry"/>'
+        "</cloud>" + entry + "</config>"
+    )
+    hashes[FILES[1]] = hashlib.sha256(config.read_bytes()).hexdigest()
+    output = tmp_path / "overlay"
+    with pytest.raises(Invalid):
+        stage(root, output, hashes, "https://192.168.50.2:8443")
+    assert not output.exists()
+
+
+@pytest.mark.parametrize(
+    "prefix",
+    [
+        '<!DOCTYPE config [<!ENTITY flag "1">]>',
+        '<!DOCTYPE config SYSTEM "file:///etc/passwd">',
+    ],
+)
+def test_config_hardening_rejects_dtds(prefix):
+    from firmware.harden import client_config
+
+    config = (
+        prefix + '<config><cloud><a key="cloudregisterurl" value="https://old.invalid/"/>'
+        '</cloud><a key="uploadlogs" value="1"/></config>'
+    )
+    with pytest.raises(Invalid, match="DTDs and entities"):
+        client_config(config, "https://192.168.50.2:8443")
+
+
+@pytest.mark.parametrize(
+    "cloud",
+    [
+        '<a key="cloudregisterurl" value="https://old.invalid/"/>',
+        (
+            '<cloud><a key="cloudregisterurl" value="https://old.invalid/"/>'
+            '<a key="cloudregisterurl" value="https://other.invalid/"/></cloud>'
+        ),
+        '<!-- <cloud><a key="cloudregisterurl" value="https://old.invalid/"/></cloud> -->',
+    ],
+)
+def test_config_hardening_rejects_ambiguous_cloud_endpoint(cloud):
+    from firmware.harden import client_config
+
+    with pytest.raises(Invalid):
+        client_config(
+            "<config>" + cloud + '<a key="uploadlogs" value="1"/></config>',
+            "https://192.168.50.2:8443",
+        )
+
+
+def test_config_hardening_bounds_parser_input():
+    from firmware.harden import client_config
+
+    for config in (
+        "x" * (1024 * 1024 + 1),
+        "<config>" * 65,
+        '<?xml version="1.0" encoding="ISO-8859-1"?><config/>',
+        '<?xml version="1.1"?><config/>',
+    ):
+        with pytest.raises(Invalid):
+            client_config(config, "https://192.168.50.2:8443")

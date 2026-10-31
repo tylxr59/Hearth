@@ -71,6 +71,13 @@ and rejection of default fallback after revocation before native commissioning.
 Do not send real credentials through that path merely because the header format
 is now understood.
 
+The [storage follow-up](research/native-storage-2026-10-30.md) traces file/directory
+sync and rename, but entry write errors can log settings values without blocking
+replacement, and directory-sync errors can clear dirty state. Require entry-write
+fault propagation, correct dirty-state retry and interrupted credential-rotation
+tests before trusting persistence. Offline staging disables the traced log uploader
+only; existing logs and other outbound paths remain separate review requirements.
+
 ## 3. Review candidate modifications
 
 Pin the actual input hashes. Generate an inert review archive and private hardening replacements. Compare every edited file, prove that unknown/native services are preserved, and map every listener/startup path. The current four-file staging tool is incomplete for stock firmware: audit the historical serial debug shell, Lua bot port 8000, SSH/remote-support service monitors, crash upload paths and all actual firmware init entry points. Do not deploy the partial overlay as if it were hardened firmware.

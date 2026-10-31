@@ -50,7 +50,7 @@ make audit
 make demo
 ```
 
-`make container-test` builds and tests the unprivileged HTTPS container. `make integration` starts an ephemeral TLS Mosquitto container on loopback and removes it afterward. It does not access USB or HVAC hardware. `make demo` creates synthetic input, `build/demo/review.tar`, a SHA-256 manifest and private offline replacement files. All firmware artifacts are inert and explicitly marked non-flashable.
+`make container-test` builds and tests the unprivileged HTTPS container. `make integration` starts an ephemeral TLS Mosquitto container on loopback and removes it afterward. It does not access USB or HVAC hardware. `make demo` creates synthetic input, `build/demo/review.tar`, a SHA-256 manifest and private offline replacement files. All firmware artifacts are inert and explicitly marked non-flashable. Offline replacements also prepare `uploadlogs=0`; the config editor requires the reviewed XML structure and preserves other bytes. Native storage error handling and a complete outbound-service audit remain unresolved; see [storage review](docs/research/native-storage-2026-10-30.md).
 
 Prepare a simulated device (secrets are written to private files, never printed):
 

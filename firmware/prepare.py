@@ -62,6 +62,7 @@ def build(root, output, expected, origin):
                 "key": "cloudregisterurl",
                 "value": origin + "/nest/entry",
             },
+            {"path": "etc/nestlabs/client.config", "key": "uploadlogs", "value": "0"},
             {"path": "etc/shadow", "operation": "lock root password"},
         ],
         "candidate_rcS_lines_to_disable": unsafe,

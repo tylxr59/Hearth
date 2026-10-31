@@ -1,0 +1,41 @@
+{
+  "date": "2026-10-30",
+  "scope": "Offline native settings/log-path review and partial hardening artifact update",
+  "host_validation": {
+    "static_checks": "make check passed",
+    "host_tests_passed": 189,
+    "optional_integration_tests_skipped": 2,
+    "new_config_tests": 15,
+    "deterministic_replacement_and_archive_checks": true,
+    "recovered_config_accepted_offline": true,
+    "original_config_preserved": true,
+    "ghidra_completion_markers_and_exports_checked": true,
+    "interior_address_partial_export_excluded": true
+  },
+  "static_findings": {
+    "settings_setter_updates_memory_and_dirty_flag": true,
+    "settings_writer_file_and_directory_sync_sequence": true,
+    "entry_write_errors_log_key_and_value": true,
+    "entry_write_errors_not_accumulated_by_outer_writer": true,
+    "directory_sync_failure_can_clear_dirty_flag": true,
+    "generic_logs_feed_queued_file_uploader": true,
+    "uploadlogs_flag_controls_reviewed_sender": true
+  },
+  "artifact_change": {
+    "uploadlogs": "0 in private offline replacements",
+    "config_edits": "two reviewed attribute-value spans only",
+    "ambiguous_config_rejected_before_output": true,
+    "device_modified": false,
+    "settings_writer_patched": false,
+    "deployable_image": false
+  },
+  "not_demonstrated": [
+    "effective runtime settings permissions, logging and filesystem semantics",
+    "actual credential disclosure or log upload",
+    "durable credential rotation and interrupted-write restoration",
+    "complete log/upload/outbound-service audit",
+    "native target TLS and transport compatibility",
+    "firmware restoration or HVAC validation"
+  ],
+  "privacy": "Private firmware, decompilations, hashes, credentials and actual identifiers excluded from source artifacts."
+}

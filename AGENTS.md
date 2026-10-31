@@ -98,8 +98,16 @@ Ghidra import. Nothing installed; durable settings/rollback and other logging
 paths remain unverified. Three host regression tests preserve enrollment/header
 boundaries; make check passed, 174 host tests passed with two optional integration
 tests skipped. See docs/research/native-bootstrap-2026-10-30.md.
-Next: trace settings commit/log-upload behavior and finish native entry/revision/
-subscription mapping, then target validation subject to recovery gates.
+The native storage/log follow-up traces a temp-file/sync/rename/directory-sync
+writer, but entry write failures log key/value and do not reach the outer result;
+a failed directory sync can still clear dirty state. The earlier client log
+candidate does not fix this library path. A known uploadlogs flag controls the
+queued-file sender. Offline hardening now prepares uploadlogs=0 and edits only
+two reviewed config value spans, refusing ambiguous XML before output. No writer
+patch or device installation. Fifteen new tests; make check and 189 host tests
+passed, two optional integrations skipped. See docs/research/native-storage-2026-10-30.md.
+Next: finish native entry/revision/subscription mapping and design storage failure/
+commissioning tests, then target validation subject to recovery gates.
 Keep private identifiers, credentials, bytes and binary hashes out of source/logs.
 Machine-local offline scripts are `build/{infer-private-bch4-layout,decode-private-bch4,extract-private-jffs2}-20261030.py`;
 the public BCH source is pinned in docs/research/bchlib-2.1.3.json. These scripts

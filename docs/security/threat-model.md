@@ -17,3 +17,10 @@ Adversaries considered: an unauthenticated LAN peer, device-serial impersonator,
 Safety boundary: backend is supervisory only, with no wire/relay/GPIO/MCU interfaces. Preserve native protective behavior, but it has not been measured. Conservative host command bounds are not a substitute for hardware-specific safety limits, compressor lockout or wiring validation. Do not disable unknown services for cosmetic minimalism.
 
 Privacy: backend persists only serial identifiers, capability inventory and hashes in registry.json. Device bootstrap and admin files contain secrets and are stored only by explicit tooling. Temperature/humidity/state/intent live in memory; MQTT retains last state/discovery and offline availability at the broker. Online availability is a non-retained heartbeat, preventing a broker restart from restoring an old online marker. Broker persistence and HA recorder/history may retain it on disk independently. Revocation removes retained state/discovery for devices observed by the current bridge process; if the bridge was restarted after offline revocation, manually remove their retained topics. No diagnostic history or credential logging is enabled. Runtime library errors go to stderr without request body logging. Configure HA/broker log retention and recorder exclusions; discard commissioning packet captures after review, because captures of any plaintext legacy experiment may contain credentials.
+
+Native firmware boundary: the [storage/log review](../research/native-storage-2026-10-30.md)
+found credential-bearing component logs and a queued log-file uploader. Host
+no-logging guarantees do not cover that firmware. Offline replacements prepare
+the reviewed upload flag disabled, while existing logs, stderr/crash paths,
+settings-write failures and other outbound services remain unresolved. No real
+credential should be commissioned until these paths and restoration are validated.
