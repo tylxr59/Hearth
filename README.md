@@ -25,6 +25,11 @@ identified a loopback temperature-control candidate. Startup and request framing
 remain unverified; the host transport remains provisional and no native bridge
 is enabled.
 
+A [private RAM-only TLS experiment](firmware/tls_probe/README.md) is now built
+and checked offline for the native verification hooks. Its first supervised
+target run is pending; it installs nothing and does not establish full transport
+compatibility, recovery or HVAC safety.
+
 Implemented:
 
 - TLS local API, separate device/management authentication, registration, rotation and revocation.

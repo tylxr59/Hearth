@@ -1,0 +1,52 @@
+{
+  "date": "2026-10-30",
+  "scope": "Unexecuted private RAM-only native TLS callback experiment",
+  "host_validation": {
+    "kernel": "separate public-only rootless Podman build; no private library/compiler inputs",
+    "compiler": "installed Clang/LLD, ARM hard-float helpers; no ARM execution on host",
+    "native_dependencies": "verified against private acquisition hashes; 34 original libraries",
+    "candidate": "matched separate private one-word input/output review record",
+    "synthetic_fixture_baselines": 9,
+    "new_probe_tests_passed": 45,
+    "host_tests_passed": 234,
+    "optional_integration_tests_skipped": 2,
+    "static_checks": "make check passed",
+    "dry_run": "offline gate passed; no device opened",
+    "deterministic_packaging": "image, RAM archive and manifest reproduced exactly from identical inputs",
+    "kernel_byte_reproducibility_claimed": false,
+    "normal_usb_preflight": "2464:0002 on previously reviewed port 1-1"
+  },
+  "private_image": {
+    "original_and_candidate_libraries": 35,
+    "rootfs_bytes": 11066136,
+    "image_bytes": 6040245,
+    "image_limit_bytes": 6291456,
+    "network": "device loopback only; physical network devices disabled",
+    "kernel_flash_support": false,
+    "block_support": false,
+    "rtc_and_hardware_clock_sync": "disabled in this separate kernel profile",
+    "clock": "synthetic 2030-01-01 in RAM",
+    "helper_uid_gid": 65534,
+    "nlclient_osm_included": false,
+    "actual_device_credentials_included": false,
+    "synthetic_ca_private_keys_included": false,
+    "whole_boot_chain_write_free": "unverified"
+  },
+  "target_validation": {
+    "executed": false,
+    "cases_planned": 18,
+    "native_tls_behavior_observed": false,
+    "device_modified": false,
+    "restoration_verified": false,
+    "hvac_verified": false
+  },
+  "remaining_limits": [
+    "first supervised RAM boot with the owner",
+    "full native fetch setup and effective trust configuration",
+    "trusted clock/bootstrap and native credential commissioning",
+    "settings error propagation, retry and rollback",
+    "complete protocol pairing/revision/CAS/subscription compatibility",
+    "recovery, power and separately authorized HVAC testing"
+  ],
+  "privacy": "Only original tooling, public reference hashes and sanitized evidence in source; image, libraries, keys and result capture remain private."
+}

@@ -106,8 +106,29 @@ queued-file sender. Offline hardening now prepares uploadlogs=0 and edits only
 two reviewed config value spans, refusing ambiguous XML before output. No writer
 patch or device installation. Fifteen new tests; make check and 189 host tests
 passed, two optional integrations skipped. See docs/research/native-storage-2026-10-30.md.
-Next: finish native entry/revision/subscription mapping and design storage failure/
-commissioning tests, then target validation subject to recovery gates.
+Native protocol review corroborates response metadata ordering and identifies
+a preliminary brace-counting extractor; full entry/CAS/subscription semantics
+remain open. The next concrete target measurement is the private RAM-only TLS
+probe under firmware/tls_probe/. Its public kernel has MTD/block/physical-network/
+RTC support disabled and removes forced hardware-clock synchronization selections.
+Only device loopback is enabled; UID/GID 65534 helpers compare original/candidate
+native hooks over 18 synthetic certificate/CRL cases. No nlclient/osm or actual
+settings/credentials are included. Public-only kernel build, host cross-compilation,
+private dependency/fixture packaging and offline checks pass. The prepared private
+profile is private/native-tls-probe-20261030/profile-supervised; public kernel/helpers
+are under build/native-tls-lab-20261030/. It contains proprietary libraries and
+synthetic keys: never publish/upload it. 45 new tests; make check and 234 host
+tests passed, two optional integrations skipped. Normal USB 2464:0002 on 1-1 was
+observed; NO TLS target run has occurred. See firmware/tls_probe/README.md and
+docs/research/native-protocol-2026-10-30.md.
+Next: coordinate the owner for one supervised TLS RAM boot. Arm the PTY-backed
+loader only when the owner is ready, then prompt the reviewed button sequence.
+Run from Hearth: sh firmware/tls_probe/boot.sh PRIVATE_PROFILE first for dry run;
+the explicit --execute-experimental-tls-probe flag is required for execution.
+The fixed-token collector saves a fresh private tls-result.jsonl, including
+failures. Do not retry a boot automatically; return to native startup with the
+loader exited afterward. This is not flashing/recovery/HVAC or a full native
+fetch/setup test. Persistent modifications remain gated.
 Keep private identifiers, credentials, bytes and binary hashes out of source/logs.
 Machine-local offline scripts are `build/{infer-private-bch4-layout,decode-private-bch4,extract-private-jffs2}-20261030.py`;
 the public BCH source is pinned in docs/research/bchlib-2.1.3.json. These scripts

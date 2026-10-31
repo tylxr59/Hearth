@@ -31,6 +31,12 @@ The opt-in test factory flag `experimental_nest=True` mounts `/nest/entry`, `/ne
 
 This strict fixture decoder is **not a complete Nest transport implementation**. Revision/CAS handling, chunked long-poll subscribe, pairing buckets, sleep headers, native authentication bootstrap and command mapping are not implemented. Empty PUT responses have not been verified on a device. No assumption that raw Nest action/fan fields match canonical state is made.
 
+The [native wire review](../research/native-protocol-2026-10-30.md) corroborates
+response revision/timestamp-before-key ordering and flags a preliminary
+brace-counting extractor. Full buffering, CAS and subscription semantics remain
+unverified. The next target measurement is an isolated TLS callback test, not
+activation of these partial routes.
+
 ## MQTT
 
 Discovery topic `homeassistant/climate/hearth_SERIAL/config`; state `hearth/SERIAL/state`, availability `hearth/SERIAL/availability` plus bridge last-will `hearth/bridge/availability`. Only offline availability is retained; online status is a live five-second heartbeat, avoiding stale retained online markers across broker restart. MQTT v5 subscription preserves retain flags and suppresses old retained command delivery. Retained live commands, unknown paths, arbitrary raw fields, oversized payloads, invalid UTF-8, booleans-as-temperature, non-finite values and unsupported operations fail closed. No offline broker session queue is requested. HA commands are non-retained. See [official MQTT climate schema](https://www.home-assistant.io/integrations/climate.mqtt/) and [broker ACL](../../homeassistant/mosquitto.acl).

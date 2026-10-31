@@ -47,6 +47,15 @@ not demonstrate restorability or close the backup/recovery gates.
 
 Physical device flashing, modification or control requires explicit human authorization covering that action. Honor existing authorization without repeating permission requests; notify this owner before experimental RAM execution and preserve the backup/recovery gates before persistent writes. Actual HVAC switching tests additionally require explicit authorization, appropriate isolated equipment and a person qualified for the wiring/system. The project request does not authorize those actions. Do not connect a production HVAC system for initial tests. Do not use a thermostat safety limit as the sole safeguard.
 
+The [TLS RAM experiment](../firmware/tls_probe/README.md) is separately built
+and checked offline. It loads native curl/OpenSSL plus original/candidate hooks
+with synthetic loopback peers, without nlclient/osm, flash support or physical
+networking. RTC drivers and forced hardware-clock update selections are disabled;
+its 2030 clock is a RAM test fixture. First execution still needs an owner-timed
+manual restart. Bootstrap hardware/power behavior remains unverified; keep the
+display detached from the unwired base. This diagnostic does not waive any
+persistent-write, recovery or HVAC gate below.
+
 ## 1. Establish identity and recovery before writes
 
 1. Record enclosure/base model, serial, generation, board revision and installed software using the native UI or separately authorized read-only access. Photograph wiring and label conductors before any qualified disconnection. Use approved, current-limited power and bench equipment appropriate to that model; no invented voltage/pin assumptions.

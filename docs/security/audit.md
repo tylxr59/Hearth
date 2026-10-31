@@ -64,3 +64,14 @@ established. Recovery, clock/bootstrap, hostname/CA/time and CRL target tests
 remain required. The public Ghidra helper exports only into private storage; its
 actual integration and public-output-refusal checks passed. No native binary
 was executed and no proprietary library/patch output was published.
+
+## Unexecuted native TLS RAM test, 2026-10-30
+
+The [separate diagnostic](../../firmware/tls_probe/README.md) is built and passes
+offline integrity gates and 45 host regression checks. It uses synthetic
+loopback TLS cases with native libraries, plus the separately reviewed private
+callback candidate, under an unprivileged helper. Flash, block, physical-network
+and RTC/hardware-clock update support are disabled in its custom kernel. The
+boot stages still have unverified hardware/power side effects. No target run
+or persistent installation occurred; owner-timed restart is next. See the
+[dated scope record](validation-2026-10-30-tls-probe.json).

@@ -57,6 +57,17 @@ OpenSSL 1.0.2h/curl 7.49.1 reference files are pinned in
 [the native TLS source record](docs/research/native-tls-source-pins.json), retained
 under ignored build/, and neither vendored nor executed as target firmware.
 
+The separate original firmware/tls_probe/ diagnostic reuses the same pinned
+GPL kernel and validated boot stages. Its generated kernel recipe removes the
+OMAP hardware-clock synchronization selections for this RAM-only experiment;
+the unchanged native firmware is not patched by that recipe. Original helper,
+packaging and observation source is MIT. Installed Clang/LLD compile only original
+code with generated public ABI stubs; those stubs are not included on target.
+Version-matched public curl/glibc API/startup references are pinned in
+[the TLS probe source record](firmware/tls_probe/sources.json), retained under
+ignored build/ and not vendored. Recovered libraries, the private review candidate,
+synthetic private keys and the prepared image stay private and are not redistributed.
+
 ## Runtime dependencies
 
 Full versions and package metadata: [python-dependencies.json](docs/security/python-dependencies.json). Hash-locked distributions: requirements.lock. Runtime directly uses aiohttp (Apache-2.0 AND MIT) and paho-mqtt (EPL-2.0 OR BSD-3-Clause per distribution metadata; retain notices when distributing). Transitives include aiohappyeyeballs (PSF-2.0), aiosignal/frozenlist/multidict/propcache/yarl (Apache-2.0), attrs (MIT) idna (BSD-3-Clause) and conditional typing_extensions (PSF-2.0); see each distribution's license files for authoritative terms. Metadata inventory is not a substitute for retaining the installed licenses. No dependencies are vendored.

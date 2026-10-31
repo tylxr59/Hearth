@@ -1,0 +1,14 @@
+{
+  "curl.h": {
+    "url": "https://raw.githubusercontent.com/curl/curl/curl-7_49_1/include/curl/curl.h",
+    "sha256": "84a954c4a3f0e7e27b64e523398a0b0902ca2b0d4cd0f8fee145281f7d9f0dda"
+  },
+  "curl-openssl.c": {
+    "url": "https://raw.githubusercontent.com/curl/curl/curl-7_49_1/lib/vtls/openssl.c",
+    "sha256": "826f2a55341369c54018ae57329d08a528bbf69e740f01f6237e84cb224c4e06"
+  },
+  "glibc-arm-start.S": {
+    "url": "https://raw.githubusercontent.com/bminor/glibc/glibc-2.19/ports/sysdeps/arm/start.S",
+    "sha256": "a0b60e7782861b40c1e4c37881ccef84560f047dd62c6e59b1a208550401fb6b"
+  }
+}
