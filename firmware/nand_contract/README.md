@@ -2,7 +2,8 @@
 
 This separate experimental RAM profile reports the detected bus width, bad-block
 marker position/scan flags and BCH4/OOB layout from the controller initialized in
-the custom kernel. **Prepared source; not yet observed on target.** It acquires no
+the custom kernel. **Observed once on target** with the exact prepared v5 build;
+see the [result](../../docs/research/nand-contract-result-2026-10-31.md). It acquires no
 NAND contents and supplies no write/erase, restore or apply operation. It is not a
 stock runtime partition map or proof that programming/restoration will work.
 

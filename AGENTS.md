@@ -303,6 +303,20 @@ and advance experimental-RAM notification. No loader armed or device execution y
 After it exits request full ten-second hold/release/single-press and verify native
 return. No automatic retry; this cannot establish restoration/programming.
 See docs/security/validation-2026-10-31-nand-contract-prepared.json.
+The exact v5 controller profile was subsequently executed ONCE using source
+316f50d and passed. Loader/observer zero; observed bus16, protected1, markerpos0,
+second-page flag1, last-page/byte1-and6 flags0, explicit descriptor absent under
+skipped BBT scanning. ECC HW2, size2048, bytes/total28, steps1; parity positions
+36..63 and free OOB offset2/length34. Geometry/zero capabilities unchanged.
+Private validated output record: private/nand-contract-20261031/attempt-1.json;
+no raw serial frame separately archived, no NAND contents acquired. Owner restart
+done and native USB independently returned after a brief disappearance. Preserve
+all manifests and do not rerun v5 or drafts. See
+docs/research/nand-contract-result-2026-10-31.md and dated observed JSON.
+No writer, programming, ECC-fault correction or restoration was tested; next is
+bounded normal-ECC read comparison and fresh proposed-region acquisition before
+designing persistent operations. No loader currently armed. Full native protocol,
+application/TLS/time integration and physical bench validation still remain.
 The owner has only this unit and explicitly accepts potentially dangerous same-unit
 work; spare-only recovery restriction is waived, advance notification before
 persistent writes and separate physical HVAC authorization remain. Continue through
