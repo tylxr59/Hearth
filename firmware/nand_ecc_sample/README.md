@@ -1,7 +1,8 @@
 # Fixed-block normal-ECC read comparison
 
 This original experiment compares the initialized NAND driver's normal ECC read
-path with a preserved private reference. **Prepared source, unexecuted.** It is
+path with a preserved private reference. **Observed once:** both passes matched
+the reference; see the [result](../../docs/research/nand-ecc-result-2026-10-31.md). It is
 separate from the earlier raw exporter and controller-metadata profile. No writer,
 erase/restore operation, native application, real settings interface or network is
 included. All geometry hardware-WP, protected-status, NAND_ROM, denied mutation

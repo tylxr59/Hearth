@@ -1,0 +1,22 @@
+{
+  "source_commit": "cae21fa",
+  "loader_exit_code": 0,
+  "collector_exit_code": 0,
+  "records": 128,
+  "passes": 2,
+  "bytes_per_pass": 135168,
+  "matches_preserved_data_and_oob_reference": true,
+  "ecc_fault_injection_tested": false,
+  "driver_ecc_status_reliable": false,
+  "write_path_verified": false,
+  "owner_reported_restart_done": true,
+  "normal_usb_return_observed": true,
+  "persistent_operation_executed": false,
+  "restoration_verified": false,
+  "date": "2026-10-31",
+  "scope": "Fixed block190 normal-ECC data and physical OOB comparison",
+  "first_page": 12160,
+  "pages_per_pass": 64,
+  "physical_hvac_verified": false,
+  "installed": false
+}

@@ -341,6 +341,21 @@ sh build/nand-ecc-sample-20261031/boot.sh --execute-read-only-nand-ecc-sample /h
 After exit request full ten-second hold/release/single-press and verify native USB.
 No automatic retry. No loader currently armed or target run yet. See
 docs/research/nand-ecc-read-review-2026-10-31.md and dated preparation JSON.
+The normal-ECC profile was then executed ONCE using source cae21fa and PASSED.
+Loader/collector zero; 128 ordered records, two 135168-byte data+physical-OOB passes
+match each other and the independent preserved reference exactly, including the
+padding page12209. Private payload lengths/digests, reference byte equality and
+600/700 permissions independently rechecked. Private/nand-ecc-sample-20261031 has
+capture.json, pass-{0,1}.ecc-oob and separate immutable attempt-1.json. Preserve
+all original manifests/reference/results; never rerun this profile or existing
+output. Owner restart done and native USB independently observed after brief
+disappearance. No diagnostic programming/erase, native app or physical HVAC ran.
+This is a bounded normal-read match, not measured ECC-error count/fault injection,
+reliable driver status, arbitrary-data integrity, programming or restoration.
+See docs/research/nand-ecc-result-2026-10-31.md and dated observed JSON. Next:
+fresh complete data/OOB for a specifically proposed restoration-test region,
+exact program/erase/ECC and restore bounds/error plan before persistent work.
+Both boot/root/config/calibration/backplate remain protected. No loader armed.
 The owner has only this unit and explicitly accepts potentially dangerous same-unit
 work; spare-only recovery restriction is waived, advance notification before
 persistent writes and separate physical HVAC authorization remain. Continue through
