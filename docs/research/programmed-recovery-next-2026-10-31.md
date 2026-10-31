@@ -1,5 +1,12 @@
 # Next recovery work after the scratch result
 
+**Deferred:** after owner feedback about duplicating NLE, the default next step
+is the [NLE integration milestone](nle-integration-focus-2026-10-31.md). The
+unexecuted draft core/model is parked under ignored build storage. This design
+and its source findings remain available if a concrete installation/recovery
+requirement later needs them; they are not an automatic prerequisite to further
+functional integration work.
+
 The successful [single-page scratch experiment](scratch-result-2026-10-31.md)
 measured hardware ECC programming and restoration of an originally empty block.
 It did not restore a block containing programmed data/parity. The next recovery

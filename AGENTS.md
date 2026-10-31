@@ -488,6 +488,18 @@ Current successful marker path is OOB-only and already requires status/exact cou
 Next synthetic full-block rehearsal/rescue requirements are design-only in
 docs/research/programmed-recovery-next-2026-10-31.md; no additional profile built,
 armed or authorized to run by that document. Native startup remains in place.
+Owner subsequently challenged duplication of NLE. The uncommitted full-block
+rehearsal core/model was parked under ignored build/parked-programmed-block-20261031
+(one sanitizer host-model test passed; no image built/loader armed/device executed).
+Do not automatically resume the 64-page RAW restoration framework. Prioritize
+one authenticated native telemetry exchange using NLE's existing transport and
+filesystem-level commissioning approach, with Hearth's unique-auth/TLS boundary.
+Both upstream main heads freshly match existing pins; no re-fetch/re-audit of
+completed research is needed. Map minimum endpoint/trust/credential/logging changes,
+active-root checks, exact original-file backups and suitable rollback before any
+install. Existing recovery/physical-operation gates are not silently waived.
+See docs/research/nle-integration-focus-2026-10-31.md. Device remains native; no
+new test requested. This priority supersedes earlier default-next raw-rehearsal plans.
 
 1. `README.md` and `TODO.md` for scope and outstanding work.
 2. `docs/architecture/0001-local-transport.md` for the provisional architecture decision.
