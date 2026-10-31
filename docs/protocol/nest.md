@@ -34,8 +34,8 @@ This strict fixture decoder is **not a complete Nest transport implementation**.
 The [native wire review](../research/native-protocol-2026-10-30.md) corroborates
 response revision/timestamp-before-key ordering and flags a preliminary
 brace-counting extractor. Full buffering, CAS and subscription semantics remain
-unverified. The next target measurement is an isolated TLS callback test, not
-activation of these partial routes.
+unverified. The [isolated TLS callback measurement](../research/tls-probe-result-2026-10-30.md)
+now passed its expected matrix; it does not validate or activate these partial routes.
 
 ## MQTT
 

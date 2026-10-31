@@ -29,6 +29,12 @@ remediation candidate is statically reviewed. These findings narrow commissionin
 requirements; they do not establish trusted bootstrap, durable rotation or a
 production-compatible transport. Keep the same provisional architecture.
 
+The [supervised TLS callback result](../research/tls-probe-result-2026-10-30.md)
+now confirms the candidate accepts valid and rejects eight invalid fixture cases
+on device loopback, with native startup return. This closes that bounded callback
+measurement, not full native fetch/configuration, storage, commissioning or
+transport compatibility. The provisional architecture and deployment gates remain.
+
 ## Decision
 
 Preserve nlclient, backplate firmware, drivers, watchdog, SCPM, schedules and unknown services. Build a small host-side authenticated API and MQTT boundary with a partial legacy decoder for research. Choose a provisional local cloud-protocol backend because it has demonstrated upstream protocol evidence; retain the identified test-access path as a bridge candidate pending enablement, framing and separately authorized bench evidence. Do not deploy a guessed IPC bridge or a permissive legacy backend.

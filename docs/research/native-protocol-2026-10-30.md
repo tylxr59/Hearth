@@ -59,3 +59,8 @@ time bootstrap, storage correction, recovery and HVAC validation remain open.
 The [storage findings](native-storage-2026-10-30.md) still block reliance on native
 credential persistence. No persistent writes or broad device-control tests are
 part of this next measurement.
+
+Follow-up: the [second TLS RAM attempt](tls-probe-result-2026-10-30.md) completed
+all 18 expected cases and native startup returned. This supersedes the pending
+callback-measurement status above, while full native transport/configuration
+and the settings/recovery gates remain open.

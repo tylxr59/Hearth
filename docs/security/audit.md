@@ -82,3 +82,10 @@ but no TLS cases. The non-executable dynamic interpreter is corrected; richer
 setup/launch evidence and independent host permission regression checks pass.
 The corrected profile remains unexecuted. Native startup return was confirmed,
 with no automatic retry, installation or recovery/HVAC claim.
+
+The [second supervised result](../research/tls-probe-result-2026-10-30.md) now
+confirms all 18 expected callback cases with native libraries on device loopback:
+the candidate accepts valid and rejects all eight invalid cases. Native startup
+returned after a full timed restart. Full native fetch/configuration, trusted time
+bootstrap, credential persistence, recovery and HVAC remain unverified. No library
+or CA was installed; raw results/hashes remain private.

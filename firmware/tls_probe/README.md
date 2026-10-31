@@ -1,9 +1,10 @@
 # Private native TLS RAM experiment
 
 This is an experimental diagnostic for the owner's Display-2.6 / 5.9.4-5 unit.
-The first RAM attempt reached its diagnostic report but produced no TLS cases.
-The corrected launch profile passes offline checks and **has not run on the thermostat**;
-see [the attempt/correction record](../../docs/research/tls-probe-attempt-2026-10-30.md).
+The first attempt produced no TLS cases; its launch-permission defect was corrected.
+The second supervised RAM run completed all 18 expected cases and returned to
+native startup. See [the measured result](../../docs/research/tls-probe-result-2026-10-30.md)
+and [the preserved first attempt](../../docs/research/tls-probe-attempt-2026-10-30.md).
 It is not installable firmware, a recovery procedure or an HVAC controller.
 
 The custom Linux profile has MTD, block storage, physical network devices and
@@ -137,7 +138,8 @@ before the owner is ready for that timing-sensitive action.
 The collector sends only `BEGIN_TLS_TEST_V1` after the ready marker and writes
 a fresh mode-0600 `tls-result.jsonl` under the private profile. There is no
 automatic boot retry. After success or failure, manually restart with the loader
-exited and confirm native startup. Do not reconnect the base for this test.
+exited: hold for about ten seconds (the screen may already be black), release,
+then press/release once and confirm native startup. Do not reconnect the base for this test.
 
 Host regression checks cover profile boundaries, exact clock-selection patching,
 result forgery/timeout rejection, serial fragmentation/fixed-token behavior,

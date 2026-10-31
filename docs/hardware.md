@@ -119,3 +119,11 @@ Native code preservation is not proof of safe operation. Any unexpected output, 
 ## 5. Promotion gate
 
 Enable a hardware profile only after the firmware/control interfaces, TLS/authentication, post-provision service checks, network restrictions, sleep/power behavior and relevant failure matrix pass with recorded artifacts and human sign-off. Gen 1 requires its own results. Document what remains unsupported rather than inferring compatibility from shared software.
+
+The [second TLS RAM run](research/tls-probe-result-2026-10-30.md) completed all
+18 expected original/candidate callback cases, followed by owner-confirmed native
+home icon and independently observed normal USB. This is a loopback/native-library
+measurement with synthetic fixtures, not full fetch/configuration, credential
+commissioning, restoration, power or HVAC validation. The screen remains black
+during the probe; native return required a full timed approximately ten-second
+hold, release and single press with the loader exited.

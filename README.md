@@ -25,12 +25,12 @@ identified a loopback temperature-control candidate. Startup and request framing
 remain unverified; the host transport remains provisional and no native bridge
 is enabled.
 
-A [private RAM-only TLS experiment](firmware/tls_probe/README.md) is now built
-and checked offline for the native verification hooks. Its first supervised
-RAM attempt reached the diagnostic report but no TLS cases. A corrected launch
-profile is ready for a new owner-timed test; see [the attempt record](docs/research/tls-probe-attempt-2026-10-30.md).
-It installs nothing and does not establish full transport compatibility, recovery
-or HVAC safety.
+A [private RAM-only TLS experiment](firmware/tls_probe/README.md) now completed
+all 18 expected callback cases on the device; the candidate accepted valid and
+rejected all eight invalid cases. Native startup returned afterward. See the
+[measured scope](docs/research/tls-probe-result-2026-10-30.md): nothing was installed,
+and full transport/configuration, credential persistence, recovery and HVAC
+remain unverified.
 
 Implemented:
 

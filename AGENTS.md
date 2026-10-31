@@ -123,20 +123,33 @@ It now has required execute mode 0555; ordinary DSOs stay 0444. The first report
 cannot prove this was the sole failure. The corrected supervisor records loopback/
 RAM-clock setup, pre-exec syscall errors, child wait statuses and private bounded
 stderr. Success requires setup, both zero statuses and all 18 expected TLS rows.
-The corrected, UNEXECUTED private profile is
-private/native-tls-probe-20261030/profile-launch-diagnostics. Public kernel/helpers
-are under build/native-tls-lab-20261030/ (helpers-launch-diagnostics). Kernel and
-bootstrap bytes are unchanged; corrected packaging/offline gates pass. 50 probe
-tests and 239 host tests passed, two optional integrations skipped; make check
-passed. An independent host true/loader permission regression executes only trusted
-host binaries, never firmware. Prepared images/libraries/keys/results stay private.
-Next: coordinate a new owner-timed supervised TLS RAM boot, not an automatic retry.
-Arm the PTY loader only when the owner is ready, then prompt the reviewed button
-sequence. From Hearth, sh firmware/tls_probe/boot.sh PRIVATE_PROFILE is dry-run;
---execute-experimental-tls-probe is the explicit execution flag. The collector
-requires a fresh private tls-result.jsonl. With the loader exited afterward,
-manually restart and confirm native startup. Persistent modification, recovery,
-full native fetch/setup and HVAC gates remain unresolved. See the probe README.
+The corrected profile at private/native-tls-probe-20261030/profile-launch-diagnostics
+now completed a second supervised RAM run using source cd3f9b1. Loader and collector
+exited zero; the private 1873-byte/22-row result confirms loopback and RAM-clock
+setup, both zero helper statuses, no stderr and all 18 expected TLS cases. Original
+hook accepts valid plus future-cert/missing-issuer/expired/future-CRL cases; the
+candidate accepts only valid and rejects all eight invalid cases. This validates
+the specific callback candidate on ARM/native curl/OpenSSL in the loopback harness,
+not full native fetch/startup/config/time bootstrap or secure commissioning.
+After command exit the display initially stayed black/probe USB. A full ~10-second
+hold, release, single press returned the native home icon (owner confirmed) and
+normal USB 2464:0002 (independently observed). No retry or persistent installation.
+See docs/research/tls-probe-result-2026-10-30.md and the dated TLS-observed JSON.
+Both attempts, creation manifests, results and separate attempt records remain
+private and immutable. Never rerun a profile with an existing result. Public
+kernel/helpers remain in build/native-tls-lab-20261030/; the kernel/bootstrap bytes
+were unchanged. The preparation baseline is 50 probe tests, 239 host tests passed,
+two optional integrations skipped and make check passed. No ARM firmware ran on
+the host; the independent permission regression uses trusted host true/ld copies.
+Next: continue offline settings persistence/fault-path and native protocol work.
+Prepare any new bounded RAM test completely before another owner-timed restart;
+no automatic device retry. Existing TLS measurement does not close the native
+settings error/rollback, backup/restoration, full fetch/transport or HVAC gates.
+For a future explicit diagnostic, use a fresh private profile, PTY-backed loader,
+normal-mode preflight and the reviewed manual sequence. After command exit, use
+a full ~10-second hold when the screen is already black, release, press/release
+once and confirm native startup. All prepared images/libraries/keys/results stay
+private. No base connection or persistent modification is authorized by a TLS pass.
 Keep private identifiers, credentials, bytes and binary hashes out of source/logs.
 Machine-local offline scripts are `build/{infer-private-bch4-layout,decode-private-bch4,extract-private-jffs2}-20261030.py`;
 the public BCH source is pinned in docs/research/bchlib-2.1.3.json. These scripts

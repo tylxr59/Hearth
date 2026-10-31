@@ -5,6 +5,12 @@ files. No target binary, listener query, lifecycle method or control command ran
 The thermostat stayed in native USB mode. Ghidra projects, decompiled C, library
 hashes and the experimental modified copy remain private.
 
+Follow-up: the [second supervised RAM experiment](tls-probe-result-2026-10-30.md)
+now validates the specific original/candidate callbacks over 18 synthetic TLS
+cases using native libraries on device loopback. Nothing was installed. This
+updates the static-only status of the candidate below; full native fetch/config,
+trusted time, credential persistence, recovery and HVAC remain unverified.
+
 ## Architecture consequence
 
 Retain the provisional native cloud-protocol replacement route. The loopback
