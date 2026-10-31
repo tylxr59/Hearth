@@ -27,8 +27,10 @@ is enabled.
 
 A [private RAM-only TLS experiment](firmware/tls_probe/README.md) is now built
 and checked offline for the native verification hooks. Its first supervised
-target run is pending; it installs nothing and does not establish full transport
-compatibility, recovery or HVAC safety.
+RAM attempt reached the diagnostic report but no TLS cases. A corrected launch
+profile is ready for a new owner-timed test; see [the attempt record](docs/research/tls-probe-attempt-2026-10-30.md).
+It installs nothing and does not establish full transport compatibility, recovery
+or HVAC safety.
 
 Implemented:
 

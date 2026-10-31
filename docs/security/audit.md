@@ -75,3 +75,10 @@ and RTC/hardware-clock update support are disabled in its custom kernel. The
 boot stages still have unverified hardware/power side effects. No target run
 or persistent installation occurred; owner-timed restart is next. See the
 [dated scope record](validation-2026-10-30-tls-probe.json).
+
+The subsequent [first-attempt record](../research/tls-probe-attempt-2026-10-30.md)
+supersedes the preparation-only runtime status above: RAM reporting was observed,
+but no TLS cases. The non-executable dynamic interpreter is corrected; richer
+setup/launch evidence and independent host permission regression checks pass.
+The corrected profile remains unexecuted. Native startup return was confirmed,
+with no automatic retry, installation or recovery/HVAC claim.

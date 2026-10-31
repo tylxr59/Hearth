@@ -1,7 +1,8 @@
 # Native protocol constraints and the next TLS measurement
 
 This continues offline review of the privately reconstructed Display-2.6 /
-5.9.4-5 client and pinned NLE source. No target program or protocol request ran.
+5.9.4-5 client and pinned NLE source. No native transport request was sent as part of
+that offline review; the later diagnostic attempt is recorded below.
 The pinned backend files were fetched again into ignored build/ and verified
 against [the existing source lock](upstreams.json); they were not executed or
 copied into Hearth's implementation.
@@ -50,7 +51,9 @@ The original helper also follows the matched glibc ARM startup ABI; public
 reference hashes are in [the probe source record](../../firmware/tls_probe/sources.json).
 No third-party reference implementation is vendored.
 
-The first target run remains pending an owner-supervised restart. Even if its
+The first RAM attempt reached diagnostic reporting but no TLS cases; see the
+[launch correction](tls-probe-attempt-2026-10-30.md). The corrected target test
+awaits a newly supervised restart. Even if its
 18-case matrix succeeds, native fetch setup, effective configuration, trusted
 time bootstrap, storage correction, recovery and HVAC validation remain open.
 The [storage findings](native-storage-2026-10-30.md) still block reliance on native

@@ -27,16 +27,52 @@ def validate(data):
     if len(data) > MAX_REPORT:
         raise ValueError("TLS report limit exceeded")
     rows = [loads(line) for line in data.splitlines()]
+    clean = []
+    for row in rows:
+        if isinstance(row, dict) and row.get("type") == "tls_stderr":
+            if (
+                set(row) != {"type", "variant", "hex"}
+                or row["variant"] not in ("original", "candidate")
+                or not isinstance(row["hex"], str)
+                or not re.fullmatch(r"(?:[0-9a-f]{2}){1,128}", row["hex"])
+            ):
+                raise ValueError("invalid private diagnostic row")
+            continue  # kept privately; never echo decoded library output
+        clean.append(row)
+    rows = clean
     if (
-        len(rows) != 19
+        len(rows) != 22
         or not isinstance(rows[-1], dict)
         or set(rows[-1]) != {"type", "passed"}
         or rows[-1]["type"] != "tls_complete"
         or rows[-1]["passed"] is not True
     ):
         raise ValueError("TLS run incomplete or helper failed")
+    setup = rows[0]
+    expected_setup = {
+        "type": "tls_setup",
+        "loopback_stage": 3,
+        "loopback_result": 0,
+        "clock_result": 0,
+    }
+    if setup != expected_setup or any(
+        type(setup.get(k)) is not int for k in ("loopback_stage", "loopback_result", "clock_result")
+    ):
+        raise ValueError("TLS setup was not confirmed")
     seen = set()
-    for row in rows[:-1]:
+    processes = set()
+    for row in rows[1:-1]:
+        if isinstance(row, dict) and row.get("type") == "tls_process":
+            if (
+                set(row) != {"type", "variant", "wait_status"}
+                or row["variant"] not in ("original", "candidate")
+                or row["variant"] in processes
+                or type(row["wait_status"]) is not int
+                or row["wait_status"] != 0
+            ):
+                raise ValueError("TLS helper did not exit successfully")
+            processes.add(row["variant"])
+            continue
         if not isinstance(row, dict) or set(row) != {
             "type",
             "variant",
@@ -62,7 +98,10 @@ def validate(data):
         if row["curl_code"] != expected or row["passed"] is not True:
             raise ValueError("native TLS behavior differed from the test expectation")
         seen.add((variant, case))
-    if seen != {(v, c) for v in ("original", "candidate") for c in CASES}:
+    if seen != {(v, c) for v in ("original", "candidate") for c in CASES} or processes != {
+        "original",
+        "candidate",
+    }:
         raise ValueError("missing TLS case")
     return {
         "status": "native-tls-callback-matrix-observed",

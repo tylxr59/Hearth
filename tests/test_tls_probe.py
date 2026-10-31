@@ -18,13 +18,13 @@ from firmware.probe import configure as heartbeat
 from firmware.tls_probe import configure, fixtures, observe
 from firmware.tls_probe.check import FILES, check, recipe_hashes, split_multi
 from firmware.tls_probe.compile import compile_helpers
-from firmware.tls_probe.package import cpio, multi_image, sha
+from firmware.tls_probe.package import cpio, helper_interpreter, multi_image, sha
 from tests.test_probe import synthetic_init
 from tools import elf_review
 
 
 def matrix():
-    rows = []
+    rows = [{"type": "tls_setup", "loopback_stage": 3, "loopback_result": 0, "clock_result": 0}]
     for variant in ("original", "candidate"):
         for case in fixtures.CASES:
             accepted = case == "valid" or (
@@ -40,6 +40,7 @@ def matrix():
                     "passed": True,
                 }
             )
+        rows.append({"type": "tls_process", "variant": variant, "wait_status": 0})
     return rows + [{"type": "tls_complete", "passed": True}]
 
 
@@ -97,26 +98,39 @@ def test_complete_tls_matrix_requires_explicit_certificate_rejections():
 
 
 @pytest.mark.parametrize(
-    "damage", ["missing", "duplicate", "timeout", "false", "bool", "unknown", "completion", "setup"]
+    "damage",
+    [
+        "missing",
+        "duplicate",
+        "timeout",
+        "false",
+        "bool",
+        "unknown",
+        "completion",
+        "setup",
+        "process",
+    ],
 )
 def test_tls_results_fail_closed(damage):
     rows = copy.deepcopy(matrix())
     if damage == "missing":
-        rows.pop(0)
+        rows.pop(1)
     if damage == "duplicate":
-        rows[0] = rows[1]
+        rows[1] = rows[2]
     if damage == "timeout":
         rows[1]["curl_code"] = 28
     if damage == "false":
-        rows[0]["passed"] = False
+        rows[1]["passed"] = False
     if damage == "bool":
-        rows[0]["curl_code"] = False
+        rows[1]["curl_code"] = False
     if damage == "unknown":
-        rows[0]["extra"] = "unexpected"
+        rows[1]["extra"] = "unexpected"
     if damage == "completion":
         rows[-1]["passed"] = 1  # JSON numeric truthiness is not a completed test.
     if damage == "setup":
-        rows[0]["case"] = "setup"
+        rows[0]["loopback_result"] = -1
+    if damage == "process":
+        next(row for row in rows if row["type"] == "tls_process")["wait_status"] = 122 << 8
     with pytest.raises(ValueError):
         observe.validate(encode(rows))
     with pytest.raises(ValueError):
@@ -206,6 +220,13 @@ def synthetic_profile(tmp_path, monkeypatch, damage=None):
     profile = private / "profile"
     (profile / "artifacts").mkdir(parents=True)
     init = synthetic_init()
+    helper = bytearray(256)
+    helper[: len(init)] = init
+    struct.pack_into("<H", helper, 44, 2)
+    struct.pack_into("<II", helper, 68, 256, 256)
+    interpreter = b"/lib/ld-linux-armhf.so.3\0"
+    helper[128 : 128 + len(interpreter)] = interpreter
+    struct.pack_into("<8I", helper, 84, 3, 128, 0, 0, len(interpreter), len(interpreter), 4, 1)
     library = bytearray(init)
     struct.pack_into("<H", library, 16, 3)
     entries = [
@@ -215,7 +236,7 @@ def synthetic_profile(tmp_path, monkeypatch, damage=None):
     entries += [
         ("dev/console", stat.S_IFCHR | 0o600, 0, b"", 5, 1),
         ("init", stat.S_IFREG | 0o555, 0, init, 0, 0),
-        ("tls-test", stat.S_IFREG | 0o555, 0, init, 0, 0),
+        ("tls-test", stat.S_IFREG | 0o555, 0, bytes(helper), 0, 0),
     ]
     for name in (
         "libnlwebservice.so",
@@ -225,7 +246,10 @@ def synthetic_profile(tmp_path, monkeypatch, damage=None):
         "libc.so.6",
         "ld-linux-armhf.so.3",
     ):
-        entries.append(("lib/" + name, stat.S_IFREG | 0o444, 0, bytes(library), 0, 0))
+        mode = 0o555 if name == "ld-linux-armhf.so.3" else 0o444
+        if damage == "interpreter-permission" and name == "ld-linux-armhf.so.3":
+            mode = 0o444
+        entries.append(("lib/" + name, stat.S_IFREG | mode, 0, bytes(library), 0, 0))
     for name in sorted(fixtures.TARGET_FILES):
         entries.append(
             (
@@ -295,7 +319,17 @@ def test_private_profile_gate_accepts_synthetic_complete_inventory(tmp_path, mon
 
 
 @pytest.mark.parametrize(
-    "damage", ["extra-key", "key-owner", "device", "writable-lib", "network", "count", "corruption"]
+    "damage",
+    [
+        "extra-key",
+        "key-owner",
+        "device",
+        "writable-lib",
+        "network",
+        "count",
+        "corruption",
+        "interpreter-permission",
+    ],
 )
 def test_private_profile_gate_rejects_unsafe_or_corrupt_content(tmp_path, monkeypatch, damage):
     with pytest.raises(ValueError):
@@ -363,3 +397,63 @@ def test_boot_wrapper_stops_before_native_preflight_or_loader(tmp_path, flag, ex
     assert len(calls) == 1 and calls[0].startswith("-m firmware.tls_probe.check ")
     if existing:
         assert (profile / "tls-result.jsonl").read_text() == "preserve"
+
+
+def test_setup_and_process_evidence_are_required_even_with_all_cases_passing():
+    rows = matrix()
+    rows.insert(2, {"type": "tls_stderr", "variant": "original", "hex": "74657374"})
+    assert observe.validate(encode(rows))["cases"] == 18
+    rows[2]["hex"] = "untrusted plaintext"
+    with pytest.raises(ValueError, match="diagnostic"):
+        observe.validate(encode(rows))
+
+
+def test_helper_interpreter_is_read_from_elf_and_static_helpers_are_rejected():
+    with pytest.raises(ValueError, match="interpreter"):
+        helper_interpreter(synthetic_init())
+
+
+def test_host_kernel_requires_execute_permission_on_dynamic_interpreter(tmp_path):
+    # Reproduce Linux open_exec semantics using trusted HOST true/ld binaries.
+    # This test never executes device firmware or an ARM cross-compiled helper.
+    source = shutil.which("true")
+    if not source:
+        pytest.skip("trusted host true executable required")
+    data = bytearray(Path(source).read_bytes())
+    if data[:6] != b"\x7fELF\x02\x01":
+        pytest.skip("dynamic little-endian ELF64 host required")
+    offset = struct.unpack_from("<Q", data, 32)[0]
+    stride, count = struct.unpack_from("<HH", data, 54)
+    slot = next(
+        (
+            offset + i * stride
+            for i in range(count)
+            if struct.unpack_from("<I", data, offset + i * stride)[0] == 3
+        ),
+        None,
+    )
+    if slot is None:
+        pytest.skip("host true has no dynamic interpreter")
+    begin = struct.unpack_from("<Q", data, slot + 8)[0]
+    size = struct.unpack_from("<Q", data, slot + 32)[0]
+    host_loader = Path(bytes(data[begin : begin + size - 1]).decode())
+    binary, loader = tmp_path / "host-true", tmp_path / "host-loader"
+    binary.write_bytes(data)
+    binary.chmod(0o755)
+    try:
+        subprocess.run([str(binary)], check=True, capture_output=True, timeout=3)
+    except PermissionError:
+        pytest.skip("test filesystem is mounted noexec")
+    loader.write_bytes(host_loader.read_bytes())
+    interpreter = str(loader).encode() + b"\0"
+    struct.pack_into("<Q", data, slot + 8, len(data))
+    struct.pack_into("<QQ", data, slot + 32, len(interpreter), len(interpreter))
+    data.extend(interpreter)
+    binary.write_bytes(data)
+    loader.chmod(0o444)
+    with pytest.raises(PermissionError):
+        subprocess.run([str(binary)], check=True, capture_output=True, timeout=3)
+    loader.chmod(0o555)
+    assert (
+        subprocess.run([str(binary)], check=False, capture_output=True, timeout=3).returncode == 0
+    )

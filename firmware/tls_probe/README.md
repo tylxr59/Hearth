@@ -1,7 +1,9 @@
 # Private native TLS RAM experiment
 
 This is an experimental diagnostic for the owner's Display-2.6 / 5.9.4-5 unit.
-It has passed offline build/integrity checks; **it has not run on the thermostat**.
+The first RAM attempt reached its diagnostic report but produced no TLS cases.
+The corrected launch profile passes offline checks and **has not run on the thermostat**;
+see [the attempt/correction record](../../docs/research/tls-probe-attempt-2026-10-30.md).
 It is not installable firmware, a recovery procedure or an HVAC controller.
 
 The custom Linux profile has MTD, block storage, physical network devices and
@@ -34,7 +36,9 @@ libraries and the actual native SSL-context hook, with peer/hostname checking
 enabled. Separate processes prevent cross-variant library reuse. The parent
 enforces deadlines, caches results in RAM and repeats a fixed result frame.
 Successful or failed frames are retained privately by the collector, never echoed
-as raw library output. Setup diagnostics contain only bounded loader errors.
+as raw library output. The supervisor records loopback/clock setup, pre-exec
+syscall failures, both child wait statuses and bounded hex-encoded stderr. Success
+requires successful setup and both zero statuses as well as all TLS case rows. Setup diagnostics contain only bounded loader errors.
 
 `passed` means the observed result matched the case expectation. The original
 callback is deliberately expected to accept its known invalid-time/CRL cases;
@@ -81,7 +85,9 @@ It verifies the candidate against its separate private one-word review record,
 and verifies synthetic fixture hashes after host OpenSSL baseline checks.
 It packs regular library aliases, the two original helpers and only the listed
 test fixtures. The synthetic server key belongs to UID 65534 in RAM; CA private
-keys remain on the host. No links or block devices are allowed in the archive.
+keys remain on the host. No links or block devices are allowed in the archive. The dynamic loader identified
+by PT_INTERP must have execute permission (0555); ordinary DSOs remain 0444.
+The host-kernel regression checks this distinction with trusted host binaries.
 
 The boot image is a two-component legacy uImage: the bounded ARM zImage plus a
 gzip newc RAM filesystem. The pinned U-Boot source supports this form and passes

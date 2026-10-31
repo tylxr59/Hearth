@@ -10,7 +10,16 @@ from pathlib import Path
 from firmware.probe.configure import initramfs
 from firmware.tls_probe.configure import verify
 from firmware.tls_probe.fixtures import TARGET_FILES
-from firmware.tls_probe.package import MAX_IMAGE, MAX_ROOT, cpio, private_read, sha, unpack_image
+from firmware.tls_probe.package import (
+    INTERPRETER,
+    MAX_IMAGE,
+    MAX_ROOT,
+    cpio,
+    helper_interpreter,
+    private_read,
+    sha,
+    unpack_image,
+)
 from tools.elf_review import ArmElf, private_path
 
 FILES = {
@@ -170,7 +179,7 @@ def check(root):
             expected_mode, expected_uid, devices = stat.S_IFDIR | 0o755, 0, (0, 0)
         elif name == "dev/console":
             expected_mode, expected_uid, devices = stat.S_IFCHR | 0o600, 0, (5, 1)
-        elif name in ("init", "tls-test"):
+        elif name in ("init", "tls-test") or name == INTERPRETER.removeprefix("/"):
             expected_mode, expected_uid, devices = stat.S_IFREG | 0o555, 0, (0, 0)
         elif name == "fixtures/server.key":
             expected_mode, expected_uid, devices = stat.S_IFREG | 0o400, 65534, (0, 0)
@@ -182,10 +191,12 @@ def check(root):
             raise ValueError("RAM permissions, ownership or device nodes exceed the fixed profile")
         if library:
             ArmElf(content)
-            if mode != stat.S_IFREG | 0o444 or uid:
+            if mode != expected_mode or uid:
                 raise ValueError("unexpected library permissions")
         if name == "init":
             initramfs(content)  # static ARM ELF bounds; its archive is not used here
+        if name == "tls-test":
+            helper_interpreter(content)
         entries.append((name, mode, uid, content, numbers[9], numbers[10]))
     if offset != len(rootfs) or not allowed <= found or cpio(entries) != rootfs:
         raise ValueError("RAM archive is not the exact deterministic inventory")

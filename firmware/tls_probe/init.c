@@ -26,64 +26,120 @@ static void append(const char *s)
 {
     while (*s && used < (long)sizeof(report) - 1) report[used++] = *s++;
 }
+static void number(long value)
+{
+    char digits[16]; long count = 0;
+    unsigned long magnitude = value < 0 ? 0UL - (unsigned long)value : (unsigned long)value;
+    if (value < 0) append("-");
+    do { digits[count++] = '0' + magnitude % 10; magnitude /= 10; } while (magnitude);
+    while (count) { char digit[2] = {digits[--count], 0}; append(digit); }
+}
+static void child_failure(const char *stage, long code, long status)
+{
+    long begin = used;
+    append("{\"type\":\"tls_launch_error\",\"stage\":\""); append(stage);
+    append("\",\"code\":"); number(code); append("}\n");
+    sc(4, 1, (long)(report + begin), used - begin, 0, 0);
+    sc(248, status, 0, 0, 0, 0);
+    for (;;) pause_one();
+}
+static long loop_stage, loop_result;
 static int loopback(void)
 {
     struct { char name[16]; unsigned char value[16]; } req = {"lo", {0}};
     long fd = sc(281, 2, 2, 0, 0, 0), result;
+    loop_stage = 1; loop_result = fd;
     if (fd < 0) return 0;
     req.value[0] = 2; /* sockaddr_in: AF_INET, 127.0.0.1 */
     req.value[4] = 127; req.value[7] = 1;
     result = sc(54, fd, 0x8916, (long)&req, 0, 0); /* SIOCSIFADDR */
+    loop_stage = 2; loop_result = result;
     req.value[0] = 0x49; req.value[1] = 0; /* UP | LOOPBACK | RUNNING */
-    if (!result) result = sc(54, fd, 0x8914, (long)&req, 0, 0);
+    if (!result) {
+        result = sc(54, fd, 0x8914, (long)&req, 0, 0);
+        loop_stage = 3; loop_result = result;
+    }
     sc(6, fd, 0, 0, 0, 0);
     return result == 0;
 }
 static int run(const char *variant)
 {
-    int pipefd[2], status = -1, pid, pfd[2];
-    long size, started, elapsed;
+    int pipefd[2], errors[2], status = -1, pid, pfd[4];
+    int output_open = 1, error_open = 1;
+    long size, started, elapsed, i;
+    unsigned char diagnostic[128];
+    static const char hex[] = "0123456789abcdef";
     char *const argv[] = {"/tls-test", (char *)variant, 0};
     char *const env[] = {"LD_LIBRARY_PATH=/lib", "HOME=/nonexistent", "LC_ALL=C", 0};
-    if (sc(42, (long)pipefd, 0, 0, 0, 0) != 0) return 0;
+    if (sc(42, (long)pipefd, 0, 0, 0, 0) != 0) return -201;
+    if (sc(42, (long)errors, 0, 0, 0, 0) != 0) {
+        sc(6, pipefd[0], 0, 0, 0, 0); sc(6, pipefd[1], 0, 0, 0, 0); return -201;
+    }
     pid = sc(2, 0, 0, 0, 0, 0);
-    if (pid < 0) { sc(6, pipefd[0], 0, 0, 0, 0); sc(6, pipefd[1], 0, 0, 0, 0); return 0; }
+    if (pid < 0) {
+        sc(6, pipefd[0], 0, 0, 0, 0); sc(6, pipefd[1], 0, 0, 0, 0);
+        sc(6, errors[0], 0, 0, 0, 0); sc(6, errors[1], 0, 0, 0, 0); return -202;
+    }
     if (!pid) {
         long fd, n;
         sc(57, 0, 0, 0, 0, 0); /* isolated process group for the deadline */
         sc(63, pipefd[1], 1, 0, 0, 0);
+        sc(63, errors[1], 2, 0, 0, 0);
         fd = sc(5, (long)"/dev/null", 2, 0, 0, 0);
-        if (fd < 0) sc(248, 120, 0, 0, 0, 0);
-        sc(63, fd, 0, 0, 0, 0); sc(63, fd, 2, 0, 0, 0);
+        if (fd < 0) child_failure("null", fd, 120);
+        sc(63, fd, 0, 0, 0, 0);
         for (n = 3; n < 64; n++) sc(6, n, 0, 0, 0, 0);
-        if (sc(206, 0, 0, 0, 0, 0) || sc(214, 65534, 0, 0, 0, 0) || sc(213, 65534, 0, 0, 0, 0))
-            sc(248, 121, 0, 0, 0, 0);
-        sc(11, (long)"/tls-test", (long)argv, (long)env, 0, 0);
-        sc(248, 122, 0, 0, 0, 0);
-        for (;;) pause_one();
+        n = sc(206, 0, 0, 0, 0, 0); if (n) child_failure("groups", n, 121);
+        n = sc(214, 65534, 0, 0, 0, 0); if (n) child_failure("gid", n, 121);
+        n = sc(213, 65534, 0, 0, 0, 0); if (n) child_failure("uid", n, 121);
+        n = sc(11, (long)"/tls-test", (long)argv, (long)env, 0, 0);
+        child_failure("exec", n, 122);
     }
     sc(6, pipefd[1], 0, 0, 0, 0);
+    sc(6, errors[1], 0, 0, 0, 0);
     started = now();
-    for (;;) {
+    while (output_open || error_open) {
         elapsed = now();
-        if (started < 0 || elapsed < started || elapsed - started > 120 || used >= (long)sizeof(report) - 256) {
+        if (started < 0 || elapsed < started || elapsed - started > 120 || used >= (long)sizeof(report) - 1024) {
             sc(37, -pid, 9, 0, 0, 0); sc(37, pid, 9, 0, 0, 0);
             break;
         }
-        pfd[0] = pipefd[0]; pfd[1] = 1; /* struct pollfd: POLLIN */
-        size = sc(168, (long)pfd, 1, 1000, 0, 0);
+        pfd[0] = output_open ? pipefd[0] : -1; pfd[1] = 1;
+        pfd[2] = error_open ? errors[0] : -1; pfd[3] = 1;
+        size = sc(168, (long)pfd, 2, 1000, 0, 0);
         if (size < 0) {
             sc(37, -pid, 9, 0, 0, 0); sc(37, pid, 9, 0, 0, 0);
             break;
         }
         if (size == 0) continue;
-        size = sc(3, pipefd[0], (long)(report + used), sizeof(report) - 256 - used, 0, 0);
-        if (size <= 0) break;
-        used += size;
+        if (output_open && (pfd[1] >> 16)) {
+            size = sc(3, pipefd[0], (long)(report + used), sizeof(report) - 1024 - used, 0, 0);
+            if (size <= 0) output_open = 0;
+            else used += size;
+        }
+        if (error_open && (pfd[3] >> 16)) {
+            size = sc(3, errors[0], (long)diagnostic, sizeof(diagnostic), 0, 0);
+            if (size <= 0) error_open = 0;
+            else {
+                append("{\"type\":\"tls_stderr\",\"variant\":\""); append(variant);
+                append("\",\"hex\":\"");
+                for (i = 0; i < size; i++) {
+                    char pair[3] = {hex[diagnostic[i] >> 4], hex[diagnostic[i] & 15], 0};
+                    append(pair);
+                }
+                append("\"}\n");
+            }
+        }
     }
     sc(6, pipefd[0], 0, 0, 0, 0);
-    sc(114, pid, (long)&status, 0, 0, 0);
-    return status == 0;
+    sc(6, errors[0], 0, 0, 0, 0);
+    if (sc(114, pid, (long)&status, 0, 0, 0) != pid) return -205;
+    return status;
+}
+static void process_result(const char *variant, long status)
+{
+    append("{\"type\":\"tls_process\",\"variant\":\""); append(variant);
+    append("\",\"wait_status\":"); number(status); append("}\n");
 }
 void __attribute__((noreturn)) _start(void)
 {
@@ -94,10 +150,13 @@ void __attribute__((noreturn)) _start(void)
     long fd = -1, n, i, matched = 0, offset;
     long tv[2] = {1893456000L, 0}; /* synthetic RAM clock: 2030-01-01 UTC */
     int setup, original, candidate;
+    long clock_result;
     sc(21, (long)"proc", (long)"/proc", (long)"proc", 15, 0);
     sc(21, (long)"sysfs", (long)"/sys", (long)"sysfs", 15, 0);
     sc(21, (long)"devtmpfs", (long)"/dev", (long)"devtmpfs", 10, (long)"mode=0755");
-    setup = loopback() && sc(79, (long)tv, 0, 0, 0, 0) == 0;
+    setup = loopback();
+    clock_result = sc(79, (long)tv, 0, 0, 0, 0);
+    setup = setup && clock_result == 0;
     for (;;) {
         fd = sc(5, (long)"/dev/ttyGS0", 2 | 0400 | 04000, 0, 0, 0);
         if (fd >= 0 && sc(54, fd, 0x5401, (long)tty, 0, 0) == 0) {
@@ -119,9 +178,14 @@ void __attribute__((noreturn)) _start(void)
     }
 begin:
     append("HEARTH_TLS_PROBE_V1\n");
-    original = setup && run("original");
-    candidate = setup && run("candidate");
-    append(original && candidate ?
+    append("{\"type\":\"tls_setup\",\"loopback_stage\":"); number(loop_stage);
+    append(",\"loopback_result\":"); number(loop_result);
+    append(",\"clock_result\":"); number(clock_result); append("}\n");
+    original = setup ? run("original") : -210;
+    process_result("original", original);
+    candidate = setup ? run("candidate") : -210;
+    process_result("candidate", candidate);
+    append(original == 0 && candidate == 0 ?
         "{\"type\":\"tls_complete\",\"passed\":true}\n" :
         "{\"type\":\"tls_complete\",\"passed\":false}\n");
     append("END_HEARTH_TLS_PROBE\n");

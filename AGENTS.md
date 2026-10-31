@@ -106,29 +106,37 @@ queued-file sender. Offline hardening now prepares uploadlogs=0 and edits only
 two reviewed config value spans, refusing ambiguous XML before output. No writer
 patch or device installation. Fifteen new tests; make check and 189 host tests
 passed, two optional integrations skipped. See docs/research/native-storage-2026-10-30.md.
-Native protocol review corroborates response metadata ordering and identifies
-a preliminary brace-counting extractor; full entry/CAS/subscription semantics
-remain open. The next concrete target measurement is the private RAM-only TLS
-probe under firmware/tls_probe/. Its public kernel has MTD/block/physical-network/
-RTC support disabled and removes forced hardware-clock synchronization selections.
-Only device loopback is enabled; UID/GID 65534 helpers compare original/candidate
-native hooks over 18 synthetic certificate/CRL cases. No nlclient/osm or actual
-settings/credentials are included. Public-only kernel build, host cross-compilation,
-private dependency/fixture packaging and offline checks pass. The prepared private
-profile is private/native-tls-probe-20261030/profile-supervised; public kernel/helpers
-are under build/native-tls-lab-20261030/. It contains proprietary libraries and
-synthetic keys: never publish/upload it. 45 new tests; make check and 234 host
-tests passed, two optional integrations skipped. Normal USB 2464:0002 on 1-1 was
-observed; NO TLS target run has occurred. See firmware/tls_probe/README.md and
-docs/research/native-protocol-2026-10-30.md.
-Next: coordinate the owner for one supervised TLS RAM boot. Arm the PTY-backed
-loader only when the owner is ready, then prompt the reviewed button sequence.
-Run from Hearth: sh firmware/tls_probe/boot.sh PRIVATE_PROFILE first for dry run;
-the explicit --execute-experimental-tls-probe flag is required for execution.
-The fixed-token collector saves a fresh private tls-result.jsonl, including
-failures. Do not retry a boot automatically; return to native startup with the
-loader exited afterward. This is not flashing/recovery/HVAC or a full native
-fetch/setup test. Persistent modifications remain gated.
+Native protocol review corroborates response metadata ordering and flags a
+preliminary brace-counting extractor; full entry/CAS/subscription semantics remain
+open. The RAM-only TLS probe under firmware/tls_probe/ uses a separate kernel with
+MTD/block/physical-network/RTC and hardware-clock synchronization disabled. Only
+loopback is enabled. UID/GID 65534 helpers compare original/candidate native hooks
+against 18 synthetic cases; nlclient/osm and actual credentials/settings are absent.
+The first supervised attempt (source commit 3fa529e) transferred all three files
+and reached custom USB serial/PID 1 reporting, but saved only a 39-byte failed
+completion marker with no TLS cases. No automatic retry. Owner confirmed return
+to home icon and normal USB 2464:0002 was observed. Preserve the original private
+profile-supervised directory and tls-result.jsonl; creation manifest remains an
+immutable pre-execution record. See docs/research/tls-probe-attempt-2026-10-30.md.
+A concrete packaging error was found: PT_INTERP's dynamic loader had mode 0444.
+It now has required execute mode 0555; ordinary DSOs stay 0444. The first report
+cannot prove this was the sole failure. The corrected supervisor records loopback/
+RAM-clock setup, pre-exec syscall errors, child wait statuses and private bounded
+stderr. Success requires setup, both zero statuses and all 18 expected TLS rows.
+The corrected, UNEXECUTED private profile is
+private/native-tls-probe-20261030/profile-launch-diagnostics. Public kernel/helpers
+are under build/native-tls-lab-20261030/ (helpers-launch-diagnostics). Kernel and
+bootstrap bytes are unchanged; corrected packaging/offline gates pass. 50 probe
+tests and 239 host tests passed, two optional integrations skipped; make check
+passed. An independent host true/loader permission regression executes only trusted
+host binaries, never firmware. Prepared images/libraries/keys/results stay private.
+Next: coordinate a new owner-timed supervised TLS RAM boot, not an automatic retry.
+Arm the PTY loader only when the owner is ready, then prompt the reviewed button
+sequence. From Hearth, sh firmware/tls_probe/boot.sh PRIVATE_PROFILE is dry-run;
+--execute-experimental-tls-probe is the explicit execution flag. The collector
+requires a fresh private tls-result.jsonl. With the loader exited afterward,
+manually restart and confirm native startup. Persistent modification, recovery,
+full native fetch/setup and HVAC gates remain unresolved. See the probe README.
 Keep private identifiers, credentials, bytes and binary hashes out of source/logs.
 Machine-local offline scripts are `build/{infer-private-bch4-layout,decode-private-bch4,extract-private-jffs2}-20261030.py`;
 the public BCH source is pinned in docs/research/bchlib-2.1.3.json. These scripts

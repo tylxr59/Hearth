@@ -1,0 +1,45 @@
+{
+  "date": "2026-10-30",
+  "scope": "First supervised TLS RAM attempt and unexecuted launch correction",
+  "first_attempt": {
+    "source_commit": "3fa529e",
+    "rom_transfer_files": 3,
+    "loader_exit_code": 0,
+    "probe_usb_serial_observed": true,
+    "private_result_bytes": 39,
+    "private_result_rows": 1,
+    "completion_passed": false,
+    "tls_cases_observed": 0,
+    "collector_exit_code": 1,
+    "launch_stage_captured": false,
+    "automatic_retry": false,
+    "native_home_icon_owner_confirmed": true,
+    "normal_usb_return_observed": true
+  },
+  "confirmed_defect": {
+    "interpreter_mode": "0444; missing execute permission",
+    "corrected_interpreter_mode": "0555",
+    "other_shared_libraries_mode": "0444",
+    "sole_cause_of_first_failure_proven": false,
+    "host_kernel_permission_regression": "trusted host true/loader copies only; passed"
+  },
+  "corrected_profile": {
+    "target_executed": false,
+    "offline_gate": "passed",
+    "rootfs_bytes": 11069140,
+    "image_bytes": 6039919,
+    "kernel_and_bootstrap_reused_unchanged": true,
+    "setup_and_wait_status_required": true,
+    "private_bounded_stderr_capture": true,
+    "host_tests_passed": 239,
+    "optional_integration_tests_skipped": 2,
+    "probe_tests_passed": 50,
+    "static_checks": "make check passed"
+  },
+  "not_demonstrated": [
+    "native TLS behavior or complete callback matrix",
+    "native transport or secure commissioning",
+    "firmware restoration, battery/power safety or HVAC operation"
+  ],
+  "privacy": "Original private attempt preserved. No proprietary image, private digest, credential, device identifier or decoded loader output published."
+}

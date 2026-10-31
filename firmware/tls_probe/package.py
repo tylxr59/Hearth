@@ -19,10 +19,33 @@ from tools.elf_review import ArmElf, private_path
 MAX_ROOT = 24 * 1024 * 1024
 # Source buffer 0x80a00000 must remain below the reviewed 0x81000000 boundary.
 MAX_IMAGE = 6 * 1024 * 1024
+INTERPRETER = "/lib/ld-linux-armhf.so.3"
 
 
 def sha(data):
     return hashlib.sha256(data).hexdigest()
+
+
+def helper_interpreter(data):
+    """Read the actual executable's PT_INTERP, not a guessed library role."""
+    ArmElf(data)
+    header = struct.unpack_from("<16sHHIIIIIHHHHHH", data)
+    paths = []
+    for index in range(header[10]):
+        kind, offset, _, _, size, _, _, _ = struct.unpack_from(
+            "<8I", data, header[5] + index * header[9]
+        )
+        if kind != 3:
+            continue
+        if not 2 <= size <= 256 or offset + size > len(data):
+            raise ValueError("invalid helper interpreter bounds")
+        value = data[offset : offset + size]
+        if value[-1:] != b"\0" or b"\0" in value[:-1]:
+            raise ValueError("invalid helper interpreter string")
+        paths.append(value[:-1].decode("ascii"))
+    if paths != [INTERPRETER]:
+        raise ValueError("exact native ARM dynamic interpreter required")
+    return paths[0]
 
 
 def private_read(path, maximum=8 * 1024 * 1024):
@@ -192,6 +215,9 @@ def package(
         if helper_record["files"][name] != sha(data):
             raise ValueError("original helper digest mismatch")
         helper_data[name] = data
+    interpreter = helper_interpreter(helper_data["tls-test"])
+    if interpreter.removeprefix("/lib/") not in selected:
+        raise ValueError("helper interpreter missing from recovered libraries")
     entries = [
         (d, stat.S_IFDIR | 0o755, 0, b"", 0, 0)
         for d in (".", "dev", "proc", "sys", "lib", "fixtures")
@@ -202,7 +228,14 @@ def package(
         ("tls-test", stat.S_IFREG | 0o555, 0, helper_data["tls-test"], 0, 0),
     ]
     entries += [
-        ("lib/" + name, stat.S_IFREG | 0o444, 0, data, 0, 0)
+        (
+            "lib/" + name,
+            stat.S_IFREG | (0o555 if "/lib/" + name == interpreter else 0o444),
+            0,
+            data,
+            0,
+            0,
+        )
         for name, data in sorted(selected.items())
     ]
     fixture_record = json.loads(private_read(Path(fixtures) / "fixtures.json"))
