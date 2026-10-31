@@ -144,7 +144,8 @@ def test_diagnostic_truncation_does_not_truncate_streamed_log_checks():
         results.validate(b"x" * 32769)
 
 
-def test_shared_stream_scanner_covers_every_fragment_boundary_and_overlapping_patterns(tmp_path):
+@pytest.mark.parametrize("harness", ["settings_compat_scan", "settings_compat_tail"])
+def test_stream_diagnostics_under_sanitizers(tmp_path, harness):
     if not shutil.which("clang"):
         pytest.skip("Clang required for original host scanner checks")
     root = Path(__file__).resolve().parents[1]
@@ -157,7 +158,7 @@ def test_shared_stream_scanner_covers_every_fragment_boundary_and_overlapping_pa
             "-Werror",
             "-g",
             "-fsanitize=address,undefined",
-            str(root / "tests/settings_compat_scan_harness.c"),
+            str(root / f"tests/{harness}_harness.c"),
             "-o",
             str(driver),
         ],

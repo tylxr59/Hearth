@@ -5,6 +5,7 @@ This original diagnostic runs the original settings library and the
 in one RAM boot. The first attempt completed the original baseline but the
 candidate crashed before its first case; see the
 [attempt record](../../docs/research/settings-compat-attempt-2026-10-31.md).
+A phase-marker attempt reproduced the startup crash before any candidate marker.
 No passing comparison has been observed. Neither nlclient/osm nor real settings,
 credentials, production networking or flash filesystems are used.
 
@@ -34,7 +35,9 @@ of the 29 required cases or successful child statuses.
 PID 1 accepts only `BEGIN_SETTINGS_COMPAT_V1`, runs each variant once with a fixed
 environment and caches the result. Each child has an 8 KiB stdout and 2 KiB raw
 stderr cache, a 90-second alarm and a 120-second supervisor deadline. Excess
-stderr is drained and counted, with a 1 MiB excess-output stop limit. The shared
+stderr is drained and counted, with a 1 MiB excess-output stop limit. The original
+retains the first 2 KiB; the candidate retains the final 2 KiB and enables
+`LD_DEBUG=files,reloc` to locate the pre-initializer failure. The shared
 report is bounded at 32 KiB. Streaming matchers inspect **all** stderr bytes,
 including those discarded from the diagnostic cache. The original must reproduce
 the synthetic disclosure pattern; the candidate must emit none. A formatted

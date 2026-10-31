@@ -27,3 +27,28 @@ Next, prepare value-free phase diagnostics to locate the crash before requesting
 another supervised RAM boot. Phase markers must not include paths, pointers,
 settings, credentials or native log contents. Preserve this failed profile rather
 than rerunning it or treating its baseline rows as a passing comparison.
+
+## Phase-marker attempt
+
+A second supervised attempt used source `af32cd5` and a fresh private
+`profile-phase-v1`. All three files transferred; original baseline again completed
+all twelve cases with zero status. Its captured fixed phase markers reached main,
+library/binding setup, construction, initialization and save. The candidate again
+terminated with SIGSEGV (raw wait status 11), with no phase marker, case or helper
+row. The saved report is again 9176 bytes/33 rows and the collector exited one.
+
+This narrows the failure to startup before the candidate initializer/main can
+emit their first marker; it does not establish the precise relocation, mapping or
+constructor cause. No speculative linker change has been treated as a fix.
+A second immutable private attempt record preserves the result identity. The owner
+reported completing the manual restart after command exit and normal USB was
+independently observed. No automatic retry or persistent installation ran.
+
+The next prepared diagnostic adds `LD_DEBUG=files,reloc` only to the candidate
+child. Its fixed 2 KiB diagnostic cache retains the final window, with explicit
+previous-byte discard counts; the original still retains its first window. Both
+streaming log matchers inspect every byte before either cache policy. An original
+host sanitizer harness checks final-window contents across chunk sizes and refusal
+at the discard limit. This changes diagnostic visibility, not any case acceptance
+condition. Loader diagnostics remain private; no actual settings/native app are
+introduced and flash/network/clock restrictions remain unchanged.

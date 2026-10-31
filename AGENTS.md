@@ -212,7 +212,15 @@ Prepared diagnostic profile: private/settings-compat-probe-20261031/profile-phas
 helpers build/settings-compat-20261031/comparison-phase-v1. Seven artifacts match
 its separate repro; rootfs 11020556 bytes, image 6018284 bytes. Offline wrapper,
 make check and 312 host tests pass (three unchanged optional integration skips).
-This fresh profile has no result yet. Owner readiness is required before arming.
+This profile was executed once using source af32cd5: original twelve cases and
+zero child status again, candidate SIGSEGV before any fixed phase marker. Report
+9176 bytes/33 rows and private attempt-2.json preserved; owner reported manual
+restart done and native USB was independently observed. Never rerun it. Startup
+fails before initializer/main diagnostics, with exact cause still unknown.
+Next diagnostic profile private/settings-compat-probe-20261031/profile-loader-v1
+adds candidate-only LD_DEBUG=files,reloc and retains its final 2 KiB stderr window;
+original first-window capture and all-byte secret scanning remain. No candidate
+correction has been validated. Owner readiness is required before arming.
 The owner has only this unit and explicitly accepts potentially dangerous same-unit
 work; spare-only recovery restriction is waived, advance notification before
 persistent writes and separate physical HVAC authorization remain. Continue through

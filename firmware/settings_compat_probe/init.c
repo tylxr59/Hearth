@@ -3,6 +3,7 @@
  * The only accepted USB input is a fixed start token. Results are cached in RAM.
  */
 #include "../settings_probe/capture.h"
+#include "tail.h"
 #include "scan.h"
 
 static long sc(long nr, long a, long b, long c, long d, long e)
@@ -56,7 +57,8 @@ static int run(const char *variant, int candidate)
     char *const argv[] = {"/settings-test", (char *)variant, 0};
     char *const env[] = {"LD_LIBRARY_PATH=/lib", "HOME=/nonexistent", "LC_ALL=C", candidate ?
         "LD_PRELOAD=/lib/libhearth-settings-compat.so:/lib/libhearth-settings-faults.so" :
-        "LD_PRELOAD=/lib/libhearth-settings-faults.so", 0};
+        "LD_PRELOAD=/lib/libhearth-settings-faults.so",
+        candidate ? "LD_DEBUG=files,reloc" : "HEARTH_LAB_ORIGINAL=1", 0};
     output_used = diagnostics_used = diagnostics_dropped = 0;
     if (!scan_init(&secrets,"synthetic_secret_") || !scan_init(&passthrough,"HEARTH_COMPAT_LOG_PASSTHROUGH 17 probe 23 29 31 1.5")) return -211;
     if (sc(42, (long)pipefd, 0, 0, 0, 0) != 0) return -201;
@@ -112,7 +114,7 @@ static int run(const char *variant, int candidate)
             if (size <= 0) error_open = 0;
             else {
                 scan_bytes(&secrets,diagnostic,size); scan_bytes(&passthrough,diagnostic,size);
-                if (!capture_diagnostics(diagnostic, size)) {
+                if (!(candidate ? capture_diagnostic_tail(diagnostic, size) : capture_diagnostics(diagnostic, size))) {
                 sc(37, -pid, 9, 0, 0, 0); sc(37, pid, 9, 0, 0, 0); break;
                 }
             }
