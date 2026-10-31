@@ -25,6 +25,9 @@ def matrix():
         rows.extend(results.io_expected(variant, case) for case in results.CASES)
         if variant == "candidate":
             rows.extend(results.allocation_expected(case) for case in results.ALLOCATIONS)
+        rows.extend(results.permission_expected(variant, case) for case in results.PERMISSIONS)
+        if variant == "candidate":
+            rows.append(results.permission_expected(variant, "chmod_failure"))
         rows.append(
             {
                 "type": "compat_helper",
@@ -54,6 +57,7 @@ def test_complete_comparison_requires_baseline_correction_allocation_and_log_evi
     assert (
         result["io_cases"] == 24
         and result["allocation_alias_cases"] == 5
+        and result["permission_cases"] == 7
         and not result["installed"]
     )
 
@@ -75,6 +79,11 @@ def test_complete_comparison_requires_baseline_correction_allocation_and_log_evi
         "passthrough",
         "process",
         "complete",
+        "public_mode",
+        "permission_bool",
+        "permission_failure_not_injected",
+        "permission_retry",
+        "unrelated_mode",
     ],
 )
 def test_comparison_rejects_missing_or_false_security_evidence(damage):
@@ -123,6 +132,21 @@ def test_comparison_rejects_missing_or_false_security_evidence(damage):
         process["passthrough_log_matches"] = 0
     if damage == "process":
         process["wait_status"] = 9
+    permission = next(
+        r for r in rows if r.get("variant") == "candidate" and r.get("case") == "chmod_failure"
+    )
+    if damage == "public_mode":
+        permission["mode"] = 0o666
+    if damage == "permission_bool":
+        permission["fchmod_calls"] = True
+    if damage == "permission_failure_not_injected":
+        permission["failure_injected"] = 0
+    if damage == "permission_retry":
+        permission["retry_result"] = -100
+    if damage == "unrelated_mode":
+        next(
+            r for r in rows if r.get("variant") == "candidate" and r.get("case") == "unrelated_open"
+        )["mode"] = 0o600
     if damage == "complete":
         rows[-1]["passed"] = 1
     with pytest.raises(ValueError):
@@ -270,6 +294,7 @@ def comparison_profile(tmp_path, monkeypatch, damage=None):
     (base / "artifacts/uImage").write_bytes(multi_image(kernel, gzip.compress(rootfs, mtime=0)))
     record = {
         "status": artifact.STATUS,
+        "cases": 29 if damage == "old_matrix" else 36,
         "files": {n: sha((base / "artifacts" / n).read_bytes()) for n in artifact.FILES},
         "recipe_sha256": artifact.recipes(),
         "native_review": review,
@@ -282,13 +307,14 @@ def comparison_profile(tmp_path, monkeypatch, damage=None):
 def test_private_comparison_gate_accepts_only_exact_profile_and_review_contract(
     tmp_path, monkeypatch
 ):
-    assert artifact.check(comparison_profile(tmp_path, monkeypatch))["cases"] == 29
+    assert artifact.check(comparison_profile(tmp_path, monkeypatch))["cases"] == 36
 
 
 @pytest.mark.parametrize(
     "damage",
     [
         "allocator_contract",
+        "old_matrix",
         "identity",
         "review_range",
         "writable_candidate",

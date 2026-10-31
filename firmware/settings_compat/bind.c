@@ -11,6 +11,8 @@ static int ready, initializing;
 static const char *(*string_bytes)(const void *);
 static void (*lock)(void *);
 static int (*unlock)(void *);
+static int (*native_handle)(void *);
+static int (*descriptor_mode)(int, unsigned int);
 static void *real_log, *pointer_compare, *configuration_init;
 static int (*original_add)(void *,const char *,const char *);
 static int supported_table(void *object)
@@ -44,6 +46,11 @@ static void *table(void *object)
 { void *value; memcpy(&value,(unsigned char *)object+4,sizeof(value)); return value; }
 static const void *entry_key(const void *entry)
 { const void *value; memcpy(&value,(const unsigned char *)entry+8,sizeof(value)); return value; }
+static int private_mode(void *descriptor)
+{
+    int handle = native_handle(descriptor);
+    return handle < 0 ? -1 : descriptor_mode(handle, 0600);
+}
 static void initialize(void)
 {
     if (ready) return;
@@ -58,6 +65,7 @@ static void initialize(void)
     LOAD(hearth_ops.set, "_ZN10nlSettings8SetValueEPKcS1_");
     LOAD(hearth_ops.open, "PR_Open"); LOAD(hearth_ops.write_bytes, "PR_Write");
     LOAD(hearth_ops.sync, "PR_Sync"); LOAD(hearth_ops.close, "PR_Close");
+    LOAD(native_handle, "PR_FileDesc2NativeHandle"); LOAD(descriptor_mode, "fchmod");
     LOAD(hearth_ops.get, "_ZNK8nlConfig8GetValueEPKc");
     LOAD(hearth_ops.add, "PL_HashTableAdd");
     LOAD(hearth_ops.allocate, "nlMALLOC"); LOAD(hearth_ops.release, "nlFREE");
@@ -66,6 +74,7 @@ static void initialize(void)
     LOAD(real_log, "nlLogWithComponent");
 #undef LOAD
     hearth_ops.filename = filename; hearth_ops.mark_dirty = dirty; hearth_ops.table = table; hearth_ops.failure = notice; hearth_ops.entry_key = entry_key;
+    hearth_ops.private_mode = private_mode;
     ready = 1;
     HEARTH_PHASE("initialize.done");
 }

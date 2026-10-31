@@ -164,7 +164,7 @@ def package(base, helpers, review, output):
         "persistent_storage": False,
         "native_application": False,
         "whole_boot_chain_write_free": "unverified",
-        "cases": 29,
+        "cases": 36,
         "candidate_linker": candidate_record["linker"],
         "files": {n: sha(d) for n, d in files.items()},
         "recipe_sha256": recipes(),
@@ -193,6 +193,7 @@ def check(root):
     record = json.loads(private_read(root / "compat-probe.json", 1024 * 1024))
     if (
         record.get("status") != STATUS
+        or record.get("cases") != 36
         or record["recipe_sha256"] != recipes()
         or set(record["files"]) != FILES
     ):
@@ -228,7 +229,7 @@ def check(root):
         "device_executed": False,
         "hardware_safe": "unverified",
         "restoration": "unverified",
-        "cases": 29,
+        "cases": 36,
         "baseline_libraries": 34,
         "original_test_libraries": 2,
         "rootfs_bytes": len(rootfs),

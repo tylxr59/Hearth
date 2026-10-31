@@ -11,7 +11,7 @@ struct descriptor { struct object *object; int kind; };
 struct object {
     PLHashTable *table;
     pthread_mutex_t mutex;
-    int dirty, fault, renames, file_syncs, restored;
+    int dirty, fault, renames, file_syncs, restored, private_calls, closed;
     const char *path;
     char callback_value[128];
     struct descriptor file, directory, decoy;
@@ -20,7 +20,7 @@ struct object {
 };
 static __thread int allocation_fail, allocation_calls, entry_fail;
 static __thread struct object *opening;
-static void notice(int code) { assert(code == -103 || code == -2 || code == -5); }
+static void notice(int code) { assert(code == -103 || code == -2 || code == -5 || code == -100); }
 static void *allocate(hearth_size size)
 {
     allocation_calls++;
@@ -60,9 +60,9 @@ static void dirty(void *pointer)
 }
 static void *open_file(const char *path, int flags, int mode)
 {
-    (void)mode;
     if (!path) return NULL;
-    if (strcmp(path, "/decoy") == 0) return &opening->decoy;
+    if (strcmp(path, "/decoy") == 0) { assert(mode == 0666); return &opening->decoy; }
+    assert(mode == (flags == 0x2a ? 0600 : 0));
     return flags == 0x2a ? (void *)&opening->file : (void *)&opening->directory;
 }
 static int write_bytes(void *handle, const void *data, int size)
@@ -79,7 +79,13 @@ static int sync_file(void *handle)
     if (!descriptor->kind) descriptor->object->file_syncs++;
     return descriptor->kind == 1 && descriptor->object->fault == 3 ? -1 : 0;
 }
-static int close_file(void *handle) { (void)handle; return 0; }
+static int close_file(void *handle) { ((struct descriptor *)handle)->object->closed++; return 0; }
+static int private_mode(void *handle)
+{
+    struct object *object = ((struct descriptor *)handle)->object;
+    object->private_calls++;
+    return object->fault == 5 ? -1 : 0;
+}
 static int native_writer_fixture(void *pointer)
 {
     struct object *object = pointer, *previous = opening;
@@ -91,7 +97,8 @@ static int native_writer_fixture(void *pointer)
     opening = object;
     snprintf(path, sizeof(path), "%s.tmp", object->path);
     file = hearth_storage_open(path, 0x2a, 0666);
-    assert(file && hearth_storage_log_blocked());
+    if (!file) { opening = previous; pthread_mutex_unlock(&object->mutex); return -100; }
+    assert(hearth_storage_log_blocked());
     decoy = hearth_storage_open("/decoy", 0x2a, 0666);
     assert(hearth_storage_write_bytes(decoy, "ignored", 7) == -1);
     if (object->nested) assert(hearth_storage_write(object->nested) == 0);
@@ -135,9 +142,20 @@ int main(void)
 {
     struct object object, other;
     hearth_ops = (struct hearth_storage_ops){native_writer_fixture, filename, dirty, open_file,
-        write_bytes, sync_file, close_file, get, table, add, allocate, free, notice, setter_fixture, entry_key};
+        write_bytes, sync_file, close_file, get, table, add, allocate, free, notice, setter_fixture, entry_key, private_mode};
     assert(!hearth_storage_log_blocked());
     assert(hearth_storage_open(NULL,0x2a,0600)==NULL);
+    initialize(&object, "/state/settings", 5);
+    assert(hearth_storage_write(&object) == -100);
+    assert(object.dirty && !object.renames && !object.file_syncs && object.private_calls == 1 && object.closed == 1);
+    object.fault = 0;
+    assert(hearth_storage_write(&object) == 0 && !object.dirty && object.renames == 1);
+    destroy(&object);
+    initialize(&object, "/state/settings", 0);
+    hearth_ops.private_mode = NULL;
+    assert(hearth_storage_write(&object) == -100 && !object.renames && object.dirty);
+    hearth_ops.private_mode = private_mode;
+    destroy(&object);
     for (int mode = 0; mode <= 4; mode++) {
         initialize(&object, "/state/settings", mode);
         assert(hearth_storage_write(&object) == (mode ? -103 : 0));

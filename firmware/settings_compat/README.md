@@ -48,3 +48,18 @@ other credential log paths, actual permissions, two-key credential transactions,
 serialized-value limits, trusted TLS/time configuration, same-unit restoration and
 physical bench validation. This correction alone cannot establish secure
 commissioning or legacy-library safety. Keep all installed/native originals intact.
+
+## Owner-only settings writes (prepared, unmeasured)
+
+The current source adds a narrow permission correction after the earlier 29-case
+result. The exact temporary file opened within a native writer call requests only
+owner permission bits. After opening, the actual NSPR native handle is restricted
+to 0600 before serialization; this covers a pre-existing permissive temporary
+file. Failure closes it and returns through the original open-error path, with
+dirty-state retry preserved. Other opens and the process umask are unchanged.
+
+Required native-handle and fchmod exports were checked privately. The public NSPR
+handle declaration is pinned in sources.json. The new build needs its own target
+measurement; the older observed build does not validate these additions. The
+extended synthetic RAM diagnostic has 36 cases. No file installer or production
+native application integration is established by this correction.

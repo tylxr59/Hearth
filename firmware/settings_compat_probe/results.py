@@ -12,6 +12,35 @@ ALLOCATIONS = (
     "hash_insertion",
     "aliased_value",
 )
+PERMISSIONS = ("new_temporary", "existing_temporary", "unrelated_open")
+
+
+def permission_expected(variant, case):
+    corrected = variant == "candidate"
+    unrelated = case == "unrelated_open"
+    failed = case == "chmod_failure"
+    mode = (
+        0o666
+        if unrelated
+        else 0o600
+        if corrected
+        else 0o644
+        if case == "existing_temporary"
+        else 0o666
+    )
+    return {
+        "type": "compat_permissions",
+        "variant": variant,
+        "case": case,
+        "first_result": -100 if failed else 0,
+        "mode": mode,
+        "fchmod_calls": int(corrected and not unrelated),
+        "failure_injected": int(failed),
+        "values_ok": True,
+        "retry_result": 0,
+        "retry_mode": mode,
+        "canary_ok": True,
+    }
 
 
 def io_expected(variant, case, lost_mask=1):
@@ -125,13 +154,14 @@ def validate(data):
                 dropped.add(v)
             continue
         clean.append(row)
-    if len(clean) != 34:
+    if len(clean) != 41:
         raise ValueError("comparison matrix incomplete")
     exact(clean[-1], {"type": "compat_complete", "passed": True})
     seen = set()
     helpers = set()
     processes = set()
     allocations = set()
+    permissions = set()
     for row in clean[:-1]:
         if not isinstance(row, dict):
             raise Invalid("comparison row must be an object")
@@ -154,6 +184,13 @@ def validate(data):
                 raise ValueError("unexpected/duplicate allocation case")
             exact(row, allocation_expected(case))
             allocations.add(case)
+        elif kind == "compat_permissions":
+            case = row.get("case")
+            allowed = PERMISSIONS + (("chmod_failure",) if variant == "candidate" else ())
+            if not isinstance(case, str) or case not in allowed or (variant, case) in permissions:
+                raise ValueError("unexpected/duplicate permission case")
+            exact(row, permission_expected(variant, case))
+            permissions.add((variant, case))
         elif kind == "compat_helper":
             if (
                 set(row) != {"type", "variant", "bindings_verified", "suppressed_logs"}
@@ -194,6 +231,8 @@ def validate(data):
     if (
         seen != {(v, c) for v in captured for c in CASES}
         or allocations != set(ALLOCATIONS)
+        or permissions
+        != {(v, c) for v in captured for c in PERMISSIONS} | {("candidate", "chmod_failure")}
         or helpers != set(captured)
         or processes != set(captured)
         or any(captured[v] != 2048 for v in dropped)
@@ -203,6 +242,7 @@ def validate(data):
         "status": "native-storage-correction-matrix-observed",
         "io_cases": 24,
         "allocation_alias_cases": 5,
+        "permission_cases": 7,
         "synthetic_value_logs_removed": True,
         "unrelated_variadic_log_forwarding_verified": True,
         "installed": False,

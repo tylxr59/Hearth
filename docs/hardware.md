@@ -156,3 +156,10 @@ by owner-reported restart completion and independently observed normal USB.
 This supersedes the no-writer-correction-measurement status above. No actual
 settings, flash durability, interrupted power, installed correction, restoration
 or physical HVAC behavior was tested. The base remained detached throughout.
+
+The current settings privacy follow-up is prepared for one separate RAM-only
+measurement, with no flash or physical network support. It extends the previously
+observed 29-case candidate with descriptor permission restriction and seven new
+cases, so the earlier pass cannot validate the new build. See
+[preparation and exact profile](research/settings-permissions-preparation-2026-10-31.md).
+It neither changes actual credentials nor supplies an installer/rollback path.

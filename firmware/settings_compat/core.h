@@ -17,6 +17,7 @@ struct hearth_storage_ops {
     void (*failure)(int);
     int (*set)(void *, const char *, const char *);
     const void *(*entry_key)(const void *);
+    int (*private_mode)(void *);
 };
 extern struct hearth_storage_ops hearth_ops;
 int hearth_storage_write(void *);

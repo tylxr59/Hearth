@@ -8,9 +8,13 @@
     "lib/ds/plhash.h": {
       "url": "https://raw.githubusercontent.com/mozilla/nspr/05ff6a5ce12737114a98ca1043230878100d9f88/lib/ds/plhash.h",
       "sha256": "85758e98a6e3dd9f64e410999728123fb4dd1997ec101490a117edb277b6665a"
+    },
+    "pr/include/private/pprio.h": {
+      "url": "https://raw.githubusercontent.com/mozilla/nspr/05ff6a5ce12737114a98ca1043230878100d9f88/pr/include/private/pprio.h",
+      "sha256": "a24cc17bcbf34e57ee23a727cf7bf5ce3cf8c3148d2129386f6adae4fa268607"
     }
   },
   "repository": "https://github.com/mozilla/nspr",
-  "use": "Public hash API/ownership reference only. Native callbacks and comparator separately inspected; no source/binary correspondence asserted. No third-party implementation copied, compiled or bundled.",
+  "use": "Public hash ownership and native file-handle ABI references. Native callbacks, comparator and required exports separately inspected; no source/binary correspondence asserted. No third-party implementation copied, compiled or bundled.",
   "license": "MPL-2.0 reference files remain under ignored build/."
 }

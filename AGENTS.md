@@ -12,7 +12,7 @@ spare is therefore not mandatory for the recovery investigation. Prepare a concr
 same-unit recovery/installation plan, verify original inputs and partition/write
 semantics, and notify the owner before any persistent write with its recovery
 limits. This does not establish recovery or authorize physical HVAC switching.
-No persistent write has yet been performed.
+Only the later fixed scratch-block experiment has written NAND; no firmware installation has occurred.
 
 Implementation baseline: commit `30c82f5`. It contains an authenticated host-side laboratory, not deployable thermostat firmware:
 
@@ -621,3 +621,26 @@ filesystem commit/rollback, measured TLS candidate assembly and native settings
 permissions/integration. The existing correction still forwards 0666; no new
 permission correction or persistent installer exists. Do not claim these five
 review files are ready to apply or resume general NAND research by default.
+
+
+## Settings privacy follow-up (2026-10-31)
+
+The current original correction now requests owner-only creation bits for its
+exact native settings temporary file and fchmods the actual NSPR-backed file
+handle to 0600 before any serialized write. This also handles existing temporary
+files. Permission failure closes the descriptor, fails through the native open
+path, preserves the destination and leaves retry dirty. Unrelated opens retain
+their requested modes; there is no process-wide umask change. The prior GNU
+29-case measurement validates only the preserved older candidate, not this new
+build. Public native-handle declarations are pinned; required exports were
+checked privately without running firmware on the host.
+
+The synthetic RAM matrix is now 36 cases, adding new/existing temporary files
+with umask zero, unrelated opens and injected fchmod failure/retry. ARM stat64
+mode layout/syscall were checked against the existing pinned kernel header;
+baseline 0600 checks fail if measurement ABI is wrong. Real native application,
+flash, networking and actual credentials are absent. Preserve all executed old
+profiles. Fresh checked profile and validation scope are recorded in
+`docs/research/settings-permissions-preparation-2026-10-31.md`. No loader is
+armed; obtain owner restart readiness before execution, under the existing
+device-investigation authorization. Never reuse an output with a result.

@@ -64,3 +64,11 @@ commit/rollback tooling and native permission/TLS integration remain. Owner chos
 public NIST NTP and existing UniFi IoT access, and will handle trusted-network
 rules after connection. No router change is requested. See
 research/native-commissioning-preparation-2026-10-31.md under docs/.
+
+Settings privacy correction: current source restricts native temporary-file
+creation and the actual opened descriptor to owner-only mode before serialization,
+including pre-existing temporary files. Failure preserves settings and dirty
+retry; unrelated opens/umask are unchanged. The 36-case RAM comparison is prepared
+but unexecuted; the prior 29-case pass applies only to its preserved older build.
+See docs/research/settings-permissions-preparation-2026-10-31.md. File installer/
+rollback and full native startup remain pending after this focused measurement.

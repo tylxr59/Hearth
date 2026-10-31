@@ -70,11 +70,21 @@ int hearth_storage_write(void *object)
 }
 void *hearth_storage_open(const char *path, int flags, int mode)
 {
-    void *fd = hearth_ops.open(path, flags, mode);
-    if (active && path && flags == 0x2a && active->path_size &&
+    int temporary = active && path && flags == 0x2a && active->path_size &&
         strncmp(path, active->path, active->path_size) == 0 &&
-        strcmp(path + active->path_size, ".tmp") == 0)
+        strcmp(path + active->path_size, ".tmp") == 0;
+    void *fd = hearth_ops.open(path, flags, temporary ? mode & 0600 : mode);
+    if (temporary && fd) {
+        /* Creation mode alone does not fix a pre-existing temporary file.
+         * Restrict the actual descriptor before any serialized value is written.
+         * Failure returns through the native open-error path; do not replace. */
+        if (!hearth_ops.private_mode || hearth_ops.private_mode(fd) != 0) {
+            hearth_ops.close(fd);
+            active->failed = 1;
+            return 0;
+        }
         active->descriptor = fd;
+    }
     return fd;
 }
 static struct transaction *owner(void *fd)

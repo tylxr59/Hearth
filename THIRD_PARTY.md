@@ -128,3 +128,9 @@ Its separately sealed RAM kernel uses the same pinned GPL kernel and toolchain.
 The actual adapter I/O functions and supervisor control flow run only against
 original host simulators in tests; no owner firmware is executed or included,
 and no deployable whole-firmware recovery image is implemented.
+
+The settings privacy follow-up additionally references the pinned public NSPR
+private/pprio.h native-handle declaration, without copying its implementation.
+Its required ARM native exports were checked separately. The RAM permission
+measurement uses syscall/layout constants reviewed in the already pinned Linux
+ARM stat header; no third-party stat implementation or firmware runs on the host.

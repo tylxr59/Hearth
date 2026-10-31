@@ -67,6 +67,9 @@ def compile_helpers(output, *, legacy_linker=False):
         "allocation_begin",
         "allocation_end",
         "allocation_snapshot",
+        "permission_begin",
+        "permission_end",
+        "permission_snapshot",
     ]
     for soname, names in (
         ("libc.so.6", symbols),

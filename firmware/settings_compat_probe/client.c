@@ -143,6 +143,68 @@ static int allocation_case(int index)
     if (n<=0 || n>=(int)sizeof(line) || write(1,line,n)!=n) return 0;
     return preserved && restored && guard && first == (index == 4 ? 0 : -2) && injected == (index != 4) && !freed;
 }
+static int file_mode(const char *path)
+{
+    /* ARM EABI stat64: syscall 195, mode at byte 16 in the pinned kernel ABI.
+     * Deliberately avoid the host/glibc stat structure. The kernel writes into
+     * an aligned 128-byte buffer, larger than its 104-byte ARM stat64 result. */
+    unsigned long long buffer[16] = {0};
+    register long r0 __asm__("r0") = (long)path;
+    register long r1 __asm__("r1") = (long)buffer;
+    register long r7 __asm__("r7") = 195;
+    __asm__ volatile ("svc 0" : "+r"(r0) : "r"(r1), "r"(r7) : "memory", "cc");
+    if (r0) return -1;
+    return (((unsigned char *)buffer)[16] | ((unsigned char *)buffer)[17] << 8) & 07777;
+}
+static int permission_case(int index)
+{
+    static const char *const names[] = {"new_temporary", "existing_temporary", "unrelated_open", "chmod_failure"};
+    char directory[96], path[128], temporary[132], line[512];
+    unsigned int *object, previous_mask;
+    void *(*pr_open)(const char *, int, int);
+    int (*pr_close)(void *);
+    void *descriptor;
+    int init, result, retry = 0, calls, injected, mode, retry_mode, guard = 1;
+    int readback, updated, old, values_ok, n, fd;
+    snprintf(directory, sizeof(directory), "/state/%s-permissions-%s", variant, names[index]);
+    snprintf(path, sizeof(path), "%s/settings.xml", directory);
+    snprintf(temporary, sizeof(temporary), "%s.tmp", path);
+    if (mkdir(directory,0700) || !baseline(path) || file_mode(path) != 0600) return 0;
+    object = create(path,&init);
+    if (init) { release(object); return 0; }
+    previous_mask = umask(0);
+    if (index == 1) {
+        fd = open(temporary,1|64|128,0644);
+        if (fd < 0 || close(fd) || file_mode(temporary) != 0644) return 0;
+    }
+    permission_begin(index == 3);
+    if (index == 2) {
+        pr_open = (void *(*)(const char *,int,int))dlsym(0,"PR_Open");
+        pr_close = (int (*)(void *))dlsym(0,"PR_Close");
+        if (!pr_open || !pr_close) return 0;
+        descriptor = pr_open(temporary,0x2a,0666);
+        if (!descriptor || pr_close(descriptor)) return 0;
+        result = 0; mode = file_mode(temporary);
+    } else {
+        if (set(object,keys[0],new_values[0]) || set(object,keys[1],new_values[1])) return 0;
+        result = save(object); mode = file_mode(path);
+    }
+    permission_snapshot(&calls,&injected); permission_end();
+    reload(path,&readback,&updated,&old,&guard);
+    values_ok = readback == 0 && ((index == 2 || index == 3) ? old == 3 : updated == 3);
+    if (index == 3) {
+        retry = save(object);
+        reload(path,&readback,&updated,&old,&guard);
+        values_ok = values_ok && readback == 0 && updated == 3;
+    }
+    retry_mode = file_mode(index == 2 ? temporary : path);
+    umask(previous_mask);
+    guard = release(object) && guard;
+    n = snprintf(line,sizeof(line),
+        "{\"type\":\"compat_permissions\",\"variant\":\"%s\",\"case\":\"%s\",\"first_result\":%d,\"mode\":%d,\"fchmod_calls\":%d,\"failure_injected\":%d,\"values_ok\":%s,\"retry_result\":%d,\"retry_mode\":%d,\"canary_ok\":%s}\n",
+        variant,names[index],result,mode,calls,injected,values_ok?"true":"false",retry,retry_mode,guard?"true":"false");
+    return n>0 && n<(int)sizeof(line) && write(1,line,n)==n && guard && values_ok;
+}
 int main(int argc,char **argv)
 {
     HEARTH_PHASE("helper.main");
@@ -172,6 +234,7 @@ int main(int argc,char **argv)
     HEARTH_PHASE("helper.bindings");
     for (i=0;i<12;i++) if (!run_case(i)) return 113;
     if (suppressed_logs) for (i=0;i<5;i++) if (!allocation_case(i)) return 114;
+    for (i=0;i<(suppressed_logs?4:3);i++) if (!permission_case(i)) return 116;
     logger(4,0,"HEARTH_COMPAT_LOG_PASSTHROUGH %d %s %d %d %d %.1f",17,"probe",23,29,31,1.5);
     n = snprintf(line,sizeof(line),"{\"type\":\"compat_helper\",\"variant\":\"%s\",\"bindings_verified\":true,\"suppressed_logs\":%lu}\n",variant,suppressed_logs?suppressed_logs():0UL);
     return n>0 && n<(int)sizeof(line) && write(1,line,n)==n ? 0 : 115;

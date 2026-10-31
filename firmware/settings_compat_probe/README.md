@@ -88,3 +88,21 @@ container mounts only the fresh helper output, has a read-only root/no network/n
 capabilities, and retains eager binding and RELRO. The exact GNU-linked comparison passed on target; this does not establish which
 ELF difference caused the earlier startup crash. Executed profiles must never
 be reused.
+
+## Prepared permission comparison
+
+Current source extends the old 29-case matrix to **36 cases**. Three permission
+cases run per variant: a fresh temporary file under umask zero, a pre-existing
+0644 temporary file, and an unrelated PR_Open that must retain 0666. Candidate
+also injects a descriptor-permission failure and requires original settings
+preservation plus successful retry. Original fresh/existing modes are expected
+to be 0666/0644; corrected modes must be 0600. This is specific file permission
+behavior on synthetic RAM, not a flash or full application claim.
+
+Mode observation uses ARM EABI stat64 directly, checked against the pinned kernel
+header, and verifies a known baseline file's 0600 mode first. It avoids using a
+host/glibc stat structure on ARM. The parser requires all seven new rows, exact
+mode/call/failure/readback evidence, the existing 29 cases, both child statuses,
+log checks and completion. Older reports are historical and do not satisfy this
+expanded contract. Existing stdout/stderr/report bounds remain unchanged; measured
+old rows plus conservative new-row allowances fit the per-child 8 KiB budget.
