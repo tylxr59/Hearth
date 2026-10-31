@@ -51,8 +51,8 @@ The [TLS RAM experiment](../firmware/tls_probe/README.md) is separately built
 and checked offline. It loads native curl/OpenSSL plus original/candidate hooks
 with synthetic loopback peers, without nlclient/osm, flash support or physical
 networking. RTC drivers and forced hardware-clock update selections are disabled;
-its 2030 clock is a RAM test fixture. The first attempt reported failure before any TLS cases; the corrected launch
-profile still needs a newly owner-timed manual restart. Bootstrap hardware/power behavior remains unverified; keep the
+its 2030 clock is a RAM test fixture. The first attempt reported failure before any TLS cases; the corrected second run
+completed all 18 expected cases and returned to native startup. Bootstrap hardware/power behavior remains unverified; keep the
 display detached from the unwired base. This diagnostic does not waive any
 persistent-write, recovery or HVAC gate below.
 

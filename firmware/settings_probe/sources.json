@@ -1,0 +1,16 @@
+{
+  "repository": "https://github.com/mozilla/nspr",
+  "revision": "05ff6a5ce12737114a98ca1043230878100d9f88",
+  "files": {
+    "pr/include/prio.h": {
+      "sha256": "a2cda60ba2da73164272d61d18114449e5bfb344477bbb58dbaac046ff838cc6",
+      "url": "https://raw.githubusercontent.com/mozilla/nspr/05ff6a5ce12737114a98ca1043230878100d9f88/pr/include/prio.h"
+    },
+    "pr/include/prerr.h": {
+      "sha256": "2f11f76156962116e40490409d2c72a3ef41030e4d7c2cb9cc1b88e104b62916",
+      "url": "https://raw.githubusercontent.com/mozilla/nspr/05ff6a5ce12737114a98ca1043230878100d9f88/pr/include/prerr.h"
+    }
+  },
+  "use": "Public PR_Open/Write/Sync/Close/SetError ABI and PR_IO_ERROR constant only; no source copied or executed. Not proof of source/binary correspondence for recovered NSPR.",
+  "license": "MPL-2.0 in reference headers; not vendored or redistributed."
+}

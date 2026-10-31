@@ -110,3 +110,38 @@ its actual initializer were reviewed separately. No decompiled firmware was run.
 Next: finish native entry/revision/subscription mapping and design the storage
 failure/commissioning tests. Credential installation, native transport compatibility,
 target TLS, restoration and HVAC behavior remain unverified.
+
+## Offline follow-up and prepared fault experiment
+
+The separate [settings RAM diagnostic](../../firmware/settings_probe/README.md)
+is now prepared and integrity-checked, but **unexecuted**. It reuses the successful
+TLS kernel/bootstrap and unchanged baseline libraries, adds synthetic `/state`
+files, and calls only the reviewed native base settings class. One boot measures
+twelve normal/error cases plus fresh-object readback and dirty-state retry.
+It does not mount flash, load original settings, start nlclient or fix the writer.
+The owner is offline; no loader is armed. Host instrumentation checks do not count
+as native writer measurements.
+
+Six exported method addresses/extents, constructor dirty/writable initialization,
+48-byte allocation, getter/setter return paths and non-deleting destructor were
+checked offline. The setter returns zero on its normal successful path. This ABI
+review narrows the harness; it does not make its eventual execution observational
+or establish storage durability. The custom kernel's RAM filesystem uses no-op
+sync operations; injected failures measure application response, not real flash
+or power-loss behavior.
+
+A further ARM/Ghidra review of `nlConfig::AddEntry` finds another value-bearing
+allocation-error log, beyond the credential-change and entry-write messages
+already traced. On an existing-value update, the old value is freed before a new
+copy is allocated. If that allocation fails, the reviewed error path returns
+without replacing the hash entry. This suggests a dangling-value hazard and
+requires a separate focused allocation-failure review/test; no such failure has
+been induced and no native code was patched. The current I/O diagnostic does
+not inject allocator failures. Three complete Ghidra exports and independent ARM
+disassembly remain private. An initial export invocation lacked the required
+existing output directory; it was not counted as a successful review, and the
+corrected run's completion marker and outputs were checked.
+
+The earlier logging-removal candidate still addresses only its one client log
+block. Do not commission actual credentials on the basis of silencing that log,
+disabling the known uploader or receiving a successful loopback TLS matrix.

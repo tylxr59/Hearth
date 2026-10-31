@@ -141,7 +141,22 @@ kernel/helpers remain in build/native-tls-lab-20261030/; the kernel/bootstrap by
 were unchanged. The preparation baseline is 50 probe tests, 239 host tests passed,
 two optional integrations skipped and make check passed. No ARM firmware ran on
 the host; the independent permission regression uses trusted host true/ld copies.
-Next: continue offline settings persistence/fault-path and native protocol work.
+A separate original twelve-case settings RAM diagnostic is now prepared under
+firmware/settings_probe/. It uses the same kernel/bootstrap and 34 unchanged
+base libraries, only the reviewed native settings base class, fixed one-shot I/O
+faults and synthetic /state files. No real settings, TLS candidate, keys, clock
+change, network setup or nlclient/osm. Six exact ABI exports plus constructor
+flags are checked; opaque object size is 48 with a tail canary. Host sanitizer
+checks exercise original interposition against an original fake NSPR, not firmware.
+Private unexecuted profile: private/native-settings-probe-20261030/profile-prepared;
+helpers: build/native-settings-lab-20261030/helpers-reviewed. Offline wrapper:
+sh firmware/settings_probe/boot.sh PRIVATE_PROFILE. Explicit future execution flag:
+--execute-experimental-settings-probe (PTY, owner-timed restart, no automatic retry).
+Never run it while the owner is unavailable. The owner went to bed after confirming
+TLS native return and asked for independent offline progress. Leave native startup;
+no loader is armed. See the settings probe README for gates and measurement meaning.
+Next: finish independent host work and native protocol/storage review while the
+prepared settings target measurement waits for the owner.
 Prepare any new bounded RAM test completely before another owner-timed restart;
 no automatic device retry. Existing TLS measurement does not close the native
 settings error/rollback, backup/restoration, full fetch/transport or HVAC gates.

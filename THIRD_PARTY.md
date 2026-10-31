@@ -68,6 +68,15 @@ Version-matched public curl/glibc API/startup references are pinned in
 ignored build/ and not vendored. Recovered libraries, the private review candidate,
 synthetic private keys and the prepared image stay private and are not redistributed.
 
+The separate original firmware/settings_probe/ diagnostic reuses those validated
+private kernel/bootstrap and unchanged native-library inputs, without carrying
+forward the TLS candidate or keys. It invokes only the reviewed base settings
+class on synthetic RAM files. Original interposition, ABI checks and host test
+doubles are MIT. Public NSPR declarations/constants are separately pinned in
+firmware/settings_probe/sources.json; MPL-2.0 reference headers remain under
+ignored build/ and are neither copied into source nor redistributed. This is not
+a source/binary-correspondence claim for the recovered native NSPR library.
+
 ## Runtime dependencies
 
 Full versions and package metadata: [python-dependencies.json](docs/security/python-dependencies.json). Hash-locked distributions: requirements.lock. Runtime directly uses aiohttp (Apache-2.0 AND MIT) and paho-mqtt (EPL-2.0 OR BSD-3-Clause per distribution metadata; retain notices when distributing). Transitives include aiohappyeyeballs (PSF-2.0), aiosignal/frozenlist/multidict/propcache/yarl (Apache-2.0), attrs (MIT) idna (BSD-3-Clause) and conditional typing_extensions (PSF-2.0); see each distribution's license files for authoritative terms. Metadata inventory is not a substitute for retaining the installed licenses. No dependencies are vendored.

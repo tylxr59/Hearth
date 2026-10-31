@@ -1,0 +1,34 @@
+{
+  "date": "2026-10-30",
+  "scope": "Prepared original native settings RAM experiment; no target execution",
+  "host_results": {
+    "make_check": "passed",
+    "pytest_passed": 266,
+    "optional_broker_container_skipped": 2,
+    "settings_tests": 27,
+    "original_arm_helpers_cross_compiled": true,
+    "proprietary_code_executed_on_host": false,
+    "original_fault_instrumentation_asan_ubsan": "passed",
+    "reviewed_native_abi_exports": 6,
+    "complete_new_private_ghidra_exports": 3
+  },
+  "prepared_profile": {
+    "cases": 12,
+    "baseline_libraries": 34,
+    "rootfs_bytes": 10998520,
+    "image_bytes": 6009749,
+    "artifact_reproducibility": "seven artifacts matched in independent fresh outputs using identical inputs/helpers",
+    "wrapper_dry_run": "offline checks only; no device opened",
+    "private_permissions": "checked"
+  },
+  "device_executed": false,
+  "native_writer_fixed": false,
+  "actual_settings_or_credentials_used": false,
+  "persistent_modification_performed": false,
+  "native_writer_runtime_verified": false,
+  "flash_durability_or_power_loss_tested": false,
+  "whole_boot_chain_write_free": "unverified",
+  "restoration_verified": false,
+  "hvac_verified": false,
+  "next": "Owner-timed supervised RAM test when available; leave native startup and do independent offline work meanwhile."
+}
