@@ -15,6 +15,13 @@ queries/setters, but startup/enablement is unproven and its short-read-based TCP
 request framing is not established as safe. No runtime setter or usable local
 bridge is verified. This narrows the critical unknown; it does not close it.
 
+The [follow-up Ghidra/TLS review](../research/native-tls-2026-10-30.md)
+supports dormant test-access startup and identifies native callback exceptions
+for future-dated certificates and selected CRL failures. The host transport stays
+provisional; CA replacement alone is insufficient. A private, uninstalled
+single-instruction default-callback candidate is statically reviewed, with target
+TLS/time/CRL and restoration/commissioning validation still required.
+
 ## Decision
 
 Preserve nlclient, backplate firmware, drivers, watchdog, SCPM, schedules and unknown services. Build a small host-side authenticated API and MQTT boundary with a partial legacy decoder for research. Choose a provisional local cloud-protocol backend because it has demonstrated upstream protocol evidence; retain the identified test-access path as a bridge candidate pending enablement, framing and separately authorized bench evidence. Do not deploy a guessed IPC bridge or a permissive legacy backend.

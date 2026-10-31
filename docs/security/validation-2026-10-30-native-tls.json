@@ -1,0 +1,47 @@
+{
+  "date": "2026-10-30",
+  "host_validation": {
+    "candidate_tls_review": "hook decompiled to peer verify plus NULL callback",
+    "ghidra": "12.1.2 DEV headless, installed Java 27",
+    "native_client_review": "seven functions; no timeout/errors",
+    "new_python_runtime_changes": false,
+    "original_tls_review": "two functions decompiled",
+    "prior_full_suite": 173,
+    "public_output_negative_check": "refused; zero files created",
+    "public_script_integration": "two TLS functions exported privately",
+    "source_release_check": "new helper/docs included; private and build artifacts excluded (129 source files)",
+    "static_checks": "passed",
+    "targeted_elf_artifact_tests_passed": 23
+  },
+  "native_findings": {
+    "cert_expiry_error_10_overridden": false,
+    "cleanup_positive_control_calls": 1,
+    "emudhra_path_established": false,
+    "recovered_anchor_family": "Nest; self-issued",
+    "recovered_trust_anchor_count": 1,
+    "testaccess_initializer_incoming_refs": 0,
+    "testaccess_thread_entry_incoming_refs": 0,
+    "tls_error_overrides": [
+      3,
+      9,
+      11,
+      12
+    ]
+  },
+  "not_demonstrated": [
+    "effective runtime configuration/trust store",
+    "native target wrong CA/hostname/time/CRL behavior",
+    "testaccess reachability",
+    "credential bootstrap/transport commissioning",
+    "recovery/HVAC/power safety"
+  ],
+  "privacy": "No proprietary binaries, decompiled code, private hashes, credentials or device identifiers included.",
+  "private_candidate": {
+    "device_modified": false,
+    "instruction_words_replaced": 1,
+    "original_preserved": true,
+    "restoration_verified": false,
+    "runtime_tls_verified": false
+  },
+  "scope": "Offline Ghidra startup/TLS review and private remediation candidate"
+}

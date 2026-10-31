@@ -78,8 +78,20 @@ reachability and robust request framing are unverified. No device command was
 sent. The bounded `tools.elf_review` reproduces private table inspection without
 executing firmware; 20 new tests pass. See docs/research/native-interface-2026-10-30.md.
 The ADR retains the provisional host transport; no production bridge is enabled.
-Next: inspect actual credential/TLS/transport configuration and resolve candidate
-listener startup/framing through static review before planning any live probe.
+Ghidra 12.1.2 headless analysis (installed Java 27) supports dormant test-access
+code: no incoming initializer/thread-entry refs, with a positive cleanup-call
+control. The recovered CA bundle resolves through a metadata-only symlink to
+/etc/ssl/certs and contains one self-issued Nest anchor; the eMudhra compromise
+is not an evidenced shortcut for that trust store.
+The native OpenSSL 1.0.2h/libcurl 7.49.1 path overrides certificate-not-yet-valid
+and selected CRL failures. A private one-instruction offline review copy now
+selects the default OpenSSL callback, independently checked by LLVM/Ghidra; it
+is uninstalled and unvalidated on target. Originals remain unchanged. No binary
+patch/library/hash was put in source. See docs/research/native-tls-2026-10-30.md.
+The original tools/ghidra/HearthStaticReview.java exports only below private/
+and was integration-tested, including refusal of a public output directory.
+Next: inspect credential/bootstrap persistence and native transport semantics,
+then prepare target TLS/commissioning validation subject to recovery gates.
 Keep private identifiers, credentials, bytes and binary hashes out of source/logs.
 Machine-local offline scripts are `build/{infer-private-bch4-layout,decode-private-bch4,extract-private-jffs2}-20261030.py`;
 the public BCH source is pinned in docs/research/bchlib-2.1.3.json. These scripts

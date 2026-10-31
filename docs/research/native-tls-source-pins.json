@@ -1,0 +1,13 @@
+{
+  "curl-url.c": {
+    "revision": "curl-7_49_1",
+    "sha256": "77554109d77c7ec9d1decf27e9046d30977800b6977262ba1403b8bf2e025748",
+    "url": "https://raw.githubusercontent.com/curl/curl/curl-7_49_1/lib/url.c"
+  },
+  "openssl-x509_vfy.h": {
+    "revision": "OpenSSL_1_0_2h",
+    "sha256": "82499638c61644234e576934291c6ab12818a18382ddd5edf2e211491ff0f1b5",
+    "url": "https://raw.githubusercontent.com/openssl/openssl/OpenSSL_1_0_2h/crypto/x509/x509_vfy.h"
+  },
+  "purpose": "Public source references for native version-matched TLS option defaults and error constants; not vendored or executed."
+}

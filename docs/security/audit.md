@@ -38,3 +38,14 @@ The router nft fragment could not be checked by the host nft tool because its ne
 ## Remaining risks and release gates
 
 Physical Nest compatibility, TLS bootstrap, complete transport/power behavior, native HVAC protections and recovery are unverified. The current partial firmware replacements are not a complete service audit or bootable firmware. No on-device isolation is enforced. Actual HAOS/Supervisor and aarch64 runtime validation are pending. Source/inert bundles reproduce; container image byte identity and binary provenance do not. Credential provisioning is not transactional across registry/export files. Manager roles and client/resource limits are intentionally minimal for the isolated laboratory. Retained MQTT state/HA history need owner-managed retention. These are explicit limitations, not waived security requirements for a release.
+
+## Native TLS static review, 2026-10-30
+
+The [native TLS review](../research/native-tls-2026-10-30.md) found error overrides
+for a not-yet-valid certificate and selected CRL failures. A private offline
+default-callback candidate is statically checked, not installed or target tested.
+The recovered trust bundle contains one Nest anchor; no eMudhra trust path was
+established. Recovery, clock/bootstrap, hostname/CA/time and CRL target tests
+remain required. The public Ghidra helper exports only into private storage; its
+actual integration and public-output-refusal checks passed. No native binary
+was executed and no proprietary library/patch output was published.

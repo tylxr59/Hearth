@@ -50,6 +50,13 @@ BCH C code was compiled on the host; no Python package was installed and no
 proprietary firmware was executed. The source/library remains under ignored
 build/, is not vendored or redistributed, and is not a product runtime dependency.
 
+The optional static-review workflow uses the owner's installed Ghidra 12.1.2 DEV
+and Java 27. Only original `tools/ghidra/HearthStaticReview.java` is included;
+Ghidra, its projects and proprietary decompilations are not bundled. Public
+OpenSSL 1.0.2h/curl 7.49.1 reference files are pinned in
+[the native TLS source record](docs/research/native-tls-source-pins.json), retained
+under ignored build/, and neither vendored nor executed as target firmware.
+
 ## Runtime dependencies
 
 Full versions and package metadata: [python-dependencies.json](docs/security/python-dependencies.json). Hash-locked distributions: requirements.lock. Runtime directly uses aiohttp (Apache-2.0 AND MIT) and paho-mqtt (EPL-2.0 OR BSD-3-Clause per distribution metadata; retain notices when distributing). Transitives include aiohappyeyeballs (PSF-2.0), aiosignal/frozenlist/multidict/propcache/yarl (Apache-2.0), attrs (MIT) idna (BSD-3-Clause) and conditional typing_extensions (PSF-2.0); see each distribution's license files for authoritative terms. Metadata inventory is not a substitute for retaining the installed licenses. No dependencies are vendored.
