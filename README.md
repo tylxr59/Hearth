@@ -2,7 +2,7 @@
 
 A local-first laboratory for Nest Learning Thermostat Gen 2, with Gen 1 as a secondary research target. Preserve Nest's hardware control; replace remote services only where behavior is understood.
 
-**Status: functional host-side prototype, not deployable thermostat firmware.** A physical unit has received [read-only USB identity intake](docs/research/device-intake-2026-10-30.md) and one [successful fixed scratch-block write/ECC/erase/restoration test](docs/research/scratch-result-2026-10-31.md), followed by native USB return. Whole-firmware recovery, installation and HVAC remain unverified. The complete Nest pairing/subscribe protocol and device credential/TLS installation are unresolved. Do not connect this prototype to live HVAC equipment. This iteration does not meet the physical firmware compatibility portion of the definition of done.
+**Status: experimental same-unit installation, not a supported thermostat release.** The first [nine-file persistent install](docs/research/file-install-result-2026-10-31.md) passed exact read-only verification and returned to native USB startup. Live native networking, complete protocol/control, restoration, power-loss recovery and HVAC remain unverified. The local HAOS backend runs in telemetry-only mode, with commands disabled. Do not connect this prototype to live HVAC equipment. This iteration does not meet the physical firmware compatibility portion of the definition of done.
 
 An authorized restart exposed OMAP ROM mode on the unit reporting `Display-2.6` /
 `5.9.4-5`. A separate [experimental RAM heartbeat probe](firmware/probe/README.md)

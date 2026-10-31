@@ -173,3 +173,11 @@ native boot. It rejects decisions/writes, uncertain results, wrong captures,
 broken custody, native or stale ROM. Full host suite774/five skips; new v3 pair
 checked/reproduced. Next owner-timed RAM handoff, then separate first-write notice
 if real-file preflight passes. No persistent installation or physical transport.
+
+Observed: c4dc064/install-v3 first persistent nine-file install PASSED after
+owner-confirmed commit: all56 selftests, real-file preflight, all9 committed,
+exact post-unmount RO readback, sealed WP,94 page programs/no failures; native
+USB return independently observed. No restore test/erase/OOB/power-loss/HVAC
+claim. Backend credential matches installed settings; telemetry-only mode still
+rejects commands. First battery/unwired-base Wi-Fi setup/physical telemetry is
+pending. Never rerun install-v3. See docs/research/file-install-result-2026-10-31.md.

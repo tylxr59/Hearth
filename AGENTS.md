@@ -4,7 +4,7 @@
 
 Build a local-first Nest Learning Thermostat modification that preserves native hardware/HVAC control. Gen 2 is the primary target; Gen 1 is secondary. Prefer a verified local on-device interface if feasible; otherwise retain the native transport behind a minimal local backend. Do not rewrite HVAC control loops.
 
-The user's unit has arrived and received USB intake on their PC. Arrival/ownership alone does not authorize flashing or physical control. The owner has explicitly authorized device investigation and requests advance notification for potentially dangerous actions such as flashing; preserve the backup/recovery gates below. The [2026-10-30 intake](docs/research/device-intake-2026-10-30.md) records enclosure `02A`, reported `Display-2.6`, firmware `5.9.4-5`, normal-mode USB `2464:0002` and an authorized manual restart briefly exposing OMAP `0451:d00e`. A later paced diagnostic RAM boot succeeded and returned to native startup. One supervised fixed scratch-block program/ECC/erase/restoration test subsequently passed with native USB return; no firmware installation, HVAC operation or whole-firmware recovery has been tested. Two complete owner raw NAND captures and independently matching BCH-derived data views now exist privately; native nlclient/osm were reconstructed for static inspection. Programmed firmware-block and whole-chip restoration remain unverified.
+The user's unit has arrived and received USB intake on their PC. Arrival/ownership alone does not authorize flashing or physical control. The owner has explicitly authorized device investigation and requests advance notification for potentially dangerous actions such as flashing; preserve the backup/recovery gates below. The [2026-10-30 intake](docs/research/device-intake-2026-10-30.md) records enclosure `02A`, reported `Display-2.6`, firmware `5.9.4-5`, normal-mode USB `2464:0002` and an authorized manual restart briefly exposing OMAP `0451:d00e`. A later paced diagnostic RAM boot succeeded and returned to native startup. One supervised fixed scratch-block program/ECC/erase/restoration test subsequently passed with native USB return; the later nine-file commissioning is recorded below. HVAC operation and whole-firmware recovery remain untested. Two complete owner raw NAND captures and independently matching BCH-derived data views now exist privately; native nlclient/osm were reconstructed for static inspection. Programmed firmware-block and whole-chip restoration remain unverified.
 
 On 2026-10-31 the owner confirmed this is their only unit and explicitly accepted
 potentially dangerous same-unit work after asking why a spare was required. A
@@ -12,7 +12,9 @@ spare is therefore not mandatory for the recovery investigation. Prepare a concr
 same-unit recovery/installation plan, verify original inputs and partition/write
 semantics, and notify the owner before any persistent write with its recovery
 limits. This does not establish recovery or authorize physical HVAC switching.
-Only the later fixed scratch-block experiment has written NAND; no firmware installation has occurred.
+The scratch-block experiment and the later owner-confirmed nine-file commissioning
+have written NAND. The latter passed exact readback/native USB return; see the
+CURRENT installation entry below. Actual restoration/HVAC remain unverified.
 
 Implementation baseline: commit `30c82f5`. It contains an authenticated host-side laboratory, not deployable thermostat firmware:
 
@@ -1027,3 +1029,39 @@ private/file-writer-20261031/install-v3 private/file-writer-20261031/restore-v3
 private/file-writer-20261031/preflight-attempt-3 --execute-writer-preflight
 --handoff-from private/file-writer-20261031/preflight-attempt-2.
 No persistent commit is part of that readiness request.
+
+## CURRENT: first nine-file installation passed; Wi-Fi bench pending
+
+Source c4dc064/install-v3 ran once via the explicit verified snapshot handoff from
+attempt2. All56 ARM cases and real-file read-only preflight passed. Host paused;
+owner received concrete scope/power-loss/native-startup/recovery limits and
+explicitly replied Ready—run the install. Separate persistent commit rechecked
+exact capsule/backup/restore/image, durably recorded intent, then sent once.
+The full strict result passes: attempted511, committed1, both RW remounts,
+no transaction/journal/cleanup/release/unmount/seal errors, exact post-unmount
+read-only verification, gate sealed/WP asserted, safe restart. Actual94 page
+programs, zero erase/OOB operations/failures. Source original bytes remain private.
+
+Owner restart done; normal USB independently observed and private native-return
+saved. Never rerun install-v3; no restore image executed. Preserve all attempt3
+creation/execution/selftests/preflight/decisions/result/review/native-return.
+**Device now has the local endpoint/CA/CRL/credentials/NTP/settings shim/startup
+wrapper installed. Do not treat it as stock or restore initial backend registry.**
+
+First Wi-Fi bench: backend is enrolled and telemetry-only, commands disabled.
+Owner was asked to detach USB, fit completely unwired base and use normal Wi-Fi
+setup on the dedicated IoT SSID, entering password only on the thermostat.
+Read-only host watch runs as session81437, private output
+native-deployment-20261031/native-wifi-bench-20261031-attempt-1-corrected-watch.
+It polls manager status, prints only availability/state field names, sends no
+commands. The earlier watch used an incorrect `online` field; stopped and
+replaced with actual Core.view `available`. Its saved raw private status remains
+valid evidence; its printed online flag is not availability proof.
+User's screen/Wi-Fi result and physical telemetry are pending. No loader armed.
+
+Actual restoration, hardware power loss/whole-firmware recovery, erase/OOB paths
+in this writer, native app/TLS/time/transport and HVAC remain unverified. Native
+startup can rewrite settings: old exact-byte restore preflight may refuse later
+changed app data. Preserve fresh read-only evidence/review recovery; do not bypass
+its checks. See docs/research/file-install-result-2026-10-31.md. Host774/five skips,
+make check passed before documentation-only result updates.

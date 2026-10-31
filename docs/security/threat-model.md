@@ -24,3 +24,11 @@ no-logging guarantees do not cover that firmware. Offline replacements prepare
 the reviewed upload flag disabled, while existing logs, stderr/crash paths,
 settings-write failures and other outbound services remain unresolved. No real
 credential should be commissioned until these paths and restoration are validated.
+
+Same-unit development exception, 2026-10-31: after explicit owner acceptance of
+recovery limits, a dedicated private credential and local trust/endpoint were
+installed through the exact-plan write gate and verified read-only. Backend
+credential-update headers and commands remain disabled; the tested settings shim
+and uploadlogs=0 mitigation are installed. Other native log paths, actual
+restoration, live TLS/time bootstrap and physical control remain unresolved.
+See the dated first-install measurement; this is not a production security claim.

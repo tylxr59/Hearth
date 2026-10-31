@@ -179,3 +179,10 @@ An uncertain persistent result requires USB power retained, base detached and
 evidence review before restart. A matching restore image can enter from the
 reviewed failed RAM session, without booting partial native files. This is not
 verified whole-firmware, damaged-filesystem or hardware power-loss recovery.
+
+The [first nine-file persistent installation](research/file-install-result-2026-10-31.md)
+subsequently passed with owner-timed commit, exact post-unmount readback, sealed
+hardware WP and native USB return. It performed94 page programs and no erases/OOB
+writes. Restoration/power loss/native networking/HVAC remain separate unverified
+gates. The first unwired-base battery/Wi-Fi bench is pending, with no external
+HVAC power/load and backend command delivery disabled.

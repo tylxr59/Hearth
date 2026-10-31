@@ -120,3 +120,10 @@ synthetic selftest unprivileged. Images exclude shells, link stubs and native
 applications. CRC framing is transport integrity, not USB peer authentication.
 Host selftests and simulated rollback do not establish JFFS2 installation,
 power-loss/whole-firmware restoration or actual native TLS/time bootstrap.
+
+The subsequent [first persistent install](../research/file-install-result-2026-10-31.md)
+passed actual selected-file readback and native USB return after an explicit
+owner-confirmed commit. This supersedes only the no-installation status above.
+Native network/TLS/time, application integration, actual restoration and hardware
+power loss remain unverified. Credential installation alone does not close other
+native log paths; backend credential-update headers remain disabled.
