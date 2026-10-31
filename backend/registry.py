@@ -45,6 +45,7 @@ class Registry:
         if self.path.is_symlink() or not self.path.is_file() or self.path.stat().st_mode & 0o077:
             raise Invalid("registry must be a private regular file")
         self.data = json.loads(self.path.read_text())
+        self.revoked_devices()  # reject invalid cleanup topic identities before connecting
 
     @classmethod
     def initialize(cls, path, admin_file):
@@ -81,11 +82,24 @@ class Registry:
             for other, record in self.data["devices"].items()
         ):
             raise Invalid("credentials must be unique and role-specific")
+        removed = self.revoked_devices() - {ident}
         self.data["devices"][ident] = {"hash": digest(token), "capabilities": caps}
+        self.data["revoked"] = sorted(removed)
         self.save()
 
+    def revoked_devices(self):
+        values = self.data.get("revoked", [])  # compatible with earlier registries
+        if not isinstance(values, list):
+            raise Invalid("revoked device identities must be a list")
+        return {serial(ident) for ident in values}
+
     def revoke(self, ident):
+        serial(ident)
+        removed = self.revoked_devices() | {ident}
         self.data["devices"].pop(ident, None)
+        # Persist identifiers with the revocation, never old credentials or state.
+        # Keep them so every future broker connection can repeat idempotent cleanup.
+        self.data["revoked"] = sorted(removed)
         self.save()
 
     def save(self):

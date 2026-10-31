@@ -86,7 +86,7 @@ is not an evidenced shortcut for that trust store.
 The native OpenSSL 1.0.2h/libcurl 7.49.1 path overrides certificate-not-yet-valid
 and selected CRL failures. A private one-instruction offline review copy now
 selects the default OpenSSL callback, independently checked by LLVM/Ghidra; it
-is uninstalled and unvalidated on target. Originals remain unchanged. No binary
+remains uninstalled; the later bounded target measurement is recorded below. Originals remain unchanged. No binary
 patch/library/hash was put in source. See docs/research/native-tls-2026-10-30.md.
 The original tools/ghidra/HearthStaticReview.java exports only below private/
 and was integration-tested, including refusal of a public output directory.
@@ -173,8 +173,21 @@ Owner confirmed native home icon and read-only preflight confirmed normal USB.
 Preserve both attempts and private/native-settings-probe-20261031/attempt-2.json.
 No further mode switch is needed now; no loader is armed. See
 docs/research/settings-probe-result-2026-10-31.md, the first-attempt record and README.
-Next: finish independent host work and native protocol/storage review while the
-prepared settings target measurement waits for the owner.
+Next: design/test a narrowly scoped settings error/log correction against the
+observed matrix, continue native entry/CAS/subscription mapping and establish
+recovery before any persistent modification. No new device action is prepared.
+Independent host progress now closes retained MQTT cleanup across offline
+revocation/backend restart: the optional registry revoked list retains validated
+identifiers only, saved with credential removal. Every broker connection repeats
+offline availability and discovery/state deletion; queue failures retry, and
+explicit re-enrollment cancels cleanup. Active identities are always excluded.
+Identifiers remain privately after cleanup so stale broker restores can be removed
+on reconnect. Legacy already-forgotten orphans need explicit revoke/manual cleanup.
+Thirteen new unit checks and one real TLS-broker test cover two fresh backend
+instances and fresh subscriber verification. Updated image built with rootless
+Podman; full 284 tests passed with broker/container integrations enabled; make
+check and runtime/build lockfile audits passed. No HAOS UI/aarch64/firmware or
+HVAC claim. See docs/security/validation-2026-10-31-mqtt-cleanup.json.
 Prepare any new bounded RAM test completely before another owner-timed restart;
 no automatic device retry. Existing TLS measurement does not close the native
 settings error/rollback, backup/restoration, full fetch/transport or HVAC gates.
@@ -254,7 +267,7 @@ These tests use simulated devices and loopback container services, not USB or HV
 6. **Implement a model/revision-specific commissioning path.** Add verified backup/recovery, transactional provisioning, complete startup/service hardening and post-install verification. Existing offline replacements cover only understood files and are not a complete lockdown. Verify available firewall tools/kernel features and external isolation. Keep deployment disabled until these gates are met.
 7. **Validate separately authorized bench operation.** Use the hardware plan's dummy-load, power/sleep, offline regulation, schedule, restart, protection and outage matrix. Physical HVAC switching requires explicit authorization and appropriate equipment. Validate actual HAOS MQTT entities/install/upgrade separately. Promote support only for the configurations actually measured.
 
-Progress on independent host work while hardware investigation is blocked. Useful remaining work includes transactional credential/export recovery, retained MQTT cleanup after offline revocation across backend restarts, real HAOS installation, aarch64 validation and container/firmware supply-chain analysis. Keep the small working prototype intact; avoid adding speculative APIs or capabilities.
+Progress on independent host work while hardware investigation is blocked. Useful remaining work includes transactional credential/export recovery, real HAOS installation, aarch64 validation and container/firmware supply-chain analysis. Keep the small working prototype intact; avoid adding speculative APIs or capabilities.
 
 ## Non-negotiable operating boundaries
 

@@ -1,0 +1,38 @@
+{
+  "date": "2026-10-31",
+  "scope": "Durable retained MQTT cleanup across offline revocation and backend restart",
+  "environment": {
+    "container_engine": "rootless Podman",
+    "device_access_in_host_tests": false,
+    "network_bind": "loopback TLS services only"
+  },
+  "results": {
+    "image_build": "passed",
+    "make_check": "passed",
+    "full_pytest_with_broker_and_container_integrations": "284 passed, zero skipped",
+    "new_unit_cases": 13,
+    "new_real_broker_test": "passed",
+    "independent_backend_instances_in_new_test": 2,
+    "fresh_retained_subscriber_checks": "stale discovery/state absent, active device preserved, revoked availability offline",
+    "revoked_command_accepted": false,
+    "runtime_lock_audit": "no known vulnerabilities found",
+    "build_backend_lock_audit": "no known vulnerabilities found"
+  },
+  "behavior": {
+    "older_registry_without_field_supported": true,
+    "revoked_identifiers_persist": true,
+    "revoked_credentials_or_telemetry_retained": false,
+    "cleanup_replayed_after_reconnect": true,
+    "publish_queue_failure_retried": true,
+    "active_reenrollment_protected": true,
+    "already_forgotten_legacy_orphans_auto_recovered": false
+  },
+  "limits": [
+    "Broker connectivity and correct ACLs required; queue acceptance is not broker confirmation",
+    "Revoked identifiers remain in private registry for future reconnect cleanup",
+    "Offline CLI changes require backend shutdown/restart",
+    "HA recorder/history and backups are outside retained-topic cleanup",
+    "Actual HAOS UI, aarch64, production broker, native transport, restoration and HVAC not validated",
+    "Python lockfile audits do not cover container OS or legacy firmware"
+  ]
+}

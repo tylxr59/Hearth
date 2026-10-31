@@ -4,7 +4,7 @@ Release-blocking:
 
 - Identity intake and authorized ROM enumeration complete: enclosure `02A`, reported `Display-2.6`, firmware `5.9.4-5`, normal USB `2464:0002`, brief OMAP `0451:d00e` during restart; see docs/research/device-intake-2026-10-30.md. Obtain base/board identity and reviewed Gen 2 firmware acquisition/MTD/boot/recovery evidence. A later diagnostic RAM heartbeat boot succeeded; no firmware was acquired. Actual nlclient/osm now exist privately after full raw capture and offline ECC/JFFS2 reconstruction; static inspection of their usable interfaces remains next.
 - Native static review traced D-Bus methods to power/sniffer/heartbeat and identified a loopback test-access temperature getter/setter candidate. Ghidra supports dormant startup (zero initializer/thread refs); units and TCP framing also remain unverified. No activation patch or production bridge. ADR remains provisional; no bridge is enabled. See docs/research/native-interface-2026-10-30.md.
-- Native TLS review found overrides for not-yet-valid certificates and selected CRL failures. The private default-callback candidate is now measured in the 18-case device-loopback harness but remains uninstalled; require exact-profile review, fresh owner CA/CRL, trusted time and wrong-CA/hostname/time target tests. Unique stock-client credential/bootstrap installation and rollback remain open. No plaintext production fallback. See docs/research/native-tls-2026-10-30.md.
+- Native TLS review found overrides for not-yet-valid certificates and selected CRL failures. The private default-callback candidate is now measured in the 18-case device-loopback harness but remains uninstalled; require full native fetch/effective-trust configuration, fresh owner CA/CRL and trusted operational-time bootstrap tests. Unique stock-client credential/bootstrap installation and rollback remain open. No plaintext production fallback. See docs/research/native-tls-2026-10-30.md.
 - Native bootstrap review confirms assigned-setting reads, response-header rotation and assigned-to-default fallback on 401. The update helper logs new credentials; a private logging-removal candidate is statically checked but uninstalled. Storage follow-up finds entry-write failures that log key/value without reaching the outer writer result, plus dirty clearing after directory-sync failure. The earlier client candidate does not fix these library paths. Offline staging now disables the traced uploadlogs sender; storage fault propagation/retry and a complete log/outbound audit remain commissioning blockers. See docs/research/native-storage-2026-10-30.md. Host regressions reject native-looking/default claims and inbound-header rotation. See docs/research/native-bootstrap-2026-10-30.md.
 - Second supervised TLS RAM run completed all 18 expected cases with native curl/OpenSSL and original/candidate hooks. Candidate accepts valid and rejects all eight invalid cases; native home icon and normal USB returned after a full timed restart. No persistent install, full native fetch/config, time bootstrap, recovery or HVAC claim. Preserve both private attempts. See docs/research/tls-probe-result-2026-10-30.md.
 - The corrected settings RAM diagnostic completed all twelve cases and returned to native startup. It confirms silent entry loss/invalid XML on write failure and skipped retry after directory-sync failure. Design and validate a narrow storage/logging correction against the same matrix; no fix or persistent installation exists. These are synthetic RAM results, not flash durability, power loss or real commissioning. See docs/research/settings-probe-result-2026-10-31.md.
@@ -23,7 +23,6 @@ Host/software follow-up:
 - Add transactional commissioning journal/recovery; offline registry edits currently require backend shutdown/restart.
 - Registry enrollment spans output and registry files without an all-or-nothing transaction; interruption produces a prepared but uninstalled credential. Inspect reports/files and explicitly revoke/retry; never assume success.
 - Scope manager roles if multi-user use arises; current manager credential is full privilege. Add connection/rate limits if the service expands beyond isolated small-device use.
-- Automatically scrub retained discovery for offline-revoked devices across bridge restarts; current manual broker cleanup documented.
 - OS/container and legacy firmware CVE/SBOM analysis; pip-audit covers Python only. Verify binary/source correspondence and redistribution permissions before any release.
 - Sign release manifests using an owner-controlled trust root when a real release exists; current manifests are unsigned integrity records.
 
@@ -31,3 +30,11 @@ Completed 2026-10-30: normal Nest USB detection, bounded transition watch and
 allowlisted plist diagnostics; source-built offline RAM probe and patched native
 loader with synthetic sanitizer checks; rootless Podman laboratory support and
 94 passing host tests. This does not close the release-blocking device work above.
+
+Completed 2026-10-31: retained MQTT discovery/state cleanup now survives offline
+revocation and backend restart, with identifier-only durable records, queue retry,
+reconnect replay and re-enrollment protection. Two real TLS-broker restart cycles
+and fresh-subscriber retained-state checks pass. Older already-forgotten orphans
+still need explicit revoke or administrator cleanup; HA history remains outside
+broker cleanup scope. Full 284-test host/broker/container suite passes. See
+docs/security/validation-2026-10-31-mqtt-cleanup.json.

@@ -41,6 +41,22 @@ with urllib.request.urlopen(request, context=context) as response:
 
 Management enrollment/rotation POST/PUT accepts only `{"capabilities":{"modes":["off","heat"],"fan":false}}`. The server uses OS randomness and returns the new credential once over the authenticated TLS connection with no-store caching. Save it directly to a 0600 file, never ordinary logs; actual device installation is not implemented. DELETE revokes immediately. Offline CLI prepare/--rotate/revoke requires stopping the backend first and restarting it afterward. Keep old private config until a rollback is possible, but revocation intentionally invalidates the old credential.
 
+Revocation also stores the validated identity in the registry's optional `revoked`
+list. On its next MQTT connection, the bridge retains offline availability and
+deletes that identity's retained discovery/state, including after an offline CLI
+revocation and backend restart. Queue failures retry on a later publish tick;
+the list survives successful cleanup and is replayed after reconnect. Explicit
+re-enrollment removes the identity from this list, and active identities are
+always excluded from deletion. This list contains identifiers only, without old
+credentials, capability data or telemetry.
+
+Older registries remain readable without the optional field. An identity already
+forgotten by an older release cannot be reconstructed automatically: with the
+backend stopped, explicitly revoke that known identity once and restart, or use
+an authorized broker admin tool. Keep the bridge running until broker/HA cleanup
+is observed before uninstalling. Correct broker ACLs and connectivity are needed;
+a local publish-queue acceptance is not proof of successful broker deletion.
+
 To rotate the manager credential, stop the backend, run `python -m provisioning.cli rotate-admin --registry private/registry.json --output private/admin-new.json`, then restart and use the new private file. Existing output is never overwritten; the old manager credential becomes invalid after restart. Device credentials do not change.
 
 ## MQTT

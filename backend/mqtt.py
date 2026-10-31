@@ -74,6 +74,7 @@ class Bridge:
     def __init__(self, core, config, loop):
         self.core, self.loop = core, loop
         self.known = set()
+        self.cleaned = set()
         self.client = mqtt.Client(
             mqtt.CallbackAPIVersion.VERSION2, client_id="hearth-bridge", protocol=mqtt.MQTTv5
         )
@@ -97,6 +98,7 @@ class Bridge:
             self.loop.call_soon_threadsafe(self.connected)
 
     def connected(self):
+        self.cleaned = set()  # repeat durable revocations after every reconnect
         # Persist offline, then send live online heartbeats. A restarted broker must
         # not resurrect a retained online state while this process is absent.
         self.client.publish("hearth/bridge/availability", "offline", qos=1, retain=True)
@@ -117,12 +119,21 @@ class Bridge:
         if not self.client.is_connected():
             return
         current = set(self.core.registry.data["devices"])
-        for ident in self.known - current:
-            self.client.publish(f"hearth/{ident}/availability", "offline", qos=1, retain=True)
-            self.client.publish(
-                f"homeassistant/climate/hearth_{ident}/config", "", qos=1, retain=True
-            )
-            self.client.publish(f"hearth/{ident}/state", "", qos=1, retain=True)
+        removed = (self.known | self.core.registry.revoked_devices()) - current
+        self.cleaned.intersection_update(removed)
+        for ident in sorted(removed - self.cleaned):
+            queued = [
+                self.client.publish(f"hearth/{ident}/availability", "offline", qos=1, retain=True),
+                self.client.publish(
+                    f"homeassistant/climate/hearth_{ident}/config", "", qos=1, retain=True
+                ),
+                self.client.publish(f"hearth/{ident}/state", "", qos=1, retain=True),
+            ]
+            # A full/disconnected queue is retried on the next tick. QoS 1 handles
+            # accepted messages; the durable identifiers survive process loss and
+            # are replayed after reconnect. Never erase the registry ledger on PUBACK.
+            if all(info.rc == mqtt.MQTT_ERR_SUCCESS for info in queued):
+                self.cleaned.add(ident)
         for ident in current:
             view = self.core.view(ident)
             config = discovery(

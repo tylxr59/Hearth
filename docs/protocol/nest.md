@@ -41,4 +41,13 @@ now passed its expected matrix; it does not validate or activate these partial r
 
 Discovery topic `homeassistant/climate/hearth_SERIAL/config`; state `hearth/SERIAL/state`, availability `hearth/SERIAL/availability` plus bridge last-will `hearth/bridge/availability`. Only offline availability is retained; online status is a live five-second heartbeat, avoiding stale retained online markers across broker restart. MQTT v5 subscription preserves retain flags and suppresses old retained command delivery. Retained live commands, unknown paths, arbitrary raw fields, oversized payloads, invalid UTF-8, booleans-as-temperature, non-finite values and unsupported operations fail closed. No offline broker session queue is requested. HA commands are non-retained. See [official MQTT climate schema](https://www.home-assistant.io/integrations/climate.mqtt/) and [broker ACL](../../homeassistant/mosquitto.acl).
 
+Revocation persists validated identifiers for retained discovery/state cleanup.
+The bridge sends offline availability and idempotent QoS-1 deletions on the next
+connection, including after an offline revocation/backend restart, and repeats
+cleanup on future reconnects. Queue failures retry; successful queueing does not
+prove broker application. Re-enrollment cancels that identity's cleanup, and
+active identities are excluded. The private list contains no old credentials or
+telemetry; identifiers remain so broker snapshot restoration can be cleaned again.
+Older already-forgotten orphans require explicit revocation or authorized cleanup.
+
 The broker authenticates command publishers; payloads do not carry redundant device credentials. Broker compromise or a writer with broad ACLs can control enrolled devices within allowed operations. Use one backend instance per namespace/client ID. Firmware capabilities must come from bench validation; simulation defaults are not hardware detection.

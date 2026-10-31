@@ -243,3 +243,140 @@ async def test_real_broker_discovery_commands_and_auth(broker, rig, tmp_path):
     finally:
         observer.disconnect()
         observer.loop_stop()
+
+
+async def test_offline_revocation_cleans_retained_records_after_backend_restarts(broker, rig):
+    import contextlib
+
+    from backend.core import Core
+    from backend.mqtt import Bridge
+    from backend.registry import Registry
+    from tests.conftest import OTHER
+
+    root, port, password = broker
+    old_core, revoked_token, _, _ = rig
+    caps = old_core.caps(SERIAL)
+    other_token = secrets.token_hex(32)
+    old_core.registry.register(OTHER, other_token, caps)
+    old_core.registry.revoke(SERIAL)  # no bridge running during this offline change
+    peers = []
+    config_topic = f"homeassistant/climate/hearth_{SERIAL}/config"
+    state_topic = f"hearth/{SERIAL}/state"
+
+    def peer(user, topics=()):
+        messages, connected, subscribed = queue.Queue(), threading.Event(), threading.Event()
+        client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, protocol=mqtt.MQTTv5)
+        client.tls_set(ca_certs=str(root / "cert.pem"))
+        client.username_pw_set(user, password)
+
+        def on_connect(client, userdata, flags, reason, properties):
+            if reason == 0:
+                if topics:
+                    client.subscribe([(topic, 1) for topic in topics])
+                connected.set()
+
+        client.on_connect = on_connect
+        client.on_subscribe = lambda *args: subscribed.set()
+        client.on_message = lambda c, u, m: messages.put((m.topic, bytes(m.payload), m.retain))
+        client.connect("127.0.0.1", port)
+        client.loop_start()
+        peers.append(client)
+        return client, messages, connected, subscribed
+
+    def drain(messages, into):
+        while not messages.empty():
+            topic, payload, retained = messages.get_nowait()
+            into[topic] = (payload, retained)
+
+    seed, _, seed_ready, _ = peer("bridge")
+    topics = ("homeassistant/climate/+/config", "hearth/+/state", "hearth/+/availability")
+    config = {
+        "host": "127.0.0.1",
+        "port": port,
+        "username": "bridge",
+        "password": password,
+        "ca": str(root / "cert.pem"),
+    }
+    try:
+        await wait_for(seed_ready.is_set)
+        # Reintroduce stale broker data between two independent backend instances.
+        # The cleanup ledger must survive even after the first successful deletion.
+        for _ in range(2):
+            for topic in (config_topic, state_topic):
+                publication = seed.publish(topic, b'{"stale":true}', qos=1, retain=True)
+                await asyncio.to_thread(publication.wait_for_publish, 3)
+                assert publication.is_published()
+            observer, messages, ready, subscribed = peer("ha", topics)
+            await wait_for(
+                lambda ready=ready, subscribed=subscribed: ready.is_set() and subscribed.is_set()
+            )
+            initial = {}
+
+            def stale_received(messages=messages, initial=initial):
+                drain(messages, initial)
+                return all(
+                    initial.get(topic, (None,))[0] == b'{"stale":true}'
+                    for topic in (config_topic, state_topic)
+                )
+
+            await wait_for(stale_received)
+            fresh = Core(Registry(old_core.registry.path))
+            assert not fresh.registry.authenticate(SERIAL, revoked_token)
+            assert fresh.registry.authenticate(OTHER, other_token)
+            mqtt_bridge = Bridge(fresh, config, asyncio.get_running_loop())
+            task = asyncio.create_task(mqtt_bridge.run())
+            try:
+                deleted = {}
+
+                def cleanup_received(messages=messages, deleted=deleted):
+                    drain(messages, deleted)
+                    return all(
+                        deleted.get(topic, (None,))[0] == b""
+                        for topic in (config_topic, state_topic)
+                    )
+
+                await wait_for(cleanup_received)
+                # A fresh subscriber checks retained broker contents, rather than
+                # merely observing that this process attempted deletion messages.
+                check, retained, check_ready, check_subscribed = peer("ha", topics)
+                await wait_for(
+                    lambda check_ready=check_ready, check_subscribed=check_subscribed: (
+                        check_ready.is_set() and check_subscribed.is_set()
+                    )
+                )
+                actual = {}
+
+                def active_and_offline_received(retained=retained, actual=actual):
+                    drain(retained, actual)
+                    return (
+                        f"homeassistant/climate/hearth_{OTHER}/config" in actual
+                        and f"hearth/{OTHER}/state" in actual
+                        and actual.get(f"hearth/{SERIAL}/availability", (None,))[0] == b"offline"
+                    )
+
+                await wait_for(active_and_offline_received)
+                await asyncio.sleep(0.3)
+                drain(retained, actual)
+                assert config_topic not in actual and state_topic not in actual
+                assert (
+                    json.loads(actual[f"homeassistant/climate/hearth_{OTHER}/config"][0])[
+                        "unique_id"
+                    ]
+                    == f"hearth_{OTHER}"
+                )
+                observer.publish(f"hearth/{SERIAL}/command/mode", "heat", qos=1)
+                await asyncio.sleep(0.2)
+                assert not fresh.pending
+                assert Registry(old_core.registry.path).revoked_devices() == {SERIAL}
+                check.disconnect()
+                check.loop_stop()
+            finally:
+                task.cancel()
+                with contextlib.suppress(asyncio.CancelledError):
+                    await task
+                observer.disconnect()
+                observer.loop_stop()
+    finally:
+        for client in peers:
+            client.disconnect()
+            client.loop_stop()
