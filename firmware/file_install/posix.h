@@ -30,4 +30,7 @@ extern const struct hearth_file_ops hearth_posix_file_ops;
  * Reads/validates the whole journal/current tree before mutation. Caller closes
  * context.recovery if >=0, including on failure. No mount or device launcher. */
 struct hearth_install_result hearth_posix_restore_files(struct hearth_posix_context *);
+/* Read-only recovery inspection. Leaves recovery fd open on success; close and
+ * reset it before calling restore_files, which repeats the full inspection. */
+int hearth_posix_restore_preflight(struct hearth_posix_context *);
 #endif

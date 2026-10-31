@@ -397,12 +397,11 @@ done:
     if(close(fd)) result=-1;
     return result;
 }
-struct hearth_install_result hearth_posix_restore_files(struct hearth_posix_context *c)
+int hearth_posix_restore_preflight(struct hearth_posix_context *c)
 {
-    struct hearth_install_result r={0,0,0,0,0,0,0};
     struct metadata m;unsigned int i,phase=0,mask=0;char name[128],temporary[128],backup[16];
-    if(!c||c->recovery!=-1||!c->count||c->count>HEARTH_FILE_LIMIT) { r.error=HEARTH_INVALID_PLAN;return r; }
-    for(i=0;i<c->count;i++) if(valid_change(c,i)) { r.error=HEARTH_INVALID_PLAN;return r; }
+    if(!c||c->recovery!=-1||!c->count||c->count>HEARTH_FILE_LIMIT) return HEARTH_INVALID_PLAN;
+    for(i=0;i<c->count;i++) if(valid_change(c,i)) return HEARTH_INVALID_PLAN;
     if(local_root(c,c->roots[0])||local_root(c,c->roots[1])) goto invalid;
     c->recovery=openat(c->roots[1],".hearth-rollback",H_RDONLY|H_DIRECTORY|H_NOFOLLOW|H_CLOEXEC);
     if(c->recovery<0||local_root(c,c->recovery)||metadata(c->recovery,&m)||
@@ -440,6 +439,15 @@ checked:
         if(close(directory)) status=-1;
         if(status) goto invalid;
     }
+    return 0;
+invalid:
+    return HEARTH_PREFLIGHT_FAILED;
+}
+struct hearth_install_result hearth_posix_restore_files(struct hearth_posix_context *c)
+{
+    struct hearth_install_result r={0,0,0,0,0,0,0};unsigned int i;
+    r.error=hearth_posix_restore_preflight(c);
+    if(r.error) return r;
     /* Conservatively cover every target: a durable journal may precede an
      * interrupted update of journal.new. Exact current bytes, not old masks,
      * decide whether each original already exists or needs restoration. */
@@ -458,8 +466,5 @@ checked:
     if(journal(c,r.rollback_error?HEARTH_RESTORE_FAILED:HEARTH_RESTORED,r.restored)) r.journal_error=1;
     if(!r.rollback_error) for(i=c->count;i;i--) if(discard(c,i-1)) r.cleanup_error=1;
     if(r.rollback_error) r.error=HEARTH_ROLLBACK_FAILED;
-    return r;
-invalid:
-    r.error=HEARTH_PREFLIGHT_FAILED;
     return r;
 }

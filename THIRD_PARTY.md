@@ -143,3 +143,10 @@ and trusted host-only preload/exec fixtures run under installed host tools. No
 proprietary ARM firmware runs on the development host. Private RAM images reuse
 the same retained native runtime libraries and GPL bootstrap/kernel; no new
 redistribution permission or complete source/binary correspondence is asserted.
+
+The fixed-plan writer under firmware/file_writer/ uses original MIT orchestration,
+framing, supervisor and host tooling. Its original kernel adapter is
+GPL-2.0-or-later when combined with the pinned Linux driver; the policy core is
+MIT. Critical public kernel source identities are pinned in its sources.json.
+The exact-source-checked JFFS2 remount correction modifies the same GPL source.
+No additional upstream implementation or proprietary bytes are redistributed.

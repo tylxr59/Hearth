@@ -168,3 +168,14 @@ That separate [36-case privacy RAM comparison](research/settings-permissions-res
 subsequently passed once, followed by owner restart completion and independently
 observed normal USB. It validates bounded synthetic file-mode/failure/retry
 behavior, not actual credential installation, full application or flash recovery.
+
+The [fixed-plan writer preparation](research/file-writer-preparation-2026-10-31.md)
+adds separate write-capable RAM install/restore images, checked offline only.
+They start protected and require complete synthetic selftests, real-file
+read-only preflight and a separate owner-timed commit before writable remount.
+Remount itself may start persistent GC/metadata writes. Cleanup unmounts before
+sealing protection, then checks exact selected files through read-only mounts.
+An uncertain persistent result requires USB power retained, base detached and
+evidence review before restart. A matching restore image can enter from the
+reviewed failed RAM session, without booting partial native files. This is not
+verified whole-firmware, damaged-filesystem or hardware power-loss recovery.

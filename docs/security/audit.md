@@ -112,3 +112,11 @@ No correction is installed. Full application integration, other log paths,
 credential-pair atomicity, actual storage/permissions, restoration and HVAC remain
 open. The [observed scope record](validation-2026-10-31-storage-compat-observed.json)
 preserves these limits; historical preparation/failed attempts are unchanged.
+
+The [fixed-plan writer preparation](../research/file-writer-preparation-2026-10-31.md)
+is offline-checked, unexecuted. It binds target gate and host commit to the actual
+private plan/backup receipt; the credential-bearing action is root-only and the
+synthetic selftest unprivileged. Images exclude shells, link stubs and native
+applications. CRC framing is transport integrity, not USB peer authentication.
+Host selftests and simulated rollback do not establish JFFS2 installation,
+power-loss/whole-firmware restoration or actual native TLS/time bootstrap.

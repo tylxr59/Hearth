@@ -37,7 +37,7 @@ def recovery_lab(tmp_path_factory):
     return output
 
 
-@pytest.mark.parametrize("scenario", range(24))
+@pytest.mark.parametrize("scenario", range(25))
 def test_fresh_process_restoration_and_fail_closed_preflight(recovery_lab, tmp_path, scenario):
     result = subprocess.run(
         [str(recovery_lab), str(scenario), str(tmp_path)],

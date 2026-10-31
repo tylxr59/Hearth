@@ -932,3 +932,39 @@ enforcement, including flush/unmount/protection and exact restoration. Existing
 JFFS2 file installation, hardware power-loss recovery, actual native transport
 or HVAC proof. Notify before persistent action under the owner's authorization.
 See docs/research/file-capsule-preparation-2026-10-31.md.
+
+## CURRENT: paired file-action images checked, unexecuted (2026-10-31)
+
+The bounded writer is implemented under firmware/file_writer/. Its separate
+kernel starts protected, registers only fixed root0/user-config and checks
+plan/host-custody binding before enabling bounded write callbacks. Actual I/O
+adapter sanitizer tests cover synchronous erase request lifetime and callbacks
+after WP restoration/mutex release. The legacy JFFS2 remount compatibility check
+now examines requested flags; unknown RO-compatible nodes must block writes.
+The existing read-only profiles/verifiers remain separate.
+
+Root-only capsule action runs after 56 synthetic UID/GID65534 RAM cases, strict
+host ACK and real-file read-only preflight. It then waits for a separate bound
+commit/abort. The host repeats full image/capsule/backup validation; no automatic
+commit/retry. Any writable remount counts as potential persistence. Unmount comes
+before sealing WP; complete requires exact post-operation read-only verification.
+Restore has its own read-only journal inspection, image and commit. An explicitly
+reviewed --recover-from entry permits restore from the matching exited persistent
+RAM session without native boot; it rejects stale ROM and other plans.
+
+Prepared: build/file-writer-kernel-20261031-v3 (six artifacts match rebuild),
+build/file-writer-actions-20261031-v4 and -v4-repro (five helpers match),
+private/file-writer-20261031/{install,restore}-v1 and their reproductions. The
+separate private reviewed plan pin is native-file-capsule-20261031-v1-pin.json.
+All are unexecuted. Older drafts remain preserved, not usable execution evidence.
+make check and 766 host tests pass/five optional skips. No proprietary firmware
+executes on host. No JFFS2 install/restore, hardware power-loss, whole-firmware
+recovery, live native transport or HVAC claim.
+
+Next: notify owner and obtain restart timing readiness for one supervised
+write-capable RAM preflight, PTY-backed, no writes until separate decision.
+If stock startup changed selected bytes, preserve the same-session fresh
+read-only snapshot, stop and rebuild a reviewed plan. After any uncertain
+persistent result, keep USB power/base detached and review evidence before
+restart; never reflexively request native startup. No loader currently armed.
+See docs/research/file-writer-preparation-2026-10-31.md and the writer README.

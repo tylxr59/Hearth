@@ -145,3 +145,14 @@ pass/five skips. Not installable; target writer/receipt enforcement pending.
 Stock UI reached Wi-Fi setup on battery with the unwired base, then returned to
 USB; Wi-Fi remains unconfigured. No additional power gear assumed for first
 short attempt. See the dated file-capsule preparation note.
+
+Bounded file writer integration is now implemented and paired private install/
+restore images are checked, unexecuted. A 56-case synthetic RAM selftest precedes
+real-file read-only preflight and a separate scoped persistent commit. Target
+gate enforces plan/host receipt and physical ranges, with WP restored per I/O;
+unmount/seal/read-only exact verification governs restart safety. Host socket,
+sanitizer, archive/ABI and evidence tests pass; full suite 766/five optional skips.
+Next one notified owner-timed RAM preflight. If originals changed, preserve a
+fresh read-only snapshot in that session and rebuild the private plan. No flash
+commit, live transport, hardware power-loss or HVAC measurement yet. See
+docs/research/file-writer-preparation-2026-10-31.md.

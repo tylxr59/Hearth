@@ -109,6 +109,18 @@ static int recovery_scenario_main(int argc,char **argv)
         write_file(c.roots[0],"etc/ntp.conf.hearth-new",replacement,5,0600);
         recovery_write_fault=2;
     }
+    if(recovery_case==24) {
+        unsigned char record[48];
+        write_file(c.roots[0],"etc/ntp.conf.hearth-new",replacement,5,0600);
+        write_file(c.roots[0],"etc/ntp.conf.hearth-restore",old,3,0600);
+        assert(hearth_posix_restore_preflight(&c)==0);
+        check_file(c.roots[0],"etc/ntp.conf.hearth-new",replacement,5,0600);
+        check_file(c.roots[0],"etc/ntp.conf.hearth-restore",old,3,0600);
+        check_file(c.roots[0],paths[3],replacement,sizeof(replacement)-1,new_modes[3]);
+        fd=openat(c.recovery,"journal",O_RDONLY);assert(fd>=0);
+        assert(read(fd,record,sizeof(record))==(ssize_t)sizeof(record)&&record[4]==HEARTH_COMMITTED);
+        assert(close(fd)==0&&close(c.recovery)==0);c.recovery=-1;
+    }
     r=hearth_posix_restore_files(&c);
     if(recovery_case==23) {
         assert(r.error==HEARTH_ROLLBACK_FAILED&&r.rollback_error&&!r.committed&&!r.journal_error);
@@ -144,11 +156,17 @@ static int recovery_scenario_main(int argc,char **argv)
 #ifndef HEARTH_RAM_LAB
 int main(int argc,char **argv) { return recovery_scenario_main(argc,argv); }
 #else
+#ifndef HEARTH_FILE_RECOVERY_CASES
+#define HEARTH_FILE_RECOVERY_CASES 24
+#endif
+#if HEARTH_FILE_RECOVERY_CASES != 24 && HEARTH_FILE_RECOVERY_CASES != 25
+#error "Only the reviewed original or preflight-extended RAM matrix is allowed"
+#endif
 int main(int argc,char **argv)
 {
     int i,n;char directory[96],number[16],line[128];char *args[4];
     assert(original_file_lab_main(argc,argv)==0);
-    for(i=0;i<24;i++) {
+    for(i=0;i<HEARTH_FILE_RECOVERY_CASES;i++) {
         if(i==14) continue; /* Positive xattr storage requires a host fixture. */
         snprintf(directory,sizeof(directory),"/state/recovery-case-%d",i);
         snprintf(number,sizeof(number),"%d",i);assert(mkdir(directory,0700)==0);

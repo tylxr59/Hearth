@@ -1,0 +1,17 @@
+{
+  "repository": "https://github.com/exploiteers/NestDFUAttack",
+  "revision": "930b834b7f1f082b8761aa5c5af765b4b3e99dc9",
+  "scope": "Unmodified critical source identities for synchronous erase callback, partition forwarding, NAND buffering/cleanmarkers, WP and statfs review. Not proprietary firmware hashes.",
+  "files": {
+    "drivers/mtd/nand/nand_base.c": "c3ed2a8d4c91303661c52a355ca4be8d336c7405ed5076be6cad4c165ce377d9",
+    "drivers/mtd/mtdpart.c": "24384e2d0bffa1fcc7eda43018b75fe0c1d80ec2eb38329ecce8f2f7aa622ab0",
+    "drivers/mtd/mtdsuper.c": "0b0bc7027680f130bdd75984a65b7b54eb6831112c6da0b0a8781340c0f0274d",
+    "fs/jffs2/wbuf.c": "e257a24b831680decc2bfac6881f3e4e315b1c5d47edd7f47a5e60ebe2343400",
+    "fs/jffs2/erase.c": "f957bd45a6125ad1da99b15ecd41cd3921ecbbd76bc00d22ac3602b17914fd74",
+    "arch/arm/mach-omap2/gpmc-nand.c": "7b1dd5325918d91928c443d1cbb4d89065d29f6ba09691ef432098108ebf6d96",
+    "arch/arm/mach-omap2/gpmc.c": "40b34c8e8af80a7dacbab87b89c91b0cf71c82a76617abcca3e60f1a0ee4b284",
+    "fs/statfs.c": "078a43dab47bd429f511a640ebf21c98be41661cfbf80169bce49e08b01e21d4",
+    "include/linux/mtd/mtd.h": "b94a21908d120aadfe2a0c4d964138b21434f9d925b01562e866a3277b3b47c6",
+    "include/linux/mtd/nand.h": "b08adaa57fdcf8bd385bb494f3e434389503d807636d1b348d564233970c56fb"
+  }
+}
