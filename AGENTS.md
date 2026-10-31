@@ -227,6 +227,13 @@ Next fresh profile private/settings-compat-probe-20261031/profile-bindings-v1
 adds loader binding diagnostics; all limits and 29 case gates are unchanged.
 No candidate correction has been validated. Owner readiness is required before
 arming.
+While waiting for owner readiness, read-only Ghidra review traced the native
+entry callback at 0x976c0 and URL/platform-key/tier setters. Platform-key values
+have additional log paths; tier changes can call settings Write; URL processing
+indexes using original length after a bounded copy (LLVM corroborated). No entry
+request or native app was run. Details: docs/research/native-entry-2026-10-31.md.
+Private exports: private/native-entry-review-20261031. Do not copy the upstream
+entry field set or claim it is observational; no production codec was added.
 The owner has only this unit and explicitly accepts potentially dangerous same-unit
 work; spare-only recovery restriction is waived, advance notification before
 persistent writes and separate physical HVAC authorization remain. Continue through

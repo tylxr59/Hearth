@@ -37,6 +37,11 @@ brace-counting extractor. Full buffering, CAS and subscription semantics remain
 unverified. The [isolated TLS callback measurement](../research/tls-probe-result-2026-10-30.md)
 now passed its expected matrix; it does not validate or activate these partial routes.
 
+The [entry-field follow-up](../research/native-entry-2026-10-31.md) traces another
+platform-key log path, tier-triggered settings writes, specific URL destinations
+and an original-length indexing concern after URL truncation. A future minimal
+entry response must account for these effects; no live entry exchange is enabled.
+
 ## MQTT
 
 Discovery topic `homeassistant/climate/hearth_SERIAL/config`; state `hearth/SERIAL/state`, availability `hearth/SERIAL/availability` plus bridge last-will `hearth/bridge/availability`. Only offline availability is retained; online status is a live five-second heartbeat, avoiding stale retained online markers across broker restart. MQTT v5 subscription preserves retain flags and suppresses old retained command delivery. Retained live commands, unknown paths, arbitrary raw fields, oversized payloads, invalid UTF-8, booleans-as-temperature, non-finite values and unsupported operations fail closed. No offline broker session queue is requested. HA commands are non-retained. See [official MQTT climate schema](https://www.home-assistant.io/integrations/climate.mqtt/) and [broker ACL](../../homeassistant/mosquitto.acl).
