@@ -95,5 +95,6 @@ transaction phases, partial temporaries, unknown late target changes, invalid
 journals/metadata, absence with/without intent, and failed-then-retried restore.
 These simulate process interruption, not actual power loss. A separate fresh
 91-case RAM profile is prepared: 36 settings, 32 transaction and 23 recovery
-cases (the positive extended-attribute fixture remains host-only). No new ARM
-recovery measurement or persistent JFFS2 restoration is claimed yet.
+cases (the positive extended-attribute fixture remains host-only). All 91 cases subsequently passed on ARM RAM, including the 23 recovery cases;
+see the [result](../../docs/research/file-recovery-result-2026-10-31.md). Persistent
+JFFS2 restoration remains unverified.

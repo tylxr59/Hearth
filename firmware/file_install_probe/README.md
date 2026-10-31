@@ -87,3 +87,9 @@ Fresh local profile: private/file-recovery-ram-20261031/profile-v2 and a separat
 settings shim and 34 base libraries remain unchanged; the file adapter/test
 helper and strict evidence contract changed. Nothing in this diagnostic enables
 a device writer or measures JFFS2 write durability.
+
+The 91-case recovery revision subsequently passed one owner-timed run from
+`aaf93b7`, with a complete privately retained report and native startup/USB
+return. See the [result](../../docs/research/file-recovery-result-2026-10-31.md).
+Earlier unexecuted notes record preparation history. Actual JFFS2 write,
+hardware power-loss recovery and persistent commissioning remain unverified.

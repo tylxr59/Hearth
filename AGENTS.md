@@ -880,3 +880,22 @@ before the explicit --execute-experimental-file-ram-lab PTY run. Keep base
 detached and USB connected; after command exit confirm home icon and native USB.
 See docs/research/file-recovery-preparation-2026-10-31.md. Next target-writer
 receipt/plan binding, bounded JFFS2 integration and actual native state exchange.
+
+## CURRENT: all 91 ARM RAM cases passed (2026-10-31)
+
+Source aaf93b7/profile file-recovery-ram-20261031/profile-v2 executed ONCE.
+PTY session 9876 exited zero; no loader/collector remains. Complete private
+23240-byte/131-row report independently revalidated: 36 settings, 32 file
+transactions, 23 interrupted-install recoveries, three zero child statuses.
+Original/candidate bindings/canaries/log and strict evidence checks passed.
+Private attempt-1-observed.json and attempt-1-native-return.json remain immutable,
+alongside original profile/result/marker/manifests. Owner confirmed home icon
+and normal USB independently returned on port 1-1. Never reuse v2/repro.
+
+This closes bounded ARM RAM restoration measurement only. Host xattr fixture14
+is intentionally separate; no actual JFFS2 writes, hardware power loss, firmware
+installation/restoration, native app/transport or HVAC was measured. Next exact
+replacement-plan/host-receipt binding, capsule validation and narrowly bounded
+JFFS2 writer integration. Advance notice before persistent work remains required.
+See docs/research/file-recovery-result-2026-10-31.md. Host baseline unchanged:
+653 passed, five optional skips, make check. Unit left at native startup.

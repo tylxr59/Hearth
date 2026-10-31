@@ -132,3 +132,9 @@ RAM profile-v2 is checked/reproduced but unexecuted; 653 host tests pass/five
 optional skips. Native snapshot return confirmed. Next one owner-timed ARM run,
 then target receipt/plan binding and actual bounded JFFS2 installer integration.
 Do not confuse host/RAM process restoration with hardware power-loss recovery.
+
+Observed: all 91 ARM RAM cases passed from aaf93b7/profile-v2, including all23
+recovery paths, with a complete independently validated private report. Home
+icon and normal USB returned; no loader armed. Next actual plan/receipt binding
+and bounded JFFS2 writer integration. No persistent installation or power-loss
+recovery claim. See docs/research/file-recovery-result-2026-10-31.md.
