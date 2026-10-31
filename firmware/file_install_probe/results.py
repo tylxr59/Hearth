@@ -23,16 +23,21 @@ def validate(data):
             exact(row, {"type": "file_case", "case": case, "passed": True})
             cases.add(case)
         elif isinstance(row, dict) and row.get("variant") == "files":
-            exact(
-                row,
-                {
-                    "type": "compat_process",
-                    "variant": "files",
-                    "wait_status": 0,
-                    "synthetic_secret_log_matches": CLEAN_LOG_MATCHES,
-                    "passthrough_log_matches": CLEAN_LOG_MATCHES,
-                },
-            )
+            try:
+                exact(
+                    row,
+                    {
+                        "type": "compat_process",
+                        "variant": "files",
+                        "wait_status": 0,
+                        "synthetic_secret_log_matches": CLEAN_LOG_MATCHES,
+                        "passthrough_log_matches": CLEAN_LOG_MATCHES,
+                    },
+                )
+            except ValueError as exc:
+                raise ValueError(
+                    "file helper did not complete with a clean process status"
+                ) from exc
             processes += 1
         else:
             storage.append(row)

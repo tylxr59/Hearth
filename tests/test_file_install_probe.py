@@ -299,3 +299,29 @@ def test_execution_marker_blocks_reuse_even_without_result(tmp_path, marker):
     calls = log.read_text().splitlines()
     assert len(calls) == 1 and "artifact check" in calls[0]
     assert not (profile / "file-result.jsonl").exists()
+
+
+def test_supervisor_executes_the_program_declared_by_its_argv(tmp_path):
+    import subprocess
+    from pathlib import Path
+
+    if not shutil.which("clang"):
+        pytest.skip("Clang required for original dispatch sanitizer check")
+    root = Path(__file__).resolve().parents[1]
+    output = tmp_path / "dispatch"
+    subprocess.run(
+        [
+            "clang",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            "-g",
+            "-fsanitize=address,undefined",
+            str(root / "tests/lab_exec_harness.c"),
+            "-o",
+            str(output),
+        ],
+        check=True,
+        capture_output=True,
+    )
+    subprocess.run([str(output)], check=True, capture_output=True, timeout=3)

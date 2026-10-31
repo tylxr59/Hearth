@@ -52,3 +52,41 @@ rootfs 11045344 bytes, image 6034056 bytes. Workload, kernel, bootstrap and nati
 libraries are unchanged. Current host validation passes make check and 569 tests,
 with five unchanged optional integration skips. No corrected profile is executed
 or loader armed. A new owner-timed attempt is required to establish its result.
+
+## Second attempt: complete transport, wrong file-helper dispatch
+
+A fresh owner-timed run used source `7c1572c` and profile-v7. The corrected sender
+and receiver retained a complete 20816-byte/77-row report, including the completion
+record. The collector correctly rejected the aggregate result. Both original and
+standalone candidate processes exited zero, and their complete 36-case behavior,
+binding/canary and full-stream log evidence independently matches the storage
+contract. The exact standalone GNU candidate is therefore measured on RAM, with
+full native application integration still unverified.
+
+The file process exited 109 without any file-case rows. Review found that the
+supervisor set argv[0] to /file-test but still passed a literal /settings-test to
+execve. It launched the settings helper with the files argument, which that helper
+rejected immediately. This is a supervisor dispatch mistake, not a measurement
+of file-transaction behavior. No combined 68-case pass is claimed.
+
+The original full result is immutable. A separate private component-evaluation
+record identifies its source digest, retains the original aggregate false result
+and explicitly records the derived completion envelope used to validate only the
+two successful storage processes. It does not rewrite or promote the failed
+aggregate report. Prepared/observed/native-return records remain separate.
+The owner confirmed home icon and normal USB was independently observed afterward.
+No loader remains armed or persistent provisioning installed.
+
+The corrected execution adapter always uses the program declared in argv[0] and
+passes that same argv/environment to the raw exec backend. An original host
+sanitizer check injects an execution callback and verifies settings/file program
+selection plus unchanged arguments/environment and invalid-input rejection.
+File-process failures now have a specific collector message. Test bodies,
+standalone candidate, kernel, bootstrap and native runtime libraries are unchanged.
+
+Current fresh profile: profile-v8 and separate profile-v8-repro under the same
+private parent. Helpers: build/file-commissioning-ram-20261031/helpers-v6 and the
+separate -repro. Seven artifacts/full inventories reproduce: rootfs 11045344,
+image 6034042 bytes. Make check and 570 host tests pass, five unchanged optional
+skips. A new owner-timed run is needed for the unmeasured 32 file cases; no new
+attempt is armed automatically. Never reuse v6, v7 or their reproduction copies.

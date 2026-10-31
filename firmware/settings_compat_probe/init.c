@@ -6,6 +6,7 @@
 #include "tail.h"
 #include "scan.h"
 #include "transmit.h"
+#include "exec.h"
 
 static long sc(long nr, long a, long b, long c, long d, long e)
 {
@@ -15,6 +16,8 @@ static long sc(long nr, long a, long b, long c, long d, long e)
     __asm__ volatile ("svc 0" : "+r"(r0) : "r"(r1), "r"(r2), "r"(r3), "r"(r4), "r"(r7) : "memory", "cc");
     return r0;
 }
+static long exec_child(const char *path,char *const argv[],char *const env[])
+{ return sc(11,(long)path,(long)argv,(long)env,0,0); }
 static long send_cached_bytes(long fd,const char *data,long size)
 { return sc(4,fd,(long)data,size,0,0); }
 static void pause_one(void)
@@ -85,7 +88,7 @@ static int run(const char *variant, int candidate)
         n = sc(206, 0, 0, 0, 0, 0); if (n) child_failure("groups", n, 121);
         n = sc(214, 65534, 0, 0, 0, 0); if (n) child_failure("gid", n, 121);
         n = sc(213, 65534, 0, 0, 0, 0); if (n) child_failure("uid", n, 121);
-        n = sc(11, (long)"/settings-test", (long)argv, (long)env, 0, 0);
+        n = hearth_exec_argv(argv,env,exec_child);
         child_failure("exec", n, 122);
     }
     sc(6, pipefd[1], 0, 0, 0, 0);

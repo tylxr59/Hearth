@@ -723,3 +723,29 @@ helpers-v5-repro. Seven artifacts/full inventories reproduce, rootfs 11045344,
 image 6034056 bytes. Prepared-v7.json is separate and immutable. Notify and obtain
 owner restart readiness before a new PTY-backed --execute-experimental-file-ram-lab
 attempt. No automatic retry. See docs/research/file-commissioning-attempt-2026-10-31.md.
+
+## Second combined attempt / CURRENT dispatch-corrected profile (2026-10-31)
+
+Profile-v7 executed ONCE using 7c1572c. Report transport now completed: 20816 bytes,
+77 rows saved privately. All 36 standalone storage component cases, two zero
+statuses, bindings/canaries and log checks independently validate. Separate
+attempt-2-storage-component.json discloses its derived component completion
+while preserving the original global false report. The exact standalone GNU
+shim now has bounded RAM measurement; full native app remains unverified.
+
+The file process exited 109 with zero file-case rows: supervisor argv named
+/file-test but raw exec still used literal /settings-test. Corrected via exec.h,
+which executes argv[0] with its same argv/env; injected-exec sanitizer regression
+checks the actual adapter. Collector now distinguishes file-process failure.
+No 68-case combined pass or ARM file-engine measurement is established yet.
+Owner confirmed home icon and normal USB independently returned. No loader armed.
+Preserve profile-v7/result/marker and immutable attempt-2 records. Never reuse it.
+
+CURRENT fresh unexecuted profile: private/file-commissioning-ram-20261031/profile-v8;
+separate profile-v8-repro; helpers build/file-commissioning-ram-20261031/helpers-v6
+and helpers-v6-repro. Seven artifacts/inventories match, rootfs 11045344 bytes,
+image 6034042 bytes. Make check and 570 host tests pass/five optional skips.
+Workload/storage candidate/kernel/boot chain/native libraries are unchanged;
+only supervisor dispatch and clearer failure classification changed. Obtain owner
+restart readiness before a new --execute-experimental-file-ram-lab PTY attempt.
+No automatic retry. Actual filesystem/kernel installer integration remains pending.

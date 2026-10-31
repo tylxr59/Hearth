@@ -60,3 +60,9 @@ now retains its offset across USB backpressure, and the collector handles restar
 prefixes without concatenation. The wrapper also creates a durable execution marker;
 never reuse a marked profile even if no result was saved. The corrected profile
 is prepared separately. No 68-case hardware pass is claimed.
+
+The next owner-timed attempt delivered a complete report and validated all 36
+standalone storage checks. Its file process exited 109 because exec still used
+the settings-helper path despite the file argv. The supervisor now executes its
+declared argv[0], with a direct injected-exec regression. The 32 ARM file cases
+remain unmeasured pending the fresh corrected profile; see the dated attempt note.

@@ -68,3 +68,10 @@ The subsequent supervised [36-case result](../../docs/research/settings-permissi
 now validates the exact GNU-linked instrumented privacy candidate on synthetic
 RAM files, with native USB return. This supersedes the preparation-only status
 above. No standalone/full application, persistent installation or flash claim.
+
+A later combined session independently validated all 36 cases for the exact GNU
+standalone build without phase tracing. Its separate file-helper dispatch failed,
+so that aggregate run is not a combined pass. Original global failure and derived
+storage-component evaluation remain private and distinct. Full native application
+and physical filesystem integration are still unverified. See the dated file
+commissioning attempt note for scope.

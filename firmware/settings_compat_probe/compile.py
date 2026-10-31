@@ -32,6 +32,7 @@ def source_hashes():
                 "scan.h",
                 "tail.h",
                 "transmit.h",
+                "exec.h",
             )
         }
         | {n: sha((root / n).read_bytes()) for n in SHARED}
