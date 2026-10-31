@@ -111,3 +111,9 @@ header is GPL-2.0-or-later; the syscall-only userspace is original MIT code. An
 exact-source-checked patch normalizes only the legacy compile metadata generator's
 time/user/host/domain, and Kconfig omits timestamps. No additional upstream
 implementation, proprietary bytes or toolchain executable is bundled.
+
+The normal-ECC sample under firmware/nand_ecc_sample/ reuses the same pinned GPL
+NAND source and original read-only/framing helpers. Its kernel header and synthetic
+host guard fixture are GPL-2.0-or-later; userspace/framing/host collection are
+original project code. Preserved firmware references/captures remain private and
+are never compiled into the diagnostic or executed on the host.

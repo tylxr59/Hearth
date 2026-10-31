@@ -1,0 +1,36 @@
+{
+  "date": "2026-10-31",
+  "scope": "Prepared, unexecuted normal-ECC read/reference comparison",
+  "host_results": {
+    "make_check": "passed",
+    "pytest_passed": 371,
+    "unchanged_optional_integrations_skipped": 3,
+    "new_checks": 21,
+    "original_c_sysfs_and_framing_asan_ubsan": "passed",
+    "kernel_cross_compilation": "passed",
+    "six_artifacts_reproduced": true,
+    "bootstrap_and_configuration_choices_unchanged": true,
+    "offline_wrapper_and_private_preflights": "passed; no device opened"
+  },
+  "sample": {
+    "first_page": 12160,
+    "pages_per_pass": 64,
+    "passes": 2,
+    "bytes_per_pass_including_oob": 135168,
+    "read_mode": "MTD_OOB_PLACE; normal HW ECC data and physical OOB",
+    "reference_in_ram_image": false,
+    "reference_inputs_independently_verified_privately": true,
+    "driver_ecc_status_reliable": false,
+    "host_reference_match_required": true,
+    "mutation_interfaces_enabled": false
+  },
+  "initramfs_bytes": 3744,
+  "kernel_uncompressed_bytes": 2742464,
+  "target_executed": false,
+  "ecc_fault_injection_tested": false,
+  "write_path_verified": false,
+  "restoration_verified": false,
+  "installed": false,
+  "physical_hvac_verified": false,
+  "whole_boot_chain_hardware_side_effects": "unverified"
+}

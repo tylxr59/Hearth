@@ -317,6 +317,30 @@ No writer, programming, ECC-fault correction or restoration was tested; next is
 bounded normal-ECC read comparison and fresh proposed-region acquisition before
 designing persistent operations. No loader currently armed. Full native protocol,
 application/TLS/time integration and physical bench validation still remain.
+The next original normal-ECC read comparison is now fully prepared under
+firmware/nand_ecc_sample/. Build: build/nand-ecc-sample-20261031; separate -repro
+has six byte-identical artifacts. Configuration choices/bootstrap unchanged from
+observed controller/validated heartbeat. Fixed block190, pages12160..12223 includes
+the prior noncanonical-padding page12209. Uses normal read_oob MTD_OOB_PLACE with
+physical OOB; no char/block/partition/UBI/network or writer, WP/readonly guards
+unchanged. The published BCH4 callback discards decode failures/counts, so zero
+status is insufficient; exact host reference comparison is mandatory. No callback
+fix or stock-kernel source/binary equivalence is claimed.
+Private reference: private/nand-ecc-reference-20261031/expected.ecc-oob and immutable
+reference.json. Prepared from freshly reverified raw/corrected file identities,
+matching corrected views and raw OOB. Not in image or sent to device. Fresh future
+output: private/nand-ecc-sample-20261031 (must not already exist). Magic HRTHCOR1
+with absolute page indices; failure HRTHFAL1 preserves bounded typed diagnostics.
+No raw bytes/hashes logged. Collector requires 128 records, matching passes and
+reference, syncs private 0600 output and preserves partial failures. Host C fixture
+executes original fake NAND/sysfs only, under sanitizers. 21 new checks; make check
+and 371 host tests pass/three unchanged optional integration skips. No ARM firmware
+executed on host. Offline image and private reference/output preflights pass.
+Future PTY command (notify owner and obtain readiness before arming):
+sh build/nand-ecc-sample-20261031/boot.sh --execute-read-only-nand-ecc-sample /home/tylxr/workspaces/Hearth/private/nand-ecc-sample-20261031 /home/tylxr/workspaces/Hearth/private/nand-ecc-reference-20261031/expected.ecc-oob
+After exit request full ten-second hold/release/single-press and verify native USB.
+No automatic retry. No loader currently armed or target run yet. See
+docs/research/nand-ecc-read-review-2026-10-31.md and dated preparation JSON.
 The owner has only this unit and explicitly accepts potentially dangerous same-unit
 work; spare-only recovery restriction is waived, advance notification before
 persistent writes and separate physical HVAC authorization remain. Continue through
