@@ -163,3 +163,8 @@ observed 29-case candidate with descriptor permission restriction and seven new
 cases, so the earlier pass cannot validate the new build. See
 [preparation and exact profile](research/settings-permissions-preparation-2026-10-31.md).
 It neither changes actual credentials nor supplies an installer/rollback path.
+
+That separate [36-case privacy RAM comparison](research/settings-permissions-result-2026-10-31.md)
+subsequently passed once, followed by owner restart completion and independently
+observed normal USB. It validates bounded synthetic file-mode/failure/retry
+behavior, not actual credential installation, full application or flash recovery.

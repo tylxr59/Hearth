@@ -644,3 +644,15 @@ profiles. Fresh checked profile and validation scope are recorded in
 `docs/research/settings-permissions-preparation-2026-10-31.md`. No loader is
 armed; obtain owner restart readiness before execution, under the existing
 device-investigation authorization. Never reuse an output with a result.
+
+Settings privacy measurement update: source 68edfb9/profile-v2 executed ONCE and
+all 36 cases passed, loader/collector zero. Candidate new/existing temporary
+settings files became 0600 under umask zero; unrelated opens stayed 0666. Injected
+fchmod failure preserved old settings and dirty retry then succeeded. Existing
+I/O/allocation/binding/canary/log checks passed. Owner reported restart done;
+normal USB 2464:0002 on 1-1 independently returned. No loader armed, installation
+or actual settings changed. Preserve profile-v2/result and separate immutable
+attempt-1-{prepared,observed,native-return}.json. See the dated permissions result.
+The exact instrumented GNU candidate is measured; standalone no-trace/full
+native application and filesystem install/rollback remain unverified. Next is
+that narrow filesystem commissioning path, not more generic NAND research.

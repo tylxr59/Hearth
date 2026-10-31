@@ -106,3 +106,7 @@ mode/call/failure/readback evidence, the existing 29 cases, both child statuses,
 log checks and completion. Older reports are historical and do not satisfy this
 expanded contract. Existing stdout/stderr/report bounds remain unchanged; measured
 old rows plus conservative new-row allowances fit the per-child 8 KiB budget.
+
+The prepared privacy comparison subsequently [passed all 36 cases](../../docs/research/settings-permissions-result-2026-10-31.md)
+once using source 68edfb9/profile-v2, with loader/collector zero and native USB
+return. That executed profile/result must be preserved and never reused.

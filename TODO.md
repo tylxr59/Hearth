@@ -72,3 +72,10 @@ retry; unrelated opens/umask are unchanged. The 36-case RAM comparison is prepar
 but unexecuted; the prior 29-case pass applies only to its preserved older build.
 See docs/research/settings-permissions-preparation-2026-10-31.md. File installer/
 rollback and full native startup remain pending after this focused measurement.
+
+Observed: the 36-case settings privacy RAM comparison passed using source 68edfb9,
+with successful native USB return. New/existing temporary files became 0600;
+permission failure preserved old values and retry, unrelated opens stayed 0666.
+No persistent installation occurred. The exact instrumented build is measured;
+standalone/full application and filesystem installation/rollback remain open.
+See docs/research/settings-permissions-result-2026-10-31.md.

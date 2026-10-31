@@ -63,3 +63,8 @@ handle declaration is pinned in sources.json. The new build needs its own target
 measurement; the older observed build does not validate these additions. The
 extended synthetic RAM diagnostic has 36 cases. No file installer or production
 native application integration is established by this correction.
+
+The subsequent supervised [36-case result](../../docs/research/settings-permissions-result-2026-10-31.md)
+now validates the exact GNU-linked instrumented privacy candidate on synthetic
+RAM files, with native USB return. This supersedes the preparation-only status
+above. No standalone/full application, persistent installation or flash claim.
