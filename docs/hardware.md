@@ -127,3 +127,10 @@ measurement with synthetic fixtures, not full fetch/configuration, credential
 commissioning, restoration, power or HVAC validation. The screen remains black
 during the probe; native return required a full timed approximately ten-second
 hold, release and single press with the loader exited.
+
+
+The [native settings RAM matrix](research/settings-probe-result-2026-10-31.md)
+also completed twelve synthetic-file fault cases after a reporting-budget
+correction. It confirms original writer/retry defects; no writer fix, real
+settings access, flash durability or power-loss measurement is claimed. The
+owner-confirmed home icon and normal USB returned with the loader exited.

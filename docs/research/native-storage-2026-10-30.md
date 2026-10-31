@@ -145,3 +145,11 @@ corrected run's completion marker and outputs were checked.
 The earlier logging-removal candidate still addresses only its one client log
 block. Do not commission actual credentials on the basis of silencing that log,
 disabling the known uploader or receiving a successful loopback TLS matrix.
+
+
+The [second supervised RAM result](settings-probe-result-2026-10-31.md) now
+completes all twelve cases and confirms both entry-failure propagation and
+directory-sync/retry defects in the original native library. Native startup
+returned afterward. This supersedes the experiment's preparation-only status
+above; the historical static findings and allocation-failure limits remain.
+Nothing was installed or corrected in the native writer.

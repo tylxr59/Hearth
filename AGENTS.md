@@ -159,12 +159,20 @@ Owner confirmed native home icon and normal USB returned; no automatic retry.
 Preserve profile-prepared/result and private/native-settings-probe-20261030/attempt-1.json.
 The corrected supervisor separates stdout (8 KiB) and diagnostic (2 KiB raw) caches,
 continues draining excess diagnostics and reports dropped bytes. Its original shared
-cache sanitizer stress checks and 29 settings tests pass. New private UNEXECUTED
+cache sanitizer stress checks and 29 settings tests pass. Corrected private
 profile: private/native-settings-probe-20261031/profile-capped-diagnostics; helpers:
 build/native-settings-lab-20261031/helpers-capped-diagnostics. Seven artifacts match
 a fresh reproducibility profile. No kernel/bootstrap/library/writer change.
-Notify the owner before any new manually timed run; no loader is armed.
-See docs/research/settings-probe-attempt-2026-10-31.md and the probe README.
+A second supervised run using e5b0917 now completed all twelve cases: loader and
+collector zero, 8329 private bytes/31 rows, 16 diagnostic chunks plus 7956 explicitly
+discarded bytes, zero child status and all tail canaries intact. Original entry
+error returns success with one value lost; short write returns success with invalid
+XML; neither retries. Directory-sync error also skips retry. Normal write/readback
+and other modeled failures behave as recorded. No writer correction is installed.
+Owner confirmed native home icon and read-only preflight confirmed normal USB.
+Preserve both attempts and private/native-settings-probe-20261031/attempt-2.json.
+No further mode switch is needed now; no loader is armed. See
+docs/research/settings-probe-result-2026-10-31.md, the first-attempt record and README.
 Next: finish independent host work and native protocol/storage review while the
 prepared settings target measurement waits for the owner.
 Prepare any new bounded RAM test completely before another owner-timed restart;
