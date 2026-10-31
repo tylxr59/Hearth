@@ -41,6 +41,11 @@ The [entry-field follow-up](../research/native-entry-2026-10-31.md) traces anoth
 platform-key log path, tier-triggered settings writes, specific URL destinations
 and an original-length indexing concern after URL truncation. A future minimal
 entry response must account for these effects; no live entry exchange is enabled.
+The existing opt-in entry fixture now returns only a bounded transport URL from
+the shared private-IPv4/explicit-port HTTPS origin validator. Unsupported empty
+weather/update fields are omitted. Omission does not disable cached native
+services or establish that this reply completes pairing; normal runtime remains
+unchanged and the legacy routes remain disabled.
 
 ## MQTT
 

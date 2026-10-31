@@ -1,12 +1,42 @@
 """Small fail-closed schemas shared by HTTP, Nest adapter and MQTT."""
 
+import ipaddress
 import json
 import math
 import re
+from urllib.parse import urlsplit
 
 
 class Invalid(ValueError):
     pass
+
+
+def endpoint(value):
+    if (
+        not isinstance(value, str)
+        or not value.isascii()
+        or any(ord(c) <= 32 or ord(c) == 127 for c in value)
+    ):
+        raise Invalid("HTTPS endpoint with explicit port and private IPv4 required")
+    try:
+        parsed = urlsplit(value)
+        port = parsed.port
+        address = ipaddress.ip_address(parsed.hostname or "")
+    except ValueError as exc:
+        raise Invalid("endpoint must use a literal private IPv4 address") from exc
+    if (
+        parsed.scheme != "https"
+        or parsed.username is not None
+        or parsed.password is not None
+        or parsed.query
+        or parsed.fragment
+        or parsed.path not in ("", "/")
+        or not port
+        or address.version != 4
+        or not (address.is_private and not address.is_unspecified and not address.is_multicast)
+    ):
+        raise Invalid("HTTPS endpoint with explicit port and private IPv4 required")
+    return f"https://{address}:{port}"
 
 
 def serial(value):

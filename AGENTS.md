@@ -259,6 +259,28 @@ indexes using original length after a bounded copy (LLVM corroborated). No entry
 request or native app was run. Details: docs/research/native-entry-2026-10-31.md.
 Private exports: private/native-entry-review-20261031. Do not copy the upstream
 entry field set or claim it is observational; no production codec was added.
+The existing experimental entry fixture was then corrected to omit empty weather
+and update fields. It now advertises only transport_url, from the shared
+private-IPv4/explicit-port HTTPS validator moved to backend.validation. Controls,
+non-ASCII and empty userinfo are rejected before URL parsing. Twelve regression
+cases added; make check and all 328 tests including real TLS broker/container
+integration pass, plus an explicit rebuilt-container check. Normal runtime still
+disables legacy routes; no entry request was sent to the unit. Field omission
+does not disable cached/default native service URLs or prove pairing.
+Offline recovery-layout follow-up freshly verified raw capture identities, surveyed
+marker bytes and recovered two CRC-valid boot environments (credential values stay
+private). Their root device references 7/9 corroborate the source overlay numbering.
+Fresh corrected-image header/payload CRC checks pass at four expected locations.
+Secondary root reconstruction: private/nand-analysis-20261030/root1-extracted and
+root1-extraction.json, 2567 regular files, zero scanned CRC failures; no symlinks or
+special nodes created, no executable mode. Its four critical native binaries match
+primary, but whole regular-file maps differ. In scratch, 725/736 blocks have erased
+data plus first-page OOB cleanmarkers; do not treat them as all-FF/free space.
+New private metadata: private/nand-marker-review-20261031. No block selected for
+writing, live map/write-ECC contract or restoration verified. See
+docs/research/recovery-layout-2026-10-31.md. Scripts remain machine-local research
+recipes, not portable recovery tools. Next: native integration/protocol and exact
+fresh-region acquisition/write-contract planning before persistent operations.
 The owner has only this unit and explicitly accepts potentially dangerous same-unit
 work; spare-only recovery restriction is waived, advance notification before
 persistent writes and separate physical HVAC authorization remain. Continue through

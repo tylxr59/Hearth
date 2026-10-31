@@ -1,38 +1,14 @@
 """Offline Linux provisioning preparation. Intentionally no flash/apply operation."""
 
 import argparse
-import ipaddress
 import json
 import secrets
 import sys
 from pathlib import Path
-from urllib.parse import urlsplit
 
 from backend.registry import Registry, private_json
-from backend.validation import Invalid, serial
+from backend.validation import Invalid, endpoint, serial
 from provisioning.intake import MAX_INFO_BYTES, inspect_info, usb_events, usb_inventory
-
-
-def endpoint(value):
-    parsed = urlsplit(value)
-    try:
-        port = parsed.port
-        address = ipaddress.ip_address(parsed.hostname or "")
-    except ValueError as exc:
-        raise Invalid("endpoint must use a literal private IPv4 address") from exc
-    if (
-        parsed.scheme != "https"
-        or parsed.username
-        or parsed.password
-        or parsed.query
-        or parsed.fragment
-        or parsed.path not in ("", "/")
-        or not port
-        or address.version != 4
-        or not (address.is_private and not address.is_unspecified and not address.is_multicast)
-    ):
-        raise Invalid("HTTPS endpoint with explicit port and private IPv4 required")
-    return f"https://{address}:{port}"
 
 
 def prepare(registry_path, output, ident, generation, origin, modes, fan=False, rotate=False):

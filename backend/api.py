@@ -12,7 +12,7 @@ from aiohttp import web
 from backend.core import Core
 from backend.nest import reports
 from backend.registry import Registry
-from backend.validation import Invalid, loads, serial
+from backend.validation import Invalid, endpoint, loads, serial
 
 CORE = web.AppKey("core", Core)
 ORIGIN = web.AppKey("origin", str)
@@ -119,12 +119,14 @@ async def nest_put(request):
 
 async def nest_entry(request):
     origin = request.app[ORIGIN]
-    return web.json_response(
-        {"transport_url": origin + "/nest/transport", "software_update_url": "", "weather_url": ""}
-    )
+    # Empty URLs hit an unsafe native trim path; tier/update fields can mutate
+    # settings/buckets. Omit services whose native disable behavior is unverified.
+    return web.json_response({"transport_url": origin + "/nest/transport"})
 
 
 def create_app(core, origin="https://127.0.0.1:8443", experimental_nest=False):
+    if experimental_nest:
+        origin = endpoint(origin)
     app = web.Application(middlewares=[guard], client_max_size=16384)
     app[CORE], app[ORIGIN] = core, origin
     app.router.add_post("/v1/device/state", report)

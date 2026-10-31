@@ -44,3 +44,19 @@ is upstream behavior, not proof that Hearth should copy its whole response. No
 production route/schema was added from these observations. Full entry completion,
 trusted bootstrap, fetch/TLS/time setup, CAS/subscriptions, storage correction and
 same-unit recovery still require independent validation.
+
+## Host laboratory response correction
+
+The existing experimental entry endpoint previously advertised empty weather and
+update URLs. It now emits only its implemented transport URL. Its configured
+origin uses the same private-IPv4/explicit-port HTTPS validator as offline
+provisioning, which now also rejects controls, non-ASCII input and empty userinfo
+before parsing/canonicalization. The resulting URL is bounded well below the
+native copy limit. Regression checks require the exact minimal response and reject
+unsafe origins; the route remains disabled in the normal runtime.
+
+Omitting fields does not disable native cached/default service URLs, prove that
+this minimal response completes registration, or close any network-isolation or
+bootstrap gate. No entry reply has been sent to the actual unit. Host make check,
+all 328 tests including TLS broker/container integration, and an explicit check of
+the freshly rebuilt container passed. These are laboratory software results.

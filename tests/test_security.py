@@ -2,6 +2,7 @@ import base64
 import json
 import secrets
 
+import pytest
 from aiohttp.test_utils import TestClient, TestServer
 from hypothesis import given
 from hypothesis import strategies as st
@@ -95,6 +96,42 @@ async def test_native_bootstrap_stays_disabled_in_normal_runtime(rig):
         response = await normal.post("/nest/entry", headers=auth(token), data={"reset": "true"})
         assert response.status == 404
         assert "X-nl-set-client-credentials" not in response.headers
+
+
+async def test_experimental_entry_has_only_bounded_transport_url(rig):
+    core, token, _, _ = rig
+    before = core.registry.path.read_bytes()
+    app = create_app(core, origin="https://192.168.50.2:8443/", experimental_nest=True)
+    async with TestClient(TestServer(app)) as client:
+        response = await client.post("/nest/entry", headers=auth(token), data={"reset": "true"})
+        assert response.status == 200
+        assert await response.json() == {
+            "transport_url": "https://192.168.50.2:8443/nest/transport"
+        }
+        assert len((await response.json())["transport_url"].encode("ascii")) <= 255
+        assert "X-nl-set-client-credentials" not in response.headers
+    assert core.registry.path.read_bytes() == before
+
+
+@pytest.mark.parametrize(
+    "origin",
+    [
+        "http://192.168.50.2:8443",
+        "https://user:secret@192.168.50.2:8443",
+        "https://@192.168.50.2:8443",
+        "https://192.168.50.2:8443/path",
+        "https://192.168.50.2:8443?secret=value",
+        "https://192.168.50.2:8443#fragment",
+        "https://8.8.8.8:8443",
+        "https://" + "a" * 300 + ":8443",
+        "https://192.168.50.2:8443\r\n",
+        "https://[invalid:8443",
+        None,
+    ],
+)
+def test_experimental_entry_rejects_unsafe_origins(rig, origin):
+    with pytest.raises(Invalid):
+        create_app(rig[0], origin=origin, experimental_nest=True)
 
 
 async def test_nle_regressions(client, rig):
