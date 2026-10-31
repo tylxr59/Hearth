@@ -1,0 +1,16 @@
+{
+  "revision": "05ff6a5ce12737114a98ca1043230878100d9f88",
+  "files": {
+    "lib/ds/plhash.c": {
+      "url": "https://raw.githubusercontent.com/mozilla/nspr/05ff6a5ce12737114a98ca1043230878100d9f88/lib/ds/plhash.c",
+      "sha256": "ae1273f579b02565358b2e8f3e23363edddb7da6b5b5dad01005a8a888f6b7e4"
+    },
+    "lib/ds/plhash.h": {
+      "url": "https://raw.githubusercontent.com/mozilla/nspr/05ff6a5ce12737114a98ca1043230878100d9f88/lib/ds/plhash.h",
+      "sha256": "85758e98a6e3dd9f64e410999728123fb4dd1997ec101490a117edb277b6665a"
+    }
+  },
+  "repository": "https://github.com/mozilla/nspr",
+  "use": "Public hash API/ownership reference only. Native callbacks and comparator separately inspected; no source/binary correspondence asserted. No third-party implementation copied, compiled or bundled.",
+  "license": "MPL-2.0 reference files remain under ignored build/."
+}

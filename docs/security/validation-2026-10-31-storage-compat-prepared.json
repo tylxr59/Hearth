@@ -1,0 +1,36 @@
+{
+  "date": "2026-10-31",
+  "scope": "Original native storage compatibility candidate and synthetic RAM comparison, unexecuted",
+  "host_results": {
+    "make_check": "passed",
+    "pytest_passed": 312,
+    "optional_unchanged_broker_container_skipped": 3,
+    "new_host_checks": 31,
+    "original_core_with_host_nspr_asan_ubsan": "passed",
+    "thread_nested_scope_and_alias_callback_checks": "passed",
+    "shared_stream_matcher_fragment_and_overflow_checks": "passed",
+    "original_arm_cross_compilation": "passed",
+    "proprietary_firmware_executed_on_host": false
+  },
+  "profile": {
+    "io_cases": 24,
+    "candidate_allocation_alias_cases": 5,
+    "baseline_native_libraries": 34,
+    "original_correction_instrumentation_libraries": 2,
+    "rootfs_bytes": 11017920,
+    "image_bytes": 6017381,
+    "seven_artifacts_reproduced": true,
+    "kernel_and_bootstrap_unchanged": true,
+    "private_permissions_checked": true,
+    "wrapper_dry_run": "passed; offline only, no device opened"
+  },
+  "target_executed": false,
+  "installed": false,
+  "native_application_integration_verified": false,
+  "real_settings_or_credentials_used": false,
+  "credential_pair_transaction_verified": false,
+  "restoration_verified": false,
+  "physical_hvac_verified": false,
+  "whole_boot_chain_write_free": "unverified",
+  "ownership_update": "Owner has only this unit and accepts potentially dangerous same-unit work; a spare is not mandatory. Notify before any persistent write and prepare its concrete verified-input plan; no persistent write has occurred."
+}

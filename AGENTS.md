@@ -6,6 +6,14 @@ Build a local-first Nest Learning Thermostat modification that preserves native 
 
 The user's unit has arrived and received USB intake on their PC. Arrival/ownership alone does not authorize flashing or physical control. The owner has explicitly authorized device investigation and requests advance notification for potentially dangerous actions such as flashing; preserve the backup/recovery gates below. The [2026-10-30 intake](docs/research/device-intake-2026-10-30.md) records enclosure `02A`, reported `Display-2.6`, firmware `5.9.4-5`, normal-mode USB `2464:0002` and an authorized manual restart briefly exposing OMAP `0451:d00e`. A later paced diagnostic RAM boot succeeded and returned to native startup. No flashing, HVAC operation or firmware recovery test has been performed. Two complete owner raw NAND captures and independently matching BCH-derived data views now exist privately; native nlclient/osm were reconstructed for static inspection. Restoration remains unverified.
 
+On 2026-10-31 the owner confirmed this is their only unit and explicitly accepted
+potentially dangerous same-unit work after asking why a spare was required. A
+spare is therefore not mandatory for the recovery investigation. Prepare a concrete
+same-unit recovery/installation plan, verify original inputs and partition/write
+semantics, and notify the owner before any persistent write with its recovery
+limits. This does not establish recovery or authorize physical HVAC switching.
+No persistent write has yet been performed.
+
 Implementation baseline: commit `30c82f5`. It contains an authenticated host-side laboratory, not deployable thermostat firmware:
 
 - HTTPS API with separate device/manager credentials, enrollment, rotation/revocation, validated commands, expiry and availability.
@@ -175,7 +183,33 @@ No further mode switch is needed now; no loader is armed. See
 docs/research/settings-probe-result-2026-10-31.md, the first-attempt record and README.
 Next: design/test a narrowly scoped settings error/log correction against the
 observed matrix, continue native entry/CAS/subscription mapping and establish
-recovery before any persistent modification. No new device action is prepared.
+recovery before any persistent modification. An original storage correction and a 29-case comparison profile are now being
+prepared under firmware/settings_compat/ and firmware/settings_compat_probe/.
+The correction delegates native writer/setter behavior, makes entry errors block
+replacement, restores dirty state after failure, and replaces AddEntry allocation
+ordering while preserving callback input lifetimes. Native serialization/control
+are unchanged. Host NSPR/ASan/UBSan checks cover allocator ownership, failures,
+thread/nested scopes and aliased setter callbacks. Source/ABI review is private
+under private/settings-compat-review-20261031/native-abi.json. Candidate remains
+uninstalled and unexecuted on target. Original draft profiles named profile-reviewed
+and profile-callback-guard are superseded by later source changes and must not run;
+current recipe gates reject them. Final UNEXECUTED profile: private/settings-compat-probe-20261031/profile-candidate-v2.
+Helpers: build/settings-compat-20261031/comparison-candidate-v2. Earlier draft
+profiles, including v1, are stale/unexecuted and must not run. Final seven artifacts
+match profile-candidate-v2-repro; kernel/bootstrap are byte-identical to the tested
+TLS base. Image 6017381 bytes; rootfs 11017920 bytes. The comparison runs 24 I/O
+cases plus five candidate allocation/alias cases, with explicit symbol bindings,
+streamed synthetic-value log checks and an unrelated variadic-log marker. A
+runtime comparator/allocator guard delegates unknown tables to original code.
+Host checks now pass 312 tests; three unchanged optional broker/container tests
+were skipped for this firmware-only change. make check passed. No target execution
+or installation of the correction has occurred. Use the compatibility probe README
+and explicit --execute-experimental-settings-compat-probe only for a notified,
+owner-timed PTY attempt. Never rerun a profile with compat-result.jsonl. Streaming diagnostics must inspect discarded bytes as well as cached data.
+The owner has only this unit and explicitly accepts potentially dangerous same-unit
+work; spare-only recovery restriction is waived, advance notification before
+persistent writes and separate physical HVAC authorization remain. Continue through
+RAM validation and a concrete same-unit recovery/commissioning plan.
 Independent host progress now closes retained MQTT cleanup across offline
 revocation/backend restart: the optional registry revoked list retains validated
 identifiers only, saved with credential removal. Every broker connection repeats

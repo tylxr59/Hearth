@@ -88,3 +88,12 @@ The wheel build backend setuptools 84.2.1 (MIT) is separately hash-pinned in req
 ## Firmware retention policy
 
 Future owner-specific images must retain nlclient, osm where necessary, kernel/drivers, backplate MCU firmware, calibration and essential power services until individually understood. Their proprietary status and outdated dependencies remain risks, even when all host code is open. Preserve required notices and obtain applicable permissions before redistribution. Private development does not erase third-party license obligations. No firmware license conclusions are inferred from open-source kernel availability.
+
+The original firmware/settings_compat/ candidate and settings_compat_probe/ use
+only reviewed ABI identifiers/behavior, generated public link stubs and the same
+private native libraries for a diagnostic comparison. No decompiled implementation
+or proprietary binary patch is included. Public NSPR hash references are pinned in
+firmware/settings_compat/sources.json and remain under ignored build/. Original
+host fixtures use the installed host NSPR (not firmware); its headers/library are
+not bundled. The candidate, instrumentation, adapters and tests are MIT licensed.
+This adds no redistribution permission for native libraries or a deployable image.

@@ -1,0 +1,13 @@
+{
+  global:
+    _ZN10nlSettings5WriteEv;
+    _ZN10nlSettings8SetValueEPKcS1_;
+    _ZN8nlConfig8AddEntryEPKcS1_;
+    PR_Open;
+    PR_Write;
+    PR_Sync;
+    PR_Close;
+    nlLogWithComponent;
+    hearth_settings_suppressed_logs;
+  local: *;
+};
