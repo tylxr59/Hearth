@@ -25,8 +25,8 @@
     "query_status": 400,
     "post_status": 405,
     "https_manager_auth": "passed",
-    "fresh_device_telemetry": "not observed during bounded three-minute watch; owner wake/status requested",
-    "owner_followup": "Owner reports probable overnight battery depletion; USB charging requested, no loader."
+    "fresh_device_telemetry": "Observed after USB charge and return to unwired base: available with all three fields; owner independently confirms uploads.",
+    "owner_followup": "USB charging restored normal attach-to-base screen; owner reseated on base and confirmed uploads."
   },
   "static_review": {
     "private_exports": "passed",

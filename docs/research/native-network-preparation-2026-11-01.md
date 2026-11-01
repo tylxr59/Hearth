@@ -94,6 +94,12 @@ likely depleted overnight on the unwired base. Charging by USB was requested,
 with no loader or ring restart. A reconnect defect is not established; fresh
 telemetry remains unmeasured until battery power and Wi-Fi operation resume.
 
+Follow-up: USB charging returned the normal attach-to-base screen. The owner
+reseated the display on the unwired base and confirmed HA uploads. A fresh
+authenticated manager observation independently reports available with all three
+state fields under HA 0.2.1. This closes the post-update reconnect check without
+another device write or restart; the Google URLs are still unchanged.
+
 The [proposed bounded device contract](../architecture/0002-network-update-plan.md)
 uses full-file streaming replacement through uncompressed temporaries, allowing
 the existing whole-file encoding audit to remain applicable. It is a preparation

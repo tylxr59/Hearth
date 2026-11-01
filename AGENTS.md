@@ -1536,3 +1536,10 @@ no decoder rejections. Owner then reported the battery likely ran down overnight
 Instructed detach unwired base/reconnect USB to charge, no ring restart or loader.
 Await screen/charge confirmation. This does not establish a HA reconnect defect.
 Next preserve fresh network-target originals before any new device update.
+
+Post-charge result: owner observed normal attach-to-base screen, then reseated on
+the unwired base and confirmed uploads to HA. Authenticated manager independently
+reports available with all three state fields under HA0.2.1. Fresh private receipt:
+private/native-ha-local-probe-20261101/post-charge-telemetry.json. Reconnect passes;
+no new device writes/restarts were needed. Keep charging/power management separate
+from protocol failures. Google dependencies and native commands remain unfinished.

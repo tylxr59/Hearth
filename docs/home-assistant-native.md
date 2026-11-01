@@ -105,7 +105,9 @@ Neither route requires another app, MQTT or a new device listener.
 
 The candidate passes the real pinned HA runtime check. The owner then authorized
 activation and one Core restart; the live frontend passes204/empty-body and
-query/method refusal checks. Fresh native telemetry after that restart is pending.
+query/method refusal checks. Fresh native telemetry initially awaited charging.
+After USB charging and return to the unwired base, the owner and authenticated
+manager independently confirmed all three readings under 0.2.1; reconnect now passes.
 Device URL/time replacements remain offline only. See the
 [network preparation record](research/native-network-preparation-2026-11-01.md)
 for exact evidence, remaining update bounds and recovery gates.
