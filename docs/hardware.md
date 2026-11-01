@@ -186,3 +186,15 @@ hardware WP and native USB return. It performed94 page programs and no erases/OO
 writes. Restoration/power loss/native networking/HVAC remain separate unverified
 gates. The first unwired-base battery/Wi-Fi bench is pending, with no external
 HVAC power/load and backend command delivery disabled.
+
+
+### Selected-file recovery and corrected commissioning observation
+
+The original selected-file compression repair restored the owner-confirmed
+working primary UI on5.9.4-5. A fresh protected snapshot then supplied a new
+plan-scoped nine-file installation, preserving the legacy recovery archive.
+All72 target RAM cases and real-file preflight passed; the owner-authorized
+commit passed exact readback and active native-compatible flash-encoding checks,
+with sealed gate/asserted WP and zero reported failures. Native UI under the new
+installation remains pending; no physical network/HVAC or whole-firmware/power-loss
+recovery pass. See [the commissioning record](research/recommissioning-preparation-2026-10-31.md).

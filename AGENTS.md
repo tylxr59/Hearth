@@ -1307,3 +1307,39 @@ Suggested fresh output: private/file-writer-20261031/post-recovery-snapshot-atte
 Owner readiness question is pending. Do not arm before reply; after capture,
 leave protected RAM rather than reboot native before constructing the new plan.
 The read-only runner's new execution.json binds source/session for that handoff.
+
+
+## CURRENT: corrected nine-file install passed; native UI check pending
+
+Source78ad40d protected startup-diagnostic-v4 ran once, saved fresh nine-file
+snapshot and custody under private/file-writer-20261031/post-recovery-snapshot-attempt-2.
+Attempt1 timed out before reported transfer, preserved; never rerun either profile.
+Log tail capture limited64 files (partial log view). Recovered originals allmatch
+old except settings, whose metadata is unchanged; new shim/wrapper paths absent.
+Fresh credentials editor preserved unknown fields; unchanged other8 replacements,
+trust/CRL checked, newcapsulev4/repro+separatepin+custody verified archive_layout1.
+
+New kernelv7 and v7-repro2 reproduce6 artifacts with fixed identical snapshot
+session; initial v7-repro used another random session, differs, remains preserved.
+Helpersv11/repro reproduce7; recommission-{install,restore,reencode}-v1/repros each
+reproduce7. Source includes72-case gate. Owner explicitly conditionally authorized
+corrected nine-file install after concrete NAND/power-loss notice, then performed
+RAM-to-ROM sequence. All72 ARM cases and exact real-file preflight passed. Manually
+sent one scoped commit after independent pair/capsule/matrix check, no extra ask.
+
+recommission-install-attempt-1 strict result: complete/committed/verified/
+encoding_verified/safe_to_restart/protected all1, attempted511, phase2; all errors0.
+131programs,0erase,0marker,0failures. Host exited0. Selected files plus new scoped
+archive originals/journal passed active flash-header NONE/ZERO check after fresh
+RO remount. Legacy .hearth-rollback not targeted; preserved along with all host
+originals/raw acquisitions. Never rerun recommission-install-v1. Matched restore
+and reencode profiles remain unexecuted. No loader is running; device stays RAM,
+USB powered/base detached. Native startup/UI outcome under new files is PENDING.
+
+Next owner test: disconnectUSB, fit completely unwired base, hold10sec/release/
+singlepress, allow2min, report UI/home icon/LED. Leave Wi-Fi unconfigured until UI
+passes. Then start read-only backendwatch and firstnativeWiFi test. Actual physical
+network/TLS/time/native protocol/MQTTcontrols/HVAC remain unverified. Backend pair
+retained. See docs/research/recommissioning-preparation-2026-10-31.md. Host852/five
+optional skips/makecheck remain latest source validation; no runtime source edits
+since78ad40d. Pending source changes now document these actual observations only.

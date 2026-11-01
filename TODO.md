@@ -205,3 +205,12 @@ See docs/research/compression-recovery-2026-10-31.md. Before recommissioning,
 preserve fresh native originals and use a plan-derived rollback directory without
 removing the legacy recovery archive. New 72-case gate includes archive separation;
 its on-device measurement and the fresh install/native-network test remain pending.
+
+
+Observed corrected commissioning: fresh protected snapshot and exact original
+custody passed; the new plan keeps the legacy archive and uses its own namespace.
+All72 ARM cases and real-file preflight passed. Owner-authorized installation
+committed all nine files, verified exact contents/modes plus active flash encoding,
+and sealed write protection:131 page programs, zero failures. Host exited0.
+Next native UI check under the new installation, then isolated native networking;
+neither is passed yet. See docs/research/recommissioning-preparation-2026-10-31.md.
