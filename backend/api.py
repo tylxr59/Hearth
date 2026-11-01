@@ -63,6 +63,8 @@ async def guard(request, handler):
         response.headers["Cache-Control"] = "no-store"
         return response
     except Invalid as exc:
+        if NATIVE in request.app and request.path.startswith("/nest/"):
+            request.app[NATIVE].reject(exc)
         return web.json_response({"error": str(exc)}, status=400)
 
 
@@ -108,7 +110,10 @@ async def ack(request):
 
 async def status(request):
     core = request.app[CORE]
-    return web.json_response({"devices": [core.view(i) for i in core.registry.data["devices"]]})
+    result = {"devices": [core.view(i) for i in core.registry.data["devices"]]}
+    if NATIVE in request.app:
+        result["native_diagnostics"] = request.app[NATIVE].diagnostics()
+    return web.json_response(result)
 
 
 async def enqueue(request):

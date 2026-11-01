@@ -41,6 +41,33 @@ META = {
     "base_object_revision",
     "if_object_revision",
 }
+REJECTION_REASONS = {
+    "invalid native revision or timestamp": "revision_or_timestamp",
+    "native value nesting limit exceeded": "value_depth",
+    "nonfinite native value": "nonfinite_value",
+    "native object key required": "object_key",
+    "native bucket ownership or type rejected": "bucket_owner_or_type",
+    "native object envelope required": "envelope_type",
+    "invalid native session": "session",
+    "invalid native chunked flag": "chunked_flag",
+    "ambiguous native object envelope": "envelope_shape",
+    "native named bucket identity mismatch": "named_bucket_identity",
+    "native named subscription identity mismatch": "named_subscription_identity",
+    "invalid native object count": "object_count",
+    "invalid native bucket": "bucket_shape",
+    "duplicate native bucket": "duplicate_bucket",
+    "bounded native value required": "value_shape_or_size",
+    "native PUT value required": "put_value_missing",
+    "inline native bootstrap value requires zero revision and timestamp": "bootstrap_metadata",
+    "invalid native field name": "field_name",
+    "invalid native field value": "field_value",
+    "native bucket field limit exceeded": "field_count",
+    "duplicate JSON key": "duplicate_json_key",
+    "invalid JSON": "invalid_json",
+    "number outside allowed range": "telemetry_range",
+    "unsupported state field": "telemetry_field",
+    "invalid firmware version": "firmware_value",
+}
 MAPPINGS = {
     "device": {
         "current_temperature": "temperature",
@@ -185,6 +212,17 @@ class NativeTelemetry:
         self.core, self.clock = core, clock
         self._key = secrets.token_bytes(32)
         self._records, self._generation = {}, {}
+        self._rejections, self._last_rejection = {}, None
+
+    def reject(self, error):
+        # Finite vocabulary only: never retain exception text, payload fields,
+        # credentials, identifiers, addresses or per-request data.
+        reason = REJECTION_REASONS.get(str(error), "other")
+        self._rejections[reason] = min(self._rejections.get(reason, 0) + 1, 2147483647)
+        self._last_rejection = reason
+
+    def diagnostics(self):
+        return {"rejections": dict(self._rejections), "last_rejection": self._last_rejection}
 
     def _records_for(self, ident):
         generation = self.core.registry.data["devices"][ident]["hash"]

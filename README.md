@@ -6,7 +6,9 @@ A local-first laboratory for Nest Learning Thermostat Gen 2, with Gen 1 as a sec
 restored the working primary native UI. The [corrected nine-file installation](docs/research/recommissioning-preparation-2026-10-31.md)
 now passes exact readback and active native-compatible encoding checks, with
 write protection asserted. The owner confirmed the working native UI afterward;
-the isolated Wi-Fi/backend test is next. Do not use the old LZO-writing images.
+[physical Wi-Fi/HTTPS discovery](docs/research/native-wifi-result-2026-10-31.md) now succeeds,
+but the first upload receives HTTP 400. Bounded host diagnostics are deployed
+to identify that rejection. Do not use the old LZO-writing images.
 
 **Status: experimental same-unit investigation, not a supported thermostat release.** The first [nine-file install](docs/research/file-install-result-2026-10-31.md) passed readback but the native UI stalled. The selected original files have now been [restored and verified](docs/research/file-restore-result-2026-10-31.md); the owner confirmed the working stock UI, and the native plist confirms the primary slot remains selected on firmware `5.9.4-5`. Live native networking, complete protocol/control, power-loss/whole-firmware recovery and HVAC remain unverified. The local HAOS backend runs in telemetry-only mode, with commands disabled. Do not connect this prototype to live HVAC equipment. This iteration does not meet the physical firmware compatibility portion of the definition of done.
 

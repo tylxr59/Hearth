@@ -1364,3 +1364,45 @@ normal Wi-Fi UI to join dedicated IoT SSID and report resulting screen/error;
 password only on device. Await their result; poll read-only watch sensibly while
 working. No commands/HVAC. If watch expires, preserve and use a fresh output for
 any new observation. Physical native network/TLS/time/backend exchange still pending.
+
+
+## CURRENT: live HTTPS discovery succeeds; PUT400 under investigation
+
+Owner completed Wi-Fi association (thermostat+AP-controller confirmation), despite
+E22 empty-base wiring report which they managed to dismiss. Do not insist E22
+needs bench-power gear merely to perform this Wi-Fi check. No wiring changes,
+bypass or new flash. Private owner address/screenshot remain excluded fromsource.
+Read-only backendwatchattempt2 completed600sec with no accepted state; ICMP fromPC
+failed but inconclusiveVLAN. Backend0.1.0 started/trustedHTTPSmanager worked.
+
+Fresh protected startup-diagnostic-v5/repro reproduced8 artifacts; v5 executed
+once into post-wifi-diagnostic-attempt-1 with owner ROM sequence. All9 bytes/modes
+match installed capsulev4; rootowner and assignedcredentials intact. Backupcustody
+verified;64logfiles limited/partial. Current eventlog index9 has same9field layout:
+entryHTTP200, transportmetadataHTTP200, putHTTP400 (statusfield4). Sanitized evidence
+native-https-status-review.json plus raw frames remain private. Positive native
+HTTPS/assignedauth discovery demonstrated; actualPUT rejected before accepted
+telemetry. No TLS/network/control/HVAC completeness claim.
+
+Host added finite rejection codes/counts/latest to native-mode manager status only;
+no request bodies/fieldnames/identifiers/addresses/exceptiontext stored, unknown
+errors shareother, counts saturate/reset. Auth+validation/native responses+command
+disabling unchanged, normalstatusunchanged. Three meaningfultests, host855/fiveskips,
+makecheck. HAappversion0.1.1 newsourcepackage staged+readback; oldsource preserved at
+/app_configs/local_hearth/hearth-source-before-diagnostics-20261031, registrypreserved
+byteexact. Supervisorupdated0.1.1started, trustedHTTPSmanager+actualenrollment+empty
+newdiagnostics verified. ImmediateHTTPproberacedstartup andrefused; laterreadyGET
+passed. Never rerun one-shot deployscript; private native-diagnostics-deployment-
+20261031-v1 contains receipts, sourcearchive and all step results.
+
+No loader running, device remains protected RAM from readonlyv5 USB/base detached.
+Owner was prompted async to disconnectUSB, fit unwired base, full10sec hold/release/
+singlepress and let Wi-Fi reconnect, dismissE22 asbefore, reportconnected. Await
+that actual test; do NOT arm another loader or change thermostat files. Fresh
+10min read-only backendwatch execsession48747, machine-local
+build/watch-private-native-rejection-20261031.py, private native-wifi-bench-20261031-
+attempt-3. It records/prints finite native_diagnostics alongsideavailability/field
+names. Initialcounters empty/stateempty. Review actual reason before altering
+protocol validation; no hypothetical relaxation. All earlier executedprofiles and
+watchoutputs preserved. If watch expires, usefreshoutput; no automaticdevice retry.
+See docs/research/native-wifi-result-2026-10-31.md.

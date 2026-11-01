@@ -95,3 +95,21 @@ This original implementation follows behavior in the pinned MIT NLE backend;
 no upstream application code was copied. New source-file provenance is recorded
 in `docs/research/upstreams.json`. Host fixtures and a real TLS broker validate
 this subset, not a physical thermostat exchange or a complete NLE replacement.
+
+
+### First physical discovery and refused upload
+
+The corrected nine-file native installation reached the owner-confirmed UI and
+joined Wi-Fi. Private current event records show HTTP200 for entry and transport
+metadata, then HTTP400 for the first PUT. This verifies valid native HTTPS/assigned
+authentication for discovery, not complete transport compatibility. See
+[the physical attempt](../research/native-wifi-result-2026-10-31.md).
+
+In native telemetry mode only, manager-authenticated `GET /v1/manage/devices`
+additionally returns `native_diagnostics` with aggregate `rejections` counts and
+`last_rejection`. These finite codes contain no request bodies, field names,
+credentials, device identifiers or addresses; unknown errors share `other`.
+Counters saturate and reset with the process. Device credentials cannot read the
+manager response. Normal runtime has no diagnostic field. Native request validation
+and command disabling remain unchanged; the next bench run must identify the
+actual400 reason before changing accepted payload semantics.

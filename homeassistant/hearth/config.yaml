@@ -1,5 +1,5 @@
 name: Hearth Laboratory
-version: "0.1.0"
+version: "0.1.1"
 slug: hearth
 stage: experimental
 description: Local thermostat protocol laboratory; physical Nest support unverified

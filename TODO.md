@@ -219,3 +219,12 @@ neither is passed yet. See docs/research/recommissioning-preparation-2026-10-31.
 Owner subsequently confirmed the working native UI under the corrected nine-file
 installation. Fresh read-only HTTPS backend watch is active; first isolated Wi-Fi
 commissioning and actual native state exchange are pending. Commands remain disabled.
+
+
+First physical networking: owner/AP confirm association; protected post-Wi-Fi
+capture verifies all nine installed files/modes and credentials unchanged. Native
+current events report entry200/metadata200/PUT400. Prioritize the actual upload
+rejection rather than more TLS/flash experiments. HA app0.1.1 finite manager-only
+rejection counters are deployed and checked; host855/five skips/make check pass.
+Fresh read-only watch awaits one native startup. No telemetry/control/HVAC pass.
+See docs/research/native-wifi-result-2026-10-31.md.

@@ -49,6 +49,59 @@ async def native_client(rig):
         yield client
 
 
+async def test_native_rejection_reason_is_manager_only_and_payload_free(native_client, rig, caplog):
+    core, token, admin, _ = rig
+    marker = secrets.token_hex(32)
+    endpoint = "/v1/manage/devices"
+    manager = {"Authorization": "Bearer " + admin}
+    assert (await native_client.get(endpoint)).status == 401
+    assert (await native_client.get(endpoint, headers=auth(token))).status == 401
+    response = await native_client.post("/nest/transport/put", json={marker: marker})
+    assert response.status == 401
+    assert native_client.app[NATIVE].diagnostics()["rejections"] == {}
+    response = await native_client.post(
+        "/nest/transport/put", headers=auth(token), json={"objects": marker}
+    )
+    assert response.status == 400
+    assert not core.available(SERIAL) and core.states == {}
+    response = await native_client.get(endpoint, headers=manager)
+    result = await response.json()
+    assert result["native_diagnostics"] == {
+        "rejections": {"envelope_shape": 1},
+        "last_rejection": "envelope_shape",
+    }
+    assert marker not in json.dumps(result) and marker not in caplog.text
+    assert marker not in repr(native_client.app[NATIVE].__dict__)
+    assert marker not in core.registry.path.read_text()
+    assert (
+        await native_client.post("/nest/transport/put", headers=auth(token), json=batch())
+    ).status == 200
+    assert core.available(SERIAL) and core.command_delivery_enabled is False
+
+
+def test_rejection_diagnostics_have_finite_keys_saturating_counts_and_restart_reset(rig):
+    native = NativeTelemetry(rig[0])
+    for _ in range(1000):
+        native.reject(Invalid(secrets.token_hex(32)))
+    assert native.diagnostics() == {"rejections": {"other": 1000}, "last_rejection": "other"}
+    native._rejections["other"] = 2147483647
+    native.reject(Invalid("unknown payload text"))
+    assert native.diagnostics()["rejections"]["other"] == 2147483647
+    copy = native.diagnostics()
+    copy["rejections"]["other"] = 0
+    assert native.diagnostics()["rejections"]["other"] == 2147483647
+    assert NativeTelemetry(rig[0]).diagnostics() == {"rejections": {}, "last_rejection": None}
+
+
+async def test_normal_runtime_does_not_expose_native_diagnostics(rig):
+    core, _, admin, _ = rig
+    async with TestClient(TestServer(create_app(core))) as client:
+        response = await client.get(
+            "/v1/manage/devices", headers={"Authorization": "Bearer " + admin}
+        )
+        assert set(await response.json()) == {"devices"}
+
+
 async def test_authenticated_native_entry_put_listing_and_read_only_controls(native_client, rig):
     core, token, admin, _ = rig
     response = await native_client.post(
