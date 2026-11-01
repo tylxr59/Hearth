@@ -9,7 +9,7 @@
 #ifndef HEARTH_FILE_ACTION
 #error "Explicit profile action required"
 #endif
-#if HEARTH_FILE_ACTION != 1 && HEARTH_FILE_ACTION != 2
+#if HEARTH_FILE_ACTION != 1 && HEARTH_FILE_ACTION != 2 && HEARTH_FILE_ACTION != 3
 #error "Unknown profile action"
 #endif
 static long sc(long nr,long a,long b,long c,long d,long e)

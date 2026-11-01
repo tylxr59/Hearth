@@ -153,8 +153,11 @@ static int recovery_scenario_main(int argc,char **argv)
     assert(close(c.roots[0])==0&&close(c.roots[1])==0&&close(base)==0);
     return 0;
 }
+#ifndef HEARTH_RECOVERY_ENTRY
+#define HEARTH_RECOVERY_ENTRY main
+#endif
 #ifndef HEARTH_RAM_LAB
-int main(int argc,char **argv) { return recovery_scenario_main(argc,argv); }
+int HEARTH_RECOVERY_ENTRY(int argc,char **argv) { return recovery_scenario_main(argc,argv); }
 #else
 #ifndef HEARTH_FILE_RECOVERY_CASES
 #define HEARTH_FILE_RECOVERY_CASES 24
@@ -162,7 +165,7 @@ int main(int argc,char **argv) { return recovery_scenario_main(argc,argv); }
 #if HEARTH_FILE_RECOVERY_CASES != 24 && HEARTH_FILE_RECOVERY_CASES != 25
 #error "Only the reviewed original or preflight-extended RAM matrix is allowed"
 #endif
-int main(int argc,char **argv)
+int HEARTH_RECOVERY_ENTRY(int argc,char **argv)
 {
     int i,n;char directory[96],number[16],line[128];char *args[4];
     assert(original_file_lab_main(argc,argv)==0);

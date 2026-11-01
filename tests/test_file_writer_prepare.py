@@ -54,6 +54,20 @@ def test_writer_rejects_unreviewed_driver():
         configure.patch_driver("unreviewed source")
 
 
+def test_writer_must_read_lzo_but_never_select_compression_for_writes():
+    from firmware.probe.configure import configure as basic
+
+    text = configure.configure(basic(""))
+    configure.verify(text)
+    assert "CONFIG_JFFS2_LZO=y" in text.splitlines()
+    assert "CONFIG_JFFS2_CMODE_NONE=y" in text.splitlines()
+    for mode in configure.COMPRESS_MODES:
+        with pytest.raises(ValueError):
+            configure.verify(configure.base.setting(text, mode, True))
+    with pytest.raises(ValueError):
+        configure.verify(configure.base.setting(text, "JFFS2_CMODE_NONE", False))
+
+
 def test_binding_requires_complete_capsule_and_external_pin(preparation, monkeypatch):
     from tools import elf_review
 

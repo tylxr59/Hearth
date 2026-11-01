@@ -28,6 +28,9 @@ SOURCES = (
     "firmware/file_install/targets.h",
     "firmware/file_install/snapshot.c",
     "firmware/file_install/snapshot.h",
+    "firmware/file_reencode/reencode.c",
+    "firmware/file_reencode/reencode.h",
+    "tests/file_reencode_harness.c",
     "tests/file_install_harness.c",
     "tests/file_recovery_harness.c",
     "firmware/file_install_probe/lab_abi.h",
@@ -80,6 +83,7 @@ IMPORTS = (
     "readlink",
     "_exit",
     "strcmp",
+    "ioctl",
 )
 
 
@@ -130,7 +134,9 @@ def compile_helpers(output, capsule, pin):
         "-Wl,-e,_start,--dynamic-linker=/lib/ld-linux-armhf.so.3",
         str(ROOT / "firmware/tls_probe/start.S"),
     ]
-    for action in (1, 2):
+    action_names = {1: "file-install", 2: "file-restore", 3: "file-reencode"}
+    init_names = {1: "install-init", 2: "restore-init", 3: "reencode-init"}
+    for action in (1, 2, 3):
         run(
             common
             + entry
@@ -141,14 +147,14 @@ def compile_helpers(output, capsule, pin):
                     for name in (
                         "firmware/file_writer/action.c",
                         "firmware/file_writer/lifecycle.c",
-                        "firmware/file_install/posix.c",
+                        "firmware/file_reencode/reencode.c",
                         "firmware/file_install/transaction.c",
                         "firmware/file_install/snapshot.c",
                     )
                 ],
                 str(output / "libc.so.6"),
                 "-o",
-                str(output / ("file-install" if action == 1 else "file-restore")),
+                str(output / action_names[action]),
             ]
         )
         run(
@@ -160,7 +166,7 @@ def compile_helpers(output, capsule, pin):
                 "-Wl,-e,_start",
                 str(ROOT / "firmware/file_writer/bootstrap.c"),
                 "-o",
-                str(output / ("install-init" if action == 1 else "restore-init")),
+                str(output / init_names[action]),
             ]
         )
     run(
@@ -173,9 +179,9 @@ def compile_helpers(output, capsule, pin):
             *[
                 str(ROOT / name)
                 for name in (
-                    "tests/file_recovery_harness.c",
+                    "tests/file_reencode_harness.c",
                     "firmware/file_install/transaction.c",
-                    "firmware/file_install/posix.c",
+                    "firmware/file_reencode/reencode.c",
                 )
             ],
             str(output / "libc.so.6"),
@@ -183,14 +189,14 @@ def compile_helpers(output, capsule, pin):
             str(output / "file-selftest"),
         ]
     )
-    names = ("file-install", "file-restore", "install-init", "restore-init", "file-selftest")
+    names = (*action_names.values(), *init_names.values(), "file-selftest")
     record = {
         "status": "private-file-action-helpers-unexecuted",
         "source_sha256": source_hashes(),
         "plan": plan.hex(),
         "binding_sha256": sha((output / "binding.h").read_bytes()),
         "capsule_header_sha256": sha((output / "capsule.h").read_bytes()),
-        "selftest_cases": 56,
+        "selftest_cases": 66,
         "stub_not_for_target": True,
         "files": {name: sha((output / name).read_bytes()) for name in names},
     }

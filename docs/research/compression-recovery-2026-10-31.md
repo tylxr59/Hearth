@@ -1,0 +1,63 @@
+# Native JFFS2 compression incompatibility and recovery preparation
+
+**Do not execute the old priority-compression writer/restore images.** Their
+byte-only readback did not establish readability by the native kernel.
+
+The captured native messages contain seven reports that compression type0x07 is
+unavailable, paired with seven JFFS2 decompression errors. The pinned public
+header identifies0x07 as LZO. The experimental writer inherited LZO enabled,
+priority compression enabled, with LZO priority80 ahead of zlib60/rtime50.
+Thus the laboratory kernel could read its own writes while the native kernel
+could not. Original-byte restoration using that same policy could repeat it.
+
+Stock UI remained at the home icon with green blinking after the byte restoration
+and after a two-minute wait/brief wake press. ROM boot/RAM diagnostics still work;
+the bootloader/native kernel ranges were not writable through the bounded writer.
+This is not evidence of lost ROM recovery, but native UI recovery remains unproven.
+
+Original preserved log messages were separately reconstructed offline without
+executing firmware and contained no such error. Two invalid-data-CRC records in
+that old log volume were excluded, so this is not a claim of perfect historical
+log acquisition. Private diagnostic messages remain the direct failure evidence.
+
+The omission was the writer's native-format compatibility check. The earlier
+installation and restoration results remain valid only as byte/mode readback
+measurements under the laboratory kernel, not successful native recovery.
+
+## Checked correction, not yet executed
+
+- Require JFFS2_CMODE_NONE and reject other writer modes. An exact-source patch
+  independently forces the compression dispatch to NONE. Keep LZO decompression
+  enabled to read already-written nodes. Existing read-only kernels are unchanged.
+- Add a root-only, read-only ioctl that checks active inode fragments directly
+  through flash reads: header/type/inode/CRC and NONE/ZERO encoding. It exposes
+  no addresses/data or write operation. A fresh read-only mount after flush,
+  unmount and protection seal must pass this check for selected files, rollback
+  originals and journal. `encoding_verified` is now mandatory for post-write
+  restart/completion. Old reports cannot pass the new contract.
+- Action3 explicitly re-encodes the seven existing original files and seven
+  rollback originals even when bytes already match. It rewrites the journal,
+  keeps the two added paths absent, and preserves the same exact private plan,
+  original bytes/modes and host custody. It does not recommission Hearth.
+- Preflight validates original/current files, backup bytes, journal/plan, exact
+  archive inventory and only recognized temporary prefixes before writes.
+  Unknown changes are refused. Partial original/archive writes have bounded
+  retry/refusal tests; no automatic physical retry exists.
+- The combined unprivileged RAM workload is now66 cases: prior56 plus ten
+  forced-rewrite/refusal/interruption cases. The root gate remains closed until
+  host validation, real-file read-only preflight and a separate local commit.
+
+Kernel build/file-writer-kernel-20261031-v6 reproduces all six artifacts. Seven
+ARM programs at build/file-writer-actions-20261031-v7 reproduce. Private profiles
+file-writer-20261031/reencode-v1 and restore-none-v1 each reproduce seven artifacts;
+the repair uImage is1805067 bytes, under the existing load bound. All are
+unexecuted at preparation. make check and814 host tests pass/five optional skips.
+Fifteen sanitizer cases execute the actual kernel audit header against original
+fake kernel APIs; they do not substitute for target flash verification.
+
+The owner has received the concrete persistent rewrite/power-loss scope and
+explicitly chosen to run checked recovery. After their restart, run all66 RAM
+checks and read-only preflight. Only if both pass, manually issue the already
+authorized action3 commit; no further general permission is needed. Keep USB
+power/base detached, inspect exact byte/encoding/protection report, and do not
+claim recovery until the native stock UI is observed. No HVAC operation is allowed.

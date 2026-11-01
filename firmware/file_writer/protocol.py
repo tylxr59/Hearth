@@ -15,6 +15,7 @@ SNAPSHOT = b"HFW_SNP1"
 MAX_SNAPSHOT = 8 + 9 * (24 + 1024 * 1024)
 FILE_CASES = set(range(32))
 RECOVERY_CASES = set(range(25)) - {14}
+REENCODE_CASES = set(range(10))
 
 
 @dataclass(frozen=True)
@@ -30,7 +31,7 @@ class Binding:
             or type(self.receipt) is not bytes
             or len(self.receipt) != 32
             or type(self.action) is not int
-            or self.action not in (1, 2)
+            or self.action not in (1, 2, 3)
         ):
             raise ValueError("fixed private plan/receipt/action required")
 
@@ -96,7 +97,12 @@ class Decoder:
 def validate_selftest(payload):
     if len(payload) > MAX_PAYLOAD:
         raise ValueError("selftest evidence exceeds bound")
-    seen, process, stdout = {"file_case": set(), "recovery_case": set()}, None, 0
+    expected = {
+        "file_case": FILE_CASES,
+        "recovery_case": RECOVERY_CASES,
+        "reencode_case": REENCODE_CASES,
+    }
+    seen, process, stdout = {kind: set() for kind in expected}, None, 0
     for line in payload.splitlines(keepends=True):
         row = loads(line)
         if not isinstance(row, dict):
@@ -104,7 +110,7 @@ def validate_selftest(payload):
         kind = row.get("type")
         if kind in seen:
             case = row.get("case")
-            allowed = FILE_CASES if kind == "file_case" else RECOVERY_CASES
+            allowed = expected[kind]
             if (
                 set(row) != {"type", "case", "passed"}
                 or type(case) is not int
@@ -130,8 +136,8 @@ def validate_selftest(payload):
         else:
             # Raw diagnostics stay in the private frame, never become a pass.
             raise ValueError("selftest diagnostic or unexpected record present")
-    if seen["file_case"] != FILE_CASES or seen["recovery_case"] != RECOVERY_CASES:
-        raise ValueError("all 56 original RAM selftests required")
+    if seen != expected:
+        raise ValueError("all 66 original RAM selftests required")
     if process != {
         "type": "file_selftest_process",
         "wait_status": 0,
@@ -140,7 +146,7 @@ def validate_selftest(payload):
         "stdout_bytes": stdout,
     }:
         raise ValueError("selftest process or exact stdout completion failed")
-    return {"status": "file-action-ram-selftests-observed", "cases": 56, "writes_started": False}
+    return {"status": "file-action-ram-selftests-observed", "cases": 66, "writes_started": False}
 
 
 FIELDS = {
@@ -173,6 +179,7 @@ FIELDS = {
     "marker",
     "failed",
     "snapshot_available",
+    "encoding_verified",
 }
 FLAGS = {
     "commit_received",
@@ -189,6 +196,7 @@ FLAGS = {
     "complete",
     "protected",
     "snapshot_available",
+    "encoding_verified",
 }
 
 
@@ -202,7 +210,7 @@ def validate_result(payload, action):
         or row["type"] != "file_action"
         or any(type(row[key]) is not int for key in row if key != "type")
         or type(action) is not int
-        or action not in (1, 2)
+        or action not in (1, 2, 3)
         or row["action"] != action
     ):
         raise ValueError("exact bound file-action result required")
@@ -236,6 +244,8 @@ def validate_result(payload, action):
         raise ValueError("write window lacks scoped commit")
     if row["verified"] and not row["rw_attempted"]:
         raise ValueError("post-write verification lacks writable attempt")
+    if row["encoding_verified"] and (not row["verified"] or not row["rw_attempted"]):
+        raise ValueError("encoding verification lacks completed post-write readback")
     if (row["attempted"] or row["restored"] or row["committed"]) and not row["transaction_called"]:
         raise ValueError("transaction outcome lacks invocation evidence")
     if row["committed"] and (
@@ -251,7 +261,7 @@ def validate_result(payload, action):
         or row["phase"] != 2
         or row["protected"] != 1
         or row["failed"]
-        or (row["rw_attempted"] and not row["verified"])
+        or (row["rw_attempted"] and (not row["verified"] or not row["encoding_verified"]))
         or (not row["rw_attempted"] and (row["program"] or row["erase"] or row["marker"]))
     ):
         raise ValueError("restart safety evidence incomplete")
@@ -274,6 +284,7 @@ def validate_result(payload, action):
             "unmount_errors": 0,
             "seal_error": 0,
             "verified": 1,
+            "encoding_verified": 1,
             "safe_to_restart": 1,
             "phase": 2,
             "protected": 1,
@@ -281,6 +292,8 @@ def validate_result(payload, action):
         }
         if any(row[key] != value for key, value in required.items()):
             raise ValueError("complete action lacks exact transaction/readback/protection evidence")
+        if action == 3 and not row["program"]:
+            raise ValueError("forced reencoding requires actual fresh page programs")
     return row
 
 

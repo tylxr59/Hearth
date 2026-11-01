@@ -21,7 +21,11 @@ def frame(kind, payload=b"", binding=BINDING):
 def selftests():
     rows = [
         {"type": kind, "case": case, "passed": True}
-        for kind, cases in (("file_case", p.FILE_CASES), ("recovery_case", p.RECOVERY_CASES))
+        for kind, cases in (
+            ("file_case", p.FILE_CASES),
+            ("recovery_case", p.RECOVERY_CASES),
+            ("reencode_case", p.REENCODE_CASES),
+        )
         for case in sorted(cases)
     ]
     data = b"".join(json.dumps(row).encode() + b"\n" for row in rows)
@@ -52,8 +56,10 @@ def result(action=1, **changes):
         transaction_called=1,
         attempted=511,
         committed=int(action == 1),
-        restored=511 if action == 2 else 0,
+        restored=0 if action == 1 else 511,
         verified=1,
+        encoding_verified=1,
+        program=1 if action == 3 else 0,
         safe_to_restart=1,
         complete=1,
         phase=2,
@@ -75,7 +81,7 @@ def test_fragmented_frames_bind_exact_plan_receipt_and_action():
     for byte in data:
         events.extend(decoder.feed(bytes([byte])))
     assert [kind for kind, _ in events] == [p.SELFTEST, p.READY, p.RESULT]
-    assert p.validate_selftest(events[0][1])["cases"] == 56
+    assert p.validate_selftest(events[0][1])["cases"] == 66
     assert p.validate_result(events[2][1], 1)["complete"] == 1
     wrong = p.Binding(b"q" * 32, BINDING.receipt, 1)
     assert p.Decoder(BINDING).feed(frame(p.READY, binding=wrong)) == []
@@ -124,11 +130,12 @@ def test_selftest_duplicate_or_missing_cases_rejected():
         p.validate_selftest(data.splitlines(keepends=True)[0] + data)
 
 
-@pytest.mark.parametrize("action", (1, 2))
+@pytest.mark.parametrize("action", (1, 2, 3))
 def test_complete_result_requires_exact_transaction_and_readback(action):
     assert p.validate_result(result(action), action)["complete"] == 1
     for name, value in (
         ("verified", 0),
+        ("encoding_verified", 0),
         ("protected", 0),
         ("phase", 1),
         ("unmount_errors", 1),
@@ -170,6 +177,15 @@ def test_clean_abort_can_report_restart_without_claiming_install():
         protected=1,
     )
     assert p.validate_result(json.dumps(row).encode(), 1)["complete"] == 0
+
+
+def test_legacy_byte_only_report_cannot_pass_native_encoding_gate():
+    row = json.loads(result())
+    del row["encoding_verified"]
+    with pytest.raises(ValueError):
+        p.validate_result(json.dumps(row).encode(), 1)
+    with pytest.raises(ValueError):
+        p.validate_result(result(3, program=0), 3)
 
 
 def test_snapshot_reuses_strict_nine_file_scope():

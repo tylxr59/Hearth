@@ -22,6 +22,7 @@ RECIPES = (
     "firmware/file_writer/core.h",
     "firmware/file_writer/io.h",
     "firmware/file_writer/adapter.h",
+    "firmware/file_writer/encoding.h",
     "firmware/file_writer/configure.py",
     "firmware/file_writer/prepare.py",
     "provisioning/file_capsule.py",
@@ -135,12 +136,20 @@ def finalize(output, base):
         filesystem.with_suffix(".hearth-writer-original").read_text()
     ):
         raise ValueError("unexpected read-only compatibility guard")
+    for name, patch in (
+        ("compr.c", configure.patch_compression),
+        ("ioctl.c", configure.patch_ioctl),
+    ):
+        path = kernel / "fs/jffs2" / name
+        if path.read_text() != patch(path.with_suffix(".hearth-writer-original").read_text()):
+            raise ValueError("unexpected native encoding protection")
     pairs = [
         (ROOT / "firmware/nand_metadata/readonly.h", driver.parent / "hearth-metadata-readonly.h"),
         (output / "probe-init.c", output / "firmware/file_snapshot/init.c"),
         (kernel / ".config", output / "artifacts/kernel.config"),
         (kernel / "arch/arm/boot/uImage", output / "artifacts/uImage"),
         (output / "root/init", output / "artifacts/probe-init"),
+        (ROOT / "firmware/file_writer/encoding.h", kernel / "fs/jffs2/hearth-encoding.h"),
     ]
     for name in ("core.c", "core.h", "io.h", "adapter.h", "binding.h"):
         pairs.append((output / name, driver.parent / "hearth-file-writer" / name))

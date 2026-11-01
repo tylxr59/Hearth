@@ -2,7 +2,10 @@
 
 This is an experimental installer/recovery path for one privately reviewed Gen 2
 primary/5.9.4-5 plan. One [persistent installation](../../docs/research/file-install-result-2026-10-31.md)
-passed exact readback and native USB return; actual restoration remains untested.
+passed exact readback/native USB return but exposed a UI startup stall. The later
+[selected-file restoration](../../docs/research/file-restore-result-2026-10-31.md)
+passed original-byte readback; stock UI recovery is pending. Whole-firmware and
+hardware power-loss recovery remain unverified.
 It preserves native HVAC code; this does not validate physical HVAC operation.
 The owner must receive advance notice before persistent work, including the
 unverified whole-firmware recovery and power-loss limits.

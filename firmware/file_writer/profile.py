@@ -51,7 +51,7 @@ LIBRARIES = {"lib/libc.so.6", "lib/ld-linux-armhf.so.3"}
 
 def recipes():
     paths = set(compile.SOURCES) | set(prepare.RECIPES) | set(snapshot.RECIPES)
-    for folder in ("file_writer", "file_install"):
+    for folder in ("file_writer", "file_install", "file_reencode"):
         paths |= {
             p.relative_to(ROOT).as_posix()
             for p in (ROOT / "firmware" / folder).iterdir()
@@ -143,6 +143,20 @@ def kernel_check(root):
         read_build(fs.with_suffix(".hearth-writer-original"), 65536).decode()
     ):
         raise ValueError("read-only compatibility protection changed")
+    for name, patch in (
+        ("compr.c", configure.patch_compression),
+        ("ioctl.c", configure.patch_ioctl),
+    ):
+        path = tree / "fs/jffs2" / name
+        if read_build(path, 65536).decode() != patch(
+            read_build(path.with_suffix(".hearth-writer-original"), 65536).decode()
+        ):
+            raise ValueError("native encoding protection changed")
+    if (
+        read_build(tree / "fs/jffs2/hearth-encoding.h", 65536)
+        != (ROOT / "firmware/file_writer/encoding.h").read_bytes()
+    ):
+        raise ValueError("read-only encoding audit changed")
     for name, patch in (
         ("scripts/mkcompile_h", configure.base.patch_build_metadata),
         ("drivers/usb/gadget/u_serial.c", configure.base.patch_serial),
@@ -237,7 +251,7 @@ def validate_entries(
         set(names) != expected
         or len(names) != len(expected)
         or type(action) is not int
-        or action not in (1, 2)
+        or action not in (1, 2, 3)
     ):
         raise ValueError("unexpected writer archive scope")
     by_name = {row[0]: row for row in entries}
@@ -281,7 +295,7 @@ def validate_entries(
 
 
 def package(kernel_root, base, helpers, capsule, pin, output, action):
-    if type(action) is not int or action not in (1, 2):
+    if type(action) is not int or action not in (1, 2, 3):
         raise ValueError("explicit install or restore profile required")
     output, capsule, pin = private_path(output), private_path(capsule), private_path(pin)
     if not output.parent.is_dir() or output.parent.stat().st_mode & 0o077:
@@ -301,7 +315,7 @@ def package(kernel_root, base, helpers, capsule, pin, output, action):
         compiled.get("status") != "private-file-action-helpers-unexecuted"
         or compiled["source_sha256"] != compile.source_hashes()
         or compiled["plan"] != plan.hex()
-        or compiled["selftest_cases"] != 56
+        or compiled["selftest_cases"] != 66
         or compiled["stub_not_for_target"] is not True
         or compiled["binding_sha256"] != sha(prepare.binding(capsule, pin).encode())
         or compiled["capsule_header_sha256"]
@@ -314,14 +328,16 @@ def package(kernel_root, base, helpers, capsule, pin, output, action):
         "install-init",
         "restore-init",
         "file-selftest",
+        "file-reencode",
+        "reencode-init",
     }:
         raise ValueError("unexpected original helper set")
     programs = {name: read_build(helpers / name, 2 * 1024 * 1024) for name in compiled["files"]}
     if any(sha(data) != compiled["files"][name] for name, data in programs.items()):
         raise ValueError("original action helper bytes changed")
     libraries = native_libraries(base)
-    action_data = programs["file-install" if action == 1 else "file-restore"]
-    bootstrap = programs["install-init" if action == 1 else "restore-init"]
+    action_data = programs[{1: "file-install", 2: "file-restore", 3: "file-reencode"}[action]]
+    bootstrap = programs[{1: "install-init", 2: "restore-init", 3: "reencode-init"}[action]]
     entries = [
         (
             name,
@@ -370,7 +386,7 @@ def package(kernel_root, base, helpers, capsule, pin, output, action):
         "kernel": str(Path(kernel_root).absolute()),
         "base": str(private_path(base)),
         "helpers": str(helpers.absolute()),
-        "selftest_cases": 56,
+        "selftest_cases": 66,
         "kernel_manifest_sha256": sha(read_build(Path(kernel_root) / "probe-manifest.json", 65536)),
         "kernel_files": kernel_record["files"],
         "helpers_files": compiled["files"],
@@ -392,8 +408,8 @@ def check(root):
         or record.get("device_executed") is not False
         or record["recipes"] != recipes()
         or type(record["action"]) is not int
-        or record["action"] not in (1, 2)
-        or record["selftest_cases"] != 56
+        or record["action"] not in (1, 2, 3)
+        or record["selftest_cases"] != 66
         or set(record["files"]) != FILES
     ):
         raise ValueError("file-action profile scope/source changed")
@@ -445,8 +461,8 @@ def check(root):
         != sha(private_read(Path(record["capsule"]) / "capsule.h", 96 * 1024 * 1024))
     ):
         raise ValueError("file-action original helper compilation changed")
-    action_name = "file-install" if record["action"] == 1 else "file-restore"
-    init_name = "install-init" if record["action"] == 1 else "restore-init"
+    action_name = {1: "file-install", 2: "file-restore", 3: "file-reencode"}[record["action"]]
+    init_name = {1: "install-init", 2: "restore-init", 3: "reencode-init"}[record["action"]]
     expected_programs = {
         name: read_build(helpers / name, 2 * 1024 * 1024)
         for name in (action_name, init_name, "file-selftest")
@@ -467,7 +483,7 @@ def check(root):
     return {
         "status": "file-action-offline-preflight-checked",
         "action": record["action"],
-        "selftest_cases": 56,
+        "selftest_cases": 66,
         "targets": 9,
         "device_executed": False,
         "installed": False,
@@ -483,7 +499,7 @@ if __name__ == "__main__":
     create = sub.add_parser("package")
     for name in ("kernel-root", "base", "helpers", "capsule", "pin", "output"):
         create.add_argument("--" + name, required=True)
-    create.add_argument("--action", required=True, type=int, choices=(1, 2))
+    create.add_argument("--action", required=True, type=int, choices=(1, 2, 3))
     sub.add_parser("check").add_argument("root")
     args = vars(parser.parse_args())
     command = args.pop("command")

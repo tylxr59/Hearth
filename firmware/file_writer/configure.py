@@ -10,6 +10,30 @@ from firmware.file_snapshot import configure as base
 initramfs = base.initramfs
 ENABLED = ("BLK_DEV_INITRD", "RD_GZIP", "AEABI", "VFP", "FUTEX")
 FILESYSTEM_SHA256 = "26079566bd00628927f5d949d304382a71ee7a0da50f183adb52a86c31f2e1ce"
+COMPRESSION_SHA256 = "22b49ef7253ee9187126b0100c3259dbc16a7b32af06edb97bf3ff9897103f13"
+IOCTL_SHA256 = "0e65d6b892fd402a43dc3928ba5c3e7cb9099f924d919d692c0470d3357d01ba"
+COMPRESS_MODES = ("JFFS2_CMODE_PRIORITY", "JFFS2_CMODE_SIZE", "JFFS2_CMODE_FAVOURLZO")
+
+
+def patch_compression(original):
+    if hashlib.sha256(original.encode()).hexdigest() != COMPRESSION_SHA256:
+        raise ValueError("unreviewed JFFS2 compression implementation")
+    start = original.index("uint16_t jffs2_compress(")
+    tail = original[start:]
+    before = "switch (jffs2_compression_mode)"
+    if tail.count(before) != 1:
+        raise ValueError("unexpected JFFS2 compression dispatch")
+    # Retain LZO decompression for already-written files, but no new compressor
+    # may run regardless of a global mode setting or future mount option.
+    return original[:start] + tail.replace(before, "switch (JFFS2_COMPR_MODE_NONE)")
+
+
+def patch_ioctl(original):
+    if hashlib.sha256(original.encode()).hexdigest() != IOCTL_SHA256:
+        raise ValueError("unreviewed JFFS2 ioctl implementation")
+    return original.replace(
+        '#include "nodelist.h"', '#include "nodelist.h"\n#include "hearth-encoding.h"'
+    ).replace("return -ENOTTY;", "return hearth_encoding_check(filp, cmd, arg);")
 
 
 def patch_remount(original):
@@ -25,6 +49,9 @@ def configure(text):
     text = base.configure(text)
     for name in ENABLED:
         text = base.setting(text, name, True)
+    text = base.setting(text, "JFFS2_CMODE_NONE", True)
+    for name in COMPRESS_MODES:
+        text = base.setting(text, name, False)
     return text
 
 
@@ -33,6 +60,10 @@ def verify(text):
     for name in ENABLED:
         if text.splitlines().count(f"CONFIG_{name}=y") != 1:
             raise ValueError("required writer userspace support missing: " + name)
+    if text.splitlines().count("CONFIG_JFFS2_CMODE_NONE=y") != 1 or any(
+        f"CONFIG_{name}=y" in text.splitlines() for name in COMPRESS_MODES
+    ):
+        raise ValueError("UNSAFE writer compression: native compatibility requires NONE")
 
 
 def patch_driver(original):
@@ -95,6 +126,15 @@ def main():
     if not saved_filesystem.exists():
         saved_filesystem.write_bytes(filesystem.read_bytes())
     filesystem.write_text(patch_remount(saved_filesystem.read_text()))
+    for name, patch in (("compr.c", patch_compression), ("ioctl.c", patch_ioctl)):
+        path = Path("fs/jffs2") / name
+        saved_source = path.with_suffix(".hearth-writer-original")
+        if not saved_source.exists():
+            saved_source.write_bytes(path.read_bytes())
+        path.write_text(patch(saved_source.read_text()))
+    shutil.copyfile(
+        Path("/work/firmware/file_writer/encoding.h"), Path("fs/jffs2/hearth-encoding.h")
+    )
     driver.write_text(patch_driver(saved.read_text()))
     target = driver.parent / "hearth-file-writer"
     target.mkdir(exist_ok=True)

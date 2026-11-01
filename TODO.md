@@ -188,3 +188,11 @@ Protected read-only startup diagnostic prepared/reproduced, unexecuted: fixed9
 current files + bounded persistent log tails, unchanged RO kernel/no native code.
 Full786 host tests/five skips and make check pass. Next notified owner-timed
 diagnostic, then private evidence review. No guessed persistent fix/recovery.
+
+Observed protected diagnostic: all9 installed bytes/modes matched;64 log tails
+captured (partial count limit), no diagnosed cause. Owner confirmed restore
+preflight and separate commit. restore-v3 PASSED actual journal/original/current
+inspection, all56 RAM cases and selected-file restoration: all9 originals exact,
+new shim/wrapper absent, sealed WP,41 programs/no failures. Stock unwired-base UI
+check PENDING; keep Wi-Fi unconfigured. Do not reinstall/claim app recovery or
+whole-firmware restoration. Backend enrollment remains. See dated restore result.

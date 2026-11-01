@@ -1097,3 +1097,78 @@ private/file-writer-20261031/startup-diagnostic-attempt-1
 Notify before boot; prompt reviewed manual restart only after loader waits.
 No persistent write/restore or native app launch is part of this diagnostic.
 Inspect current file comparisons/log evidence privately before proposing a fix.
+
+## CURRENT: original selected files restored, stock UI check pending
+
+50fe8ff/startup-diagnostic-v2 ran once: fixed9 current bytes/modes all matched
+installed payloads.64 log tails captured; count limit reached, partial logs show
+no identified loader/crash error. This does not diagnose/exclude a cause. Native
+code/flash writes disabled in that diagnostic. Evidence startup-diagnostic-attempt-1.
+Unit stayed RAM/USB/base detached; no native restart between capture and restore.
+
+Owner chose restoration preflight, then explicit separate Ready—restore now
+after scope/recovery/power-loss notice. restore-v3 ran once from matching recorded
+persistent attempt3 via --recover-from. All56 selftests and actual RO journal/
+original/current-file preflight passed; separate commit rechecked backup/images.
+Full strict restore result: attempted511/restored511/committed0, no errors,
+exact original bytes/modes and absence of new wrapper/shim verified after unmount,
+sealed WP, safe restart.41 page programs, zero erase/OOB/failures. Host exited0.
+Preserve restore-attempt-1 all decision/result/restoration-review evidence.
+Never rerun restore-v3 or startup-diagnostic-v2. No loader armed.
+
+**Device's nine selected files are now original again; Hearth wrapper/shim absent.**
+Backend enrollment/private credential remains retained; do not roll back its registry.
+Selected-file backup/journal directory remains on-device; not an untouched raw
+filesystem restoration. Whole-firmware/power-loss/damaged-JFFS2 recovery unverified.
+
+Owner was asked to disconnect USB, fit completely unwired base, full10sec hold,
+release/single press and report Wi-Fi setup vs home icon; leave Wi-Fi unconfigured.
+Stock UI outcome is PENDING. Do not claim restored app health from RO byte readback.
+If stock UI returns, isolate runtime integration in RAM before another installation;
+no guessed persistent patch. If not, investigate native compatibility/recovery
+evidence before further changes. Host786/five optional skips, make check. See
+docs/research/file-restore-result-2026-10-31.md.
+
+## CURRENT URGENT: compression recovery checked and authorized, not yet armed
+
+Stock UI still home/green after restoration and2min/briefpress. Owner worried
+about bricking; explained ROM/RAM still functional and originals preserved,
+native UI unusable, recovery not yet proven. Owner reconnected USB/base detached;
+native USB observed. No loader running yet.
+
+Concrete cause: captured native messages contain7 unsupported compression0x07
+and7 paired decompression errors.0x07=LZO. Old writer used priority/LZO80 before
+zlib60/rtime50. Byte reads under that kernel did not prove native readability;
+old byte restoration could rewrite the same incompatible format. Agent admitted
+the missed compatibility check and apologized. **NEVER EXECUTE old priority
+writer/restore images.** Current verifier refuses them. Original firmware/kernel/
+bootloader partitions outside fixed root0/user ranges remain untouched.
+
+Correction checked: kernel build/file-writer-kernel-20261031-v6 (all6 artifacts
+reproduce) requiresNONE and hard-forces compressor dispatchNONE; keeps LZO reads.
+Read-only per-inode ioctl audits active flash headers/CRC/type/inode andNONE/ZERO.
+New mandatory encoding_verified prevents byte-only completion/restart claims.
+New explicit action3 forces7 originals and7 rollback copies/journal into fresh
+nodes even if bytes match, preserving modes and absence of shim/wrapper. Strict
+preflight checks journal, original-only state, backups, fixed archive inventory
+and bounded known temporary prefixes. No guessed offsets/raw writes.
+
+helpers build/file-writer-actions-20261031-v7 and -v7-repro (7programs match);
+private/file-writer-20261031/reencode-v1 and restore-none-v1 with separate repros
+(7artifacts eachmatch). All unexecuted.66-case RAM workload=prior56+10reencode.
+make check814tests/five optional skips;15 actual-audit-header sanitizer cases.
+
+**Owner explicitly replied Ready—run checked recovery** to the concrete conditional
+plan: after restart run66 RAM checks+real RO preflight; if they pass, manually
+send action3 persistent commit. This covers the commit timing/authorization;
+do not ask it again. Keep USB/base detached, no restart/unplug during writes.
+Next PTY:
+.venv/bin/python -m firmware.file_writer.run boot
+private/file-writer-20261031/reencode-v1 private/file-writer-20261031/restore-none-v1
+private/file-writer-20261031/reencode-attempt-1 --execute-writer-preflight
+Prompt10sec hold/release/press only afterloaderwaits. After66+READY check, explicit
+localdecision .venv/bin/python -m firmware.file_writer.run decide
+private/file-writer-20261031/reencode-attempt-1 --execute-persistent-original-reencode.
+Never auto retry. Review original bytes+encoding+WP/cleanup before native startup;
+unknown result means retainUSBpower/no reboot. Native UI recovery is unproven.
+See docs/research/compression-recovery-2026-10-31.md.

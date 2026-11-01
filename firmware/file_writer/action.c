@@ -5,13 +5,14 @@
 #include "lifecycle.h"
 #include "../file_install/posix.h"
 #include "../file_install/snapshot.h"
+#include "../file_reencode/reencode.h"
 #include "../settings_compat_probe/transmit.h"
 #include "capsule.h"
 #include "binding.h"
 #ifndef HEARTH_FILE_ACTION
 #error "Explicit install=1 or restore=2 build required"
 #endif
-#if HEARTH_FILE_ACTION != 1 && HEARTH_FILE_ACTION != 2
+#if HEARTH_FILE_ACTION != 1 && HEARTH_FILE_ACTION != 2 && HEARTH_FILE_ACTION != 3
 #error "Unsupported file action"
 #endif
 static const char *const roots[2]={"/native","/user"};
@@ -25,6 +26,7 @@ struct action_context {
     struct hearth_posix_context files;
     unsigned int mounted;
     int preflight_target;
+    int encoding_verified;
     unsigned int phase,protected,programs,erases,markers,failed;
 };
 static void put(unsigned char *p,unsigned int value)
@@ -94,8 +96,8 @@ static int preflight(void *opaque)
     struct action_context *c=opaque;unsigned int i;
     if(c->files.recovery!=-1||c->mounted!=3||read_status(c)||c->phase!=0||
        c->protected!=1||c->programs||c->erases||c->markers||c->failed) return -1;
-    if(HEARTH_FILE_ACTION==2) {
-        int result=hearth_posix_restore_preflight(&c->files);
+    if(HEARTH_FILE_ACTION!=1) {
+        int result=HEARTH_FILE_ACTION==3?hearth_posix_reencode_preflight(&c->files):hearth_posix_restore_preflight(&c->files);
         if(c->files.recovery>=0) { if(close(c->files.recovery)) result=-1;c->files.recovery=-1; }
         return result;
     }
@@ -123,7 +125,8 @@ static int remount_rw(void *opaque,unsigned int i)
 static void transact(void *opaque,struct hearth_install_result *result)
 {
     struct action_context *c=opaque;
-    if(HEARTH_FILE_ACTION==2) *result=hearth_posix_restore_files(&c->files);
+    if(HEARTH_FILE_ACTION==3) *result=hearth_posix_reencode_originals(&c->files);
+    else if(HEARTH_FILE_ACTION==2) *result=hearth_posix_restore_files(&c->files);
     else *result=hearth_install_files(&hearth_posix_file_ops,&c->files,9,1);
 }
 static int verify_readonly(void *opaque,int replacement)
@@ -140,12 +143,14 @@ static int verify_readonly(void *opaque,int replacement)
            observed.mode!=mode||observed.size!=expected.size||
            (expected.size&&memcmp(scratch,expected.data,expected.size))) goto done;
     }
+    if(hearth_posix_selected_encoding(&c->files,replacement)) goto done;
     result=0;
 done:
     if(release_roots(c)) result=-1;
     if(unmount_root(c,1)) result=-1;
     if(unmount_root(c,0)) result=-1;
     if(read_status(c)||c->phase!=2||c->protected!=1||c->failed) result=-1;
+    c->encoding_verified=result==0;
     return result;
 }
 static const struct hfa_ops action_ops={preflight,open_window,remount_rw,transact,
@@ -221,7 +226,7 @@ int main(void)
      * compiled plan; a new reviewed capsule/image is still required. */
     if(initial==2) capture_changed_preflight(&c);
     if(!initial) committed=await_commit();
-    if(committed) result=hfa_run(&action_ops,&c,HEARTH_FILE_ACTION==2);
+    if(committed) result=hfa_run(&action_ops,&c,HEARTH_FILE_ACTION!=1);
     else result=hfa_cancel(&action_ops,&c);
     n=snprintf((char *)report+84,sizeof(report)-92,
         "{\"type\":\"file_action\",\"action\":%u,\"initial_error\":%d,\"preflight_target\":%d,"
@@ -230,13 +235,13 @@ int main(void)
         "\"cleanup_error\":%d,\"attempted\":%u,\"restored\":%u,\"committed\":%d,"
         "\"release_error\":%d,\"unmount_errors\":%u,\"seal_error\":%d,\"verified\":%d,"
         "\"safe_to_restart\":%d,\"complete\":%d,\"phase\":%u,\"protected\":%u,"
-        "\"program\":%u,\"erase\":%u,\"marker\":%u,\"failed\":%u,\"snapshot_available\":%u}\n",
+        "\"program\":%u,\"erase\":%u,\"marker\":%u,\"failed\":%u,\"snapshot_available\":%u,\"encoding_verified\":%d}\n",
         HEARTH_FILE_ACTION,initial,c.preflight_target,committed,result.stage_error,result.window_opened,
         result.rw_attempted,result.transaction_called,result.transaction.error,result.transaction.rollback_error,
         result.transaction.journal_error,result.transaction.cleanup_error,result.transaction.attempted,
         result.transaction.restored,result.transaction.committed,result.release_error,result.unmount_errors,
         result.seal_error,result.verified,result.safe_to_restart,result.complete,c.phase,c.protected,
-        c.programs,c.erases,c.markers,c.failed,snapshot_size?1U:0U);
+        c.programs,c.erases,c.markers,c.failed,snapshot_size?1U:0U,c.encoding_verified);
     if(n<=0||(unsigned int)n>=sizeof(report)-92) for(;;) pause_short();
     binding_frame(report,"HFW_RES1");put(report+76,(unsigned int)n);put(report+80,crc(report+84,(unsigned int)n));
     length=84+(unsigned int)n;

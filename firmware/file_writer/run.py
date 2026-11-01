@@ -80,8 +80,8 @@ def require_entry(binding, recover_from=None, *, sysfs=Path("/sys/bus/usb/device
         return require_native("1-1", sysfs=sysfs)
     # Avoid starting potentially partial native files after an interrupted write.
     # Accept only known RAM mode and a matching exited persistent attempt.
-    if binding.action != 2:
-        raise ValueError("RAM recovery entry is restricted to the restore image")
+    if binding.action not in (2, 3):
+        raise ValueError("RAM recovery entry is restricted to restore or original reencoding")
     previous = private_path(recover_from)
     execution = json.loads(private_read(previous / "execution.json", 65536))
     ended = json.loads(private_read(previous / "finished.json", 65536))
@@ -177,7 +177,7 @@ def receive(fd, output, binding, execution, recheck):
             ready_saved = True
             deadline = time.monotonic() + 540  # Below target's 600-second bound.
             print(
-                "RAM selftests and real-file read-only preflight passed. Waiting for a separate local commit or abort; no writes authorized yet.",
+                "All 66 RAM selftests and real-file read-only preflight passed. Waiting for a separate local commit or abort; no writes authorized yet.",
                 flush=True,
             )
         decision = output / "decision.json"
@@ -316,6 +316,7 @@ def run(root, recovery, output=None, *, execute=False, recover_from=None, handof
             "complete": bool(result["complete"]),
             "safe_to_restart": bool(result["safe_to_restart"]),
             "changed_files_preserved": bool(result["snapshot_available"]),
+            "encoding_verified": bool(result["encoding_verified"]),
             "recovery": "whole-firmware-unverified",
         }
     finally:
@@ -338,7 +339,8 @@ if __name__ == "__main__":
     flags = decision.add_mutually_exclusive_group(required=True)
     flags.add_argument("--execute-persistent-file-install", action="store_true")
     flags.add_argument("--execute-persistent-file-restore", action="store_true")
-    flags.add_argument("--abort", type=int, choices=(1, 2))
+    flags.add_argument("--execute-persistent-original-reencode", action="store_true")
+    flags.add_argument("--abort", type=int, choices=(1, 2, 3))
     args = parser.parse_args()
     try:
         if args.command == "boot":
@@ -351,7 +353,13 @@ if __name__ == "__main__":
                 handoff_from=args.handoff_from,
             )
         else:
-            action = args.abort or (1 if args.execute_persistent_file_install else 2)
+            action = args.abort or (
+                3
+                if args.execute_persistent_original_reencode
+                else 1
+                if args.execute_persistent_file_install
+                else 2
+            )
             result = decide(args.output, commit=args.abort is None, expected_action=action)
         print(json.dumps(result, indent=2))
     except (OSError, ValueError, subprocess.SubprocessError) as exc:
