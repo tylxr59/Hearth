@@ -114,6 +114,9 @@ async def status(request):
     result = {"devices": [core.view(i) for i in core.registry.data["devices"]]}
     if NATIVE in request.app:
         result["native_diagnostics"] = request.app[NATIVE].diagnostics()
+        if isinstance(request.app[NATIVE], NativeControls):
+            for device in result["devices"]:
+                device["native_controls"] = request.app[NATIVE].control_view(device["serial"])
     return web.json_response(result)
 
 
@@ -179,16 +182,35 @@ async def native_entry(request):
     return await nest_entry(request)
 
 
+def native_headers(app, result=None):
+    if not isinstance(app[NATIVE], NativeControls):
+        return {}
+    headers = {
+        "X-nl-service-timestamp": str(int(time.time() * 1000)),
+        "X-nl-suspend-time-max": str(int(app[NATIVE_HOLD]) + 10),
+        "X-nl-defer-device-window": "15",
+    }
+    if result and any("value" in obj for obj in result["objects"]):
+        headers["X-nl-disable-defer-window"] = "60"
+    return headers
+
+
 async def native_put(request):
-    return web.json_response(
-        request.app[NATIVE].apply(request[IDENT], await body(request, NATIVE_MAX_BODY))
-    )
+    result = request.app[NATIVE].apply(request[IDENT], await body(request, NATIVE_MAX_BODY))
+    if isinstance(request.app[NATIVE], NativeControls):
+        request.app[CORE].touch(request[IDENT])
+    return web.json_response(result, headers=native_headers(request.app))
 
 
 async def native_get(request):
     if request.match_info["serial"].removeprefix("device.") != request[IDENT]:
         raise web.HTTPForbidden()
-    return web.json_response(request.app[NATIVE].listing(request[IDENT]))
+    if isinstance(request.app[NATIVE], NativeControls):
+        request.app[NATIVE].note_request(request[IDENT], "get")
+        request.app[CORE].touch(request[IDENT])
+    return web.json_response(
+        request.app[NATIVE].listing(request[IDENT]), headers=native_headers(request.app)
+    )
 
 
 async def native_subscribe(request):
@@ -198,10 +220,16 @@ async def native_subscribe(request):
     if active.get(ident, 0) >= 2:
         raise web.HTTPTooManyRequests(headers={"Retry-After": "30"})
     result = app[NATIVE].apply(ident, incoming, subscription=True)
+    if isinstance(app[NATIVE], NativeControls):
+        app[CORE].touch(ident)
     if not incoming.get("chunked", False):
-        return web.json_response(result)
+        return web.json_response(result, headers=native_headers(app, result))
     response = web.StreamResponse(
-        headers={"Content-Type": "application/json", "Cache-Control": "no-store"}
+        headers={
+            "Content-Type": "application/json",
+            "Cache-Control": "no-store",
+            **native_headers(app, result),
+        }
     )
     response.enable_chunked_encoding()
     generation = app[CORE].registry.data["devices"][ident]["hash"]
@@ -219,6 +247,7 @@ async def native_subscribe(request):
                 if request.transport is None or request.transport.is_closing():
                     break
                 if isinstance(app[NATIVE], NativeControls):
+                    app[CORE].touch(ident)
                     changed = app[NATIVE].updates(ident, incoming)
                     if changed["objects"]:
                         await response.write(json.dumps(changed).encode())
@@ -259,8 +288,10 @@ def create_app(
     )
     app[CORE], app[ORIGIN] = core, origin
     if native_telemetry:
-        if type(native_hold_seconds) not in (int, float) or not 0 < native_hold_seconds <= 30:
-            raise Invalid("native bench hold must be greater than zero and at most 30 seconds")
+        if type(native_hold_seconds) not in (int, float) or not 0 < native_hold_seconds <= (
+            290 if native_controls else 30
+        ):
+            raise Invalid("native hold exceeds the selected transport timing limit")
         app[NATIVE] = NativeControls(core) if native_controls else NativeTelemetry(core)
         app[NATIVE_HOLD] = float(native_hold_seconds)
         core.command_delivery_enabled = False

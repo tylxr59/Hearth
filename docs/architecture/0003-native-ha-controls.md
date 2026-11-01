@@ -20,8 +20,9 @@ and cooling evidence produces unknown action.
 
 Each intent expires after30 seconds and remains volatile. Enqueue advances the
 native bucket revision, but never changes HA's reported temperature or mode.
-Only the allowlisted desired scalar values enter responses; private/unknown
-native values remain keyed fingerprints and are never echoed. Metadata revision
+Only the allowlisted desired scalar values enter subscription responses;
+telemetry PUT acknowledgements remain metadata-only, including conflicts.
+Private/unknown native values remain keyed fingerprints and are never echoed. Metadata revision
 and timestamp precede object_key for the measured native parser constraint.
 
 A live subscription wakes to receive the new revision and partial value. This is
@@ -65,3 +66,33 @@ This checklist defines the functional-parity target. Passing the first basic
 control roundtrip does not mark the whole project complete. Retain the stock
 control loops throughout; HA sends settings, not relay commands or replacement
 control algorithms.
+
+## First device result and0.3.1 correction
+
+HA0.3.0 loaded on the owner host and registered all four entities. One actual
+0.5C target increase was reported by the unwired Nest. Its reverse request was
+accepted by HA but did not produce confirmed original-target restoration in the
+bounded watch. No additional control intent was automatically retried. Preserve
+that partial result; it does not validate a complete command/restore cycle.
+
+Code review found a0.3.0 mistake: pending values could be piggybacked on PUT
+acknowledgements. The pinned NLE reference explicitly warns that doing so can
+clear native dirty state or overwrite a local/scheduled change.0.3.1 removes those
+values from PUT responses; only the subscription channel may carry intent.
+This is a concrete protocol correction, not proof that it alone caused the
+observed reverse-request failure.
+
+The owner screenshot also showed availability expiring between reports.0.3.1
+renews native presence on successful authenticated requests and valid active
+subscriptions, without fabricating sensor reports. The native listener uses a
+290s hold/300s wake safety-net,15s normal defer and60s confirmation defer-disable
+when an initial pending update is sent. These timings follow the locked public
+reference; power/network-loss behavior still needs actual measurement.
+
+Authenticated manager diagnostics now expose fixed request counts, field-baseline
+presence, pending/expired/confirmed outcomes and whether an intent was offered.
+They omit unknown native values, credentials and command values.0.3.1 passes1115
+host tests/five optional skips, make check and six real HA sandbox roundtrips.
+Its21-file source package reproduces and is staged/read back with0.3.0 backed up.
+It has not yet been activated or measured on the physical unit. Original-target
+restoration remains the next device check; the base remains completely unwired.

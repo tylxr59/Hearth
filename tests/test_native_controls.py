@@ -233,3 +233,94 @@ async def test_auth_rotation_mid_subscription_stops_control_delivery(rig):
         )
         core.registry.register(SERIAL, "d" * 64, core.caps(SERIAL), rotate=True)
         assert await response.read() == b""
+
+
+def test_put_ack_never_piggybacks_pending_controls_even_on_cas_conflict(native):
+    request = sub(native)
+    revision = native._records_for(SERIAL)[f"shared.{SERIAL}"].revision
+    native.enqueue(SERIAL, {"operation": "temperature", "value": 23})
+    for conditional in (revision, None):
+        obj = {"object_key": f"shared.{SERIAL}", "value": {"current_temperature": 19}}
+        if conditional is not None:
+            obj["if_object_revision"] = conditional
+        response = native.apply(SERIAL, {"objects": [obj]})
+        assert all("value" not in r for r in response["objects"])
+    assert any(
+        r.get("value") == {"target_temperature": 23}
+        for r in native.updates(SERIAL, request)["objects"]
+    )
+
+
+def test_manager_control_diagnostics_are_bounded_and_value_free(native):
+    native.enqueue(SERIAL, {"operation": "temperature", "value": 23})
+    row = native.control_view(SERIAL)
+    assert row["command_status"] == {"temperature": "pending"}
+    assert row["pending"]["temperature"] == {"offered": False, "seconds_remaining": 30}
+    assert row["baseline_fields"] == {"temperature": True, "mode": True, "fan": True}
+    assert row["requests"] == {"put": 1}
+    assert set(row) == {
+        "capabilities",
+        "command_status",
+        "pending",
+        "requests",
+        "last_request_age",
+        "baseline_fields",
+    }
+    assert SERIAL not in json.dumps(row)
+
+
+async def test_native_subscription_renews_availability_without_faking_a_reading(rig):
+    core, token, _admin, now = rig
+    app = create_app(core, native_telemetry=True, native_controls=True, native_hold_seconds=0.02)
+    async with TestClient(TestServer(app)) as client:
+        response = await client.post("/nest/transport/put", headers=auth(token), json=batch())
+        objects = (await response.json())["objects"]
+        before = copy.deepcopy(core.states[SERIAL])
+        now[0] += 91
+        assert not core.available(SERIAL)
+        response = await client.post(
+            "/nest/transport/v7/subscribe",
+            headers=auth(token),
+            json={"objects": objects, "chunked": True},
+        )
+        assert response.status == 200
+        await response.read()
+        assert core.available(SERIAL) and core.states[SERIAL] == before
+        assert response.headers["X-nl-defer-device-window"] == "15"
+        assert int(response.headers["X-nl-suspend-time-max"]) > 0.02
+        now[0] += 91
+        response = await client.post(
+            "/nest/transport/v7/subscribe",
+            headers=auth(token),
+            json={"objects": "invalid", "chunked": True},
+        )
+        assert response.status == 400 and not core.available(SERIAL)
+
+
+async def test_subscription_push_sets_native_confirmation_timing_headers(rig):
+    core, token, admin, _ = rig
+    app = create_app(core, native_telemetry=True, native_controls=True, native_hold_seconds=290)
+    async with TestClient(TestServer(app)) as client:
+        response = await client.post("/nest/transport/put", headers=auth(token), json=batch())
+        objects = (await response.json())["objects"]
+        response = await client.post(
+            f"/v1/manage/devices/{SERIAL}/commands",
+            headers={"Authorization": "Bearer " + admin},
+            json={"operation": "temperature", "value": 23},
+        )
+        assert response.status == 202
+        response = await client.post(
+            "/nest/transport/v7/subscribe",
+            headers=auth(token),
+            json={"objects": objects, "chunked": True},
+        )
+        assert response.headers["X-nl-suspend-time-max"] == "300"
+        assert response.headers["X-nl-disable-defer-window"] == "60"
+        assert (await response.json(content_type=None))["objects"][0]["value"] == {
+            "target_temperature": 23
+        }
+        response = await client.get(
+            "/v1/manage/devices", headers={"Authorization": "Bearer " + admin}
+        )
+        diagnostics = (await response.json())["devices"][0]["native_controls"]
+        assert diagnostics["pending"]["temperature"]["offered"] is True

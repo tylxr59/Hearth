@@ -30,7 +30,11 @@ class HearthRuntime:
         self.listeners: dict[str, set[Callable[[], None]]] = {}
         self.core = ReportingCore(profile.registry, self.changed)
         self.app = create_app(
-            self.core, origin=profile.origin, native_telemetry=True, native_controls=True
+            self.core,
+            origin=profile.origin,
+            native_telemetry=True,
+            native_controls=True,
+            native_hold_seconds=290,
         )
         self.app[NATIVE].notify = self.changed
         self.runner: web.AppRunner | None = None

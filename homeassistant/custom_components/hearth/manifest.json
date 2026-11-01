@@ -1,7 +1,7 @@
 {
   "domain": "hearth",
   "name": "Hearth",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "dependencies": ["http"],
   "codeowners": ["@tylxr59"],
   "config_flow": true,

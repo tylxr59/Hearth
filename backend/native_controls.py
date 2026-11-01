@@ -45,6 +45,8 @@ class NativeControls(NativeTelemetry):
         self.intents = {}
         self.features = {}
         self.outcomes = {}
+        self.requests = {}
+        self.last_request = {}
         self.notify = lambda _ident: None
 
     def _records_for(self, ident):
@@ -54,7 +56,43 @@ class NativeControls(NativeTelemetry):
             self.intents.pop(ident, None)
             self.features.pop(ident, None)
             self.outcomes.pop(ident, None)
+            self.requests.pop(ident, None)
+            self.last_request.pop(ident, None)
         return super()._records_for(ident)
+
+    def note_request(self, ident, kind):
+        self._records_for(ident)
+        if kind not in ("put", "subscribe", "get"):
+            raise Invalid("unknown native request category")
+        counters = self.requests.setdefault(ident, {})
+        counters[kind] = min(counters.get(kind, 0) + 1, 2147483647)
+        self.last_request[ident] = self.core.clock()
+
+    def control_view(self, ident):
+        records = self._records_for(ident)
+        self._expire(ident)
+        shared = records.get(f"shared.{ident}")
+        device = records.get(f"device.{ident}")
+        return {
+            "capabilities": self.capabilities(ident),
+            "command_status": self.command_status(ident),
+            "pending": {
+                op: {
+                    "offered": i.sent,
+                    "seconds_remaining": max(0, round(i.expires - self.core.clock(), 1)),
+                }
+                for op, i in self.intents.get(ident, {}).items()
+            },
+            "requests": dict(self.requests.get(ident, {})),
+            "last_request_age": max(0, round(self.core.clock() - self.last_request[ident], 1))
+            if ident in self.last_request
+            else None,
+            "baseline_fields": {
+                "temperature": shared is not None and "target_temperature" in shared.fingerprints,
+                "mode": shared is not None and MODE_FIELD in shared.fingerprints,
+                "fan": device is not None and "fan_timer_timeout" in device.fingerprints,
+            },
+        }
 
     def capabilities(self, ident):
         self._records_for(ident)
@@ -218,5 +256,9 @@ class NativeControls(NativeTelemetry):
             for item in self.intents.get(ident, {}).values():
                 if item.key == key:
                     item.revision = self._records_for(ident)[key].revision
+        self.note_request(ident, "subscribe" if subscription else "put")
         self.notify(ident)
-        return self._values(ident, response)
+        # PUT is an acknowledgement of the device's own dirty fields. Adding
+        # control values here can overwrite local changes and clear dirty flags.
+        # Desired values travel only through the subscription response.
+        return self._values(ident, response) if subscription else response

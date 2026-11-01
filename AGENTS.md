@@ -1766,3 +1766,45 @@ firmware checks, backups, reachability, scoped write confirmation. Research tool
 is not public installer. HACS requires self-contained custom_components/<domain>
 layout; current nested/generated dev layout needs release packaging work. Native
 HVAC development objective continues; those release questions are context/steering.
+
+## CURRENT: unit target increase confirmed; original restore UNCONFIRMED;0.3.1 staged
+
+Owner ordinary native restart on unwired base returned dial; fresh uploads arrived.
+.0.3.0 controls validator confirmed active with deliberately invalid empty request
+(400,no command). Authorized+announced single0.5C target increase and original restore
+via Hearth insideHA (manager API,sameNativeControls path). Test target accepted and
+reported within~2s. Restore intent accepted but original value NOT observed within40s
+or later read-only check. No automatic command retry. Private target-test-v1 preserves
+baseline, precise reviewed original/test values, both intents, observations and late
+reads. Precise original/test values remain only in private reviewed-targets.json.
+Thermostat remains completely UNWIRED, so no physicalHVAC. Owner couldn't locate
+command_status; attached HA image shows all4unavailable with earlierHeat transitions.
+
+I acknowledged a code mistake: NativeControls.apply piggybacked pending values on
+PUT responses. Pinned NLE warns this can clear dirty flags/override local/scheduled
+updates. New0.3.1 permits values ONLY on subscription, keeps PUT metadata-only even
+CAS conflict. Exact cause of failed original restore not proved. Availability also
+renewed only on sensor deltas; now explicitCore.touch on valid authenticated native
+requests and active subscribe (generation/transport checked), no fake sensor update.
+Native hold290/wakeheader300/defer15/initial-commanddisable-defer60 match pinnedNLE
+reference environment.py hash now recorded. Manager-only native_controls diagnostics
+adds request counts/baselinepresence/pending/outcome/offered; no raw private values.
+
+0.3.1 source/sandbox path build/native-ha-climate-20261101-v031-1 plus -repro,
+all21source bytes match.1115tests/five skips/make check pass; actual HA2026.10.4 sandbox
+6syntheticroundtrips pass. Source fix not yet activated. Staged/readback21files at
+remote /homeassistant/.hearth-native-climate-stage-20261101-v031; source0.3.0 backed
+up/readback privately under native-ha-climate-fix-20261101/stage-v1 (code-backup.tar,
+staged-code.tar,readback,receipt). Current active still0.3.0. New Core restart needs
+owner readiness (prior approval was one restart, consumed); prepare activation after
+reply, same checked old/new byte gates and preserve previous source path distinct.
+After activation verifyfresh telemetry+diagnostics, then restore PRECISE ORIGINAL
+from target-test-v1/reviewed-targets.json in one reviewed bounded operation. Do not
+rerun raise test or claim original already restored. No NAND/ROM operation needed.
+
+Supervisor scoped API file exists but Core template endpoint returned401 even with
+proper internal file token; don't keep trying or seek extra privileges. Used scoped
+entity registry4+managerauth+logs for live health; HAservice path validated in sandbox,
+actual unit target through Hearthmanager. Ask userforUIonlyifneeded; don't request
+HA access token unnecessarily. Existing SSH passwordfile stillworkedfor staging;
+use private/native-ha-climate-20261101/ssh-askpass, no secret content printing.

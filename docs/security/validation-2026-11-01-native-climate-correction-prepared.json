@@ -1,0 +1,19 @@
+{
+  "status": "native-ha-climate-correction-prepared-not-activated",
+  "integration_version": "0.3.1",
+  "host_tests_passed": 1115,
+  "optional_integration_skips": 5,
+  "make_check": "passed",
+  "real_ha_core": "2026.10.4",
+  "real_ha_synthetic_command_roundtrips": 6,
+  "put_acknowledgements_metadata_only": true,
+  "native_request_presence_separate_from_sensor_updates": true,
+  "source_package_reproduces": true,
+  "staged_source_files_read_back": 21,
+  "previous_integration_source_backed_up": true,
+  "activated": false,
+  "actual_prior_target_increase_observed": true,
+  "original_target_restoration_confirmed": false,
+  "physical_hvac_verified": false,
+  "nle_feature_parity_complete": false
+}

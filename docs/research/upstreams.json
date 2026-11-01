@@ -2,6 +2,7 @@
   "backend": {
     "files": {
       "LICENSE": "9e7c23bc8e01c33fa03a0c73607beb6b63511bbe4608be178b29fb2aca1a162f",
+      "src/nolongerevil/config/environment.py": "e0a8da5fdb33a9999cbcd6b4dd19a1f5bfb5a42d544d9e3435bdc593f6b69c52",
       "src/nolongerevil/integrations/mqtt/helpers.py": "bf9c0092bdecae76f5577d08b6ec7b782b9445bdccd88142e25672a2ab1432dc",
       "src/nolongerevil/integrations/mqtt/mqtt_integration.py": "e68fe16f4d0f83bea3727d056a55914521f76f9ba9751688d10f9c3a3b255582",
       "src/nolongerevil/lib/serial_parser.py": "30815c196e485fea147bb97a4b8a5c1f1d31b85e8f84ba652fc85361c73447b5",

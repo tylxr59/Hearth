@@ -24,6 +24,11 @@ class Core:
         self.seen[ident] = self.clock()
         return self.view(ident)
 
+    def touch(self, ident):
+        """Authenticated, valid native connection activity; not a sensor report."""
+        self.caps(ident)
+        self.seen[ident] = self.clock()
+
     def available(self, ident):
         return (
             ident in self.registry.data["devices"]
