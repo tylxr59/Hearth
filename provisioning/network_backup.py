@@ -5,6 +5,7 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
+from backend.validation import loads
 from provisioning import file_backup as custody
 
 TARGETS = (
@@ -158,3 +159,39 @@ def verify(output, snapshot):
         return receipt
     finally:
         os.close(directory)
+
+
+def load(output):
+    """Reconstruct only the fixed snapshot, then verify its complete custody."""
+    directory = custody._open_directory(output)
+    try:
+        record = loads(custody._read(directory, "manifest.json", 16384))
+        if (
+            not isinstance(record, dict)
+            or record.get("format") != "hearth-network-backup-v1"
+            or not isinstance(record.get("files"), list)
+            or len(record["files"]) != 4
+        ):
+            raise ValueError("fixed network backup manifest required")
+        try:
+            snapshot = Snapshot(
+                bytes.fromhex(record["session"]),
+                tuple(record["filesystem"]),
+                tuple(
+                    custody.CapturedFile(
+                        item["target"],
+                        True,
+                        item["mode"],
+                        item["owner"],
+                        item["group"],
+                        custody._read(directory, f"{i}.original", LIMITS[i]),
+                    )
+                    for i, item in enumerate(record["files"])
+                ),
+            )
+        except (KeyError, TypeError) as exc:
+            raise ValueError("network backup metadata invalid") from exc
+    finally:
+        os.close(directory)
+    verify(output, snapshot)
+    return snapshot

@@ -1,0 +1,18 @@
+{
+  "date": "2026-11-01",
+  "scope": "protected network RAM matrix and real-file candidate preflight",
+  "host_passed": 1014,
+  "optional_skips": 5,
+  "make_check": "passed",
+  "reproduced_artifacts": 9,
+  "observed_arm_stream_cases": 41,
+  "observed_arm_transaction_cases": 20,
+  "observed_real_preflights": 4,
+  "native_return": "owner sequence done; normal USB independently observed",
+  "flash_writes": false,
+  "installed": false,
+  "google_dependencies_removed": false,
+  "persistent_wrapper": "not prepared",
+  "hvac_verified": false,
+  "whole_firmware_recovery_verified": false
+}

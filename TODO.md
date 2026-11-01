@@ -266,3 +266,10 @@ match, private custody verified, owner home/native USB return confirmed. Host929
 five skips/make check; eight artifacts reproduce. Next bounded streaming writer
 and RAM fault cases. No Google changes installed; device on USB charging. See
 docs/research/network-snapshot-result-2026-11-01.md.
+
+
+Combined network RAM preflight PASSED:41 stream/hash +20 filesystem cases,4 real
+file/mode/full candidate hash checks. Native USB returned; device charges on USB.
+Host1014/five skips/checks;9 artifacts reproduce. Next root0-only persistent gate,
+wrapper/restore packaging with fresh memory/space checks and NONE encoding audit.
+No Google changes installed or physical control verified. See dated RAM result.

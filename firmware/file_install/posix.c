@@ -2,7 +2,11 @@
  * No command-line entry point. Host tests use caller-created temporary roots.
  * ARM syscall constants/layout below are checked against the pinned kernel.
  */
+#ifdef HEARTH_NETWORK_ADAPTER
+#include "../network_update/posix.h"
+#else
 #include "posix.h"
+#endif
 #if defined(HEARTH_HOST_LAB) && defined(HEARTH_RAM_LAB)
 #error "Host fixture and ARM RAM-only modes must never be combined"
 #endif
@@ -40,7 +44,9 @@ extern int *__errno_location(void);
 #define H_NOFOLLOW O_NOFOLLOW
 #endif
 struct metadata { unsigned int mode,links,owner,group; unsigned long long size; };
+#ifndef HEARTH_NETWORK_ADAPTER
 #include "targets.h"
+#endif
 static const char suffix[] = ".hearth-new";
 static const char restore_suffix[] = ".hearth-restore";
 static const char *recovery_name(struct hearth_posix_context *c,char name[96])
@@ -223,15 +229,24 @@ static int valid_change(struct hearth_posix_context *c,unsigned int index)
        !f->replacement.data||f->original.size>HEARTH_FILE_BYTES||
        (f->original.size&&!f->original.data)||f->original_mode&~0777U||f->replacement_mode&~0777U||
        (f->existed!=0&&f->existed!=1)) return -1;
+    for(n=0;n<index;n++) if(c->changes[n].target>=f->target) return -1;
+#ifdef HEARTH_NETWORK_ADAPTER
+    {
+        static const unsigned int limits[4]={6U*1048576U,1048576U,65536U,65536U};
+        if(c->count!=4||c->archive_layout!=1||!f->existed||!f->original.size||
+           f->original.size!=f->replacement.size||f->original.size>limits[f->target]||
+           f->original_mode!=f->replacement_mode||(f->original_mode&0022U)) return -1;
+    }
+#else
     if(!f->existed&&(f->target!=HEARTH_STORAGE_LIBRARY&&f->target!=HEARTH_LAUNCHER)) return -1;
     if(!f->existed&&(f->original.size||f->original_mode)) return -1;
-    for(n=0;n<index;n++) if(c->changes[n].target>=f->target) return -1;
     if((f->target==HEARTH_SETTINGS||f->target==HEARTH_CLIENT_CONFIG)&&f->replacement_mode!=0600) return -1;
     if(f->target==HEARTH_LAUNCHER&&f->replacement_mode!=0750) return -1;
     if(f->target==HEARTH_STARTUP&&f->replacement_mode!=f->original_mode) return -1;
     if(f->target==HEARTH_STORAGE_LIBRARY&&f->replacement_mode!=0444) return -1;
     if((f->target==HEARTH_CA||f->target==HEARTH_CRL)&&f->replacement_mode!=0644) return -1;
     if((f->target==HEARTH_WEB_LIBRARY||f->target==HEARTH_NTP)&&f->replacement_mode!=f->original_mode) return -1;
+#endif
     return 0;
 }
 static int preflight(void *opaque,unsigned int index)

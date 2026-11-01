@@ -1567,3 +1567,39 @@ Next separately bounded full-file streaming temporary replacement/restore with
 whole-file hash/span identity, plan-derived originals/journal, fresh space checks,
 root0-only gate and NONE/ZERO audit. No Google update installed. See dated snapshot
 result and architecture/0002-network-update-plan.md. No physical control authorized.
+
+
+## CURRENT: network adapter RAM and real-file preflight PASSED
+
+Host1014/five optional skips/make check pass; all9 artifacts reproduce. New core
+validates whole original/candidate SHA256 and exact spans with4KiB scratch. Separate
+HEARTH_NETWORK_ADAPTER reuses file_install/posix.c transaction under fixed4 root0
+targets/6MiB,1MiB,64KiB,64KiB bounds. Legacy1MiB header/default9-target path unchanged
+and regressions pass. Original bounded SHA256 is MIT, tested against independent
+hashlib and ARM synthetic vectors, not NIST module validation. No implementation
+copied. network_plan builds deterministic private DATA from verified full custody
+and a separate reviewed plan pin. Current private plan is network-plan-v2, separate
+reviewed-network-plan-v2.json under private/network-snapshot-20261101. v1 is older
+unexecuted offline data; keep it, do not deploy it.
+
+Executed ONCE: private/network-snapshot-20261101/network-preflight-v2; -v2-repro
+is offline only, never run either again. v1 was an unexecuted inventory-count
+draft. Build build/network-preflight-20261101-v2 and -v2-repro. One supervised PTY
+run passed41 memory/hash/stream cases,20 actual RAM filesystem transaction cases
+as UID/GID65534 and4 real original/mode/derived-candidate preflights. Kernel is
+unchanged protected RO, no commit capability. Only native libc/interpreter execute
+on DEVICE; no firmware runs on HOST and no nlclient/osm executes in the profile.
+Result private/network-snapshot-20261101/network-preflight-attempt-1; separate
+immutable network-preflight-attempt-1-record.json preserves recipe/profile/result
+identities. Owner return sequence done and native2464:0002 independently observed.
+Device stays USB/base detached charging. No loader/write armed.
+
+Persistent wrapper still pending: root0-only kernel gate, conservative fresh space/
+memory checks, bounded RAM-backed candidates/opaque original files in private
+initramfs, exact byte/mode readback and NONE/ZERO audit, separate restore profile.
+Reuse measured transaction/journal, do not invent another format or relax old
+limits. Gzip initramfs IS enabled in the proven file_writer NONE kernel (unlike
+protected snapshot kernel), so original DATA can be privately packaged compressed
+without host linking/executing proprietary ELF. Source docs now reflect bounded
+RAM backing rather than avoiding all whole-file caches. No Google fix installed.
+See docs/research/network-ram-result-2026-11-01.md.

@@ -37,10 +37,13 @@ was confirmed. This closes fresh acquisition without implementing any writer.
 
 ## Full-file streaming replacement, not an in-place range write
 
-Prefer a bounded streaming copy to a fresh temporary file, substituting only the
-reviewed span as bytes pass through it. Verify full original and candidate hashes,
-metadata and equal lengths. This avoids retaining multi-file content arrays in
-RAM and avoids changing the existing 1 MiB adapter's global limits. Reject overlap,
+Use bounded complete-file writes to fresh temporaries, with candidates derived
+through the checked streaming core. Verify full original/candidate hashes,
+metadata and equal lengths. The chosen adapter reuses the measured transaction
+with bounded RAM-backed data, avoiding a second journal implementation. Opaque
+originals can be mapped read-only from a private root-only initramfs; candidate
+arenas are bounded by the four target limits. The old 1 MiB contract stays unchanged.
+Reject overlap,
 multiple occurrences, changes outside the span or a source identity mismatch.
 
 Keep plan-specific original copies and a durable journal; preserve every existing
@@ -68,6 +71,11 @@ I/O, mid-span boundaries, full-file mismatch despite a matching span, ENOSPC,
 rename/directory-sync errors, interrupted journal states and failed restoration.
 No firmware runs on the development host. No native application or physical
 networking is needed inside the RAM harness.
+
+The [combined ARM run](../research/network-ram-result-2026-11-01.md) subsequently
+passed all 61 synthetic cases and four real preflights. Source/artifact and complete
+host-custody verification also pass. Persistent kernel/lifecycle/restore packaging
+is still unfinished; these measurements do not authorize bypassing those checks.
 
 Only after those pass may a fresh owner-timed boot perform read-only real-file
 preflight and pause. A separate scoped commit must remain bound to its session,
