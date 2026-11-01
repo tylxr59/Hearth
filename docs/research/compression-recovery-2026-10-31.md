@@ -77,3 +77,22 @@ matching exited zero-write repair run, same capsule/pin/kernel, all66 cases,
 no decision and known RAM identity. It never executes an old checker or retries
 automatically.823 host tests pass/five skips/make check; paired v2 reproduces.
 Next fresh owner-timed restart should identify refusal before any correction.
+
+## Second guarded attempt and exact missing-settings recovery
+
+Source1f9388c/v2 ran once: all66 cases pass, again zero decisions/writes and sealed
+WP. Numeric stage101 identifies base restoration preflight; the fixed snapshot
+fails at target7 settings.config. The private captured kernel tail contains no
+observed mount/ECC/JFFS2 error. This does not establish absence, file contents or
+the reason it became unreadable/unexpected. Preserve reencode-attempt-2 in RAM.
+
+V3 adds an exact absence path for settings only: a complete RESTORED journal,
+mask511, fixed original target and verified backup are mandatory. The ordinary
+restore API remains strict. Other missing originals and present foreign data or
+symlinks are refused. Host INFO must identify original-present or truly absent
+settings and the missing-original mask before action3 READY can authorize commit.
+All69 current RAM cases are required; old66 is accepted only as frozen zero-write
+handoff evidence. Three additional filesystem cases test that narrow distinction.
+
+831 host tests/five skips/make check pass; same kernel and v9 helpers/paired v3
+profiles reproduce. No compression correction has written NAND at this point.

@@ -2,6 +2,7 @@
 
 import hashlib
 
+from backend.validation import loads
 from firmware.file_writer import protocol as p
 
 
@@ -10,6 +11,7 @@ class Session:
         self.binding, self.save = binding, save
         self.selftest = self.ready = self.committed = self.aborted = False
         self.snapshot = self.result = None
+        self.info = None
         self.seen = {}
 
     def event(self, kind, payload):
@@ -30,6 +32,8 @@ class Session:
         elif kind == p.READY:
             if not self.selftest:
                 raise ValueError("real-file preflight preceded verified RAM selftests")
+            if self.binding.action == 3 and self.info is None:
+                raise ValueError("repair preflight metadata required before READY")
             self.ready = True
             reply = None
         elif kind == p.SNAPSHOT:
@@ -38,6 +42,25 @@ class Session:
             frame, records = p.snapshot_frame(payload, self.binding)
             self.save("changed-files.bin", frame)
             self.snapshot = records
+            reply = None
+        elif kind == p.PREFLIGHT_INFO:
+            row = loads(payload)
+            if (
+                not self.selftest
+                or self.ready
+                or self.binding.action != 3
+                or not isinstance(row, dict)
+                or set(row) != {"missing_originals", "settings_state", "write_policy"}
+                or any(type(value) is not int for value in row.values())
+                or row["write_policy"] != 0
+                or row["settings_state"] not in (0, 1)
+                or not 0 <= row["missing_originals"] <= 511
+                or row["missing_originals"] & 48
+                or bool(row["missing_originals"] & 128) != bool(row["settings_state"])
+            ):
+                raise ValueError("exact bounded repair preflight metadata required")
+            self.save("preflight-info.json", payload)
+            self.info = row
             reply = None
         elif kind == p.KERNEL_LOG:
             if not self.selftest or self.ready or len(payload) > p.MAX_PAYLOAD:

@@ -7,4 +7,5 @@ struct hearth_install_result hearth_posix_reencode_originals(struct hearth_posix
 int hearth_posix_original_encoding(struct hearth_posix_context *);
 int hearth_posix_selected_encoding(struct hearth_posix_context *,int);
 extern unsigned int hearth_posix_reencode_stage;
+int hearth_posix_settings_state(struct hearth_posix_context *);
 #endif

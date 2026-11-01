@@ -248,6 +248,7 @@ def readonly_repair(output):
         "status": run.profile.STATUS,
         "action": 3,
         "device_executed": False,
+        "selftest_cases": 69,
         "plan": BINDING.plan.hex(),
         "capsule": "fixed private capsule",
         "pin": "fixed private pin",

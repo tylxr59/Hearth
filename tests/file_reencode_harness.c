@@ -51,10 +51,15 @@ static int reencode_scenario(int number,const char *directory)
  }
  if(number==9) write_file(archive,"0.original.plain",replacement,3,0600);
  if(number==9) bad=1;
+ if(number==10||number==12) assert(unlinkat(c.roots[1],paths[7],0)==0);
+ if(number==11) { assert(unlinkat(c.roots[0],paths[3],0)==0);bad=1; }
+ if(number==12) { assert(symlinkat("../root/etc/ntp.conf",c.roots[1],paths[7])==0);bad=1; }
  assert(close(archive)==0);
+ if(number==10) { assert(hearth_posix_restore_preflight(&c)==HEARTH_PREFLIGHT_FAILED);close_recovery(&c);assert(hearth_posix_settings_state(&c)==1); }
+ if(number==12) assert(hearth_posix_settings_state(&c)==4);
  { int status=hearth_posix_reencode_preflight(&c);
    assert((status!=0)==bad);close_recovery(&c);
-   for(i=0;i<9;i++) if(modes[i]) assert(inode_number(c.roots[i==HEARTH_SETTINGS],paths[i])==before[i]); }
+   for(i=0;i<9;i++) if(modes[i]&&!((number==10||number==12)&&i==7)&&!(number==11&&i==3)) assert(inode_number(c.roots[i==HEARTH_SETTINGS],paths[i])==before[i]); }
  if(bad) {
   r=hearth_posix_reencode_originals(&c);assert(r.error==HEARTH_PREFLIGHT_FAILED&&!r.attempted&&!r.restored);close_recovery(&c);
  } else {
@@ -69,7 +74,7 @@ static int reencode_scenario(int number,const char *directory)
   archive=openat(c.roots[1],".hearth-rollback",O_RDONLY|O_DIRECTORY);assert(archive>=0);
   for(i=0;i<9;i++) if(modes[i]) {
    check_file(c.roots[i==HEARTH_SETTINGS],paths[i],old,sizeof(old)-1,modes[i]);
-   assert(inode_number(c.roots[i==HEARTH_SETTINGS],paths[i])!=before[i]);
+   if(!(number==10&&i==7)) assert(inode_number(c.roots[i==HEARTH_SETTINGS],paths[i])!=before[i]);
    snprintf(name,sizeof(name),"%u.original",i);
    check_file(archive,name,old,sizeof(old)-1,0600);assert(inode_number(archive,name)!=backups[i]);
   }
@@ -84,7 +89,7 @@ int main(int argc,char **argv)
 {
  int i,n;char directory[96],line[128];
  assert(hearth_original_recovery_matrix(argc,argv)==0);
- for(i=0;i<10;i++) {
+ for(i=0;i<13;i++) {
   snprintf(directory,sizeof(directory),"/state/reencode-case-%d",i);assert(mkdir(directory,0700)==0);
   assert(reencode_scenario(i,directory)==0);
   n=snprintf(line,sizeof(line),"{\"type\":\"reencode_case\",\"case\":%d,\"passed\":true}\n",i);

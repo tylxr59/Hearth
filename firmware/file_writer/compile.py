@@ -196,7 +196,7 @@ def compile_helpers(output, capsule, pin):
         "plan": plan.hex(),
         "binding_sha256": sha((output / "binding.h").read_bytes()),
         "capsule_header_sha256": sha((output / "capsule.h").read_bytes()),
-        "selftest_cases": 66,
+        "selftest_cases": 69,
         "stub_not_for_target": True,
         "files": {name: sha((output / name).read_bytes()) for name in names},
     }

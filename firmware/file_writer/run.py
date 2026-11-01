@@ -184,7 +184,12 @@ def require_readonly_resume(record, binding, previous, *, sysfs=Path("/sys/bus/u
     prior = json.loads(
         private_read(private_path(execution["profile"]) / "file-action-profile.json", 1024 * 1024)
     )
-    protocol.validate_selftest(private_read(previous / "selftest.jsonl", 16384))
+    if prior.get("selftest_cases") not in (66, 69):
+        raise ValueError("reviewed historical repair matrix required")
+    protocol.validate_selftest(
+        private_read(previous / "selftest.jsonl", 16384),
+        reencode_cases=prior["selftest_cases"] - 56,
+    )
     if (
         execution["action"] != 3
         or execution["plan"] != binding.plan.hex()
@@ -234,7 +239,7 @@ def receive(fd, output, binding, execution, recheck):
             ready_saved = True
             deadline = time.monotonic() + 540  # Below target's 600-second bound.
             print(
-                "All 66 RAM selftests and real-file read-only preflight passed. Waiting for a separate local commit or abort; no writes authorized yet.",
+                "All 69 RAM selftests and real-file read-only preflight passed. Waiting for a separate local commit or abort; no writes authorized yet.",
                 flush=True,
             )
         decision = output / "decision.json"

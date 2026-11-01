@@ -13,10 +13,11 @@ READY = b"HFW_RDY1"
 RESULT = b"HFW_RES1"
 SNAPSHOT = b"HFW_SNP1"
 KERNEL_LOG = b"HFW_KLG1"
+PREFLIGHT_INFO = b"HFW_INF1"
 MAX_SNAPSHOT = 8 + 9 * (24 + 1024 * 1024)
 FILE_CASES = set(range(32))
 RECOVERY_CASES = set(range(25)) - {14}
-REENCODE_CASES = set(range(10))
+REENCODE_CASES = set(range(13))
 
 
 @dataclass(frozen=True)
@@ -43,6 +44,7 @@ class Binding:
             RESULT,
             SNAPSHOT,
             KERNEL_LOG,
+            PREFLIGHT_INFO,
             b"HFW_ACK1",
             b"HFW_RUN1",
             b"HFW_STOP",
@@ -64,7 +66,7 @@ class Decoder:
         events = []
         prefixes = {
             kind: self.binding.prefix(kind)
-            for kind in (SELFTEST, READY, RESULT, SNAPSHOT, KERNEL_LOG)
+            for kind in (SELFTEST, READY, RESULT, SNAPSHOT, KERNEL_LOG, PREFLIGHT_INFO)
         }
         while True:
             candidates = [(self.buffer.find(prefix), kind) for kind, prefix in prefixes.items()]
@@ -107,13 +109,15 @@ class Decoder:
         return events
 
 
-def validate_selftest(payload):
+def validate_selftest(payload, *, reencode_cases=13):
     if len(payload) > MAX_PAYLOAD:
         raise ValueError("selftest evidence exceeds bound")
+    if reencode_cases not in (10, 13):
+        raise ValueError("reviewed current or historical reencode matrix required")
     expected = {
         "file_case": FILE_CASES,
         "recovery_case": RECOVERY_CASES,
-        "reencode_case": REENCODE_CASES,
+        "reencode_case": set(range(reencode_cases)),
     }
     seen, process, stdout = {kind: set() for kind in expected}, None, 0
     for line in payload.splitlines(keepends=True):
@@ -150,7 +154,7 @@ def validate_selftest(payload):
             # Raw diagnostics stay in the private frame, never become a pass.
             raise ValueError("selftest diagnostic or unexpected record present")
     if seen != expected:
-        raise ValueError("all 66 original RAM selftests required")
+        raise ValueError("all required original RAM selftests required")
     if process != {
         "type": "file_selftest_process",
         "wait_status": 0,
@@ -159,7 +163,11 @@ def validate_selftest(payload):
         "stdout_bytes": stdout,
     }:
         raise ValueError("selftest process or exact stdout completion failed")
-    return {"status": "file-action-ram-selftests-observed", "cases": 66, "writes_started": False}
+    return {
+        "status": "file-action-ram-selftests-observed",
+        "cases": 56 + reencode_cases,
+        "writes_started": False,
+    }
 
 
 FIELDS = {
@@ -219,7 +227,7 @@ def validate_result(payload, action):
     row = loads(payload)
     if (
         not isinstance(row, dict)
-        or set(row) not in (FIELDS, FIELDS | {"diagnostic", "snapshot_target"})
+        or not FIELDS <= set(row) <= FIELDS | {"diagnostic", "snapshot_target", "settings_state"}
         or row["type"] != "file_action"
         or any(type(row[key]) is not int for key in row if key != "type")
         or type(action) is not int
@@ -227,8 +235,10 @@ def validate_result(payload, action):
         or row["action"] != action
     ):
         raise ValueError("exact bound file-action result required")
-    if "diagnostic" in row and (
-        not 0 <= row["diagnostic"] <= 200 or not -1 <= row["snapshot_target"] <= 8
+    if (
+        not 0 <= row.get("diagnostic", 0) <= 200
+        or not -1 <= row.get("snapshot_target", -1) <= 8
+        or not 0 <= row.get("settings_state", 5) <= 7
     ):
         raise ValueError("bounded startup diagnostic fields required")
     if (

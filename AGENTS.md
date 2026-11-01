@@ -1200,3 +1200,35 @@ Existing conditional recovery authorization remains: only after66+realROchecks
 pass manually send --execute-persistent-original-reencode. If refused, inspect
 numeric fields/private kernel-log.bin, never raw log lines in public/model output,
 before another fix/write. Do not weaken preflight to force progress.
+
+## CURRENT URGENT: second refusal identifies settings; v3 checked, readiness pending
+
+1f9388c/reencode-v2 ran once: all66 cases pass, no writes/decision, sealed WP,
+initial_error2/diagnostic101 (base restore preflight)/snapshot_target7, no snapshot.
+8473 private kernel-log bytes preserved, no observed mount/ECC/JFFS2 errors in
+that captured kernel tail. This narrows unreadable/unexpected settings.config,
+not proof it is absent. Never rerun v2. Current unit stays protected RAM on USB,
+base detached. No loader running. Owner again asked recoverable; candidly said
+likely software-recoverable with ROM/RAM/backups intact, native UI not yet proven.
+
+New action3-only preflight permits truly absent settings at a complete RESTORED
+journal/mask511 only with exact original backup. Ordinary restore stays strict.
+All other foreign/missing originals remain refused unless old durable in-progress
+intent applies. Source has 3 new cases: missing settings reconstructs, missing
+other original refused, settings symlink refused; present foreign data already
+refused. New preflight INFO frame records missing-original mask/settings state/
+NONE policy before READY. Host action3 cannot commit without validated INFO.
+69 RAM cases now (prior66+3); current ACK requires69. Historical sealed zero-write
+resume validates old66 only against its frozen manifest, not as current readiness.
+Reporter also preserves settings_state on refusal. No raw settings/logs printed.
+
+831 host tests/five skips/make check. Same kernelv6; helpers v9/repro, paired
+private/file-writer-20261031/reencode-v3,restore-none-v3/repros checked/reproduced,
+unexecuted. Next ask timing readiness for fresh RAM handoff (no native reboot):
+.venv/bin/python -m firmware.file_writer.run boot
+private/file-writer-20261031/reencode-v3 private/file-writer-20261031/restore-none-v3
+private/file-writer-20261031/reencode-attempt-3 --execute-writer-preflight
+--resume-from-readonly private/file-writer-20261031/reencode-attempt-2
+After69+INFO+RO READY verify missingmask0or128/settingsstate0or1, archive/plan
+checks pass, then manually commit prior conditional authorization with action3.
+Never bypass foreign-state checks. No compression repair write has happened yet.

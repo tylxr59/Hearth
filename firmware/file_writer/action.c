@@ -30,6 +30,7 @@ struct action_context {
     int encoding_verified;
     unsigned int diagnostic;
     int snapshot_target;
+    int settings_state;
     unsigned int phase,protected,programs,erases,markers,failed;
 };
 static void put(unsigned char *p,unsigned int value)
@@ -103,6 +104,7 @@ static int preflight(void *opaque)
     if(c->files.recovery!=-1||c->mounted!=3||read_status(c)||c->phase!=0||
        c->protected!=1||c->programs||c->erases||c->markers||c->failed) return -1;
     if(HEARTH_FILE_ACTION!=1) {
+        if(HEARTH_FILE_ACTION==3) c->settings_state=hearth_posix_settings_state(&c->files);
         int result=HEARTH_FILE_ACTION==3?hearth_posix_reencode_preflight(&c->files):hearth_posix_restore_preflight(&c->files);
         c->diagnostic=result?(HEARTH_FILE_ACTION==3?100+hearth_posix_reencode_stage:50):0;
         if(c->files.recovery>=0) { if(close(c->files.recovery)) result=-1;c->files.recovery=-1; }
@@ -194,18 +196,31 @@ static void capture_changed_preflight(struct action_context *c)
     snapshot_size=at;
     c->snapshot_target=-1;
 }
-static int await_commit(void)
+static int await_commit(struct action_context *c)
 {
-    unsigned char ready[76],commit[76],abort[76],input[256];unsigned int a=0,b=0,i;
+    unsigned char ready[76],commit[76],abort[76],input[256],info[256];unsigned int a=0,b=0,i,info_size=0,part=0;
     long started=monotonic(),last=-1;
     struct hearth_cached_transmit sending={0};
     binding_frame(ready,"HFW_RDY1");binding_frame(commit,"HFW_RUN1");binding_frame(abort,"HFW_STOP");
+    if(HEARTH_FILE_ACTION==3) {
+        unsigned int missing=0;int length;
+        for(i=0;i<9;i++) if(c->files.created[i]&8U) missing|=1U<<i;
+        length=snprintf((char *)info+84,sizeof(info)-92,"{\"missing_originals\":%u,\"settings_state\":%d,\"write_policy\":0}\n",missing,c->settings_state);
+        if(length<=0||(unsigned int)length>=sizeof(info)-92) return 0;
+        binding_frame(info,"HFW_INF1");put(info+76,(unsigned int)length);put(info+80,crc(info+84,(unsigned int)length));
+        info_size=84+(unsigned int)length;for(i=0;i<8;i++) info[info_size++]=(unsigned char)"HFW_END1"[i];
+    }
     for(;;) {
         long now=monotonic(),n;
         if(started<0||now<started||now-started>600) return 0;
         if(now!=last) {
-            int sent=hearth_cached_transmit_step(&sending,tty,(const char *)ready,sizeof(ready),transmit);
-            if(sent==HEARTH_TRANSMIT_DONE) last=now;
+            const unsigned char *bytes=info_size&&!part?info:ready;
+            unsigned int count=info_size&&!part?info_size:sizeof(ready);
+            int sent=hearth_cached_transmit_step(&sending,tty,(const char *)bytes,count,transmit);
+            if(sent==HEARTH_TRANSMIT_DONE) {
+                if(info_size&&!part) part=1;
+                else { part=0;last=now; }
+            }
             else if(sent==HEARTH_TRANSMIT_ERROR) return 0;
         }
         n=read(tty,input,sizeof(input));
@@ -224,7 +239,7 @@ int main(void)
     struct action_context c;struct hfa_result result;int initial=0,committed=0,n;
     unsigned int i,length,part=0;struct hearth_cached_transmit sending={0};
     memset(&c,0,sizeof(c));c.files.roots[0]=c.files.roots[1]=c.files.recovery=-1;c.preflight_target=-1;
-    c.files.owner=0;c.files.group=0;c.files.count=9;c.files.changes=hearth_capsule_changes;c.snapshot_target=-1;
+    c.files.owner=0;c.files.group=0;c.files.count=9;c.files.changes=hearth_capsule_changes;c.snapshot_target=-1;c.settings_state=5;
     for(i=0;i<32;i++) { c.files.plan_id[i]=hearth_capsule_plan_id[i];if(hearth_capsule_plan_id[i]!=hearth_expected_plan[i]) initial=1; }
     if(getuid()!=0||getgid()!=0||hearth_capsule_count!=9) initial=1;
     umask(077);
@@ -235,7 +250,7 @@ int main(void)
      * snapshot in this same RAM session. It never authorizes changing the old
      * compiled plan; a new reviewed capsule/image is still required. */
     if(initial==2) capture_changed_preflight(&c);
-    if(!initial) committed=await_commit();
+    if(!initial) committed=await_commit(&c);
     if(committed) result=hfa_run(&action_ops,&c,HEARTH_FILE_ACTION!=1);
     else result=hfa_cancel(&action_ops,&c);
     if(initial==2) {
@@ -253,13 +268,13 @@ int main(void)
         "\"cleanup_error\":%d,\"attempted\":%u,\"restored\":%u,\"committed\":%d,"
         "\"release_error\":%d,\"unmount_errors\":%u,\"seal_error\":%d,\"verified\":%d,"
         "\"safe_to_restart\":%d,\"complete\":%d,\"phase\":%u,\"protected\":%u,"
-        "\"program\":%u,\"erase\":%u,\"marker\":%u,\"failed\":%u,\"snapshot_available\":%u,\"encoding_verified\":%d,\"diagnostic\":%u,\"snapshot_target\":%d}\n",
+        "\"program\":%u,\"erase\":%u,\"marker\":%u,\"failed\":%u,\"snapshot_available\":%u,\"encoding_verified\":%d,\"diagnostic\":%u,\"snapshot_target\":%d,\"settings_state\":%d}\n",
         HEARTH_FILE_ACTION,initial,c.preflight_target,committed,result.stage_error,result.window_opened,
         result.rw_attempted,result.transaction_called,result.transaction.error,result.transaction.rollback_error,
         result.transaction.journal_error,result.transaction.cleanup_error,result.transaction.attempted,
         result.transaction.restored,result.transaction.committed,result.release_error,result.unmount_errors,
         result.seal_error,result.verified,result.safe_to_restart,result.complete,c.phase,c.protected,
-        c.programs,c.erases,c.markers,c.failed,snapshot_size?1U:0U,c.encoding_verified,c.diagnostic,c.snapshot_target);
+        c.programs,c.erases,c.markers,c.failed,snapshot_size?1U:0U,c.encoding_verified,c.diagnostic,c.snapshot_target,c.settings_state);
     if(n<=0||(unsigned int)n>=sizeof(report)-92) for(;;) pause_short();
     binding_frame(report,"HFW_RES1");put(report+76,(unsigned int)n);put(report+80,crc(report+84,(unsigned int)n));
     length=84+(unsigned int)n;

@@ -65,7 +65,7 @@ done:
 int hearth_posix_reencode_preflight(struct hearth_posix_context *c)
 {
  unsigned int i,phase,mask;int status;
- hearth_posix_reencode_stage=1;status=hearth_posix_restore_preflight(c);
+ hearth_posix_reencode_stage=1;status=restore_preflight(c,1U<<HEARTH_SETTINGS);
  if(status) return status;
  hearth_posix_reencode_stage=2;
  if(recovery_journal(c,&phase,&mask)||
@@ -194,4 +194,24 @@ int hearth_posix_selected_encoding(struct hearth_posix_context *c,int replacemen
   if(append(backup,".plain")||absent(c->recovery,backup)!=1) return -1;
  }
  return absent(c->recovery,"journal.new")==1 ? 0 : -1;
+}
+int hearth_posix_settings_state(struct hearth_posix_context *c)
+{
+ char name[128];struct metadata m;int fd,status,result=5;unsigned int i;
+ if(!c||!c->changes||c->count!=9) return 5;
+ for(i=0;i<c->count&&c->changes[i].target!=HEARTH_SETTINGS;i++) {}
+ if(i==c->count) return 5;
+ fd=parent(c,HEARTH_SETTINGS,name);if(fd<0) return 5;
+ status=entry(fd,name,&m);
+ if(status==1) result=1;
+ else if(!status) {
+  if((m.mode&0170000)!=0100000) result=4;
+  else if(m.owner!=c->owner||m.group!=c->group) result=6;
+  else if(m.links!=1) result=7;
+  else if(!check_original(c,i,fd,name)) result=0;
+  else if(!contents(fd,name,c->changes[i].replacement,c->changes[i].replacement_mode,c)) result=2;
+  else result=3; /* Includes unreadable, nonmatching bytes/mode/attributes. */
+ }
+ if(close(fd)) result=5;
+ return result;
 }

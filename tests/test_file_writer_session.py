@@ -106,3 +106,35 @@ def test_kernel_evidence_is_private_and_never_authorizes_commit():
     assert not s.ready and not s.committed
     with pytest.raises(ValueError):
         s.decide(True)
+
+
+def test_repair_ready_requires_exact_preflight_metadata():
+    binding = p.Binding(BINDING.plan, BINDING.receipt, 3)
+    saved = {}
+    s = Session(binding, lambda name, data: saved.setdefault(name, data))
+    s.event(p.SELFTEST, selftests())
+    with pytest.raises(ValueError):
+        s.event(p.READY, b"")
+    info = json.dumps({"missing_originals": 128, "settings_state": 1, "write_policy": 0}).encode()
+    assert s.event(p.PREFLIGHT_INFO, info) is None
+    assert not s.ready and not s.committed
+    assert saved["preflight-info.json"] == info
+    s.event(p.READY, b"")
+    assert s.decide(True) == binding.prefix(b"HFW_RUN1")
+
+
+@pytest.mark.parametrize(
+    "info",
+    (
+        {"missing_originals": 0, "settings_state": 1, "write_policy": 0},
+        {"missing_originals": 48, "settings_state": 0, "write_policy": 0},
+        {"missing_originals": 0, "settings_state": 3, "write_policy": 0},
+        {"missing_originals": 0, "settings_state": 0, "write_policy": 7},
+    ),
+)
+def test_unexpected_preflight_state_never_allows_repair_commit(info):
+    s = Session(p.Binding(BINDING.plan, BINDING.receipt, 3), lambda *_: None)
+    s.event(p.SELFTEST, selftests())
+    with pytest.raises(ValueError):
+        s.event(p.PREFLIGHT_INFO, json.dumps(info).encode())
+    assert s.info is None and not s.ready

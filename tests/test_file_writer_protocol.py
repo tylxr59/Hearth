@@ -81,7 +81,7 @@ def test_fragmented_frames_bind_exact_plan_receipt_and_action():
     for byte in data:
         events.extend(decoder.feed(bytes([byte])))
     assert [kind for kind, _ in events] == [p.SELFTEST, p.READY, p.RESULT]
-    assert p.validate_selftest(events[0][1])["cases"] == 66
+    assert p.validate_selftest(events[0][1])["cases"] == 69
     assert p.validate_result(events[2][1], 1)["complete"] == 1
     wrong = p.Binding(b"q" * 32, BINDING.receipt, 1)
     assert p.Decoder(BINDING).feed(frame(p.READY, binding=wrong)) == []

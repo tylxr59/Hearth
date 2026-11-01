@@ -397,10 +397,11 @@ done:
     if(close(fd)) result=-1;
     return result;
 }
-int hearth_posix_restore_preflight(struct hearth_posix_context *c)
+static int restore_preflight(struct hearth_posix_context *c,unsigned int missing_restored)
 {
     struct metadata m;unsigned int i,phase=0,mask=0;char name[128],temporary[128],backup[16];
-    if(!c||c->recovery!=-1||!c->count||c->count>HEARTH_FILE_LIMIT) return HEARTH_INVALID_PLAN;
+    if(!c||c->recovery!=-1||!c->count||c->count>HEARTH_FILE_LIMIT||
+       (missing_restored&~(1U<<HEARTH_SETTINGS))) return HEARTH_INVALID_PLAN;
     for(i=0;i<c->count;i++) if(valid_change(c,i)) return HEARTH_INVALID_PLAN;
     if(local_root(c,c->roots[0])||local_root(c,c->roots[1])) goto invalid;
     c->recovery=openat(c->roots[1],".hearth-rollback",H_RDONLY|H_DIRECTORY|H_NOFOLLOW|H_CLOEXEC);
@@ -415,7 +416,9 @@ int hearth_posix_restore_preflight(struct hearth_posix_context *c)
         if(directory<0) goto invalid;
         if(check_original(c,i,directory,name)) {
             if(f->existed&&absent(directory,name)==1&&
-               (phase==HEARTH_COMMITTING||phase==HEARTH_RESTORING)&&(mask&(1U<<i))) {
+               ((phase==HEARTH_COMMITTING||phase==HEARTH_RESTORING)||
+                (phase==HEARTH_RESTORED&&(missing_restored&(1U<<i))&&mask==((1U<<c->count)-1)))&&
+               (mask&(1U<<i))) {
                 /* An interrupted filesystem rename may leave the old name
                  * absent. Only durable intent plus an exact backup permits
                  * reconstructing that specific existing target. */
@@ -443,6 +446,8 @@ checked:
 invalid:
     return HEARTH_PREFLIGHT_FAILED;
 }
+int hearth_posix_restore_preflight(struct hearth_posix_context *c)
+{ return restore_preflight(c,0); }
 struct hearth_install_result hearth_posix_restore_files(struct hearth_posix_context *c)
 {
     struct hearth_install_result r={0,0,0,0,0,0,0};unsigned int i;
