@@ -1737,3 +1737,32 @@ readiness; then move source directories with old version preserved, restart Core
 checkhealth/listener/entities/telemetry, prepare single bounded unwired target change.
 No physical HVAC attached/authorized. Basiccontrol unit acceptance still unverified.
 NLE parity remaining range/emergency/eco/schedule/settings/weather matrix in ADR0003.
+
+Owner explicitly authorized HA0.3.0 activation and one Core restart. Activation-v1
+rechecked active0.2.1 backup and staged21 files, moved old source to remote
+/homeassistant/.hearth-native-previous-20261101-030, activated/readback-verified new
+source, then ha core restart exited0. Private receipts under native-ha-climate-
+20261101/activation-v1. Profile/certs/credentials unchanged; no thermostat command.
+Health-v4 confirms four registered entities (three sensors/one climate), none
+disabled and no Hearth setup error in scoped logs. Earlier registry read while
+HA still starting showed3; do not misdiagnose that early read as failed platform.
+Supervisor/Core template query returned401 (SSH environment has no API token);
+used scoped on-disk Hearth entity-registry filtering instead, no new HA token ask.
+
+New reconnect watch session12756 records fresh HA listener manager auth but no
+native uploads yet (empty state, unavailable, zero decoder rejections). Owner
+woke ring once: wiring error with WiFi connected. This did not produce upload yet.
+Asked via async input for ordinary native restart ON the unwired base, full10sec
+hold/release/singlepress; NO loader/flashing running. Await return before bounded
+target command. Do not claim physical unit command acceptance or autonomous
+post-Core-restart reconnect. First staged-control run may require this handshake.
+
+User asked public packaging/installer architecture. Explained integration vs
+Supervisor add-on, GitHub versioned release/ZIP +early custom HACS repository,
+default catalog later after HACS Action/Hassfest/releases. Recommended one dev
+source repo now, generated distribution later if useful (no new repo created).
+Proposed HA setup/pairing wizard plus guided desktop USB installer with model/
+firmware checks, backups, reachability, scoped write confirmation. Research tooling
+is not public installer. HACS requires self-contained custom_components/<domain>
+layout; current nested/generated dev layout needs release packaging work. Native
+HVAC development objective continues; those release questions are context/steering.
