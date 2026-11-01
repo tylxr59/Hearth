@@ -1808,3 +1808,116 @@ entity registry4+managerauth+logs for live health; HAservice path validated in s
 actual unit target through Hearthmanager. Ask userforUIonlyifneeded; don't request
 HA access token unnecessarily. Existing SSH passwordfile stillworkedfor staging;
 use private/native-ha-climate-20261101/ssh-askpass, no secret content printing.
+
+Owner approved0.3.1 activation +oneCore restart. Activation script
+build/activate-native-ha-climate-fix-20261101.py rechecked prior/staged bytes,
+preserved0.3.0 source at remote /homeassistant/.hearth-native-previous-20261101-031,
+activated/readback0.3.1 and ha core restart exited0. Source commit a26057b pushed.
+Receipt private/native-ha-climate-fix-20261101/activation-v1. No new thermostat
+write/ROM/flash. Reconnect-watch-v1 session93220 active/possibly later completed;
+full private observations include new per-device native_controls diagnostics.
+
+HA0.3.1 received valid native GET+subscriptions autonomously afterCore restart,
+renewing availability, but unchanged readings did NOT reupload: empty state,
+get1/subscribe2, all temperature/mode/fan baselines false, no decoder rejection.
+0.3.1 correctly refuses target intent without actual baseline. First read-only
+restore preflight original-target-restore-v1 exited1 after180s, NO intent sent.
+Fresh extended read-only preflight original-target-restore-v2 running session71719
+from build/restore-native-target-20261101-v3.py; waits360s for available+0.3.1diag+
+actual target baseline+valid subscription. If currenttarget matches prior test,
+it will send EXACTLY ONE restore intent for saved original and poll45s; if current
+alreadyoriginal sendsnothing; unexpected thirdtarget refuses overwrite. This is
+not an automatic retry of an already sent command. Do not duplicate this intent.
+
+Asked owner via async input for ordinary native restart ON unwired base (10sec
+hold/release/singlepress) to resend startup readings. Await dial-return reply.
+NO loader is armed. Worker71719 may act on fresh baseline after that restart;
+inspect its result/evidence before any further command. Original target still
+UNCONFIRMED at last fresh check. Precise values only in ignored target-test-v1/
+reviewed-targets.json; do not log them into public source. Existing firstraise
+succeeded, firstrestore .3.0 didnotconfirm, no additional command has been sent
+under0.3.1 yet. All wiring terminals remain empty.
+
+Next release requirement discovered: preserve ONLY reported/observed state across
+HA restart while discarding intents. Nativeclient sends metadata, not unchanged
+values, on warmserver reconnect. Without reported-state cache, warmCore restart
+loses baseline and could need manualunit restart. No cache implementation yet.
+Proposed bounded known-field cache: device/shared metadata+allowlisted actually
+reported scalar telemetry/control/capability fields, generationbound; no unknown
+raw values, credentials, intent values/replay. Rebuild fingerprints under a fresh
+HMACkey; assign cachedCore.states without Core.report/seen (don't fabricate fresh
+readings), renew presence only after real valid native connection. Save atomically
+600 with bounded schema and per-unitgeneration; no outbound values without explicit
+new intent. Unit acceptance/restoration first, then build/test cache plus remaining
+NLE parity. Never interpret cached state as a newly measured device report.
+
+Extended restore preflight71719 exited1 after360s: no target baseline appeared,
+NO original-restore intent sent. Both0.3.1 restore directories are read-only refusal
+records. Owner normalrestart prompt still pending (no dial-return message yet).
+New watch continued connected/authsubscribe but no unchanged readings after full
+hold cycle. Do not repeatedly enqueue/seed fabricated sensor readings. Once owner
+returns dial, inspect actualnewmanagerstate; only then send one reviewed original
+restore intent if current stilltestvalue. If alreadyoriginal sendnothing; unexpected
+independenttarget do not overwrite. Precise original private reviewed-targets.json.
+
+While awaiting owner, prepared WIP reported cache backend (NOT deployed):
+backend/reported_cache.py strict bounded known-field-only codec, backend/reported_state.py
+snapshot/capture/restore, NativeControls.reported hooks and package inclusion. Tests
+reported_cache18 +nativecontrols28 focused46 pass. Snapshot excludes pending intent
+values (uses actually reported fields), unknown raw fields/credentials/fingerprints.
+Restore generation-bound, beforetrafficonly, recomputesHMACunderfreshkey andassigns
+cachedCorestates WITHOUT Core.report/seen/touch; no intent replay/freshnessclaim.
+No HA diskstore/runtime cache load/save yet, no version bump/package activation for
+this WIP. ActiveHA0.3.1 remains frozena26057b source and the checked21-file package.
+Do not mix WIPcache with alreadyverifiedliveartifact or claim restartcache working.
+Need atomicprivate600 boundedstore and explicitcached-origin metadata before wiring
+HAstartup/shutdown, then host+realHArestarttests and laterdeployment. Unitrestore
+remainspriority before expandingparity. Current source WIP may be dirty, preserve.
+
+
+Owner finally confirmed dial after normalrestart; fresh0.3.1target baseline arrived.
+Thirdpreflight original-target-restore-v3 (worker42747/build/v4) refused because
+nativecurrentvalue differed from BOTH exact savedoriginal/test. No0.3.1intent sent.
+Privatecomparison shows current within0.02Cofsavedoriginal andtest+0.5Ccleared; doNOT
+claim exact restorecommand confirmed. Leftnativecurrentvalue untouched. Ownercould
+onlyseeE22wiringdiagram and estimatesprior62F, NOTverified. Toldownerleaveallterminals
+empty; cannotcertifyphysicaldial/HVACcontrolfromechoedtelemetry alone. No furthertarget
+requestcurrentlyrunning. Primaryremainingcontrolproof: subscription-onlycommand
+mustchangeactualnativeapplication/dialwhenvalidpoweredbenchpermits. Keepcodebuilding.
+
+WIPcache now extended (stillNOTdeployed) with backend/reported_store.py atomicprivate
+600 FD-relative save/fsync/replace/readback, strictinodes/no links/unexpectedfile
+refusal. NativeControls per-field cache/device/unknown source markers, HA runtime
+loadbeforelistener/periodic+stopflush (generationcounter+asynclock), sensor/climate
+sourceattributes and payload-freediagnostics.py. Devmanifest0.4.0; live0.3.1 unchanged.
+Package includes3cachebackend modules+diagnostics. Hostcachetests27plusnewsource/
+invalidcapabilitycasespass; widerchecks pending. RealHAcache sandbox v040-1 FAILED
+before setup: packager didnotrewrite `from backend import reported_state`. Fixed
+packager exactly-`backend` import form +ASTregression; v040-2 running session62459.
+DoNOTdeployv040-1. CacheHA test unloadswithpending24C intent whileactualreported25C,
+loads reported25C+no intents/no seen, reconnectsmetadataonly andchecks cachelabel,
+acceptsnewactual22.5C andchecks perfieldsourceflips, payloadfreediagnostics. Need
+confirm result, fulltests/repro/custody before anyliveactivationreadinessrequest.
+
+
+HA0.4.0 batch now validated:1158 host tests pass/five optional skips, make check
+passes. Real HA2026.10.4 isolated sandbox final-podman passes12 synthetic service/
+native-report roundtrips including Fahrenheit conversion, heat/cool range pairs
+and capability-gated emergency preset. Reported-only atomic cache unload/reload
+passes without intent replay or fabricated availability; source labels/diagnostics
+and refused-cache fresh-upload/save recovery pass. Final25-file source package
+build/native-ha-cache-range-emergency-20261101-v040-final-podman matches separate
+-v040-repro byte-for-byte. Earlier draft packages superseded. No ARMfirmware or
+physical HVAC ran. Range/emergency remain untested on owner's empty base.
+
+Source staged/readback exactly on ownerHA; prior0.3.1code backedup privately in
+private/native-ha-v040-20261101/stage-v1. Owner explicitly approved activate0.4.0
++oneCore restart. build/activate-native-ha-v040-20261101.py running/possiblyfinished
+session9151; receipt activation-v1, remote previous source preserved at
+/homeassistant/.hearth-native-previous-20261101-040. Readonly reconnect watch at
+private/native-ha-v040-20261101/reconnect-watch-v1. Check results before claiming
+livehealth/cache. No thermostat writes/control intent involved. First0.4startup
+has no oldcache; mayneed normal ownerunit restart for freshfullreport, then verify
+subsequent cache reload without unitrestart. Do not rerun activation or consume
+anotherCore restart without newownerreadiness. NLEparity checklist ADR0003 updated;
+eco/schedules/weather/settings and physicalbench still unfinished.

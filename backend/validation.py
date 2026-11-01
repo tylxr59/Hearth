@@ -120,7 +120,9 @@ def capabilities(body):
     if (
         not isinstance(modes, list)
         or not modes
-        or any(not isinstance(m, str) or m not in ("off", "heat", "cool") for m in modes)
+        or any(
+            not isinstance(m, str) or m not in ("off", "heat", "cool", "heat_cool") for m in modes
+        )
         or len(set(modes)) != len(modes)
         or type(body["fan"]) is not bool
     ):

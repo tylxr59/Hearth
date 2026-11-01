@@ -324,3 +324,34 @@ async def test_subscription_push_sets_native_confirmation_timing_headers(rig):
         )
         diagnostics = (await response.json())["devices"][0]["native_controls"]
         assert diagnostics["pending"]["temperature"]["offered"] is True
+
+
+def test_emergency_mode_requires_explicit_permission_and_positive_device_capability(rig):
+    n = NativeControls(rig[0], clock=lambda: 1000)
+    baseline(n)
+    with pytest.raises(Invalid):
+        n.enqueue(SERIAL, {"operation": "mode", "value": "emergency"})
+    rig[0].registry.data["devices"][SERIAL]["capabilities"]["modes"].append("emergency")
+    with pytest.raises(Invalid):
+        n.enqueue(SERIAL, {"operation": "mode", "value": "emergency"})
+    n.apply(
+        SERIAL, {"objects": [{"object_key": f"device.{SERIAL}", "value": {"has_emer_heat": True}}]}
+    )
+    request = sub(n)
+    n.enqueue(SERIAL, {"operation": "mode", "value": "emergency"})
+    assert n.updates(SERIAL, request)["objects"][0]["value"] == {
+        "target_temperature_type": "emergency"
+    }
+    n.apply(
+        SERIAL,
+        {
+            "objects": [
+                {
+                    "object_key": f"shared.{SERIAL}",
+                    "value": {"target_temperature_type": "emergency"},
+                }
+            ]
+        },
+    )
+    assert rig[0].states[SERIAL]["mode"] == "heat"
+    assert n.command_status(SERIAL)["mode"] == "confirmed"

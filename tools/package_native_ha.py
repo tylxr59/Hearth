@@ -18,6 +18,9 @@ BACKEND_FILES = (
     "core.py",
     "native.py",
     "native_controls.py",
+    "reported_cache.py",
+    "reported_state.py",
+    "reported_store.py",
     "nest.py",
     "registry.py",
     "validation.py",
@@ -32,6 +35,7 @@ INTEGRATION_FILES = (
     "sensor.py",
     "climate.py",
     "probe.py",
+    "diagnostics.py",
     "strings.json",
 )
 
@@ -41,10 +45,18 @@ def isolated_source(data):
     tree = ast.parse(text)
     lines = text.splitlines(keepends=True)
     for node in ast.walk(tree):
-        if isinstance(node, ast.ImportFrom) and node.module and node.module.startswith("backend."):
+        if (
+            isinstance(node, ast.ImportFrom)
+            and node.module
+            and (node.module == "backend" or node.module.startswith("backend."))
+        ):
             line = lines[node.lineno - 1]
             old = "from " + node.module + " import "
-            new = "from ." + node.module.removeprefix("backend.") + " import "
+            new = (
+                "from ."
+                + (node.module.removeprefix("backend.") if node.module != "backend" else "")
+                + " import "
+            )
             if line.count(old) != 1:
                 raise ValueError("unexpected canonical import layout")
             lines[node.lineno - 1] = line.replace(old, new, 1)

@@ -182,6 +182,13 @@ async def native_entry(request):
     return await nest_entry(request)
 
 
+def native_touch(app, ident):
+    was_available = app[CORE].available(ident)
+    app[CORE].touch(ident)
+    if not was_available:
+        app[NATIVE].notify(ident)
+
+
 def native_headers(app, result=None):
     if not isinstance(app[NATIVE], NativeControls):
         return {}
@@ -198,7 +205,7 @@ def native_headers(app, result=None):
 async def native_put(request):
     result = request.app[NATIVE].apply(request[IDENT], await body(request, NATIVE_MAX_BODY))
     if isinstance(request.app[NATIVE], NativeControls):
-        request.app[CORE].touch(request[IDENT])
+        native_touch(request.app, request[IDENT])
     return web.json_response(result, headers=native_headers(request.app))
 
 
@@ -207,7 +214,7 @@ async def native_get(request):
         raise web.HTTPForbidden()
     if isinstance(request.app[NATIVE], NativeControls):
         request.app[NATIVE].note_request(request[IDENT], "get")
-        request.app[CORE].touch(request[IDENT])
+        native_touch(request.app, request[IDENT])
     return web.json_response(
         request.app[NATIVE].listing(request[IDENT]), headers=native_headers(request.app)
     )
@@ -221,7 +228,7 @@ async def native_subscribe(request):
         raise web.HTTPTooManyRequests(headers={"Retry-After": "30"})
     result = app[NATIVE].apply(ident, incoming, subscription=True)
     if isinstance(app[NATIVE], NativeControls):
-        app[CORE].touch(ident)
+        native_touch(app, ident)
     if not incoming.get("chunked", False):
         return web.json_response(result, headers=native_headers(app, result))
     response = web.StreamResponse(
@@ -247,7 +254,7 @@ async def native_subscribe(request):
                 if request.transport is None or request.transport.is_closing():
                     break
                 if isinstance(app[NATIVE], NativeControls):
-                    app[CORE].touch(ident)
+                    native_touch(app, ident)
                     changed = app[NATIVE].updates(ident, incoming)
                     if changed["objects"]:
                         await response.write(json.dumps(changed).encode())

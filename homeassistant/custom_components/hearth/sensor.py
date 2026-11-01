@@ -52,6 +52,10 @@ class HearthSensor(SensorEntity):
         return self.runtime.core.states.get(self.ident, {}).get(self.field)
 
     @property
+    def extra_state_attributes(self):
+        return {"reported_state_source": self.runtime.controls.state_source(self.ident, self.field)}
+
+    @property
     def available(self):
         return self.runtime.core.available(self.ident) and self.native_value is not None
 

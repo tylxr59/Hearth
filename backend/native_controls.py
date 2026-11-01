@@ -10,12 +10,13 @@ import hmac
 import json
 import time
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
+from backend import reported_state
 from backend.native import NativeTelemetry, canonical, envelope, integer
-from backend.validation import Invalid, command
+from backend.validation import Invalid, command, number
 
-FEATURES = {"can_heat", "can_cool", "has_fan"}
+FEATURES = {"can_heat", "can_cool", "has_fan", "has_emer_heat"}
 MODE_FIELD = "target_temperature_type"
 HEAT = {
     "hvac_heater_state",
@@ -37,6 +38,10 @@ class Intent:
     revision: int
     expires: float
     sent: bool = False
+    extra_values: dict = field(default_factory=dict)
+
+    def desired(self):
+        return {self.field: self.value, **self.extra_values}
 
 
 class NativeControls(NativeTelemetry):
@@ -45,6 +50,9 @@ class NativeControls(NativeTelemetry):
         self.intents = {}
         self.features = {}
         self.outcomes = {}
+        self.reported = {}
+        self.restored_fields = {}
+        self.reported_changed = lambda _ident: None
         self.requests = {}
         self.last_request = {}
         self.notify = lambda _ident: None
@@ -56,9 +64,37 @@ class NativeControls(NativeTelemetry):
             self.intents.pop(ident, None)
             self.features.pop(ident, None)
             self.outcomes.pop(ident, None)
+            self.reported.pop(ident, None)
+            self.restored_fields.pop(ident, None)
             self.requests.pop(ident, None)
             self.last_request.pop(ident, None)
         return super()._records_for(ident)
+
+    def snapshot_reported(self):
+        return reported_state.snapshot(self, integer(int(self.clock() * 1000)))
+
+    def restore_reported(self, data):
+        return reported_state.restore(self, data)
+
+    def state_source(self, ident, field):
+        self._records_for(ident)
+        records = self.reported.get(ident, {})
+        shared = records.get("shared", {}).get("values", {})
+        source = {
+            "temperature": (
+                "shared" if "current_temperature" in shared else "device",
+                "current_temperature",
+            ),
+            "humidity": ("device", "current_humidity"),
+            "target_temperature": ("shared", "target_temperature"),
+            "target_temperature_low": ("shared", "target_temperature_low"),
+            "target_temperature_high": ("shared", "target_temperature_high"),
+            "mode": ("shared", MODE_FIELD),
+            "fan": ("device", "fan_timer_timeout"),
+        }.get(field)
+        if source is None or source[1] not in records.get(source[0], {}).get("values", {}):
+            return "unknown"
+        return "cache" if source in self.restored_fields.get(ident, set()) else "device"
 
     def note_request(self, ident, kind):
         self._records_for(ident)
@@ -102,6 +138,14 @@ class NativeControls(NativeTelemetry):
         for mode, flag in (("heat", "can_heat"), ("cool", "can_cool")):
             if mode in configured["modes"] and observed.get(flag) is True:
                 modes.append(mode)
+        if "heat_cool" in configured["modes"] and {"heat", "cool"} <= set(modes):
+            modes.append("heat_cool")
+        if (
+            "emergency" in configured["modes"]
+            and "heat" in modes
+            and observed.get("has_emer_heat") is True
+        ):
+            modes.append("emergency")
         return {"modes": modes, "fan": configured["fan"] and observed.get("has_fan") is True}
 
     def action(self, ident):
@@ -122,7 +166,7 @@ class NativeControls(NativeTelemetry):
         mode = self.core.states.get(ident, {}).get("mode")
         if mode == "off":
             return "off"
-        if mode in ("heat", "cool") and all(flags.get(k) is False for k in OUTPUTS):
+        if mode in ("heat", "cool", "heat_cool") and all(flags.get(k) is False for k in OUTPUTS):
             return "idle"
         return None
 
@@ -141,20 +185,52 @@ class NativeControls(NativeTelemetry):
     def enqueue(self, ident, body):
         self._records_for(ident)
         self._expire(ident)
-        validated = command(body, self.capabilities(ident))
+        caps = self.capabilities(ident)
+        if isinstance(body, dict) and body.get("operation") == "temperature_range":
+            if (
+                set(body) != {"operation", "value"}
+                or not isinstance(body["value"], dict)
+                or set(body["value"]) != {"low", "high"}
+            ):
+                raise Invalid("both range targets required")
+            if (
+                "heat_cool" not in caps["modes"]
+                or self.core.states.get(ident, {}).get("mode") != "heat_cool"
+            ):
+                raise Invalid("active supported heat/cool mode required")
+            low = number(body["value"]["low"], 10, 30)
+            high = number(body["value"]["high"], 10, 30)
+            if low >= high:
+                raise Invalid("low range target must be below high target")
+            validated = {"operation": "temperature_range", "value": {"low": low, "high": high}}
+        else:
+            validated = command(body, caps)
+            if (
+                validated["operation"] == "temperature"
+                and self.core.states.get(ident, {}).get("mode") == "heat_cool"
+            ):
+                raise Invalid("both range targets required")
         if not self.core.available(ident):
             raise Invalid("device unavailable")
         operation, value = validated["operation"], validated["value"]
-        kind, field = "shared", "target_temperature"
+        kind, wire_field = "shared", "target_temperature"
+        extras = {}
         if operation == "mode":
-            field = MODE_FIELD
+            wire_field = MODE_FIELD
+            if value == "heat_cool":
+                value = "range"
+        elif operation == "temperature_range":
+            wire_field = "target_temperature_low"
+            extras = {"target_temperature_high": value["high"]}
+            value = value["low"]
         elif operation == "fan":
-            kind, field = "device", "fan_timer_timeout"
+            kind, wire_field = "device", "fan_timer_timeout"
             value = 0 if value == "auto" else integer(int(self.clock()) + 600)
         key = f"{kind}.{ident}"
         records = self._records_for(ident)
         previous = records.get(key)
-        if previous is None or field not in previous.fingerprints:
+        desired = {wire_field: value, **extras}
+        if previous is None or not desired.keys() <= previous.fingerprints.keys():
             raise Invalid("native control baseline unavailable")
         # A revision supersedes the bucket's earlier intent batch. Retain other
         # still-live intents with the same new revision so disjoint operations
@@ -162,18 +238,38 @@ class NativeControls(NativeTelemetry):
         revision = integer(previous.revision + 1)
         timestamp = integer(max(int(self.clock() * 1000), previous.timestamp + 1))
         previous.revision, previous.timestamp = revision, timestamp
-        previous.fingerprints[field] = hmac.digest(
-            self._key,
-            json.dumps(
-                canonical(value), sort_keys=True, separators=(",", ":"), allow_nan=False
-            ).encode(),
-            hashlib.sha256,
-        )
+        for name, data in desired.items():
+            previous.fingerprints[name] = hmac.digest(
+                self._key,
+                json.dumps(
+                    canonical(data), sort_keys=True, separators=(",", ":"), allow_nan=False
+                ).encode(),
+                hashlib.sha256,
+            )
         intents = self.intents.setdefault(ident, {})
-        for item in intents.values():
-            if item.key == key:
-                item.revision = revision
-        item = Intent(uuid.uuid4().hex, key, field, value, revision, self.core.clock() + 30)
+        for op, pending in list(intents.items()):
+            incompatible = operation == "mode" and (
+                (value == "range" and op == "temperature")
+                or (value != "range" and op == "temperature_range")
+                or (value == "off" and op == "temperature")
+            )
+            if incompatible or (
+                pending.key == key and pending.desired().keys() & desired.keys() and op != operation
+            ):
+                del intents[op]
+                self.outcomes.setdefault(ident, {})[op] = "superseded"
+        for pending in intents.values():
+            if pending.key == key:
+                pending.revision = revision
+        item = Intent(
+            uuid.uuid4().hex,
+            key,
+            wire_field,
+            value,
+            revision,
+            self.core.clock() + 30,
+            extra_values=extras,
+        )
         intents[operation] = item
         self.outcomes.setdefault(ident, {})[operation] = "pending"
         self.notify(ident)
@@ -183,9 +279,10 @@ class NativeControls(NativeTelemetry):
         self._expire(ident)
         for row in response["objects"]:
             values = {
-                i.field: i.value
+                name: data
                 for i in self.intents.get(ident, {}).values()
                 if i.key == row["object_key"] and i.revision == row["object_revision"]
+                for name, data in i.desired().items()
             }
             if values:
                 row["value"] = values
@@ -229,6 +326,10 @@ class NativeControls(NativeTelemetry):
                     observed[name] = value[name] if type(value[name]) is bool else None
             projection = {}
             mode = value.get(MODE_FIELD) if kind == "shared" else None
+            if mode == "range":
+                mode = "heat_cool"
+            elif mode == "emergency":
+                mode = "heat"
             if isinstance(mode, str) and mode in self.core.caps(ident)["modes"]:
                 projection["mode"] = mode
             timeout = value.get("fan_timer_timeout") if kind == "device" else None
@@ -240,14 +341,22 @@ class NativeControls(NativeTelemetry):
                 projection["fan"] = "on" if timeout > self.clock() else "auto"
             if projection:
                 self.core.report(ident, projection)
+            reported_state.capture(self, ident, key, kind, value)
             for op, item in list(self.intents.get(ident, {}).items()):
-                if item.key != key or item.field not in value:
+                expected = item.desired()
+                touched = expected.keys() & value.keys()
+                if item.key != key or not touched:
                     continue
-                outcome = (
-                    "confirmed"
-                    if canonical(value[item.field]) == canonical(item.value)
-                    else "superseded_by_device"
-                )
+                if any(canonical(value[name]) != canonical(expected[name]) for name in touched):
+                    outcome = "superseded_by_device"
+                else:
+                    observed = self.reported.get(ident, {}).get(kind, {}).get("values", {})
+                    if not all(
+                        name in observed and canonical(observed[name]) == canonical(want)
+                        for name, want in expected.items()
+                    ):
+                        continue
+                    outcome = "confirmed"
                 self.outcomes.setdefault(ident, {})[op] = outcome
                 del self.intents[ident][op]
             # A native telemetry delta may advance this bucket while an unrelated

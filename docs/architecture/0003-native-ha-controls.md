@@ -54,11 +54,11 @@ are not proof of on-device command acceptance or equipment operation.
 | Native HA climate entity and single target | Host and real HA sandbox pass | Unwired-device command/confirmation test |
 | Off/heat/cool and fan timer | Host and real HA sandbox pass | Actual native capability/report mapping and bench acceptance |
 | Reported HVAC operating action | Boolean mapping implemented | Compare against real equipment states |
-| Heat/cool range and emergency mode | Not implemented | Capability/bounds mapping, atomic range intents, native tests |
+| Heat/cool range and emergency mode | Implemented in0.4; host and real HA sandbox pass | Actual native range/preset acceptance on suitable bench |
 | Eco/away and eco temperatures | Not implemented | Structure ownership binding and native manual-eco timestamp semantics |
 | Weekly schedules and schedule mode | Not implemented | Strict weekly schema, conflict handling and complete replacement tests |
 | Learning/preconditioning and other NLE device settings | Not implemented | Per-field native writability/types/bounds; no generic arbitrary setter |
-| Weather/outdoor data and useful diagnostics | Partial/basic readings | Local HA weather mapping, diagnostic entities and fault reporting |
+| Weather/outdoor data and useful diagnostics | Payload-free integration diagnostics in0.4; weather absent | Local HA weather mapping and fault entities |
 | Native local operation when HA/network is unavailable | Native logic preserved | Supervised outage/return tests, no stale replay |
 | Actual heating/cooling/fan and equipment protections | Unverified | Separate equipment inspection/authorization and supervised test |
 
@@ -93,6 +93,38 @@ Authenticated manager diagnostics now expose fixed request counts, field-baselin
 presence, pending/expired/confirmed outcomes and whether an intent was offered.
 They omit unknown native values, credentials and command values.0.3.1 passes1115
 host tests/five optional skips, make check and six real HA sandbox roundtrips.
-Its21-file source package reproduces and is staged/read back with0.3.0 backed up.
-It has not yet been activated or measured on the physical unit. Original-target
-restoration remains the next device check; the base remains completely unwired.
+Its21-file source package reproduced and was activated after owner approval, with
+0.3.0 backed up and one Core restart. A subsequent fresh native report was close
+to the saved original target, and the test increase was gone. Guarded restoration
+preflights sent no additional intent because there was initially no baseline and
+then a different exact value. The physical dial remains obscured by E22 on the
+empty base. This is not an exact reverse-command confirmation or HVAC proof.
+
+
+##0.4 reported state and additional controls
+
+The reported-only cache retains bounded, allowlisted device/shared values and
+bucket metadata in an owner-only atomic file. Credential generation binds each
+record to the enrolled device. Credentials, unknown fields, runtime fingerprints
+and pending intents are excluded. Loading does not mark a device available or
+produce a fresh report. Valid native traffic renews presence; individual entity
+attributes distinguish cached values from values reported in the current run.
+A refused cache does not prevent fresh authenticated uploads. Disk errors remain
+visible in payload-free integration diagnostics.
+
+Heat/cool range uses one intent containing both ordered targets, each10..30C.
+The active range mode and positive heating/cooling capabilities are required.
+A single target is refused while range mode is active; both reported values must
+match before confirmation. Emergency heat is a preset, exposed only when the
+reported emergency-heat flag and configured heating permission both allow it.
+Clearing that preset requires a fresh mode report. Native protection and control
+loops remain untouched. No owner-unit range/emergency command has been sent.
+
+The real HA Core2026.10.4 sandbox covers twelve service/native-report roundtrips,
+including Fahrenheit conversion, range pairs and emergency preset transitions.
+It also checks unload/reload, absence of command replay, cache source labels,
+payload-free diagnostics and continued native operation when cache permissions
+are refused. These use synthetic data on an isolated host runtime, not firmware
+or physical equipment. The0.4 package still needs owner-host activation and a
+normal reconnect/cache-reload check. Eco, schedules, weather and the remaining
+NLE settings are separate unfinished work.

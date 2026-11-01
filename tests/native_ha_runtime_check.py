@@ -211,12 +211,15 @@ async def check(root, profile):
                             "current_humidity": 48,
                             "fan_timer_timeout": 0,
                             "has_fan": True,
+                            "has_emer_heat": True,
                         },
                     },
                     {
                         "object_key": "shared." + IDENT,
                         "value": {
                             "target_temperature": 21,
+                            "target_temperature_low": 18,
+                            "target_temperature_high": 25,
                             "target_temperature_type": "off",
                             "can_heat": True,
                             "can_cool": True,
@@ -249,6 +252,7 @@ async def check(root, profile):
                 "off",
                 "heat",
                 "cool",
+                "heat_cool",
             }
             from custom_components.hearth._backend.api import NATIVE
 
@@ -309,6 +313,38 @@ async def check(root, profile):
                 "set_hvac_mode", {"hvac_mode": "heat"}, {"target_temperature_type": "heat"}
             )
             assert hass.states.get(climate_id).state == "heat"
+            await command_roundtrip(
+                "set_hvac_mode", {"hvac_mode": "heat_cool"}, {"target_temperature_type": "range"}
+            )
+            assert hass.states.get(climate_id).state == "heat_cool"
+            await command_roundtrip(
+                "set_temperature",
+                {"target_temp_low": 20, "target_temp_high": 26},
+                {"target_temperature_low": 20, "target_temperature_high": 26},
+            )
+            assert hass.states.get(climate_id).attributes["target_temp_low"] == 20
+            assert hass.states.get(climate_id).attributes["target_temp_high"] == 26
+            hass.config.units = US_CUSTOMARY_SYSTEM
+            await command_roundtrip(
+                "set_temperature",
+                {"target_temp_low": 68, "target_temp_high": 77},
+                {"target_temperature_low": 20, "target_temperature_high": 25},
+            )
+            hass.config.units = original_units
+            await command_roundtrip(
+                "set_hvac_mode", {"hvac_mode": "heat"}, {"target_temperature_type": "heat"}
+            )
+            await command_roundtrip(
+                "set_preset_mode",
+                {"preset_mode": "emergency_heat"},
+                {"target_temperature_type": "emergency"},
+            )
+            assert hass.states.get(climate_id).state == "heat"
+            assert hass.states.get(climate_id).attributes["preset_mode"] == "emergency_heat"
+            await command_roundtrip(
+                "set_preset_mode", {"preset_mode": "none"}, {"target_temperature_type": "heat"}
+            )
+            assert hass.states.get(climate_id).attributes["preset_mode"] == "none"
             fan = await command_roundtrip("set_fan_mode", {"fan_mode": "on"}, None)
             assert 590 <= fan["fan_timer_timeout"] - int(__import__("time").time()) <= 600
             await command_roundtrip("set_fan_mode", {"fan_mode": "auto"}, {"fan_timer_timeout": 0})
@@ -320,6 +356,8 @@ async def check(root, profile):
                 "hearth", context={"source": "user"}
             )
             assert duplicate["type"] == "abort" and duplicate["reason"] == "already_configured"
+            entry.runtime_data.enqueue(IDENT, {"operation": "temperature", "value": 24})
+            assert entry.runtime_data.core.states[IDENT]["target_temperature"] == 25
             assert await hass.config_entries.async_unload(entry.entry_id)
             await hass.async_block_till_done()
             async with client.get(probe_url) as response:
@@ -330,6 +368,78 @@ async def check(root, profile):
                 pass
             else:
                 raise AssertionError("listener survived config entry unload")
+            # A queued intent must not cross an integration restart. Last
+            # reported values may restore, explicitly labelled, with no seen time.
+            # The first unload above flushed known reports before stopping.
+            assert await hass.config_entries.async_setup(entry.entry_id)
+            await hass.async_block_till_done()
+            runtime = entry.runtime_data
+            native = runtime.controls
+            assert native.core.states[IDENT]["target_temperature"] == 25
+            assert not native.core.available(IDENT) and not native.intents
+            assert native.state_source(IDENT, "target_temperature") == "cache"
+            before = native.listing(IDENT)["objects"]
+            async with ClientSession() as resumed:
+                async with resumed.post(
+                    base + "/nest/transport/v7/subscribe",
+                    headers=headers,
+                    json={"objects": before, "chunked": False},
+                    ssl=context,
+                ) as response:
+                    assert response.status == 200
+                    assert all("value" not in r for r in (await response.json())["objects"])
+                await hass.async_block_till_done()
+                assert runtime.core.available(IDENT)
+                assert (
+                    hass.states.get(climate_id).attributes["reported_state_source"][
+                        "target_temperature"
+                    ]
+                    == "cache"
+                )
+                async with resumed.post(
+                    base + "/nest/transport/put",
+                    headers=headers,
+                    json={
+                        "objects": [
+                            {"object_key": "shared." + IDENT, "value": {"target_temperature": 22.5}}
+                        ]
+                    },
+                    ssl=context,
+                ) as response:
+                    assert response.status == 200
+                await hass.async_block_till_done()
+                assert hass.states.get(climate_id).attributes["temperature"] == 22.5
+                assert native.state_source(IDENT, "target_temperature") == "device"
+                assert native.state_source(IDENT, "humidity") == "cache"
+            from custom_components.hearth.diagnostics import async_get_config_entry_diagnostics
+
+            diagnostic = json.dumps(await async_get_config_entry_diagnostics(hass, entry))
+            assert IDENT not in diagnostic and TOKEN not in diagnostic and ADMIN not in diagnostic
+            assert await hass.config_entries.async_unload(entry.entry_id)
+            await hass.async_block_till_done()
+            # Refusing a public cache must not disable fresh native operation.
+            cache_file = profile / "reported-state.json"
+            cache_file.chmod(0o644)
+            assert await hass.config_entries.async_setup(entry.entry_id)
+            await hass.async_block_till_done()
+            runtime = entry.runtime_data
+            assert runtime.cache_errors["load_failed"] and not runtime.core.states
+            async with (
+                ClientSession() as resumed,
+                resumed.post(
+                    base + "/nest/transport/put", headers=headers, json=body, ssl=context
+                ) as response,
+            ):
+                assert response.status == 200
+            await runtime.flush_reported()
+            assert runtime.core.states[IDENT]["target_temperature"] == 21
+            assert runtime.cache_errors["save_failed"]
+            # Fixture repairs permissions; the next save recovers without replay.
+            cache_file.chmod(0o600)
+            await runtime.flush_reported()
+            assert not runtime.cache_errors["save_failed"] and not runtime.controls.intents
+            assert await hass.config_entries.async_unload(entry.entry_id)
+            await hass.async_block_till_done()
         print(
             json.dumps(
                 {
@@ -340,13 +450,20 @@ async def check(root, profile):
                     "zero_preserved": True,
                     "availability_expiry": True,
                     "canonical_command_poll_disabled": True,
-                    "native_climate_roundtrips": 6,
+                    "native_climate_roundtrips": 12,
                     "native_report_confirmation": True,
                     "fahrenheit_to_celsius": True,
+                    "heat_cool_range_targets": True,
+                    "emergency_heat_capability_gated": True,
                     "unload_closes_listener": True,
                     "mqtt_used": False,
                     "profile_refusal_cases": 4,
                     "local_probe_no_data_or_actions": True,
+                    "reported_cache_reload": True,
+                    "pending_intents_not_replayed": True,
+                    "cached_source_label": True,
+                    "diagnostics_payload_free": True,
+                    "unsafe_cache_does_not_disable_native_reports": True,
                 }
             )
         )

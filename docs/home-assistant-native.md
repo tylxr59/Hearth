@@ -6,8 +6,10 @@ The current deployment target is a native custom integration:
 
 The integration receives the existing native Nest protocol and uses unique
 assigned credentials. MQTT and the separate HA app are not part of this path.
-The first platform exposes temperature, humidity and target-temperature sensors;
-native command delivery and HVAC operation remain unverified and disabled.
+The integration exposes temperature, humidity and target-temperature sensors plus
+a climate entity. Scoped settings commands use native subscriptions; physical HVAC
+operation remains unverified. The sections below preserve the earlier migration
+history; see the current controls and restart-state section for the latest scope.
 
 ## Build and validate
 
@@ -57,7 +59,7 @@ Restart HA after staging a new custom integration, then select **Settings →
 Devices & services → Add integration → Hearth** and submit the import form.
 Port conflicts or invalid private profiles refuse startup. Entity availability
 expires with native state silence; unloading the config entry closes the listener
-and cancels its timers. Commands stay disabled.
+and cancels its timers. New settings intents are volatile and expire after30 seconds.
 
 ## This owner's migration
 
@@ -111,3 +113,34 @@ manager independently confirmed all three readings under 0.2.1; reconnect now pa
 Device URL/time replacements remain offline only. See the
 [network preparation record](research/native-network-preparation-2026-11-01.md)
 for exact evidence, remaining update bounds and recovery gates.
+
+
+## Current controls and restart state (0.4)
+
+The climate entity supports a bounded single target, off/heat/cool, supported
+heat/cool range pairs, a ten-minute fan timer, and an emergency-heat preset when
+the thermostat explicitly reports support. Unsupported controls remain hidden
+or are refused. Values and command status reflect accepted native uploads; a
+queued request does not optimistically change the reported target. Physical
+control acceptance is still unverified on the owner's completely unwired base.
+
+Version0.4 saves only allowlisted reported state to private
+`.storage/hearth/reported-state.json`. A reload restores last-known values,
+with per-field `reported_state_source` attributes identifying `cache`, `device`
+or `unknown`. It does not restore pending commands or mark the unit available.
+Availability requires valid native traffic, and cached values are not new
+measurements. The initial upgrade needs actual reports to seed the cache; there
+is no previous cache to import from0.3.1.
+
+HA's integration diagnostics omit identifiers, addresses, sensor readings and
+command values. They include request counts, capability/baseline presence,
+command outcomes and cache error flags. A refused cache leaves the native
+listener able to accept fresh uploads.
+
+The targeted four-file network update has also been installed and read back,
+with native return and telemetry reconnect observed. The owner observed the
+chosen public NIST time service and no new Google entries during the bounded
+watch. This does not establish that every future endpoint has been removed.
+
+See [the feature checklist](architecture/0003-native-ha-controls.md) for remaining
+eco, scheduling, settings, weather and supervised equipment work.

@@ -6,6 +6,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
+from homeassistant.components.climate.const import ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
@@ -49,19 +50,29 @@ class HearthClimate(ClimateEntity):
 
     @property
     def supported_features(self):
-        features = ClimateEntityFeature.TARGET_TEMPERATURE
+        features = (
+            ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+            if self.hvac_mode == HVACMode.HEAT_COOL
+            else ClimateEntityFeature.TARGET_TEMPERATURE
+        )
         if self.runtime.controls.capabilities(self.ident)["fan"]:
             features |= ClimateEntityFeature.FAN_MODE
+        if self.preset_modes:
+            features |= ClimateEntityFeature.PRESET_MODE
         return features
 
     @property
     def hvac_modes(self):
-        return [HVACMode(m) for m in self.runtime.controls.capabilities(self.ident)["modes"]]
+        return [
+            HVACMode(m)
+            for m in self.runtime.controls.capabilities(self.ident)["modes"]
+            if m in ("off", "heat", "cool", "heat_cool")
+        ]
 
     @property
     def hvac_mode(self):
         mode = self.runtime.core.states.get(self.ident, {}).get("mode")
-        return HVACMode(mode) if mode in ("off", "heat", "cool") else None
+        return HVACMode(mode) if mode in ("off", "heat", "cool", "heat_cool") else None
 
     @property
     def hvac_action(self):
@@ -74,11 +85,58 @@ class HearthClimate(ClimateEntity):
 
     @property
     def target_temperature(self):
+        if self.hvac_mode == HVACMode.HEAT_COOL:
+            return None
         return self.runtime.core.states.get(self.ident, {}).get("target_temperature")
+
+    def range_target(self, field):
+        values = (
+            self.runtime.controls.reported.get(self.ident, {}).get("shared", {}).get("values", {})
+        )
+        low = values.get("target_temperature_low")
+        high = values.get("target_temperature_high")
+        if (
+            self.hvac_mode != HVACMode.HEAT_COOL
+            or type(low) not in (int, float)
+            or type(high) not in (int, float)
+            or low >= high
+        ):
+            return None
+        return values[field]
+
+    @property
+    def target_temperature_low(self):
+        return self.range_target("target_temperature_low")
+
+    @property
+    def target_temperature_high(self):
+        return self.range_target("target_temperature_high")
 
     @property
     def current_humidity(self):
         return self.runtime.core.states.get(self.ident, {}).get("humidity")
+
+    @property
+    def preset_modes(self):
+        return (
+            ["none", "emergency_heat"]
+            if "emergency" in self.runtime.controls.capabilities(self.ident)["modes"]
+            else None
+        )
+
+    @property
+    def preset_mode(self):
+        if not self.preset_modes:
+            return None
+        mode = (
+            self.runtime.controls.reported.get(self.ident, {})
+            .get("shared", {})
+            .get("values", {})
+            .get("target_temperature_type")
+        )
+        if mode is None:
+            return None
+        return "emergency_heat" if mode == "emergency" else "none"
 
     @property
     def fan_modes(self):
@@ -90,7 +148,20 @@ class HearthClimate(ClimateEntity):
 
     @property
     def extra_state_attributes(self):
-        return {"command_status": self.runtime.controls.command_status(self.ident)}
+        return {
+            "command_status": self.runtime.controls.command_status(self.ident),
+            "reported_state_source": {
+                field: self.runtime.controls.state_source(self.ident, field)
+                for field in (
+                    "temperature",
+                    "target_temperature",
+                    "target_temperature_low",
+                    "target_temperature_high",
+                    "mode",
+                    "fan",
+                )
+            },
+        }
 
     def _enqueue(self, operation, value):
         try:
@@ -99,12 +170,31 @@ class HearthClimate(ClimateEntity):
             raise HomeAssistantError(str(exc)) from exc
 
     async def async_set_temperature(self, **kwargs):
-        if ATTR_TEMPERATURE not in kwargs or set(kwargs) - {ATTR_TEMPERATURE, ATTR_ENTITY_ID}:
-            raise HomeAssistantError("A single target temperature is required")
-        self._enqueue("temperature", kwargs[ATTR_TEMPERATURE])
+        fields = set(kwargs) - {ATTR_ENTITY_ID}
+        if fields == {ATTR_TEMPERATURE}:
+            self._enqueue("temperature", kwargs[ATTR_TEMPERATURE])
+        elif fields == {ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_HIGH}:
+            self._enqueue(
+                "temperature_range",
+                {"low": kwargs[ATTR_TARGET_TEMP_LOW], "high": kwargs[ATTR_TARGET_TEMP_HIGH]},
+            )
+        else:
+            raise HomeAssistantError("Provide a single target or both range targets")
 
     async def async_set_hvac_mode(self, hvac_mode):
         self._enqueue("mode", hvac_mode)
+
+    async def async_set_preset_mode(self, preset_mode):
+        if not self.preset_modes or preset_mode not in self.preset_modes:
+            raise HomeAssistantError("Unsupported preset")
+        if preset_mode == "emergency_heat":
+            self._enqueue("mode", "emergency")
+        elif self.runtime.controls.state_source(self.ident, "mode") != "device":
+            raise HomeAssistantError(
+                "A fresh device mode report is required to clear emergency heat"
+            )
+        elif self.preset_mode == "emergency_heat":
+            self._enqueue("mode", "heat")
 
     async def async_set_fan_mode(self, fan_mode):
         self._enqueue("fan", fan_mode)

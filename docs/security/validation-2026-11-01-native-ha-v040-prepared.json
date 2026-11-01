@@ -1,0 +1,22 @@
+{
+  "status": "native-ha-v040-host-validated-and-source-staged",
+  "integration_version": "0.4.0",
+  "host_tests_passed": 1158,
+  "optional_integration_skips": 5,
+  "make_check": "passed",
+  "real_ha_core": "2026.10.4",
+  "real_ha_synthetic_command_roundtrips": 12,
+  "source_package_reproduces": true,
+  "staged_source_files_read_back": 25,
+  "previous_source_backed_up": true,
+  "reported_only_cache_reload_verified_in_sandbox": true,
+  "pending_intents_not_replayed": true,
+  "cached_fields_marked_separately": true,
+  "unsafe_cache_does_not_disable_native_reports": true,
+  "payload_free_diagnostics": true,
+  "heat_cool_range_and_emergency_preset_sandbox_verified": true,
+  "owner_unit_range_or_emergency_command_sent": false,
+  "physical_hvac_verified": false,
+  "nle_feature_parity_complete": false,
+  "activation_result": "recorded separately after owner-authorized restart"
+}

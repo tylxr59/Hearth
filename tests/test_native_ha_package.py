@@ -1,3 +1,4 @@
+import ast
 import hashlib
 import importlib
 import importlib.util
@@ -24,6 +25,13 @@ def test_native_ha_package_reproduces_and_excludes_mqtt_and_private_data(tmp_pat
     }
     for name, expected in manifest["files"].items():
         assert hashlib.sha256((one / name).read_bytes()).hexdigest() == expected
+    for path in (first / "_backend").glob("*.py"):
+        assert not any(
+            isinstance(n, ast.ImportFrom)
+            and n.module
+            and (n.module == "backend" or n.module.startswith("backend."))
+            for n in ast.walk(ast.parse(path.read_text()))
+        )
     assert not list(first.rglob("mqtt.py"))
     assert not list(first.rglob("*.pem")) and not list(first.rglob("*.key"))
     assert json.loads((first / "manifest.json").read_bytes())["requirements"] == []
