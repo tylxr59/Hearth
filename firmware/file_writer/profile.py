@@ -315,7 +315,7 @@ def package(kernel_root, base, helpers, capsule, pin, output, action):
         compiled.get("status") != "private-file-action-helpers-unexecuted"
         or compiled["source_sha256"] != compile.source_hashes()
         or compiled["plan"] != plan.hex()
-        or compiled["selftest_cases"] != 69
+        or compiled["selftest_cases"] != 72
         or compiled["stub_not_for_target"] is not True
         or compiled["binding_sha256"] != sha(prepare.binding(capsule, pin).encode())
         or compiled["capsule_header_sha256"]
@@ -386,7 +386,7 @@ def package(kernel_root, base, helpers, capsule, pin, output, action):
         "kernel": str(Path(kernel_root).absolute()),
         "base": str(private_path(base)),
         "helpers": str(helpers.absolute()),
-        "selftest_cases": 69,
+        "selftest_cases": 72,
         "kernel_manifest_sha256": sha(read_build(Path(kernel_root) / "probe-manifest.json", 65536)),
         "kernel_files": kernel_record["files"],
         "helpers_files": compiled["files"],
@@ -409,7 +409,7 @@ def check(root):
         or record["recipes"] != recipes()
         or type(record["action"]) is not int
         or record["action"] not in (1, 2, 3)
-        or record["selftest_cases"] != 69
+        or record["selftest_cases"] != 72
         or set(record["files"]) != FILES
     ):
         raise ValueError("file-action profile scope/source changed")
@@ -483,7 +483,7 @@ def check(root):
     return {
         "status": "file-action-offline-preflight-checked",
         "action": record["action"],
-        "selftest_cases": 69,
+        "selftest_cases": 72,
         "targets": 9,
         "device_executed": False,
         "installed": False,

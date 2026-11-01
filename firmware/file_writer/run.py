@@ -167,6 +167,64 @@ def require_snapshot_handoff(record, binding, previous, *, sysfs=Path("/sys/bus/
     return {"status": "reviewed-zero-write-snapshot-handoff", "native_startup_required": False}
 
 
+def require_snapshot_source(record, binding, previous, *, sysfs=Path("/sys/bus/usb/devices")):
+    """Bind a fresh install to a completed protected-reader capture, without native boot.
+
+    Only the repository's checked read-only profile is accepted as the source.
+    No source-provided commands are executed. The exact captured bytes and their
+    independently verified backup must be those used by the new capsule.
+    """
+    from firmware.file_snapshot.run import decode
+    from firmware.startup_diagnostic.profile import check as check_reader
+
+    if binding.action != 1:
+        raise ValueError("protected snapshot handoff is restricted to fresh install")
+    previous = private_path(previous)
+    execution = json.loads(private_read(previous / "execution.json", 65536))
+    source_profile = private_path(execution["profile"])
+    check_reader(source_profile)
+    creation = private_read(source_profile / "profile.json", 65536)
+    source = json.loads(creation)
+    started = json.loads(private_read(source_profile / "execution-started.json", 65536))
+    observed = json.loads(private_read(previous / "observed.json", 65536))
+    if (
+        set(execution) != {"profile", "session", "profile_sha256"}
+        or hashlib.sha256(creation).hexdigest() != execution["profile_sha256"]
+        or source["session"] != execution["session"]
+        or started.get("output") != str(previous)
+        or observed.get("status") != "protected-startup-diagnostic-preserved"
+        or observed.get("targets") != 9
+        or observed.get("installed") is not False
+        or observed.get("flash_writes") is not False
+    ):
+        raise ValueError("completed checked protected snapshot execution required")
+    capture = private_read(previous / "snapshot.bin", protocol.MAX_SNAPSHOT + 56)
+    capsule = private_path(record["capsule"])
+    if capture != private_read(capsule / "capture.bin", protocol.MAX_SNAPSHOT + 56):
+        raise ValueError("fresh capsule differs from this protected snapshot")
+    session = bytes.fromhex(execution["session"])
+    records = decode(capture, session)
+    file_backup.verify(
+        previous / "backup",
+        records,
+        session=session,
+        plan=hashlib.sha256(
+            b"read-only-root0-snapshot-v1\n" + "\n".join(file_backup.TARGETS).encode()
+        ).digest(),
+        native_root="root0",
+    )
+    usb = sysfs / "1-1"
+    identity = ((usb / "idVendor").read_text().strip(), (usb / "idProduct").read_text().strip())
+    if identity not in (("0525", "a4a7"), ("0525", "a4a6")):
+        raise ValueError(
+            "known protected snapshot RAM mode required; no native restart or stale ROM"
+        )
+    return {
+        "status": "verified-protected-snapshot-install-handoff",
+        "native_startup_required": False,
+    }
+
+
 def require_readonly_resume(record, binding, previous, *, sysfs=Path("/sys/bus/usb/devices")):
     """Fresh supervised repair boot from a sealed, exited zero-write refusal.
 
@@ -184,7 +242,7 @@ def require_readonly_resume(record, binding, previous, *, sysfs=Path("/sys/bus/u
     prior = json.loads(
         private_read(private_path(execution["profile"]) / "file-action-profile.json", 1024 * 1024)
     )
-    if prior.get("selftest_cases") not in (66, 69):
+    if prior.get("selftest_cases") not in (66, 69, 72):
         raise ValueError("reviewed historical repair matrix required")
     protocol.validate_selftest(
         private_read(previous / "selftest.jsonl", 16384),
@@ -239,7 +297,7 @@ def receive(fd, output, binding, execution, recheck):
             ready_saved = True
             deadline = time.monotonic() + 540  # Below target's 600-second bound.
             print(
-                "All 69 RAM selftests and real-file read-only preflight passed. Waiting for a separate local commit or abort; no writes authorized yet.",
+                "All 72 RAM selftests and real-file read-only preflight passed. Waiting for a separate local commit or abort; no writes authorized yet.",
                 flush=True,
             )
         decision = output / "decision.json"
@@ -317,6 +375,7 @@ def run(
     recover_from=None,
     handoff_from=None,
     resume_from_readonly=None,
+    handoff_from_snapshot=None,
 ):
     root, recovery = private_path(root), private_path(recovery)
     record, binding = checked_pair(root, recovery)
@@ -327,7 +386,17 @@ def run(
     output = private_path(output)
     if output.exists() or output.is_symlink() or output.parent.stat().st_mode & 0o077:
         raise ValueError("fresh owner-only output required")
-    if resume_from_readonly is not None:
+    if (
+        sum(
+            value is not None
+            for value in (recover_from, handoff_from, resume_from_readonly, handoff_from_snapshot)
+        )
+        > 1
+    ):
+        raise ValueError("one explicit RAM entry reason required")
+    if handoff_from_snapshot is not None:
+        require_snapshot_source(record, binding, handoff_from_snapshot)
+    elif resume_from_readonly is not None:
         if handoff_from is not None or recover_from is not None:
             raise ValueError("one explicit RAM entry reason required")
         require_readonly_resume(record, binding, resume_from_readonly)
@@ -350,6 +419,9 @@ def run(
         "handoff_from": str(private_path(handoff_from)) if handoff_from is not None else None,
         "resume_from_readonly": str(private_path(resume_from_readonly))
         if resume_from_readonly is not None
+        else None,
+        "handoff_from_snapshot": str(private_path(handoff_from_snapshot))
+        if handoff_from_snapshot is not None
         else None,
     }
     save(root, "execution-started.json", encode(execution))
@@ -415,6 +487,9 @@ if __name__ == "__main__":
     entry.add_argument(
         "--resume-from-readonly", help="verified sealed repair refusal; action3 only"
     )
+    entry.add_argument(
+        "--handoff-from-snapshot", help="completed protected-reader snapshot; fresh install only"
+    )
     decision = sub.add_parser("decide")
     decision.add_argument("output")
     flags = decision.add_mutually_exclusive_group(required=True)
@@ -433,6 +508,7 @@ if __name__ == "__main__":
                 recover_from=args.recover_from,
                 handoff_from=args.handoff_from,
                 resume_from_readonly=args.resume_from_readonly,
+                handoff_from_snapshot=args.handoff_from_snapshot,
             )
         else:
             action = args.abort or (

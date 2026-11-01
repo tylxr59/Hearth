@@ -91,3 +91,21 @@ counters, verified snapshot custody, and an exact byte match between the new
 capsule's source frame and that prior capture. Only the known RAM USB identity is
 accepted; native mode and already-active ROM are refused. This is an explicit
 new supervised boot, never an automatic retry or persistent commit.
+
+
+Recommissioning after the successful original-file compression recovery must
+preserve the existing archive. New capsules may explicitly select
+`archive_layout=1`: the canonical manifest binds this policy, and the adapter
+uses `.hearth-rollback-` followed by the plan ID. Legacy capsules retain their
+original bytes and archive location. A collision refuses the new install; a
+restore cannot select another plan's archive. The current RAM gate requires all
+72 cases, including legacy-archive preservation, collision and wrong-plan refusal.
+The earlier 69-case measurement does not satisfy this new gate.
+
+A completed protected startup diagnostic can supply the next fresh capsule via
+`--handoff-from-snapshot PRIVATE_ATTEMPT`. This checks the protected source profile,
+execution/session binding, exact capture and backup custody, and current RAM USB
+identity. It does not grant persistent-write permission. It avoids another native
+startup changing settings between capture and the separate installation preflight.
+The owner still performs one reviewed restart into the new loader; there is no
+automatic retry. Keep the old archive and all historical private evidence intact.

@@ -25,8 +25,38 @@ static unsigned long long inode_number(int directory,const char *path)
 }
 static void close_recovery(struct hearth_posix_context *c)
 { if(c->recovery>=0) assert(close(c->recovery)==0);c->recovery=-1; }
+static int archive_scenario(int number,const char *directory)
+{
+ struct hearth_posix_context c;struct hearth_install_result r;unsigned char saved[48],observed[48];int fd,legacy;
+ int base=open(directory,O_RDONLY|O_DIRECTORY);assert(base>=0);
+ scenario=0;inject=0;activation=0;recovery_case=0;recovery_write_fault=0;reencode_rename_fault=0;
+ setup(base,&c);r=hearth_install_files(&hearth_posix_file_ops,&c,9,1);assert(r.committed);close_recovery(&c);
+ r=hearth_posix_restore_files(&c);assert(!r.error&&r.restored==511);close_recovery(&c);
+ legacy=openat(c.roots[1],".hearth-rollback",O_RDONLY|O_DIRECTORY);assert(legacy>=0);
+ fd=openat(legacy,"journal",O_RDONLY);assert(fd>=0&&read(fd,saved,48)==48&&close(fd)==0);
+ c.archive_layout=1;c.plan_id[0]^=128;
+ r=hearth_install_files(&hearth_posix_file_ops,&c,9,1);assert(r.committed&&!r.error);
+ fd=openat(c.recovery,"journal",O_RDONLY);assert(fd>=0&&read(fd,observed,48)==48&&close(fd)==0);
+ assert(!memcmp(observed+16,c.plan_id,32));close_recovery(&c);
+ fd=openat(legacy,"journal",O_RDONLY);assert(fd>=0&&read(fd,observed,48)==48&&close(fd)==0);
+ assert(!memcmp(saved,observed,48));check_file(legacy,"0.original",old,sizeof(old)-1,0600);
+ if(number==1) {
+  r=hearth_install_files(&hearth_posix_file_ops,&c,9,1);assert(r.error==HEARTH_PREFLIGHT_FAILED&&!r.attempted);
+  check_file(c.roots[0],paths[0],replacement,sizeof(replacement)-1,new_modes[0]);
+ }
+ if(number==2) {
+  c.plan_id[0]^=1;r=hearth_posix_restore_files(&c);assert(r.error==HEARTH_PREFLIGHT_FAILED&&!r.attempted);close_recovery(&c);
+  check_file(c.roots[0],paths[0],replacement,sizeof(replacement)-1,new_modes[0]);c.plan_id[0]^=1;
+ }
+ r=hearth_posix_restore_files(&c);assert(!r.error&&r.restored==511);close_recovery(&c);
+ for(unsigned int i=0;i<9;i++) if(modes[i]) check_file(c.roots[i==HEARTH_SETTINGS],paths[i],old,sizeof(old)-1,modes[i]);
+ fd=openat(legacy,"journal",O_RDONLY);assert(fd>=0&&read(fd,observed,48)==48&&close(fd)==0);assert(!memcmp(saved,observed,48));
+ if(number==2) { c.archive_layout=2;r=hearth_posix_restore_files(&c);assert(r.error==HEARTH_INVALID_PLAN&&!r.attempted); }
+ assert(close(legacy)==0&&close(c.roots[0])==0&&close(c.roots[1])==0&&close(base)==0);return 0;
+}
 static int reencode_scenario(int number,const char *directory)
 {
+ if(number>=13) return archive_scenario(number-13,directory);
  struct hearth_posix_context c;struct hearth_install_result r;unsigned int i;
  unsigned long long before[9]={0},backups[9]={0};int bad=number>=1&&number<=4;
  int base=open(directory,O_RDONLY|O_DIRECTORY),archive;char name[32];
@@ -89,7 +119,7 @@ int main(int argc,char **argv)
 {
  int i,n;char directory[96],line[128];
  assert(hearth_original_recovery_matrix(argc,argv)==0);
- for(i=0;i<13;i++) {
+ for(i=0;i<16;i++) {
   snprintf(directory,sizeof(directory),"/state/reencode-case-%d",i);assert(mkdir(directory,0700)==0);
   assert(reencode_scenario(i,directory)==0);
   n=snprintf(line,sizeof(line),"{\"type\":\"reencode_case\",\"case\":%d,\"passed\":true}\n",i);

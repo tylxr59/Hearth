@@ -3,11 +3,11 @@
 A local-first laboratory for Nest Learning Thermostat Gen 2, with Gen 1 as a secondary research target. Preserve Nest's hardware control; replace remote services only where behavior is understood.
 
 **Current incident:** native startup cannot read the LZO format chosen by the
-experimental writer. Byte-only restoration did not fix it. A checked
+experimental writer. Byte-only restoration did not fix it. The checked
 [uncompressed original-file recovery](docs/research/compression-recovery-2026-10-31.md)
-is prepared; native UI recovery is not yet confirmed. Do not use old writer images.
+restored the working primary native UI. Safe recommissioning is pending. Do not use old writer images.
 
-**Status: experimental same-unit investigation, not a supported thermostat release.** The first [nine-file install](docs/research/file-install-result-2026-10-31.md) passed readback but the native UI stalled. The selected original files have now been [restored and verified](docs/research/file-restore-result-2026-10-31.md); a stock UI check is pending. Live native networking, complete protocol/control, power-loss/whole-firmware recovery and HVAC remain unverified. The local HAOS backend runs in telemetry-only mode, with commands disabled. Do not connect this prototype to live HVAC equipment. This iteration does not meet the physical firmware compatibility portion of the definition of done.
+**Status: experimental same-unit investigation, not a supported thermostat release.** The first [nine-file install](docs/research/file-install-result-2026-10-31.md) passed readback but the native UI stalled. The selected original files have now been [restored and verified](docs/research/file-restore-result-2026-10-31.md); the owner confirmed the working stock UI, and the native plist confirms the primary slot remains selected on firmware `5.9.4-5`. Live native networking, complete protocol/control, power-loss/whole-firmware recovery and HVAC remain unverified. The local HAOS backend runs in telemetry-only mode, with commands disabled. Do not connect this prototype to live HVAC equipment. This iteration does not meet the physical firmware compatibility portion of the definition of done.
 
 An authorized restart exposed OMAP ROM mode on the unit reporting `Display-2.6` /
 `5.9.4-5`. A separate [experimental RAM heartbeat probe](firmware/probe/README.md)

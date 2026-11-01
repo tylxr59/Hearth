@@ -81,7 +81,7 @@ def test_fragmented_frames_bind_exact_plan_receipt_and_action():
     for byte in data:
         events.extend(decoder.feed(bytes([byte])))
     assert [kind for kind, _ in events] == [p.SELFTEST, p.READY, p.RESULT]
-    assert p.validate_selftest(events[0][1])["cases"] == 69
+    assert p.validate_selftest(events[0][1])["cases"] == 72
     assert p.validate_result(events[2][1], 1)["complete"] == 1
     wrong = p.Binding(b"q" * 32, BINDING.receipt, 1)
     assert p.Decoder(BINDING).feed(frame(p.READY, binding=wrong)) == []
@@ -128,6 +128,14 @@ def test_selftest_duplicate_or_missing_cases_rejected():
         p.validate_selftest(data.split(b"\n", 1)[1])
     with pytest.raises(ValueError):
         p.validate_selftest(data.splitlines(keepends=True)[0] + data)
+
+
+def test_historical_matrix_cannot_acknowledge_current_archive_tests(monkeypatch):
+    monkeypatch.setattr(p, "REENCODE_CASES", set(range(13)))
+    old = selftests()
+    with pytest.raises(ValueError):
+        p.validate_selftest(old)
+    assert p.validate_selftest(old, reencode_cases=13)["cases"] == 69
 
 
 @pytest.mark.parametrize("action", (1, 2, 3))

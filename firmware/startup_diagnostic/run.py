@@ -149,6 +149,19 @@ def run(root, output=None, *, execute=False):
         "execution-started.json",
         json.dumps({"output": str(output), "started": time.time()}).encode(),
     )
+    save(
+        output,
+        "execution.json",
+        json.dumps(
+            {
+                "profile": str(root),
+                "session": session.hex(),
+                "profile_sha256": hashlib.sha256(
+                    private_read(root / "profile.json", 65536)
+                ).hexdigest(),
+            }
+        ).encode(),
+    )
     print(
         "PROTECTED READ-ONLY STARTUP DIAGNOSTIC: current nine files and bounded log tails. No native execution, installer or write-capable kernel. Keep USB connected and base detached.",
         flush=True,

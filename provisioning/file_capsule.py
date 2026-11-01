@@ -42,8 +42,16 @@ def _validate(records, replacements):
             raise ValueError("replacement scope or metadata changed")
 
 
-def _header(records, replacements, plan):
+def _layout(value):
+    if type(value) is not int or value not in (0, 1):
+        raise ValueError("reviewed legacy or plan-derived archive layout required")
+    return value
+
+
+def _header(records, replacements, plan, archive_layout=0):
     lines = ["/* Private original/replacement DATA only; never commit. */", '#include "posix.h"']
+    if _layout(archive_layout):
+        lines.append("#define HEARTH_CAPSULE_ARCHIVE_LAYOUT 1")
 
     def array(name, data):
         lines.append("static const unsigned char " + name + "[]={")
@@ -69,8 +77,8 @@ def _header(records, replacements, plan):
     return "\n".join(lines).encode("ascii")
 
 
-def _manifest(records, replacements, session, frame):
-    return {
+def _manifest(records, replacements, session, frame, archive_layout=0):
+    result = {
         "format": "hearth-file-plan-v1",
         "profile": "Display-2.6/5.9.4-5",
         "native_partition_observation": "primary",
@@ -94,15 +102,21 @@ def _manifest(records, replacements, session, frame):
             for i, (old, new) in enumerate(zip(records, replacements, strict=True))
         ],
     }
+    if _layout(archive_layout):
+        result["archive_layout"] = "plan-id-directory-v1"
+    return result
 
 
-def prepare(snapshot, replacements, output, *, session, native_partition, software_version):
+def prepare(
+    snapshot, replacements, output, *, session, native_partition, software_version, archive_layout=0
+):
     """Verify source custody, then fsync/read back a plan-bound private capsule.
 
     Callers still review replacement *contents*. This enforces custody, fixed
     scope, metadata and byte binding, not TLS/settings/startup correctness.
     No device-writer acknowledgment or permission follows from this artifact.
     """
+    _layout(archive_layout)
     if native_partition != "primary" or software_version != "5.9.4-5":
         raise ValueError("separately observed primary/5.9.4-5 profile required")
     if type(session) is not bytes or len(session) != 32:
@@ -121,7 +135,7 @@ def prepare(snapshot, replacements, output, *, session, native_partition, softwa
     custody.verify(
         snapshot / "backup", records, session=session, plan=collection_plan, native_root="root0"
     )
-    manifest = custody._canonical(_manifest(records, replacements, session, frame))
+    manifest = custody._canonical(_manifest(records, replacements, session, frame, archive_layout))
     plan = hashlib.sha256(manifest).digest()
     output = Path(output)
     if output.name in ("", ".", ".."):
@@ -144,7 +158,9 @@ def prepare(snapshot, replacements, output, *, session, native_partition, softwa
             custody._write(destination, f"{item.target}.replacement", item.data)
         custody._write(destination, "capture.bin", frame)
         custody._write(destination, "plan.json", manifest)
-        custody._write(destination, "capsule.h", _header(records, replacements, plan))
+        custody._write(
+            destination, "capsule.h", _header(records, replacements, plan, archive_layout)
+        )
         os.fsync(destination)
         os.fsync(parent)
     finally:
@@ -180,6 +196,10 @@ def check(output, *, expected_plan):
         # Canonical reserialization below rejects extra fields and noncanonical
         # JSON. Reading only fixed fields cannot authorize additional paths.
         manifest = json.loads(data)
+        layout_value = manifest.get("archive_layout")
+        if layout_value not in (None, "plan-id-directory-v1"):
+            raise ValueError("unsupported archive layout")
+        archive_layout = int(layout_value is not None)
         session = bytes.fromhex(manifest["snapshot_session"])
         frame = custody._read(directory, "capture.bin", 9 * (custody.LIMIT + 24) + 64)
         records = decode(frame, session)
@@ -192,13 +212,15 @@ def check(output, *, expected_plan):
             for i in range(9)
         )
         _validate(records, replacements)
-        expected = custody._canonical(_manifest(records, replacements, session, frame))
+        expected = custody._canonical(
+            _manifest(records, replacements, session, frame, archive_layout)
+        )
         if data != expected:
             raise ValueError("capsule contents differ from pinned plan")
         custody.verify(
             output / "backup", records, session=session, plan=expected_plan, native_root="root0"
         )
-        header = _header(records, replacements, expected_plan)
+        header = _header(records, replacements, expected_plan, archive_layout)
         if custody._read(directory, "capsule.h", 96 * custody.LIMIT) != header:
             raise ValueError("capsule data header changed")
         return {
@@ -206,6 +228,7 @@ def check(output, *, expected_plan):
             "targets": 9,
             "installed": False,
             "target_receipt_enforced": False,
+            "archive_layout": archive_layout,
         }
     finally:
         os.close(directory)

@@ -196,3 +196,12 @@ inspection, all56 RAM cases and selected-file restoration: all9 originals exact,
 new shim/wrapper absent, sealed WP,41 programs/no failures. Stock unwired-base UI
 check PENDING; keep Wi-Fi unconfigured. Do not reinstall/claim app recovery or
 whole-firmware restoration. Backend enrollment remains. See dated restore result.
+
+
+Current recovery outcome: original selected files and rollback originals/journal
+were reencoded uncompressed; fresh flash-header audit and exact readback passed.
+Owner confirmed working native UI; filtered plist confirms primary/5.9.4-5.
+See docs/research/compression-recovery-2026-10-31.md. Before recommissioning,
+preserve fresh native originals and use a plan-derived rollback directory without
+removing the legacy recovery archive. New 72-case gate includes archive separation;
+its on-device measurement and the fresh install/native-network test remain pending.

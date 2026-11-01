@@ -96,3 +96,41 @@ handoff evidence. Three additional filesystem cases test that narrow distinction
 
 831 host tests/five skips/make check pass; same kernel and v9 helpers/paired v3
 profiles reproduce. No compression correction has written NAND at this point.
+
+## Guarded correction observed, native UI check pending
+
+Sourcee90c8ba/reencode-v3 ran once. All69 ARM RAM cases passed. Real-file
+preflight and its bound INFO frame confirmed settings.config genuinely absent
+(missing mask128/state1), not foreign present data. The complete prior restoration
+journal, exact original backups, other selected files and write policy validated.
+The owner had explicitly authorized recovery if these checks passed; the host
+manually rechecked the pair/backup and sent the action3 commit once.
+
+The strict final result independently passes: attempted/restored511, committed0,
+no transaction/journal/rollback/cleanup/release/unmount/seal errors, exact original
+byte/mode readback, added paths absent, **encoding_verified1** from active flash
+inode headers after fresh read-only remount, sealed gate/WP1 and safe restart.
+The selected originals, seven rollback copies and journal passed the uncompressed
+encoding audit. Actual120 page programs, two block erases and two cleanmarker
+writes completed with zero operation failures. These erase/OOB paths were
+previously host-only in this particular adapter and are now exercised on target.
+
+The host exited0. Evidence private/file-writer-20261031/reencode-attempt-3 includes
+immutable selftests/INFO/preflight/decision/result and independent-repair-review.
+Never rerun reencode-v3. Earlier refused attempts and historical byte-only
+installation/restoration evidence remain unchanged. This measures selected-file
+content/encoding correction, not hardware power-loss or whole-firmware recovery.
+
+The owner was asked to disconnect USB, fit the completely unwired base, perform
+the reviewed native restart and allow up to two minutes. Leave Wi-Fi unconfigured.
+**Native UI outcome is still pending; do not declare the device recovered yet.**
+
+### Native UI recovery confirmed
+
+The owner subsequently reported a working native UI on the unwired base. They
+left Wi-Fi unconfigured, reconnected USB, and normal USB was independently
+observed. Their filtered read-only plist confirms **primary /5.9.4-5**, so this
+was the repaired primary system, not secondary-slot fallback. Preserve private
+native-ui-return.json and native-selection-after-recovery.json. This demonstrates
+original native UI recovery after the content/encoding correction. Whole-firmware,
+hardware power-loss and HVAC validation remain separate and unverified.

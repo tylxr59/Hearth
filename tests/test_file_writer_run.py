@@ -213,6 +213,104 @@ def test_exact_zero_write_snapshot_allows_supervised_ram_handoff(handoff):
     )
 
 
+@pytest.fixture
+def protected_handoff(handoff, monkeypatch):
+    from firmware.startup_diagnostic import profile as reader
+
+    previous, record, sysfs = handoff
+    source = sysfs / "protected-reader"
+    source.mkdir(mode=0o700)
+    creation = run.encode({"session": (b"s" * 32).hex()})
+    run.save(source, "profile.json", creation)
+    run.save(source, "execution-started.json", run.encode({"output": str(previous)}))
+    (previous / "execution.json").write_bytes(
+        run.encode(
+            {
+                "profile": str(source),
+                "session": (b"s" * 32).hex(),
+                "profile_sha256": hashlib.sha256(creation).hexdigest(),
+            }
+        )
+    )
+    (previous / "observed.json").write_bytes(
+        run.encode(
+            {
+                "status": "protected-startup-diagnostic-preserved",
+                "targets": 9,
+                "installed": False,
+                "flash_writes": False,
+            }
+        )
+    )
+    run.save(previous, "snapshot.bin", snapshot_frame())
+    (previous / "changed-files-backup").rename(previous / "backup")
+    checked = []
+    monkeypatch.setattr(reader, "check", lambda path: checked.append(path))
+    return previous, record, sysfs, source, checked
+
+
+def test_protected_capture_handoff_checks_reader_and_exact_backup(protected_handoff):
+    previous, record, sysfs, source, checked = protected_handoff
+    assert run.require_snapshot_source(record, BINDING, previous, sysfs=sysfs) == {
+        "status": "verified-protected-snapshot-install-handoff",
+        "native_startup_required": False,
+    }
+    assert checked == [source]
+
+
+@pytest.mark.parametrize(
+    "fault",
+    (
+        "profile",
+        "session",
+        "output",
+        "status",
+        "writes",
+        "capture",
+        "custody",
+        "native",
+        "rom",
+        "action",
+        "checker",
+    ),
+)
+def test_protected_capture_handoff_refuses_unbound_or_unsafe_state(
+    protected_handoff, fault, monkeypatch
+):
+    previous, record, sysfs, source, _checked = protected_handoff
+    binding = BINDING
+    if fault == "profile":
+        (source / "profile.json").write_bytes(b"{}")
+    elif fault == "session":
+        value = json.loads((previous / "execution.json").read_bytes())
+        value["session"] = (b"x" * 32).hex()
+        (previous / "execution.json").write_bytes(run.encode(value))
+    elif fault == "output":
+        (source / "execution-started.json").write_bytes(run.encode({"output": str(sysfs)}))
+    elif fault in ("status", "writes"):
+        value = json.loads((previous / "observed.json").read_bytes())
+        value["status" if fault == "status" else "flash_writes"] = "unconfirmed"
+        (previous / "observed.json").write_bytes(run.encode(value))
+    elif fault == "capture":
+        (previous / "snapshot.bin").write_bytes(snapshot_frame(session=b"x" * 32))
+    elif fault == "custody":
+        (previous / "backup/0.original").write_bytes(b"changed")
+    elif fault in ("native", "rom"):
+        (sysfs / "1-1/idVendor").write_text("2464" if fault == "native" else "0451")
+        (sysfs / "1-1/idProduct").write_text("0002" if fault == "native" else "d00e")
+    elif fault == "action":
+        binding = p.Binding(BINDING.plan, BINDING.receipt, 2)
+    else:
+        from firmware.startup_diagnostic import profile as reader
+
+        def reject(_path):
+            raise ValueError("reader artifact changed")
+
+        monkeypatch.setattr(reader, "check", reject)
+    with pytest.raises(ValueError):
+        run.require_snapshot_source(record, binding, previous, sysfs=sysfs)
+
+
 @pytest.mark.parametrize(
     "fault", ("native", "rom", "decision", "capture", "custody", "result", "selftest")
 )
@@ -248,7 +346,7 @@ def readonly_repair(output):
         "status": run.profile.STATUS,
         "action": 3,
         "device_executed": False,
-        "selftest_cases": 69,
+        "selftest_cases": 72,
         "plan": BINDING.plan.hex(),
         "capsule": "fixed private capsule",
         "pin": "fixed private pin",

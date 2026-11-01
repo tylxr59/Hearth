@@ -17,7 +17,7 @@ PREFLIGHT_INFO = b"HFW_INF1"
 MAX_SNAPSHOT = 8 + 9 * (24 + 1024 * 1024)
 FILE_CASES = set(range(32))
 RECOVERY_CASES = set(range(25)) - {14}
-REENCODE_CASES = set(range(13))
+REENCODE_CASES = set(range(16))
 
 
 @dataclass(frozen=True)
@@ -109,10 +109,10 @@ class Decoder:
         return events
 
 
-def validate_selftest(payload, *, reencode_cases=13):
+def validate_selftest(payload, *, reencode_cases=16):
     if len(payload) > MAX_PAYLOAD:
         raise ValueError("selftest evidence exceeds bound")
-    if reencode_cases not in (10, 13):
+    if reencode_cases not in (10, 13, 16):
         raise ValueError("reviewed current or historical reencode matrix required")
     expected = {
         "file_case": FILE_CASES,

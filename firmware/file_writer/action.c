@@ -9,6 +9,9 @@
 #include "../settings_compat_probe/transmit.h"
 #include "capsule.h"
 #include "binding.h"
+#ifndef HEARTH_CAPSULE_ARCHIVE_LAYOUT
+#define HEARTH_CAPSULE_ARCHIVE_LAYOUT 0
+#endif
 #ifndef HEARTH_FILE_ACTION
 #error "Explicit install=1 or restore=2 build required"
 #endif
@@ -240,6 +243,7 @@ int main(void)
     unsigned int i,length,part=0;struct hearth_cached_transmit sending={0};
     memset(&c,0,sizeof(c));c.files.roots[0]=c.files.roots[1]=c.files.recovery=-1;c.preflight_target=-1;
     c.files.owner=0;c.files.group=0;c.files.count=9;c.files.changes=hearth_capsule_changes;c.snapshot_target=-1;c.settings_state=5;
+    c.files.archive_layout=HEARTH_CAPSULE_ARCHIVE_LAYOUT;
     for(i=0;i<32;i++) { c.files.plan_id[i]=hearth_capsule_plan_id[i];if(hearth_capsule_plan_id[i]!=hearth_expected_plan[i]) initial=1; }
     if(getuid()!=0||getgid()!=0||hearth_capsule_count!=9) initial=1;
     umask(077);

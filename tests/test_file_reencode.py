@@ -37,7 +37,7 @@ def reencode_lab(tmp_path_factory):
     return output
 
 
-@pytest.mark.parametrize("scenario", range(13))
+@pytest.mark.parametrize("scenario", range(16))
 def test_forced_original_and_archive_rewrite_or_fail_closed(reencode_lab, tmp_path, scenario):
     subprocess.run(
         [str(reencode_lab), str(scenario), str(tmp_path)],

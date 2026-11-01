@@ -44,6 +44,25 @@ def prepare(parts, **changes):
     return capsule.prepare(snapshot, replacements, output, **(scope | changes))
 
 
+def test_scoped_archive_layout_is_in_plan_and_compiled_header(preparation):
+    import json
+
+    plan = prepare(preparation, archive_layout=1)
+    output = preparation[2]
+    assert (
+        json.loads((output / "plan.json").read_bytes())["archive_layout"] == "plan-id-directory-v1"
+    )
+    assert b"#define HEARTH_CAPSULE_ARCHIVE_LAYOUT 1" in (output / "capsule.h").read_bytes()
+    assert capsule.check(output, expected_plan=plan)["archive_layout"] == 1
+
+
+@pytest.mark.parametrize("layout", (True, -1, 2, "path"))
+def test_arbitrary_or_ambiguous_archive_layout_refused(preparation, layout):
+    with pytest.raises(ValueError):
+        prepare(preparation, archive_layout=layout)
+    assert not preparation[2].exists()
+
+
 def test_exact_plan_has_new_custody_binding_and_no_installation(preparation):
     snapshot, _, output = preparation
     plan = prepare(preparation)

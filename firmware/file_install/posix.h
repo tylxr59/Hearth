@@ -24,6 +24,8 @@ struct hearth_posix_context {
     int journal_temporary;
     /* Fixed 32-byte public plan identifier, not a credential. */
     unsigned char plan_id[32];
+    /* 0: legacy fixed archive; 1: immutable plan-derived archive name. */
+    unsigned int archive_layout;
 };
 extern const struct hearth_file_ops hearth_posix_file_ops;
 /* Explicit interrupted-install restoration from an exact caller-supplied plan.

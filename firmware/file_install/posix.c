@@ -43,6 +43,16 @@ struct metadata { unsigned int mode,links,owner,group; unsigned long long size; 
 #include "targets.h"
 static const char suffix[] = ".hearth-new";
 static const char restore_suffix[] = ".hearth-restore";
+static const char *recovery_name(struct hearth_posix_context *c,char name[96])
+{
+    static const char hex[]="0123456789abcdef",prefix[]=".hearth-rollback-";
+    unsigned int i,n=0,present=0;
+    if(!c->archive_layout) return ".hearth-rollback";
+    if(c->archive_layout!=1) return 0;
+    for(i=0;prefix[i];i++) name[n++]=prefix[i];
+    for(i=0;i<32;i++) { present|=c->plan_id[i];name[n++]=hex[c->plan_id[i]>>4];name[n++]=hex[c->plan_id[i]&15]; }
+    name[n]=0;return present?name:0;
+}
 static int equal(const unsigned char *a,const unsigned char *b,hearth_file_size n)
 { hearth_file_size i; for(i=0;i<n;i++) if(a[i]!=b[i]) return 0; return 1; }
 #ifndef HEARTH_HOST_LAB
@@ -207,7 +217,7 @@ static int check_original(struct hearth_posix_context *c,unsigned int index,int 
 static int valid_change(struct hearth_posix_context *c,unsigned int index)
 {
     const struct hearth_file_change *f;unsigned int n;
-    if(!c||!c->changes||!c->count||c->count>HEARTH_FILE_LIMIT||index>=c->count) return -1;
+    if(!c||!c->changes||!c->count||c->count>HEARTH_FILE_LIMIT||index>=c->count||c->archive_layout>1) return -1;
     f=&c->changes[index];
     if(f->target>=HEARTH_TARGET_COUNT||f->replacement.size>HEARTH_FILE_BYTES||!f->replacement.size||
        !f->replacement.data||f->original.size>HEARTH_FILE_BYTES||
@@ -227,10 +237,11 @@ static int valid_change(struct hearth_posix_context *c,unsigned int index)
 static int preflight(void *opaque,unsigned int index)
 {
     struct hearth_posix_context *c=opaque;const struct hearth_file_change *f;
-    char name[128];int directory,result=-1;
+    char name[128],archive[96];const char *saved;int directory,result=-1;
     if(valid_change(c,index)||c->recovery!=-1) return -1;
     f=&c->changes[index];
-    if(local_root(c,c->roots[0])||local_root(c,c->roots[1])||absent(c->roots[1],".hearth-rollback")!=1) return -1;
+    saved=recovery_name(c,archive);
+    if(!saved||local_root(c,c->roots[0])||local_root(c,c->roots[1])||absent(c->roots[1],saved)!=1) return -1;
     directory=parent(c,f->target,name);if(directory<0) return -1;
     if(check_original(c,index,directory,name)) goto done;
     if(append(name,suffix)||absent(directory,name)!=1) goto done;
@@ -244,9 +255,11 @@ static int journal(void *opaque,enum hearth_install_phase phase,unsigned int mas
 {
     struct hearth_posix_context *c=opaque; unsigned char record[48];unsigned int flags=0;
     struct hearth_file_bytes bytes={record,sizeof(record)}; unsigned int i;
+    char archive[96];const char *saved=recovery_name(c,archive);
+    if(!saved) return -1;
     if(c->recovery<0) {
-        if(phase!=HEARTH_PREPARING||mkdirat(c->roots[1],".hearth-rollback",0700)) return -1;
-        c->recovery=openat(c->roots[1],".hearth-rollback",H_RDONLY|H_DIRECTORY|H_NOFOLLOW|H_CLOEXEC);
+        if(phase!=HEARTH_PREPARING||mkdirat(c->roots[1],saved,0700)) return -1;
+        c->recovery=openat(c->roots[1],saved,H_RDONLY|H_DIRECTORY|H_NOFOLLOW|H_CLOEXEC);
         if(c->recovery<0||fchmod(c->recovery,0700)||local_root(c,c->recovery)||fsync(c->roots[1])) return -1;
     }
     if(c->journal_temporary) {
@@ -400,11 +413,13 @@ done:
 static int restore_preflight(struct hearth_posix_context *c,unsigned int missing_restored)
 {
     struct metadata m;unsigned int i,phase=0,mask=0;char name[128],temporary[128],backup[16];
+    char archive[96];const char *saved;
     if(!c||c->recovery!=-1||!c->count||c->count>HEARTH_FILE_LIMIT||
        (missing_restored&~(1U<<HEARTH_SETTINGS))) return HEARTH_INVALID_PLAN;
     for(i=0;i<c->count;i++) if(valid_change(c,i)) return HEARTH_INVALID_PLAN;
+    saved=recovery_name(c,archive);if(!saved) return HEARTH_INVALID_PLAN;
     if(local_root(c,c->roots[0])||local_root(c,c->roots[1])) goto invalid;
-    c->recovery=openat(c->roots[1],".hearth-rollback",H_RDONLY|H_DIRECTORY|H_NOFOLLOW|H_CLOEXEC);
+    c->recovery=openat(c->roots[1],saved,H_RDONLY|H_DIRECTORY|H_NOFOLLOW|H_CLOEXEC);
     if(c->recovery<0||local_root(c,c->recovery)||metadata(c->recovery,&m)||
        (m.mode&07777)!=0700||m.group!=c->group||no_attributes(c->recovery)||recovery_journal(c,&phase,&mask)) goto invalid;
     /* Ignore old in-memory flags; recovery accepts only reconstructed evidence. */

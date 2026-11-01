@@ -1232,3 +1232,78 @@ private/file-writer-20261031/reencode-attempt-3 --execute-writer-preflight
 After69+INFO+RO READY verify missingmask0or128/settingsstate0or1, archive/plan
 checks pass, then manually commit prior conditional authorization with action3.
 Never bypass foreign-state checks. No compression repair write has happened yet.
+
+## CURRENT URGENT: compression correction passed; stock UI check pending
+
+e90c8ba/reencode-v3 ran once via zero-write RAM resume from attempt2. All69 ARM
+cases passed. Actual RO preflight INFO confirmed missing settings only (mask128,
+state1, NONE policy), with exact saved original/journal/backups and other files
+verified. Under owner's prior explicit conditional recovery go-ahead, manually
+sent action3 commit after independent host recheck. No repeated permission ask.
+
+Strict result complete1/restored511/attempted511/committed0, verified1 AND
+encoding_verified1, no errors. Recreated original settings, rewrote seven original
+files/seven rollback copies/journal uncompressed, maintained absence of added
+wrapper/shim. Post-unmount fresh RO active flash-header audit passed for selected
+files/rollback/journal; sealed WP1, safe restart.120 page programs,2erases,2markers,
+0failures. Host exited0. Private reencode-attempt-3 includes independent review
+and all immutable originals/decisions; never rerun reencode-v3. No loader running.
+
+Owner was asked to unplug USB, fit completely unwired base, full10sec hold,
+release/singlepress and allow2min for native UI; leave Wi-Fi unconfigured. Their
+response is PENDING. Do not claim native recovery until interactive UI observed.
+If UI returns, preserve actual result, then recapture fresh native originals
+before recommissioning; old .hearth-rollback remains on-device, must be preserved/
+retired safely before a new install. Backend enrollment retained but device is
+stock-configured again. No physical native network/HVAC proof. Host831/five skips,
+make check unchanged. See compression-recovery observed follow-up.
+
+## CURRENT: working primary native UI recovered; prepare safe recommissioning
+
+Owner explicitly confirmed working UI after reencode-attempt3, left Wi-Fi
+unconfigured, detached base and reconnected USB. Native USB independently observed.
+Owner's filtered read-only plist confirms primary/5.9.4-5. Thus original UI recovery
+is demonstrated on the repaired primary, not fallback. Private native-ui-return.json
+and native-selection-after-recovery.json preserve attribution. No loader armed.
+
+Next preserve a fresh read-only snapshot of current native originals before
+recommissioning. Keep the old .hearth-rollback and host custody intact. Prefer a
+plan-derived archive namespace for the new install rather than deleting/overwriting
+the recovery archive. Force NONE writes and active flash-header checks remain
+mandatory. Do not rerun old priority images or claim networking/HVAC verified.
+Backend registration remains matching the private planned credential, device is
+currently stock-configured and Wi-Fi unconfigured. Source831/five skips baseline.
+
+
+## Current preparation after recovery: preserve the legacy archive
+
+Primary/5.9.4-5 was reconfirmed by the owner's filtered USB plist. Device remains
+stock-configured, USB connected/base detached. No loader running or write armed.
+New optional capsule archive_layout=1 binds a plan-derived rollback directory;
+legacy layout0 remains byte-compatible with old capsules. Never delete/overwrite
+.hearth-rollback to recommission. New synthetic cases exercise preservation of
+that archive, new-plan install/restore, collision refusal and wrong-plan refusal.
+The current protocol/helper/profile gate is72 cases (56+16); historical69 only
+serves frozen evidence and cannot authorize a current write.
+
+New --handoff-from-snapshot accepts only a completed, source-checked protected
+startup diagnostic, execution/session binding, identical capture bytes, verified
+backup custody and known RAM USB mode. It permits the owner-timed direct RAM
+restart without an intervening native startup changing settings. It does not
+commit or bypass current RAM/real-file checks. Fresh source/profile/kernel/helper
+builds are required; all executed recovery profiles remain immutable and must not
+be rerun. Next prepare a fresh protected snapshot, then new capsule and matching
+NONE/auditor install/restore pair. Physical networking remains unverified.
+
+
+Validation for this preparation: make check passes; full host suite852 passed,
+five optional skips. Seven ARM helper programs reproduce at
+build/file-writer-actions-20261031-v10 and its -repro path, bound to the old
+capsule only for compilation review (not a new installation image). Fresh pure
+read-only startup-diagnostic-v3 and -repro profiles reproduce all eight artifacts,
+based on unchanged protected snapshot kernelv4. No target execution yet.
+Fresh snapshot profile: private/file-writer-20261031/startup-diagnostic-v3.
+Suggested fresh output: private/file-writer-20261031/post-recovery-snapshot-attempt-1.
+Owner readiness question is pending. Do not arm before reply; after capture,
+leave protected RAM rather than reboot native before constructing the new plan.
+The read-only runner's new execution.json binds source/session for that handoff.
