@@ -1,0 +1,76 @@
+# Bounded network correction: proposed device contract
+
+Status: preparation only. No new device image, writer or execution command exists.
+The working native HA 0.2.1 deployment provides the future local connectivity
+response; the thermostat's Google URLs have not changed.
+
+Use a separate four-target adapter rather than increasing every bound in the
+existing nine-file installer. Its root-relative targets are fixed:
+
+| Target | Maximum file bytes | Candidate change |
+| --- | ---: | --- |
+| `nestlabs/sbin/nlclient` | 6291456 | One terminated read-only connectivity URL |
+| `usr/sbin/connmand` | 1048576 | One terminated read-only connectivity URL |
+| `etc/connman/main.conf` | 65536 | Exact preferred fallback time value |
+| `etc/nestlabs/client.config` | 65536 | Exact registration URL, logs remain off |
+
+All are existing root0 files. No user-state partition, settings values, trust
+anchors, control code, backplate or raw NAND addresses belong to this operation.
+Limits are specific to this adapter and do not alter existing capture/image/writer
+limits. The active primary partition must be reconfirmed before acquisition.
+
+## Fresh read-only acquisition
+
+Prepare an independently checked root0-only read-only RAM profile that streams
+these four files with fixed-size buffers. Capture full contents, exact length,
+mode/ownership, filesystem identity and per-file SHA256 under a fresh session.
+Refuse links, unexpected file types/owners, duplicate targets, growth, truncation,
+unbounded records and absent completion. Compare against preserved lawful inputs;
+derive candidates only from the fresh records. Preserve the complete capture and
+its durable private receipt separately from any write image. A transport checksum
+or an unchanged 40-byte string alone cannot bind the rest of a 5 MiB executable.
+
+## Full-file streaming replacement, not an in-place range write
+
+Prefer a bounded streaming copy to a fresh temporary file, substituting only the
+reviewed span as bytes pass through it. Verify full original and candidate hashes,
+metadata and equal lengths. This avoids retaining multi-file content arrays in
+RAM and avoids changing the existing 1 MiB adapter's global limits. Reject overlap,
+multiple occurrences, changes outside the span or a source identity mismatch.
+
+Keep plan-specific original copies and a durable journal; preserve every existing
+recovery archive. Reuse the independently tested transaction phase ordering where
+applicable, with new callbacks restricted to these four targets. Before any write,
+measure available JFFS2 space and account for uncompressed temporary files,
+uncompressed original copies, journal overhead and erase-block reserve. If adequate
+space cannot be demonstrated, stop; do not fall back to in-place overwrites.
+
+Writing the **complete** candidate with the already checked forced-NONE kernel
+allows the existing active-fragment encoding audit to remain meaningful: every
+live fragment of the replaced file must be NONE/ZERO after sync and exact readback.
+It avoids adding an unmeasured range ioctl and avoids incorrectly applying that
+audit to untouched stock compressed fragments. Recovery similarly streams complete
+original files through uncompressed temporaries and verifies full readback and
+encoding before sealing protection. File length preservation does not establish
+atomic multi-file installation or power-loss recovery.
+
+## Gates before a physical attempt
+
+The new adapter still requires host fault tests, bounded ARM RAM cases, reproducible
+private packaging, source/ABI checks, immutable fresh backup receipts, root0-only
+write-window enforcement and restore preparation. Tests must cover short/interrupted
+I/O, mid-span boundaries, full-file mismatch despite a matching span, ENOSPC,
+rename/directory-sync errors, interrupted journal states and failed restoration.
+No firmware runs on the development host. No native application or physical
+networking is needed inside the RAM harness.
+
+Only after those pass may a fresh owner-timed boot perform read-only real-file
+preflight and pause. A separate scoped commit must remain bound to its session,
+plan and backup receipt. Notify the owner of the concrete persistent change and
+power-loss/recovery limits before arming that operation. Abort/refusal does not
+justify bypassing a check or automatically retrying a device boot.
+
+After a successful update: verify native startup, all three HA readings, IoT-only
+registration reachability and actual probe/time destination metadata. Remove no
+more services merely because one traffic capture appears quiet. Command delivery,
+physical HVAC and whole-firmware recovery remain separate unfinished work.

@@ -1,0 +1,43 @@
+{
+  "date": "2026-11-01",
+  "scope": "local connectivity preparation and owner-authorized HA 0.2.1 activation",
+  "host": {
+    "passed": 880,
+    "skipped_optional": 5,
+    "make_check": "passed"
+  },
+  "pinned_ha_runtime": {
+    "version": "2026.10.4",
+    "network": "none",
+    "synthetic_profile": true,
+    "local_http_probe": "passed",
+    "tls_auth_entities_expiry_unload": "passed",
+    "invalid_profile_refusals": 4
+  },
+  "live_ha": {
+    "version": "0.2.1",
+    "owner_authorized_core_restart": true,
+    "restart_exit": 0,
+    "previous_code_backup_readback_verified": true,
+    "candidate_code_readback_verified": true,
+    "http_probe_status": 204,
+    "probe_body_bytes": 0,
+    "query_status": 400,
+    "post_status": 405,
+    "https_manager_auth": "passed",
+    "fresh_device_telemetry": "not observed during bounded three-minute watch; owner wake/status requested",
+    "owner_followup": "Owner reports probable overnight battery depletion; USB charging requested, no loader."
+  },
+  "static_review": {
+    "private_exports": "passed",
+    "public_output_refusal": "passed",
+    "firmware_executed_on_host": false,
+    "complete_native_probe_reachability": "unverified"
+  },
+  "device_changes": false,
+  "google_dependencies_removed": false,
+  "native_command_delivery": false,
+  "hvac_verified": false,
+  "whole_firmware_recovery_verified": false,
+  "next": "fresh four-file read-only acquisition and separately bounded streaming update/restore adapter; owner device status pending"
+}

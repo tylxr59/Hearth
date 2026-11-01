@@ -8,6 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN
+from .probe import HearthConnectivityView
 from .profile import load_profile
 from .runtime import HearthRuntime
 
@@ -26,11 +27,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.runtime_data = runtime
     try:
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+        hass.data[DOMAIN] = runtime
+        if not hass.data.get(DOMAIN + "_probe_registered"):
+            hass.http.register_view(HearthConnectivityView(hass))
+            hass.data[DOMAIN + "_probe_registered"] = True
     except Exception:
+        hass.data.pop(DOMAIN, None)
         await runtime.stop()
         raise
 
     async def stop(_event):
+        hass.data.pop(DOMAIN, None)
         await runtime.stop()
 
     entry.async_on_unload(hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop))
@@ -41,4 +48,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         return False
     await entry.runtime_data.stop()
+    hass.data.pop(DOMAIN, None)
     return True

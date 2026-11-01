@@ -1,0 +1,16 @@
+{
+  "repository": "https://nest-open-source.googlesource.com/nest-learning-thermostat/5.9.4/connman",
+  "revision": "ba669b5831fd37dd868237c13db163256d1b0c52",
+  "files": {
+    "COPYING": "b499eddebda05a8859e32b820a64577d91f1de2b52efa2a1575a2cb4000bc259",
+    "configure.ac": "8498937b1f03cfd32d74059d36afe5f7f3d5babb9b72cbaf3fe35c2b1746a173",
+    "src/main.c": "6694afff75a1e85a996ff2f7f400a0ce1a217f22a014635106c5695be467e1b1",
+    "src/main.conf": "50cc65f420b33e49541e1c4e11dc26951b88613a8a25a05f6985f6b9aabb229f",
+    "src/wispr.c": "06fe5d95f8d4fe321c39bfc28dd0dbba13157d7e68fb5d6b7375dddddb6f3e41",
+    "gweb/gweb.c": "3457fa3c9a31ef9c7e3ca93c1253218e6ddd6bcf73a28baf67578b8d83f5e681",
+    "gweb/giognutls.c": "000ae520eaa8ec356638f9e3b53b20c1e530a61a34f2809629b555c20e0fae8a",
+    "src/ntp.c": "21cc0e706259447d3fe2b29e50435da8490263592f32b51386eee57c2bb031ca"
+  },
+  "scope": "published vendor source review; exact correspondence to device binary unproven",
+  "license": "GPL-2.0-only, see COPYING"
+}

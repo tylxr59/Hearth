@@ -250,3 +250,12 @@ state; manager available and owner confirms all three numeric HA sensors. MQTT
 is off/cleared and retired app uninstalled after verified full private backup.
 Next remove residual Google probes/time dependencies and finalize stored IoT URL,
 then complete guarded native commands. No physical HVAC/control pass.
+
+2026-11-01 preparation: HA0.2.1 local bodyless204 view and authenticated entry alias
+pass the real pinned HA sandbox; full host880/five skips and make check pass.
+Offline fixed-width ELF/config candidates cover both probes, ConnMan's independent
+preferred time source and stored IoT registration URL. No device writer or new
+boot is armed. Do not send the5MiB native client to the existing1MiB installer.
+Prepare separate bounded fresh acquisition/update/restore and flash-fragment
+encoding checks before requesting the next device restart. Current HA0.2.0
+telemetry remains the working deployment. See dated network preparation record.

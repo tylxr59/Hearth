@@ -1497,3 +1497,42 @@ GOOGLEremediation remainsprioritybeforecommands. CurrentcallbackHAHTTPSendpoint
 healthy, storedregistrationoldIPstillpendingupdate; entryadvertisesIoTtransport.
 AvoidspeculativeNANDchanges; literalnlclientURLpatchwouldtouch5MBfile exceeding
 current1MiBbound. Needtargeted/configurable remedy andseparatefreshbackup/writeplan.
+
+## CURRENT: local connectivity candidate prepared, working deployment unchanged
+
+On2026-11-01, source candidate HA0.2.1 adds a frontend bodyless204 connectivity
+view and the same-auth `/nest/init` alias for a fixed-width IoT registration URL
+transition. Host880 tests pass/five optional skips; make check and fresh pinned
+HA2026.10.4 sandbox pass, including actual HTTP probe refusal/unload cases. Existing
+HA0.2.0 on the owner host remains active. No new loader or device write is armed.
+
+Offline `provisioning.native_network` prepares exact equal-width spans only; it
+does not install them or bind full-file identity. Both probe ELFs and ConnMan's
+independent preferred fallback time config are reviewed. Public vendor ConnMan
+source/revision/hash lock is docs/research/connman-5.9.4.json. Proprietary candidates,
+hashes, addresses, decompilations and logs remain private. The URL Ghidra helper
+was positively exercised and refused public output; launcher exit0 alone is not
+success. Call sites are not function starts: the private caller experiment that
+created functions at call instructions is not valid reachability evidence.
+
+Next develop a separate bounded fresh large-file acquisition/update/restore path
+with whole-file identity and per-fragment native-compatible encoding verification;
+do not widen the old nine-file writer limits or claim all stock fragments NONE.
+Keep the working HA sensors online while preparing. Notify owner before concrete
+device work and obtain timing only when a fresh fully checked payload is ready.
+See docs/research/native-network-preparation-2026-11-01.md.
+
+Subsequent owner authorization: activated staged/readback-verified HA0.2.1 and
+restarted Core once, exit0. Full previous0.2.0 code archive verified privately.
+Live frontend probe204/zero bytes, query400, POST405; manager HTTPS authenticates.
+No thermostat/profile/router changes. Fresh native state still pending on bounded
+watch85242 in private/native-ha-local-probe-20261101; do not claim reconnect yet.
+The next device design favors streaming full-file temporary replacement and the
+existing whole-file NONE/ZERO audit, rather than a new in-place range writer.
+See docs/architecture/0002-network-update-plan.md. No device image prepared/armed.
+
+Watch85242 ended after three minutes with authenticated manager/no fresh state and
+no decoder rejections. Owner then reported the battery likely ran down overnight.
+Instructed detach unwired base/reconnect USB to charge, no ring restart or loader.
+Await screen/charge confirmation. This does not establish a HA reconnect defect.
+Next preserve fresh network-target originals before any new device update.

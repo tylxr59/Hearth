@@ -143,6 +143,14 @@ async def test_authenticated_native_entry_put_listing_and_read_only_controls(nat
     assert core.poll(SERIAL) == []
 
 
+async def test_migration_entry_alias_preserves_auth_and_minimal_reply(native_client, rig):
+    assert (await native_client.post("/nest/init")).status == 401
+    for method in (native_client.post, native_client.get):
+        response = await method("/nest/init", headers=auth(rig[1]))
+        assert response.status == 200
+        assert await response.json() == {"transport_url": "https://127.0.0.1:8443/nest/transport"}
+
+
 def test_revisions_merge_cas_numeric_equivalence_and_duplicate_timestamps(rig):
     core = rig[0]
     clock = [1234.5]

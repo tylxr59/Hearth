@@ -122,6 +122,7 @@ async def check(root, profile):
             is hass
         )
         assert await async_setup_component(hass, "hearth", {})
+        await hass.async_start()
         form = await hass.config_entries.flow.async_init("hearth", context={"source": "user"})
         assert form["type"] == "form"
         result = await hass.config_entries.flow.async_configure(form["flow_id"], {})
@@ -129,6 +130,18 @@ async def check(root, profile):
         await hass.async_block_till_done()
         entry = result["result"]
         assert entry.data == {} and entry.runtime_data.core.command_delivery_enabled is False
+        from homeassistant.helpers import entity_registry as er
+
+        owned_entity_ids = {
+            row.entity_id
+            for row in er.async_get(hass).entities.values()
+            if row.config_entry_id == entry.entry_id and row.platform == "hearth"
+        }
+        assert len(owned_entity_ids) == 3
+
+        def sensor_states():
+            return [hass.states.get(entity_id) for entity_id in owned_entity_ids]
+
         from custom_components.hearth.profile import PROFILE_ERRORS, load_profile
 
         async def refused():
@@ -157,14 +170,26 @@ async def check(root, profile):
         (profile / "registry.json").write_text(json.dumps(empty_registry))
         await refused()
         (profile / "registry.json").write_bytes(original_registry)
-        states = hass.states.async_all("sensor")
-        assert len(states) == 3 and all(s.state == "unavailable" for s in states)
+        states = sensor_states()
+        assert len(states) == 3 and all(s.state == "unavailable" for s in states), {
+            "entry_state": str(entry.state),
+            "sensor_states": [(s.entity_id, s.state) for s in states],
+        }
         context = ssl.create_default_context(cafile=str(profile / "ca.pem"))
         headers = {
             "Authorization": "Basic " + base64.b64encode(f"{IDENT}:{TOKEN}".encode()).decode()
         }
         async with ClientSession() as client:
             base = "https://127.0.0.1:8443"
+            probe_url = "http://127.0.0.1:8123/api/h/204"
+            async with client.get(probe_url) as response:
+                assert response.status == 204 and await response.read() == b""
+            async with client.get(probe_url + "?unexpected=value") as response:
+                assert response.status == 400 and await response.read() == b""
+            async with client.get(probe_url, data=b"unexpected") as response:
+                assert response.status == 400 and await response.read() == b""
+            async with client.post(probe_url) as response:
+                assert response.status >= 400
             async with client.post(base + "/nest/entry", ssl=context) as response:
                 assert response.status == 401
             async with client.post(base + "/nest/entry", headers=headers, ssl=context) as response:
@@ -190,12 +215,12 @@ async def check(root, profile):
                 await hass.async_block_till_done()
 
             await report()
-            states = hass.states.async_all("sensor")
+            states = sensor_states()
             assert len(states) == 3 and sorted(float(s.state) for s in states) == [0, 21, 48]
             entry.runtime_data.core.seen[IDENT] = entry.runtime_data.core.clock() - 91
             entry.runtime_data.changed(IDENT)
             await hass.async_block_till_done()
-            assert all(s.state == "unavailable" for s in hass.states.async_all("sensor"))
+            assert all(s.state == "unavailable" for s in sensor_states())
             await report()
             async with client.get(
                 base + "/v1/device/commands", headers=headers, ssl=context
@@ -207,6 +232,8 @@ async def check(root, profile):
             assert duplicate["type"] == "abort" and duplicate["reason"] == "already_configured"
             assert await hass.config_entries.async_unload(entry.entry_id)
             await hass.async_block_till_done()
+            async with client.get(probe_url) as response:
+                assert response.status == 503 and await response.read() == b""
             try:
                 await client.get(base + "/nest/entry", ssl=context)
             except ClientConnectorError:
@@ -226,6 +253,7 @@ async def check(root, profile):
                     "unload_closes_listener": True,
                     "mqtt_used": False,
                     "profile_refusal_cases": 4,
+                    "local_probe_no_data_or_actions": True,
                 }
             )
         )

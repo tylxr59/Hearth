@@ -93,3 +93,19 @@ and server key. Its local app source was moved out of the app catalog. The nativ
 integration continues independently, with no MQTT configuration or library bundled.
 Google-dependency remediation and native command delivery remain separate unfinished
 work; this observation is the read-only native HA milestone.
+
+## Prepared local connectivity response
+
+Candidate0.2.1 adds `/api/h/204` to HA's existing HTTP frontend and an authenticated
+`/nest/init` alias to the separate HTTPS native listener. The former returns an
+empty204 only for a body-free/query-free GET while Hearth is active, with no
+device data or control operation. The alias preserves the original credential
+checks and permits the planned equal-length on-device registration URL change.
+Neither route requires another app, MQTT or a new device listener.
+
+The candidate passes the real pinned HA runtime check. The owner then authorized
+activation and one Core restart; the live frontend passes204/empty-body and
+query/method refusal checks. Fresh native telemetry after that restart is pending.
+Device URL/time replacements remain offline only. See the
+[network preparation record](research/native-network-preparation-2026-11-01.md)
+for exact evidence, remaining update bounds and recovery gates.

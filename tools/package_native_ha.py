@@ -29,6 +29,7 @@ INTEGRATION_FILES = (
     "runtime.py",
     "config_flow.py",
     "sensor.py",
+    "probe.py",
     "strings.json",
 )
 

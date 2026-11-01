@@ -270,6 +270,9 @@ def create_app(
     elif native_telemetry:
         app.router.add_get("/nest/entry", native_entry)
         app.router.add_post("/nest/entry", native_entry)
+        # Same authenticated handshake, with a fixed-width migration alias.
+        app.router.add_get("/nest/init", native_entry)
+        app.router.add_post("/nest/init", native_entry)
         for path in ("/nest/transport/put", "/nest/transport/v7/put"):
             app.router.add_post(path, native_put)
         for path in ("/nest/transport/device/{serial}", "/nest/transport/v7/device/{serial}"):

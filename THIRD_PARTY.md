@@ -4,6 +4,12 @@ Hearth's original source is MIT licensed (see LICENSE). This does not grant righ
 
 ## References
 
+The additional Google Nest5.9.4 ConnMan source review is pinned separately in
+[connman-5.9.4.json](docs/research/connman-5.9.4.json), revision
+`ba669b5831fd37dd868237c13db163256d1b0c52`. The inspected source carries GPLv2
+notices. It informs connectivity/time behavior only; no ConnMan implementation
+or proprietary executable is copied into the HA integration or source release.
+
 | Upstream | Pinned revision | License / permission finding | Use |
 |---|---|---|---|
 | codykociemba/NoLongerEvil-Thermostat | fabbe034f01cefdabe06b93d1c312068f563a177 | No repository LICENSE found in inspected tree; embedded dependencies have distinct rights. Do not infer permission to redistribute. | Architecture/security research only. |

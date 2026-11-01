@@ -45,3 +45,12 @@ not proof of runtime reachability or absence of indirect calls.
 For automated use, verify the fixed completion message and expected fresh exports
 in the private log/output. The headless launcher can return zero even when a
 post-script throws; launcher exit status alone is not a successful review.
+
+`HearthURLReview.java` locates one exact terminated Google connectivity URL and
+exports its incoming references and bounded selected decompilations. Optional
+hexadecimal selectors identify reviewed initialized string objects; the script
+examines references across32 bytes per object, which can include adjacent globals.
+This is a conservative candidate search, not proof that every result is a caller.
+Use the same private-directory/log restrictions and `-readOnly` workflow above.
+Do not use an arbitrary call-site address as a function-entry selector. Actual
+private exports succeeded and a deliberately public output was refused.
