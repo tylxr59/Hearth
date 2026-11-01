@@ -2,12 +2,14 @@
   "backend": {
     "files": {
       "LICENSE": "9e7c23bc8e01c33fa03a0c73607beb6b63511bbe4608be178b29fb2aca1a162f",
+      "src/nolongerevil/integrations/mqtt/helpers.py": "bf9c0092bdecae76f5577d08b6ec7b782b9445bdccd88142e25672a2ab1432dc",
       "src/nolongerevil/integrations/mqtt/mqtt_integration.py": "e68fe16f4d0f83bea3727d056a55914521f76f9ba9751688d10f9c3a3b255582",
       "src/nolongerevil/lib/serial_parser.py": "30815c196e485fea147bb97a4b8a5c1f1d31b85e8f84ba652fc85361c73447b5",
       "src/nolongerevil/lib/types.py": "d40ac3de02eaa4e9fc982fd495653c742569eabe556c8f50439c3f87de6cc7cf",
       "src/nolongerevil/main.py": "12d7127d05983949228cacbf6bfe06fece4234e56cd4c0e290f5246953244bf3",
       "src/nolongerevil/middleware/api_key_auth.py": "dd068680356d7cc2dc50a55d22f1da385dd94eac3989cf5e7773868726e99b9f",
       "src/nolongerevil/middleware/device_auth.py": "f9350397b0bdbb5d725737f5916ea38431aa174dae9d664699fd668b6ab06936",
+      "src/nolongerevil/routes/control/command.py": "503539bd32416a844dc913966ad103f6640cd0551f93d9bd36c26cbbcb935130",
       "src/nolongerevil/routes/nest/entry.py": "6cf376df0256b9c82ec4f4524196b254752799bc616322b7cd9b26abbe41275d",
       "src/nolongerevil/routes/nest/transport.py": "925cc4e8b92ab9b92a2f2727d076e96492db6cae2e438022751a31d2c3b5d076",
       "src/nolongerevil/services/device_state_service.py": "4bf391268a7be9dacdf882fdb5286bfac07d907932d466447c2b72c6a15c4a34",

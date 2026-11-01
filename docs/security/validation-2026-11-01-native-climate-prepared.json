@@ -1,0 +1,20 @@
+{
+  "status": "native-ha-climate-prepared-not-activated",
+  "integration_version": "0.3.0",
+  "host_tests_passed": 1111,
+  "optional_integration_skips": 5,
+  "make_check": "passed",
+  "native_control_host_checks": 24,
+  "real_ha_core": "2026.10.4",
+  "real_ha_synthetic_command_roundtrips": 6,
+  "fahrenheit_conversion_verified": true,
+  "reported_state_confirmation_verified": true,
+  "source_package_reproduces": true,
+  "staged_source_files_read_back": 21,
+  "previous_integration_source_backed_up": true,
+  "activated": false,
+  "ha_core_restarted": false,
+  "thermostat_commands_sent": false,
+  "physical_hvac_verified": false,
+  "nle_feature_parity_complete": false
+}

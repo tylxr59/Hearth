@@ -12,7 +12,7 @@ from .probe import HearthConnectivityView
 from .profile import load_profile
 from .runtime import HearthRuntime
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [Platform.SENSOR, Platform.CLIMATE]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

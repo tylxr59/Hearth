@@ -29,7 +29,10 @@ class HearthRuntime:
         self.profile = profile
         self.listeners: dict[str, set[Callable[[], None]]] = {}
         self.core = ReportingCore(profile.registry, self.changed)
-        self.app = create_app(self.core, origin=profile.origin, native_telemetry=True)
+        self.app = create_app(
+            self.core, origin=profile.origin, native_telemetry=True, native_controls=True
+        )
+        self.app[NATIVE].notify = self.changed
         self.runner: web.AppRunner | None = None
         self.cancel_timer: Callable[[], None] | None = None
 
@@ -82,6 +85,13 @@ class HearthRuntime:
         if self.runner:
             runner, self.runner = self.runner, None
             await runner.cleanup()
+
+    @property
+    def controls(self):
+        return self.app[NATIVE]
+
+    def enqueue(self, ident, body):
+        return self.controls.enqueue(ident, body)
 
     def diagnostics(self):
         return self.app[NATIVE].diagnostics()

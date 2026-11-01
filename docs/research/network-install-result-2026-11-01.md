@@ -22,3 +22,14 @@ native startup, WiFi/HA reconnection, actual new destination traffic or absence 
 other native Google dependencies. Those observations are next. The matching NAND
 restore image is prepared but has not been executed; whole-firmware/power-loss
 recovery, HA controls and physical HVAC remain unverified.
+
+## Native and network follow-up
+
+The owner completed the return sequence and confirmed the native home icon;
+normal USB was independently observed. On the unwired base, fresh authenticated
+HA uploads again show all three readings and device availability. The owner's
+new traffic view shows NIST NTP. An apparent Google NTP row was explicitly
+confirmed to predate installation by over an hour; no new Google entry was seen
+in the follow-up. This closes the observed network-update/reconnect milestone,
+not a guarantee about every possible future native endpoint. The next work is
+native HA controls and supervised HVAC validation, retaining native control loops.

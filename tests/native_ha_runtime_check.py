@@ -86,7 +86,7 @@ def fixture(root):
                 "devices": {
                     IDENT: {
                         "hash": hashlib.sha256(TOKEN.encode()).hexdigest(),
-                        "capabilities": {"modes": ["off", "heat", "cool"], "fan": False},
+                        "capabilities": {"modes": ["off", "heat", "cool"], "fan": True},
                     }
                 },
             }
@@ -137,10 +137,15 @@ async def check(root, profile):
             for row in er.async_get(hass).entities.values()
             if row.config_entry_id == entry.entry_id and row.platform == "hearth"
         }
-        assert len(owned_entity_ids) == 3
+        assert len(owned_entity_ids) == 4
+        climate_id = next(i for i in owned_entity_ids if i.startswith("climate."))
 
         def sensor_states():
-            return [hass.states.get(entity_id) for entity_id in owned_entity_ids]
+            return [
+                hass.states.get(entity_id)
+                for entity_id in owned_entity_ids
+                if entity_id.startswith("sensor.")
+            ]
 
         from custom_components.hearth.profile import PROFILE_ERRORS, load_profile
 
@@ -201,9 +206,22 @@ async def check(root, profile):
                 "objects": [
                     {
                         "object_key": "device." + IDENT,
-                        "value": {"current_temperature": 0, "current_humidity": 48},
+                        "value": {
+                            "current_temperature": 0,
+                            "current_humidity": 48,
+                            "fan_timer_timeout": 0,
+                            "has_fan": True,
+                        },
                     },
-                    {"object_key": "shared." + IDENT, "value": {"target_temperature": 21}},
+                    {
+                        "object_key": "shared." + IDENT,
+                        "value": {
+                            "target_temperature": 21,
+                            "target_temperature_type": "off",
+                            "can_heat": True,
+                            "can_cool": True,
+                        },
+                    },
                 ]
             }
 
@@ -226,6 +244,78 @@ async def check(root, profile):
                 base + "/v1/device/commands", headers=headers, ssl=context
             ) as response:
                 assert response.status == 409
+            assert hass.states.get(climate_id).state == "off"
+            assert set(hass.states.get(climate_id).attributes["hvac_modes"]) == {
+                "off",
+                "heat",
+                "cool",
+            }
+            from custom_components.hearth._backend.api import NATIVE
+
+            native = entry.runtime_data.app[NATIVE]
+
+            async def command_roundtrip(service, fields, expected):
+                before = native.listing(IDENT)["objects"]
+                async with client.post(
+                    base + "/nest/transport/v7/subscribe",
+                    headers=headers,
+                    json={"objects": before, "chunked": True},
+                    ssl=context,
+                ) as pending:
+                    await hass.services.async_call(
+                        "climate", service, {"entity_id": climate_id, **fields}, blocking=True
+                    )
+                    data = await pending.json(content_type=None)
+                rows = [r for r in data["objects"] if "value" in r]
+                assert len(rows) == 1
+                row = rows[0]
+                if expected is not None:
+                    assert row["value"] == expected
+                ack = {
+                    "objects": [
+                        {
+                            "object_key": row["object_key"],
+                            "if_object_revision": row["object_revision"],
+                            "value": row["value"],
+                        }
+                    ]
+                }
+                async with client.post(
+                    base + "/nest/transport/put", headers=headers, json=ack, ssl=context
+                ) as response:
+                    assert response.status == 200
+                await hass.async_block_till_done()
+                return row["value"]
+
+            await command_roundtrip(
+                "set_temperature", {"temperature": 23}, {"target_temperature": 23}
+            )
+            assert hass.states.get(climate_id).attributes["temperature"] == 23
+            assert native.command_status(IDENT)["temperature"] == "confirmed"
+            assert (
+                hass.states.get(climate_id).attributes["command_status"]["temperature"]
+                == "confirmed"
+            )
+            from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
+
+            original_units = hass.config.units
+            hass.config.units = US_CUSTOMARY_SYSTEM
+            await command_roundtrip(
+                "set_temperature", {"temperature": 77}, {"target_temperature": 25}
+            )
+            assert entry.runtime_data.core.states[IDENT]["target_temperature"] == 25
+            hass.config.units = original_units
+            await command_roundtrip(
+                "set_hvac_mode", {"hvac_mode": "heat"}, {"target_temperature_type": "heat"}
+            )
+            assert hass.states.get(climate_id).state == "heat"
+            fan = await command_roundtrip("set_fan_mode", {"fan_mode": "on"}, None)
+            assert 590 <= fan["fan_timer_timeout"] - int(__import__("time").time()) <= 600
+            await command_roundtrip("set_fan_mode", {"fan_mode": "auto"}, {"fan_timer_timeout": 0})
+            await command_roundtrip(
+                "set_hvac_mode", {"hvac_mode": "off"}, {"target_temperature_type": "off"}
+            )
+            assert hass.states.get(climate_id).state == "off"
             duplicate = await hass.config_entries.flow.async_init(
                 "hearth", context={"source": "user"}
             )
@@ -249,7 +339,10 @@ async def check(root, profile):
                     "direct_sensor_updates": 3,
                     "zero_preserved": True,
                     "availability_expiry": True,
-                    "commands_disabled": True,
+                    "canonical_command_poll_disabled": True,
+                    "native_climate_roundtrips": 6,
+                    "native_report_confirmation": True,
+                    "fahrenheit_to_celsius": True,
                     "unload_closes_listener": True,
                     "mqtt_used": False,
                     "profile_refusal_cases": 4,

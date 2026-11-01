@@ -1675,3 +1675,65 @@ screen; independently verify nativeUSB. Then start HA rejection/availability wat
 and ask unwired-base WiFi return plus router destination metadata check. Native UI,
 actual new connectivity/NIST destinations and fresh HA uploads are NOT YET observed.
 No whole-firmware recovery, large-file NAND restoration, physical HVAC/control claim.
+
+Post-install native return: owner confirmed home icon; normal2464:0002 independently
+observed. Owner reseated on completely unwired base/WiFi. Authenticated backend watch
+post-network-install-watch-1 reports fresh available +temperature/humidity/target.
+Owner traffic screenshot shows time.nist.gov; initially apparent Google NTP row was
+explicitly confirmed by owner to predate install by over an hour. Owner reports no
+new Google row so far. Private reconnect-and-traffic-observed.json preserves fresh
+HA receipt and bounded owner observations. Do not mistake historical row for a new
+failure or require another flash/snapshot on that basis. No claim of all future
+traffic absence. Connectivity replacement/install succeeds; hardware restoration
+and actual HVAC remain unverified. Next user's requested sustained native HA climate
+and HVAC feature development, keeping base unwired; no physical switching authorized.
+
+## CURRENT: native HA basic climate/control code; not deployed or unit-tested
+
+Owner clarified NLE functional parity target. docs/architecture/0003-native-ha-controls.md
+tracks basic +range/emergency/eco/schedules/settings/weather/diagnostics/outage/HVAC
+gaps; do not call basic heat/cool a complete project. Nativecontrol loops retained.
+User's 'subscription' question answered: local native HTTPS long-poll/bucket service,
+not NestPro/paidaccount spoofing. Actual physical switching still separate authorization.
+
+Uncommitted backend/native_controls.py original opt-in NativeControls adds bounded
+volatile temp/mode/fan intent,30s expiry, fixed partial-value responses/metadataorder,
+accepted-PUT confirmation, local supersession, revision rebase, generation clearing.
+No raw native bucket values retained/echoed. Heating/cooling/fan require observed
+booleans plus registry permission; fan on is600s native timer. Reported action maps
+native bools, never temperature-difference control. Old telemetry-only default and
+canonicalpoll refusal remain. New HA runtime explicitly enables NativeControls.
+One climate entity added, existing three sensor IDs preserved, package includes new
+module/climate.py, manifest0.3.0. No live HA code/restart/commands changed yet.
+
+1111 host tests/five optional skips and make check passed. Real pinned HA2026.10.4
+sandbox v2 passed five native command roundtrips with confirmed reported state,
+TLS/auth/probe/unload/profile checks. v1 caught HA forwarding entity_id into settemp;
+fixed by accepting that routing attribute. v3 sandbox now running to additionally
+verify Fahrenheit conversion; session84372. Public packages build/native-ha-climate-
+20261101-v1/v2/v3; never deploy failed v1. After code stable prepare fresh final
+package and remote staged readback +old0.2.1 source backup BEFORE asking activation/
+HA Core restart readiness. No new thermostat flash needed for this basic test.
+NLE public command.py/helpers.py downloaded only at existing pinned MIT revision,
+source hashes appended to upstreams.json; no upstream code copied/executed.
+
+Final basic-controls preparation: sandbox v4 passed6 real HA synthetic wire/service
+roundtrips including77F->25C, immediate command-status confirmation, mode/fan,
+existing3sensors/auth/probe/profile/unload/expiry. NativeControls notify now updates
+HA after accepted-upload outcome/capability changes, not before confirmation.
+1111 host tests/five skips and make check pass;24 native control tests. Version0.3.0
+source package build/native-ha-climate-20261101-v4 matches fresh -v4-repro exactly.
+The earlier '-final' package predates notifier fix; do not deploy that one.
+
+SSH staging first failed because prior temporary askpass secret file expired;
+no remote change. User entered password via T3 secure request_secret file delivery,
+not chat. Fresh private/native-ha-climate-20261101/ssh-askpass reads current temporary
+secret; don't print contents or add to source. Immutable failed stage-v1 retained.
+Successful stage-v2 preserved full active0.2.1 code backup/readback; all21 new files
+read back exactly from remote /homeassistant/.hearth-native-climate-stage-20261101-v1.
+Receipt/staged/backup tar files private/native-ha-climate-20261101/stage-v2. No profile,
+thermostat, active integration or HA restart changed. Next owner activation/restart
+readiness; then move source directories with old version preserved, restart Coreonce,
+checkhealth/listener/entities/telemetry, prepare single bounded unwired target change.
+No physical HVAC attached/authorized. Basiccontrol unit acceptance still unverified.
+NLE parity remaining range/emergency/eco/schedule/settings/weather matrix in ADR0003.

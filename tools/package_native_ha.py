@@ -17,6 +17,7 @@ BACKEND_FILES = (
     "api.py",
     "core.py",
     "native.py",
+    "native_controls.py",
     "nest.py",
     "registry.py",
     "validation.py",
@@ -29,6 +30,7 @@ INTEGRATION_FILES = (
     "runtime.py",
     "config_flow.py",
     "sensor.py",
+    "climate.py",
     "probe.py",
     "strings.json",
 )

@@ -15,6 +15,7 @@ from aiohttp import web
 from backend.core import Core
 from backend.native import MAX_BODY as NATIVE_MAX_BODY
 from backend.native import NativeTelemetry
+from backend.native_controls import NativeControls
 from backend.nest import reports
 from backend.registry import Registry
 from backend.validation import Invalid, endpoint, loads, serial
@@ -118,10 +119,16 @@ async def status(request):
 
 async def enqueue(request):
     if NATIVE in request.app:
-        return web.json_response(
-            {"error": "native telemetry mode has no command delivery"}, status=409
+        native = request.app[NATIVE]
+        if not isinstance(native, NativeControls):
+            return web.json_response(
+                {"error": "native telemetry mode has no command delivery"}, status=409
+            )
+        result = native.enqueue(serial(request.match_info["serial"]), await body(request))
+    else:
+        result = request.app[CORE].enqueue(
+            serial(request.match_info["serial"]), await body(request)
         )
-    result = request.app[CORE].enqueue(serial(request.match_info["serial"]), await body(request))
     return web.json_response(result, status=202)
 
 
@@ -211,6 +218,11 @@ async def native_subscribe(request):
                     break
                 if request.transport is None or request.transport.is_closing():
                     break
+                if isinstance(app[NATIVE], NativeControls):
+                    changed = app[NATIVE].updates(ident, incoming)
+                    if changed["objects"]:
+                        await response.write(json.dumps(changed).encode())
+                        break
                 try:
                     await asyncio.wait_for(
                         app[NATIVE_STOP].wait(), min(0.25, end - time.monotonic())
@@ -234,7 +246,10 @@ def create_app(
     experimental_nest=False,
     native_telemetry=False,
     native_hold_seconds=30,
+    native_controls=False,
 ):
+    if type(native_controls) is not bool or (native_controls and not native_telemetry):
+        raise Invalid("native controls require explicit native transport mode")
     if experimental_nest and native_telemetry:
         raise Invalid("select only one native laboratory mode")
     if experimental_nest or native_telemetry:
@@ -246,7 +261,8 @@ def create_app(
     if native_telemetry:
         if type(native_hold_seconds) not in (int, float) or not 0 < native_hold_seconds <= 30:
             raise Invalid("native bench hold must be greater than zero and at most 30 seconds")
-        app[NATIVE], app[NATIVE_HOLD] = NativeTelemetry(core), float(native_hold_seconds)
+        app[NATIVE] = NativeControls(core) if native_controls else NativeTelemetry(core)
+        app[NATIVE_HOLD] = float(native_hold_seconds)
         core.command_delivery_enabled = False
         core.pending.clear()
         app[NATIVE_ACTIVE], app[NATIVE_STOP] = {}, asyncio.Event()
