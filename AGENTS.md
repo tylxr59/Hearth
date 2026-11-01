@@ -1921,3 +1921,17 @@ has no oldcache; mayneed normal ownerunit restart for freshfullreport, then veri
 subsequent cache reload without unitrestart. Do not rerun activation or consume
 anotherCore restart without newownerreadiness. NLEparity checklist ADR0003 updated;
 eco/schedules/weather/settings and physicalbench still unfinished.
+
+
+0.4activation9151 exited0; exactactive25-file source verified and one ownerapproved
+Core restart returned0. Health-v3 confirmsmanifest0.4.0,4registeredentities/none
+disabled, zero scopedHearthERROR lines. Warnings are usualcustomintegrationnotice.
+Read-onlymanager endpoint responds afterstartup butstateempty/cacheabsent; owner
+confirmed NestisonUSBcharging, NOTonbase/WiFi. Thisexplainsnouploadandisnot
+evidenceoftransportfailure. AskedownerwhenchargedenoughtodisconnectUSB,fiton
+completelyEMPTYbase, letWiFireconnect/dismissE22andreport. No loader/newNAND/control
+commands. Readonlywatch41297mayfinishbeforeowner; freshboundedwatchifneeded.
+Commitd20dcec pushed main containschecked0.4source. Needactualupload/cache600
+verification,thenownerUIintegrationReload tocheckcachedreadingswithoutunitrestart.
+NoextraCore restartrequiredorcurrentlyauthorized. Ifownerneedscharge,keepworking
+offline; donotclaimphysicalHVAC/controlorfullNLEparity.
