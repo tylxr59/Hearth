@@ -96,3 +96,13 @@ def test_result_requiring_snapshot_cannot_pass_without_it():
     )
     with pytest.raises(ValueError):
         s.event(p.RESULT, json.dumps(row).encode())
+
+
+def test_kernel_evidence_is_private_and_never_authorizes_commit():
+    s, saved = session()
+    s.event(p.SELFTEST, selftests())
+    assert s.event(p.KERNEL_LOG, b"synthetic kernel evidence") is None
+    assert saved["kernel-log.bin"] == b"synthetic kernel evidence"
+    assert not s.ready and not s.committed
+    with pytest.raises(ValueError):
+        s.decide(True)

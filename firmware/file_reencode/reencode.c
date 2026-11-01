@@ -12,6 +12,7 @@
 extern int ioctl(int,unsigned long,...);
 #endif
 #define RECODE_ENCODING_IOCTL 0x4871U
+unsigned int hearth_posix_reencode_stage;
 static int same_name(const char *a,const char *b)
 { unsigned int n=0;while(a[n]&&b[n]&&a[n]==b[n]) n++;return a[n]==b[n]; }
 static void reencode_journal_bytes(struct hearth_posix_context *c,unsigned char record[48],unsigned int phase)
@@ -63,18 +64,23 @@ done:
 }
 int hearth_posix_reencode_preflight(struct hearth_posix_context *c)
 {
- unsigned int i,phase,mask;int status=hearth_posix_restore_preflight(c);
+ unsigned int i,phase,mask;int status;
+ hearth_posix_reencode_stage=1;status=hearth_posix_restore_preflight(c);
  if(status) return status;
+ hearth_posix_reencode_stage=2;
  if(recovery_journal(c,&phase,&mask)||
     (phase!=HEARTH_RESTORED&&phase!=HEARTH_RESTORING&&phase!=HEARTH_RESTORE_FAILED)||
-    (phase!=HEARTH_RESTORE_FAILED&&mask!=((1U<<c->count)-1))||archive_inventory(c)) return HEARTH_PREFLIGHT_FAILED;
+    (phase!=HEARTH_RESTORE_FAILED&&mask!=((1U<<c->count)-1))) return HEARTH_PREFLIGHT_FAILED;
+ hearth_posix_reencode_stage=3;if(archive_inventory(c)) return HEARTH_PREFLIGHT_FAILED;
  for(i=0;i<c->count;i++) {
   const struct hearth_file_change *f=&c->changes[i];char name[128],backup[128];
   int directory=parent(c,f->target,name),result=-1;
+  hearth_posix_reencode_stage=10+i;
   if(directory<0) return HEARTH_PREFLIGHT_FAILED;
   if(!(c->created[i]&8U)&&check_original(c,i,directory,name)) goto checked;
   if(c->created[i]&2U) goto checked; /* No replacement installation staging. */
   backup_name(i,backup);
+  hearth_posix_reencode_stage=30+i;
   if(f->existed) {
    if(contents(c->recovery,backup,f->original,0600,c)||append(backup,".plain")||
       recover_temporary(c,i,c->recovery,backup,f->original,0600,16)) goto checked;
@@ -84,6 +90,7 @@ checked:
   if(close(directory)) result=-1;
   if(result) return HEARTH_PREFLIGHT_FAILED;
  }
+ hearth_posix_reencode_stage=60;
  if(absent(c->recovery,"journal.new")!=1) {
   unsigned char record[48];struct hearth_file_bytes expected={record,48};
   reencode_journal_bytes(c,record,HEARTH_RESTORING);
@@ -93,7 +100,7 @@ checked:
   }
   c->journal_temporary=1;
  }
- return 0;
+ hearth_posix_reencode_stage=0;return 0;
 }
 static int force_original(struct hearth_posix_context *c,unsigned int i)
 {

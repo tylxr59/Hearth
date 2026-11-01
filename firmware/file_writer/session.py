@@ -39,6 +39,11 @@ class Session:
             self.save("changed-files.bin", frame)
             self.snapshot = records
             reply = None
+        elif kind == p.KERNEL_LOG:
+            if not self.selftest or self.ready or len(payload) > p.MAX_PAYLOAD:
+                raise ValueError("kernel evidence in inconsistent session")
+            self.save("kernel-log.bin", payload)
+            reply = None
         elif kind == p.RESULT:
             self.save("result.json", payload)
             row = p.validate_result(payload, self.binding.action)

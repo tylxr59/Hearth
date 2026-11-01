@@ -12,6 +12,7 @@ SELFTEST = b"HFW_TST1"
 READY = b"HFW_RDY1"
 RESULT = b"HFW_RES1"
 SNAPSHOT = b"HFW_SNP1"
+KERNEL_LOG = b"HFW_KLG1"
 MAX_SNAPSHOT = 8 + 9 * (24 + 1024 * 1024)
 FILE_CASES = set(range(32))
 RECOVERY_CASES = set(range(25)) - {14}
@@ -36,7 +37,16 @@ class Binding:
             raise ValueError("fixed private plan/receipt/action required")
 
     def prefix(self, magic):
-        if magic not in (SELFTEST, READY, RESULT, SNAPSHOT, b"HFW_ACK1", b"HFW_RUN1", b"HFW_STOP"):
+        if magic not in (
+            SELFTEST,
+            READY,
+            RESULT,
+            SNAPSHOT,
+            KERNEL_LOG,
+            b"HFW_ACK1",
+            b"HFW_RUN1",
+            b"HFW_STOP",
+        ):
             raise ValueError("unknown fixed file-action message")
         return magic + self.plan + self.receipt + struct.pack("<I", self.action)
 
@@ -52,7 +62,10 @@ class Decoder:
             raise ValueError("file-action receive chunk exceeds bound")
         self.buffer.extend(chunk)
         events = []
-        prefixes = {kind: self.binding.prefix(kind) for kind in (SELFTEST, READY, RESULT, SNAPSHOT)}
+        prefixes = {
+            kind: self.binding.prefix(kind)
+            for kind in (SELFTEST, READY, RESULT, SNAPSHOT, KERNEL_LOG)
+        }
         while True:
             candidates = [(self.buffer.find(prefix), kind) for kind, prefix in prefixes.items()]
             candidates = [(position, kind) for position, kind in candidates if position >= 0]
@@ -206,7 +219,7 @@ def validate_result(payload, action):
     row = loads(payload)
     if (
         not isinstance(row, dict)
-        or set(row) != FIELDS
+        or set(row) not in (FIELDS, FIELDS | {"diagnostic", "snapshot_target"})
         or row["type"] != "file_action"
         or any(type(row[key]) is not int for key in row if key != "type")
         or type(action) is not int
@@ -214,6 +227,10 @@ def validate_result(payload, action):
         or row["action"] != action
     ):
         raise ValueError("exact bound file-action result required")
+    if "diagnostic" in row and (
+        not 0 <= row["diagnostic"] <= 200 or not -1 <= row["snapshot_target"] <= 8
+    ):
+        raise ValueError("bounded startup diagnostic fields required")
     if (
         any(row[key] not in (0, 1) for key in FLAGS)
         or row["initial_error"] not in (0, 1, 2)

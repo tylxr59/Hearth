@@ -61,3 +61,19 @@ checks and read-only preflight. Only if both pass, manually issue the already
 authorized action3 commit; no further general permission is needed. Keep USB
 power/base detached, inspect exact byte/encoding/protection report, and do not
 claim recovery until the native stock UI is observed. No HVAC operation is allowed.
+
+## First guarded attempt
+
+Source7d313cb/reencode-v1 ran once: all66 ARM cases passed, then real preflight
+refused before commit. No window/RW remount/transaction; all NAND counters zero,
+protection sealed and host exited. No original reencoding occurred. Snapshot was
+unavailable and the report did not distinguish mount/file/archive checks, so the
+refusal cause remains unknown. Preserve private reencode-attempt-1; unit remains
+powered in sealed RAM.
+
+Fresh v2 adds bounded numeric stages and private CRC-framed kernel-log evidence
+without changing write checks. Its explicit read-only resume accepts only the
+matching exited zero-write repair run, same capsule/pin/kernel, all66 cases,
+no decision and known RAM identity. It never executes an old checker or retries
+automatically.823 host tests pass/five skips/make check; paired v2 reproduces.
+Next fresh owner-timed restart should identify refusal before any correction.

@@ -167,6 +167,63 @@ def require_snapshot_handoff(record, binding, previous, *, sysfs=Path("/sys/bus/
     return {"status": "reviewed-zero-write-snapshot-handoff", "native_startup_required": False}
 
 
+def require_readonly_resume(record, binding, previous, *, sysfs=Path("/sys/bus/usb/devices")):
+    """Fresh supervised repair boot from a sealed, exited zero-write refusal.
+
+    The prior image is evidence only; never run its checker or require mutable
+    current recipes to match its frozen historical source. Same kernel and exact
+    capsule/pin remain mandatory. All current profile checks run before this.
+    """
+    if binding.action != 3:
+        raise ValueError("zero-write resume is restricted to original compression repair")
+    previous = private_path(previous)
+    execution = json.loads(private_read(previous / "execution.json", 65536))
+    result = protocol.validate_result(private_read(previous / "result.json", 16384), 3)
+    observed = json.loads(private_read(previous / "observed.json", 65536))
+    ended = json.loads(private_read(previous / "finished.json", 65536))
+    prior = json.loads(
+        private_read(private_path(execution["profile"]) / "file-action-profile.json", 1024 * 1024)
+    )
+    protocol.validate_selftest(private_read(previous / "selftest.jsonl", 16384))
+    if (
+        execution["action"] != 3
+        or execution["plan"] != binding.plan.hex()
+        or ended != {"host_command_exited": True}
+        or observed != {"execution": execution, "result": result}
+        or prior["status"] != profile.STATUS
+        or prior["action"] != 3
+        or prior["device_executed"] is not False
+        or any(prior[key] != record[key] for key in ("plan", "capsule", "pin", "kernel_files"))
+        or any(
+            (previous / name).exists()
+            for name in ("decision.json", "decision-sending.json", "decision-sent.json")
+        )
+        or any(
+            result[key] != value
+            for key, value in {
+                "initial_error": 2,
+                "commit_received": 0,
+                "window_opened": 0,
+                "rw_attempted": 0,
+                "transaction_called": 0,
+                "program": 0,
+                "erase": 0,
+                "marker": 0,
+                "failed": 0,
+                "phase": 2,
+                "protected": 1,
+                "safe_to_restart": 1,
+            }.items()
+        )
+    ):
+        raise ValueError("matching complete sealed zero-write refusal required")
+    usb = sysfs / "1-1"
+    identity = ((usb / "idVendor").read_text().strip(), (usb / "idProduct").read_text().strip())
+    if identity not in (("0525", "a4a7"), ("0525", "a4a6")):
+        raise ValueError("known sealed repair RAM mode required; no stale ROM or native reboot")
+    return {"status": "reviewed-zero-write-repair-resume", "native_startup_required": False}
+
+
 def receive(fd, output, binding, execution, recheck):
     session = Session(binding, lambda name, data: save(output, name, data))
     decoder = protocol.Decoder(binding)
@@ -246,7 +303,16 @@ def decide(output, *, commit, expected_action):
     return {"status": "local-decision-recorded", "commit": commit, "device_result": "pending"}
 
 
-def run(root, recovery, output=None, *, execute=False, recover_from=None, handoff_from=None):
+def run(
+    root,
+    recovery,
+    output=None,
+    *,
+    execute=False,
+    recover_from=None,
+    handoff_from=None,
+    resume_from_readonly=None,
+):
     root, recovery = private_path(root), private_path(recovery)
     record, binding = checked_pair(root, recovery)
     if not execute:
@@ -256,7 +322,11 @@ def run(root, recovery, output=None, *, execute=False, recover_from=None, handof
     output = private_path(output)
     if output.exists() or output.is_symlink() or output.parent.stat().st_mode & 0o077:
         raise ValueError("fresh owner-only output required")
-    if handoff_from is not None:
+    if resume_from_readonly is not None:
+        if handoff_from is not None or recover_from is not None:
+            raise ValueError("one explicit RAM entry reason required")
+        require_readonly_resume(record, binding, resume_from_readonly)
+    elif handoff_from is not None:
         if recover_from is not None:
             raise ValueError("one explicit RAM entry reason required")
         require_snapshot_handoff(record, binding, handoff_from)
@@ -273,6 +343,9 @@ def run(root, recovery, output=None, *, execute=False, recover_from=None, handof
         "nonce": os.urandom(32).hex(),
         "recover_from": str(private_path(recover_from)) if recover_from is not None else None,
         "handoff_from": str(private_path(handoff_from)) if handoff_from is not None else None,
+        "resume_from_readonly": str(private_path(resume_from_readonly))
+        if resume_from_readonly is not None
+        else None,
     }
     save(root, "execution-started.json", encode(execution))
     save(output, "execution.json", encode(execution))
@@ -334,6 +407,9 @@ if __name__ == "__main__":
     entry = boot.add_mutually_exclusive_group()
     entry.add_argument("--recover-from", help="reviewed exited private write attempt; restore only")
     entry.add_argument("--handoff-from", help="verified zero-write snapshot attempt; install only")
+    entry.add_argument(
+        "--resume-from-readonly", help="verified sealed repair refusal; action3 only"
+    )
     decision = sub.add_parser("decide")
     decision.add_argument("output")
     flags = decision.add_mutually_exclusive_group(required=True)
@@ -351,6 +427,7 @@ if __name__ == "__main__":
                 execute=args.execute_writer_preflight,
                 recover_from=args.recover_from,
                 handoff_from=args.handoff_from,
+                resume_from_readonly=args.resume_from_readonly,
             )
         else:
             action = args.abort or (

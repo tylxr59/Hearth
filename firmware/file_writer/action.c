@@ -21,12 +21,15 @@ static const char status_path[]="/sys/bus/platform/devices/omap2-nand.0/hearth_f
 static unsigned char scratch[HEARTH_FILE_BYTES],report[8192];
 static unsigned char snapshot[9U*(HEARTH_FILE_BYTES+24U)+100U];
 static unsigned int snapshot_size;
+static unsigned char kernel_log[12380];static unsigned int kernel_log_size;
 static int tty=-1;
 struct action_context {
     struct hearth_posix_context files;
     unsigned int mounted;
     int preflight_target;
     int encoding_verified;
+    unsigned int diagnostic;
+    int snapshot_target;
     unsigned int phase,protected,programs,erases,markers,failed;
 };
 static void put(unsigned char *p,unsigned int value)
@@ -83,8 +86,10 @@ static int readonly_roots(struct action_context *c)
     unsigned int i;
     for(i=0;i<2;i++) {
         unsigned long long data[16];
+        c->diagnostic=10+i;
         if(mount(i?"mtd:user-config":"mtd:root0",roots[i],"jffs2",1039,0)) return -1;
         c->mounted|=1U<<i;
+        c->diagnostic=20+i;
         c->files.roots[i]=open(roots[i],O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC);
         if(c->files.roots[i]<0||syscall(100,c->files.roots[i],data)||
            word((const unsigned char *)data)!=0x72b6||!(word((const unsigned char *)data+44)&1U)) return -1;
@@ -94,10 +99,12 @@ static int readonly_roots(struct action_context *c)
 static int preflight(void *opaque)
 {
     struct action_context *c=opaque;unsigned int i;
+    c->diagnostic=40;
     if(c->files.recovery!=-1||c->mounted!=3||read_status(c)||c->phase!=0||
        c->protected!=1||c->programs||c->erases||c->markers||c->failed) return -1;
     if(HEARTH_FILE_ACTION!=1) {
         int result=HEARTH_FILE_ACTION==3?hearth_posix_reencode_preflight(&c->files):hearth_posix_restore_preflight(&c->files);
+        c->diagnostic=result?(HEARTH_FILE_ACTION==3?100+hearth_posix_reencode_stage:50):0;
         if(c->files.recovery>=0) { if(close(c->files.recovery)) result=-1;c->files.recovery=-1; }
         return result;
     }
@@ -175,6 +182,7 @@ static void capture_changed_preflight(struct action_context *c)
     if(c->mounted!=3) return;
     put(snapshot+84,0);put(snapshot+88,9);
     for(i=0;i<9;i++) {
+        c->snapshot_target=(int)i;
         if(hearth_snapshot_file(c->files.roots,0,0,i,scratch,sizeof(scratch),&observed)) return;
         put(snapshot+at,i);put(snapshot+at+4,observed.existed);put(snapshot+at+8,observed.mode);
         put(snapshot+at+12,observed.owner);put(snapshot+at+16,observed.group);put(snapshot+at+20,observed.size);
@@ -184,6 +192,7 @@ static void capture_changed_preflight(struct action_context *c)
     binding_frame(snapshot,"HFW_SNP1");put(snapshot+76,at-84);put(snapshot+80,crc(snapshot+84,at-84));
     for(i=0;i<8;i++) snapshot[at++]=(unsigned char)"HFW_END1"[i];
     snapshot_size=at;
+    c->snapshot_target=-1;
 }
 static int await_commit(void)
 {
@@ -215,11 +224,12 @@ int main(void)
     struct action_context c;struct hfa_result result;int initial=0,committed=0,n;
     unsigned int i,length,part=0;struct hearth_cached_transmit sending={0};
     memset(&c,0,sizeof(c));c.files.roots[0]=c.files.roots[1]=c.files.recovery=-1;c.preflight_target=-1;
-    c.files.owner=0;c.files.group=0;c.files.count=9;c.files.changes=hearth_capsule_changes;
+    c.files.owner=0;c.files.group=0;c.files.count=9;c.files.changes=hearth_capsule_changes;c.snapshot_target=-1;
     for(i=0;i<32;i++) { c.files.plan_id[i]=hearth_capsule_plan_id[i];if(hearth_capsule_plan_id[i]!=hearth_expected_plan[i]) initial=1; }
     if(getuid()!=0||getgid()!=0||hearth_capsule_count!=9) initial=1;
     umask(077);
     for(;;) { tty=open("/dev/ttyGS0",O_RDWR|256|O_NONBLOCK|O_CLOEXEC);if(tty>=0) break;pause_short(); }
+    c.diagnostic=1;
     if(!initial&&(read_status(&c)||c.phase!=0||c.protected!=1||readonly_roots(&c)||preflight(&c))) initial=2;
     /* If stock startup changed a selected file, preserve a fresh read-only
      * snapshot in this same RAM session. It never authorizes changing the old
@@ -228,6 +238,14 @@ int main(void)
     if(!initial) committed=await_commit();
     if(committed) result=hfa_run(&action_ops,&c,HEARTH_FILE_ACTION!=1);
     else result=hfa_cancel(&action_ops,&c);
+    if(initial==2) {
+        long bytes=syscall(103,3,kernel_log+84,sizeof(kernel_log)-92);
+        if(bytes>0&&(unsigned long)bytes<=sizeof(kernel_log)-92) {
+            binding_frame(kernel_log,"HFW_KLG1");put(kernel_log+76,(unsigned int)bytes);
+            put(kernel_log+80,crc(kernel_log+84,(unsigned int)bytes));kernel_log_size=84+(unsigned int)bytes;
+            for(i=0;i<8;i++) kernel_log[kernel_log_size++]=(unsigned char)"HFW_END1"[i];
+        }
+    }
     n=snprintf((char *)report+84,sizeof(report)-92,
         "{\"type\":\"file_action\",\"action\":%u,\"initial_error\":%d,\"preflight_target\":%d,"
         "\"commit_received\":%d,\"stage_error\":%d,\"window_opened\":%d,\"rw_attempted\":%u,"
@@ -235,23 +253,26 @@ int main(void)
         "\"cleanup_error\":%d,\"attempted\":%u,\"restored\":%u,\"committed\":%d,"
         "\"release_error\":%d,\"unmount_errors\":%u,\"seal_error\":%d,\"verified\":%d,"
         "\"safe_to_restart\":%d,\"complete\":%d,\"phase\":%u,\"protected\":%u,"
-        "\"program\":%u,\"erase\":%u,\"marker\":%u,\"failed\":%u,\"snapshot_available\":%u,\"encoding_verified\":%d}\n",
+        "\"program\":%u,\"erase\":%u,\"marker\":%u,\"failed\":%u,\"snapshot_available\":%u,\"encoding_verified\":%d,\"diagnostic\":%u,\"snapshot_target\":%d}\n",
         HEARTH_FILE_ACTION,initial,c.preflight_target,committed,result.stage_error,result.window_opened,
         result.rw_attempted,result.transaction_called,result.transaction.error,result.transaction.rollback_error,
         result.transaction.journal_error,result.transaction.cleanup_error,result.transaction.attempted,
         result.transaction.restored,result.transaction.committed,result.release_error,result.unmount_errors,
         result.seal_error,result.verified,result.safe_to_restart,result.complete,c.phase,c.protected,
-        c.programs,c.erases,c.markers,c.failed,snapshot_size?1U:0U,c.encoding_verified);
+        c.programs,c.erases,c.markers,c.failed,snapshot_size?1U:0U,c.encoding_verified,c.diagnostic,c.snapshot_target);
     if(n<=0||(unsigned int)n>=sizeof(report)-92) for(;;) pause_short();
     binding_frame(report,"HFW_RES1");put(report+76,(unsigned int)n);put(report+80,crc(report+84,(unsigned int)n));
     length=84+(unsigned int)n;
     for(i=0;i<8;i++) report[length++]=(unsigned char)"HFW_END1"[i];
     for(;;) {
-        const unsigned char *bytes=snapshot_size&&!part?snapshot:report;
-        unsigned int count=snapshot_size&&!part?snapshot_size:length;
+        const unsigned char *bytes;unsigned int count;
+        if(!part&&!snapshot_size) part=1;
+        if(part==1&&!kernel_log_size) part=2;
+        bytes=part==0?snapshot:part==1?kernel_log:report;
+        count=part==0?snapshot_size:part==1?kernel_log_size:length;
         int status=hearth_cached_transmit_step(&sending,tty,(const char *)bytes,count,transmit);
         if(status==HEARTH_TRANSMIT_DONE) {
-            if(snapshot_size&&!part) part=1;
+            if(part<2) part++;
             else { long delay[2]={1,0};part=0;nanosleep(delay,0); }
         }
         else pause_short();

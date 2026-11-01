@@ -1172,3 +1172,31 @@ private/file-writer-20261031/reencode-attempt-1 --execute-persistent-original-re
 Never auto retry. Review original bytes+encoding+WP/cleanup before native startup;
 unknown result means retainUSBpower/no reboot. Native UI recovery is unproven.
 See docs/research/compression-recovery-2026-10-31.md.
+
+## CURRENT URGENT: reencode preflight refused with zero writes; retain RAM
+
+7d313cb/reencode-v1 ran once. All66 ARM cases passed, real preflight refused:
+initial_error2/target-1/snapshot_available0. No commit/window/RW remount/transaction,
+all NAND counters0, sealed gate/WP1/safe_to_restart1. Host exited0. Evidence private
+file-writer-20261031/reencode-attempt-1. **No compression repair write happened.
+Never rerun reencode-v1. Unit stays sealed RAM/USB/base detached; do NOT request
+native startup.** No loader armed.
+
+New numeric diagnostic/snapshot_target fields and private bounded kernel-log
+frame identify future refusal stages; checks/write behavior unchanged. Explicit
+--resume-from-readonly accepts only matching completed sealed zero-write action3,
+all66 selftests, no decisions, same capsule/pin/kernel and known RAM identity.
+Prior frozen source is evidence only, never executed. Wrong plan/kernel, possible
+writes, native/staleROM and bad evidence refused.823tests/five skips/make check
+pass. helpers v8/repro, paired private reencode-v2/restore-none-v2/repros checked,
+reproduced and unexecuted. Kernelv6 unchanged. No native firmware executes on host.
+
+Next owner-timed restart (timing readiness pending), PTY:
+.venv/bin/python -m firmware.file_writer.run boot
+private/file-writer-20261031/reencode-v2 private/file-writer-20261031/restore-none-v2
+private/file-writer-20261031/reencode-attempt-2 --execute-writer-preflight
+--resume-from-readonly private/file-writer-20261031/reencode-attempt-1
+Existing conditional recovery authorization remains: only after66+realROchecks
+pass manually send --execute-persistent-original-reencode. If refused, inspect
+numeric fields/private kernel-log.bin, never raw log lines in public/model output,
+before another fix/write. Do not weaken preflight to force progress.

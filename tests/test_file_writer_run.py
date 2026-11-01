@@ -238,3 +238,82 @@ def test_snapshot_handoff_rejects_nonmatching_or_uncertain_prior_state(handoff, 
         (previous / "selftest.jsonl").write_bytes(b"{}\n")
     with pytest.raises(ValueError):
         run.require_snapshot_handoff(record, BINDING, previous, sysfs=sysfs)
+
+
+@pytest.fixture
+def readonly_repair(output):
+    old = output / "old-profile"
+    old.mkdir(mode=0o700)
+    record = {
+        "status": run.profile.STATUS,
+        "action": 3,
+        "device_executed": False,
+        "plan": BINDING.plan.hex(),
+        "capsule": "fixed private capsule",
+        "pin": "fixed private pin",
+        "kernel_files": {"kernel": "same frozen kernel"},
+    }
+    run.save(old, "file-action-profile.json", run.encode(record))
+    previous = output / "previous"
+    previous.mkdir(mode=0o700)
+    execution = {"action": 3, "plan": BINDING.plan.hex(), "profile": str(old)}
+    row = dict.fromkeys(p.FIELDS, 0)
+    row.update(
+        type="file_action",
+        action=3,
+        initial_error=2,
+        preflight_target=-1,
+        safe_to_restart=1,
+        phase=2,
+        protected=1,
+        error=-2,
+    )
+    for name, data in {
+        "execution.json": run.encode(execution),
+        "result.json": run.encode(row),
+        "observed.json": run.encode({"execution": execution, "result": row}),
+        "finished.json": run.encode({"host_command_exited": True}),
+        "selftest.jsonl": selftests(),
+    }.items():
+        run.save(previous, name, data)
+    usb = output / "1-1"
+    usb.mkdir()
+    (usb / "idVendor").write_text("0525")
+    (usb / "idProduct").write_text("a4a7")
+    return previous, record, output
+
+
+def test_zero_write_repair_resume_keeps_exact_kernel_and_plan(readonly_repair):
+    previous, record, sysfs = readonly_repair
+    binding = p.Binding(BINDING.plan, BINDING.receipt, 3)
+    assert (
+        run.require_readonly_resume(record, binding, previous, sysfs=sysfs)[
+            "native_startup_required"
+        ]
+        is False
+    )
+
+
+@pytest.mark.parametrize(
+    "fault", ("kernel", "plan", "decision", "native", "rom", "result", "selftest")
+)
+def test_repair_resume_refuses_changed_or_potentially_written_state(readonly_repair, fault):
+    previous, record, sysfs = readonly_repair
+    binding = p.Binding(BINDING.plan, BINDING.receipt, 3)
+    if fault == "kernel":
+        record = dict(record, kernel_files={})
+    elif fault == "plan":
+        record = dict(record, plan=(b"x" * 32).hex())
+    elif fault == "decision":
+        run.save(previous, "decision.json", b"{}")
+    elif fault in ("native", "rom"):
+        (sysfs / "1-1/idVendor").write_text("2464" if fault == "native" else "0451")
+        (sysfs / "1-1/idProduct").write_text("0002" if fault == "native" else "d00e")
+    elif fault == "selftest":
+        (previous / "selftest.jsonl").write_bytes(b"{}\n")
+    else:
+        row = json.loads((previous / "result.json").read_bytes())
+        row["program"] = 1
+        (previous / "result.json").write_bytes(run.encode(row))
+    with pytest.raises(ValueError):
+        run.require_readonly_resume(record, binding, previous, sysfs=sysfs)
