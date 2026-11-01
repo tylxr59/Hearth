@@ -1,0 +1,19 @@
+{
+  "date": "2026-11-01",
+  "scope": "protected read-only four-file network snapshot",
+  "host_passed": 929,
+  "optional_skips": 5,
+  "focused_passed": 49,
+  "make_check": "passed",
+  "reproduced_artifacts": 8,
+  "owner_native_selection": "primary/5.9.4-5",
+  "device_run": "one supervised PTY-backed run",
+  "capture": "four ordered complete records; host custody readback passed",
+  "baseline_match": "all four complete files",
+  "native_return": "owner home plus observed normal USB",
+  "flash_writes": false,
+  "firmware_execution_on_host": false,
+  "google_removal": false,
+  "restoration_verified": false,
+  "hvac_verified": false
+}

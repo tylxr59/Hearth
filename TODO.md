@@ -259,3 +259,10 @@ boot is armed. Do not send the5MiB native client to the existing1MiB installer.
 Prepare separate bounded fresh acquisition/update/restore and flash-fragment
 encoding checks before requesting the next device restart. Current HA0.2.0
 telemetry remains the working deployment. See dated network preparation record.
+
+
+Network follow-up2026-11-01: protected four-file acquisition PASSED, all originals
+match, private custody verified, owner home/native USB return confirmed. Host929/
+five skips/make check; eight artifacts reproduce. Next bounded streaming writer
+and RAM fault cases. No Google changes installed; device on USB charging. See
+docs/research/network-snapshot-result-2026-11-01.md.

@@ -1,6 +1,7 @@
 # Bounded network correction: proposed device contract
 
-Status: preparation only. No new device image, writer or execution command exists.
+Status: protected four-file acquisition is implemented and observed; the persistent
+writer remains preparation only. No network-update writer is armed.
 The working native HA 0.2.1 deployment provides the future local connectivity
 response; the thermostat's Google URLs have not changed.
 
@@ -21,14 +22,18 @@ limits. The active primary partition must be reconfirmed before acquisition.
 
 ## Fresh read-only acquisition
 
-Prepare an independently checked root0-only read-only RAM profile that streams
-these four files with fixed-size buffers. Capture full contents, exact length,
+The independently checked root0-only read-only RAM profile caches a bounded report
+and rereads each file through a small comparison buffer. It captures exact length,
 mode/ownership, filesystem identity and per-file SHA256 under a fresh session.
 Refuse links, unexpected file types/owners, duplicate targets, growth, truncation,
 unbounded records and absent completion. Compare against preserved lawful inputs;
 derive candidates only from the fresh records. Preserve the complete capture and
 its durable private receipt separately from any write image. A transport checksum
 or an unchanged 40-byte string alone cannot bind the rest of a 5 MiB executable.
+
+The [first supervised acquisition](../research/network-snapshot-result-2026-11-01.md)
+passed all four original comparisons and private custody readback; native return
+was confirmed. This closes fresh acquisition without implementing any writer.
 
 ## Full-file streaming replacement, not an in-place range write
 

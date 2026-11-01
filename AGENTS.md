@@ -1543,3 +1543,27 @@ reports available with all three state fields under HA0.2.1. Fresh private recei
 private/native-ha-local-probe-20261101/post-charge-telemetry.json. Reconnect passes;
 no new device writes/restarts were needed. Keep charging/power management separate
 from protocol failures. Google dependencies and native commands remain unfinished.
+
+
+## CURRENT: four network originals acquired; prepare bounded writer
+
+Owner keeps USB connected/base detached for charging/testing. New network_snapshot
+uses unchanged protected kernel, root0-only RO mount, original syscall code and no
+native libraries/app/logs. Cache7471232 bytes, limits6MiB/1MiB/64KiB/64KiB; old
+installer bounds unchanged. Host929/five optional skips/make check/49 focused cases
+pass. All8 artifacts reproduce. Owner confirmed primary/5.9.4-5, readiness and
+restart. One PTY run passed: all4 originals match preserved inputs, private custody
+and600 modes independently verified. No flash writes or firmware execution on host.
+
+Executed ONCE: private/network-snapshot-20261101/profile-v1. Never run it or
+profile-v1-repro again. Builds build/network-snapshot-20261101-v1 and -v1-repro.
+Capture/backup private/network-snapshot-20261101/attempt-1; separate immutable
+attempt-1-record.json binds source recipes/profile/capture. Owner confirmed home
+return; native2464:0002 independently observed. No loader running. File bytes
+5122360/687028/3063/10380,total5822831. statfs available21782528 includes dirty
+reclaimable space and is not an allocation guarantee. Device stays on USB charging.
+
+Next separately bounded full-file streaming temporary replacement/restore with
+whole-file hash/span identity, plan-derived originals/journal, fresh space checks,
+root0-only gate and NONE/ZERO audit. No Google update installed. See dated snapshot
+result and architecture/0002-network-update-plan.md. No physical control authorized.
