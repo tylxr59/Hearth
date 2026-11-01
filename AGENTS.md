@@ -1652,3 +1652,26 @@ Neither selected profile has executed; execution-started marker must be absent.
 Preserve older unexecuted draft1/draft2 packages. Sources/recipes are immutable
 once an attempt starts. Await owner filtered primary/version and new persistent
 operation readiness before arming. Do not mark Google traffic removed yet.
+
+## CURRENT: network four-file install PASSED; native/network return pending
+
+Owner freshly confirmed primary/5.9.4-5 and readiness after concrete NAND/power-loss
+notice. PTY boot ran network-install-v1 ONCE from source a2089a3, output
+private/network-snapshot-20261101/network-install-attempt-1; never rerun this image
+or its repro. All41+20 RAM cases passed, childstatus/output0; all4 real originals
+and resource guards passed. FreeRAM50933760, flashavailable21774336 versus required
+19565645 bytes. Matching restore image rechecked, separate scoped commit sent under
+owner's checked-update readiness authorization. No automatic device retry.
+
+Loader/collector exited0. Strict final report: action1 complete1/safe_to_restart1/
+encoding_verified1, attempted15/restored0/committed1, phase2/protected1, program5808,
+erase0/marker0/failed0. Whole selected bytes/modes plus target/backup/journal encoding
+passed after unmount/seal/remountRO. Independent immutable attempt record preserved
+at private/network-snapshot-20261101/network-install-attempt-1-record.json; original
+creation/backup/preparation records unchanged. Restore-v1 is still UNEXECUTED.
+No further loader or persistent operation is running. Owner must now perform full
+10-second hold/release/single press with USB/base detached and confirm home/attach
+screen; independently verify nativeUSB. Then start HA rejection/availability watch
+and ask unwired-base WiFi return plus router destination metadata check. Native UI,
+actual new connectivity/NIST destinations and fresh HA uploads are NOT YET observed.
+No whole-firmware recovery, large-file NAND restoration, physical HVAC/control claim.
