@@ -1,6 +1,6 @@
 /* Original separate four-file contract (MIT). Legacy1MiB header is unchanged.
  * Reuses the transaction implementation with fixed root0 targets and RAM-backed
- * immutable originals/candidates. Two cache arenas are each bounded7,471,104B. */
+ * immutable originals/candidates. Opaque original DATA and private COW candidates are immutable after verification. */
 #ifndef HEARTH_FILE_POSIX_H
 #define HEARTH_FILE_POSIX_H
 #include "../file_install/transaction.h"

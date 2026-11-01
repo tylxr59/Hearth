@@ -287,8 +287,17 @@ def require_readonly_resume(record, binding, previous, *, sysfs=Path("/sys/bus/u
     return {"status": "reviewed-zero-write-repair-resume", "native_startup_required": False}
 
 
-def receive(fd, output, binding, execution, recheck):
-    session = Session(binding, lambda name, data: save(output, name, data))
+def receive(
+    fd,
+    output,
+    binding,
+    execution,
+    recheck,
+    *,
+    session_factory=Session,
+    ready_message="All 72 RAM selftests and real-file read-only preflight passed. Waiting for a separate local commit or abort; no writes authorized yet.",
+):
+    session = session_factory(binding, lambda name, data: save(output, name, data))
     decoder = protocol.Decoder(binding)
     deadline, ready_saved = time.monotonic() + 240, False
     while time.monotonic() < deadline:
@@ -297,7 +306,7 @@ def receive(fd, output, binding, execution, recheck):
             ready_saved = True
             deadline = time.monotonic() + 540  # Below target's 600-second bound.
             print(
-                "All 72 RAM selftests and real-file read-only preflight passed. Waiting for a separate local commit or abort; no writes authorized yet.",
+                ready_message,
                 flush=True,
             )
         decision = output / "decision.json"
@@ -347,19 +356,34 @@ def receive(fd, output, binding, execution, recheck):
     raise TimeoutError("RAM session expired; no automatic retry or commit")
 
 
-def decide(output, *, commit, expected_action):
+def decide(output, *, commit, expected_action, checker=None):
     output = private_path(output)
     execution = json.loads(private_read(output / "execution.json", 65536))
     if execution != json.loads(private_read(output / "preflight.json", 65536)):
         raise ValueError("exact live preflight required")
-    if any((output / name).exists() for name in ("finished.json", "result.json", "decision.json")):
+    if any(
+        (output / name).exists()
+        for name in (
+            "finished.json",
+            "result.json",
+            "decision.json",
+            "decision-sending.json",
+            "decision-sent.json",
+        )
+    ):
         raise ValueError("execution is no longer awaiting its first decision")
-    if type(expected_action) is not int or expected_action != execution["action"]:
+    if (
+        type(commit) is not bool
+        or type(expected_action) is not int
+        or expected_action != execution["action"]
+    ):
         raise ValueError("explicit install/restore action must match live profile")
     if not 0 <= time.monotonic() - execution["started_monotonic"] < 780:
         raise ValueError("execution decision has expired")
     os.kill(execution["pid"], 0)  # Fail closed when the waiting host process exited.
-    _, binding = checked_pair(execution["profile"], execution["recovery"])
+    _, binding = (checked_pair if checker is None else checker)(
+        execution["profile"], execution["recovery"]
+    )
     if binding.action != expected_action or binding.plan.hex() != execution["plan"]:
         raise ValueError("live execution plan changed")
     save(output, "decision.json", encode({"execution": execution, "commit": commit}))

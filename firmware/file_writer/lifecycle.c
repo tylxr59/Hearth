@@ -1,6 +1,12 @@
 /* Original write lifecycle, MIT. Remount attempts count as potentially persistent
  * even when the syscall fails: the filesystem may have started background GC. */
 #include "lifecycle.h"
+#ifndef HEARTH_FILE_MASK
+#define HEARTH_FILE_MASK 511U
+#endif
+#if HEARTH_FILE_MASK != 511U && HEARTH_FILE_MASK != 15U
+#error "Only the reviewed nine-file and four-file scopes are supported"
+#endif
 static int valid(const struct hfa_ops *ops,void *context)
 {
     return context&&ops&&ops->preflight&&ops->open_window&&ops->remount_rw&&
@@ -38,7 +44,7 @@ done:
     finish(ops,context,&r);
     if(r.transaction_called&&r.safe_to_restart&&!r.stage_error&&!r.transaction.error&&
        !r.transaction.rollback_error&&!r.transaction.journal_error&&!r.transaction.cleanup_error) {
-        if(restoring) r.complete=!r.transaction.committed&&r.transaction.attempted==511&&r.transaction.restored==511;
+        if(restoring) r.complete=!r.transaction.committed&&r.transaction.attempted==HEARTH_FILE_MASK&&r.transaction.restored==HEARTH_FILE_MASK;
         else r.complete=r.transaction.committed==1;
     }
     return r;

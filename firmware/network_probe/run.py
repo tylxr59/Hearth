@@ -40,7 +40,13 @@ def decode(frame, session):
         or zlib.crc32(frame[48:-8]) != checksum
     ):
         raise ValueError("network preflight transport failure")
-    row = loads(frame[48:-8])
+    return validate_payload(frame[48:-8])
+
+
+def validate_payload(payload):
+    if len(payload) > LIMIT:
+        raise ValueError("bounded network RAM evidence required")
+    row = loads(payload)
     integers = {
         "stream_cases",
         "transaction_cases",

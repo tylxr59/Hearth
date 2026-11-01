@@ -2,11 +2,13 @@
 #include <linux/mutex.h>
 #include <linux/sysfs.h>
 #include "io.h"
-/* Only these two named views are registered. All other flash regions remain
+/* Only the scoped named views are registered. All other flash regions remain
  * inaccessible to filesystems, and master guards also enforce these bounds. */
 static struct mtd_partition hfw_partitions[]={
     { .name="root0", .offset=12ULL*1048576, .size=46ULL*1048576 },
+#ifndef HEARTH_ROOT0_ONLY
     { .name="user-config", .offset=116ULL*1048576, .size=8ULL*1048576 }
+#endif
 };
 static int hfw_shape(struct mtd_info *mtd)
 {
@@ -38,13 +40,13 @@ static ssize_t hfw_show(struct device *dev,struct device_attribute *attr,char *b
 }
 static ssize_t hfw_store(struct device *dev,struct device_attribute *attr,const char *buffer,size_t length)
 {
-    struct hfw_request r;int result=-EINVAL;
+    struct hfw_request r;int result=-EINVAL;unsigned int i;
     memset(&r,0,sizeof(r));r.mtd=hfw_master;
     mutex_lock(&hfw_mutex);
     if(length==72&&!memcmp(buffer,"HFWOPEN1",8)&&!hfw_shape(hfw_master)) {
         result=hf_open(&hfw_window,(const unsigned char *)buffer+8,
                        (const unsigned char *)buffer+40,hearth_wp_is_asserted(hfw_master));
-        if(!result) { hfw_parts[0]->flags|=MTD_WRITEABLE;hfw_parts[1]->flags|=MTD_WRITEABLE; }
+        if(!result) for(i=0;i<HFW_PART_COUNT;i++) hfw_parts[i]->flags|=MTD_WRITEABLE;
     } else if(length==8&&!memcmp(buffer,"HFWCLOSE",8)) {
         hfw_flags_readonly();result=hf_close(&hfw_window,&hfw_io,&r);
     }
@@ -72,8 +74,12 @@ static int hfw_install(struct mtd_info *mtd)
 static int hfw_register(struct device *dev)
 {
     int result;unsigned int i;
-    hfw_parts[0]=get_mtd_device_nm("root0");hfw_parts[1]=get_mtd_device_nm("user-config");
-    for(i=0;i<2;i++) {
+    if(ARRAY_SIZE(hfw_partitions)!=HFW_PART_COUNT) return -EINVAL;
+    hfw_parts[0]=get_mtd_device_nm("root0");
+#ifndef HEARTH_ROOT0_ONLY
+    hfw_parts[1]=get_mtd_device_nm("user-config");
+#endif
+    for(i=0;i<HFW_PART_COUNT;i++) {
         if(IS_ERR(hfw_parts[i])) { hfw_parts[i]=NULL;result=-ENODEV;goto fail; }
         if(hfw_parts[i]->flags||hfw_parts[i]->size!=(i?8ULL:46ULL)*1048576||
            hfw_parts[i]->index!=i||hfw_parts[i]->erasesize!=131072||
@@ -84,7 +90,7 @@ static int hfw_register(struct device *dev)
     if(!result) return 0;
     device_remove_file(dev,&dev_attr_hearth_file_status);
 fail:
-    for(i=0;i<2;i++) {
+    for(i=0;i<HFW_PART_COUNT;i++) {
         if(hfw_parts[i]&&!IS_ERR(hfw_parts[i])) put_mtd_device(hfw_parts[i]);
         hfw_parts[i]=NULL;
     }
@@ -96,5 +102,5 @@ static void hfw_remove(struct device *dev)
     memset(&r,0,sizeof(r));r.mtd=hfw_master;mutex_lock(&hfw_mutex);
     hfw_flags_readonly();hf_close(&hfw_window,&hfw_io,&r);mutex_unlock(&hfw_mutex);
     device_remove_file(dev,&dev_attr_hearth_file_control);device_remove_file(dev,&dev_attr_hearth_file_status);
-    for(i=0;i<2;i++) if(hfw_parts[i]) { put_mtd_device(hfw_parts[i]);hfw_parts[i]=NULL; }
+    for(i=0;i<HFW_PART_COUNT;i++) if(hfw_parts[i]) { put_mtd_device(hfw_parts[i]);hfw_parts[i]=NULL; }
 }

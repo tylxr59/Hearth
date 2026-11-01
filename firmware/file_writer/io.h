@@ -4,9 +4,14 @@
  */
 #include "binding.h"
 #include "core.c"
+#ifdef HEARTH_ROOT0_ONLY
+#define HFW_PART_COUNT 1
+#else
+#define HFW_PART_COUNT 2
+#endif
 static DEFINE_MUTEX(hfw_mutex);
 static struct hf_window hfw_window;
-static struct mtd_info *hfw_master,*hfw_parts[2];
+static struct mtd_info *hfw_master,*hfw_parts[HFW_PART_COUNT];
 static int (*hfw_saved_write)(struct mtd_info *,loff_t,size_t,size_t *,const u_char *);
 static int (*hfw_saved_erase)(struct mtd_info *,struct erase_info *);
 static int (*hfw_saved_oob)(struct mtd_info *,loff_t,struct mtd_oob_ops *);
@@ -64,7 +69,7 @@ static int hfw_perform(void *opaque,enum hf_operation operation,void *request)
 static const struct hf_io hfw_io={hfw_protected,hfw_protect,hfw_perform};
 static void hfw_flags_readonly(void)
 {
-    unsigned int i;for(i=0;i<2;i++) if(hfw_parts[i]) hfw_parts[i]->flags&=~MTD_WRITEABLE;
+    unsigned int i;for(i=0;i<HFW_PART_COUNT;i++) if(hfw_parts[i]) hfw_parts[i]->flags&=~MTD_WRITEABLE;
 }
 static int hfw_read_ready(struct mtd_info *mtd)
 {

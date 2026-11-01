@@ -32,8 +32,10 @@ int hf_range(enum hf_operation operation,unsigned long long at,unsigned int leng
         if(length!=8||(at&131071U)) return -1;
         span=2048;
     } else return -1;
-    if((at>=12*MIB&&at<58*MIB&&span<=58*MIB-at)||
-       (at>=116*MIB&&at<124*MIB&&span<=124*MIB-at)) return 0;
+    if(at>=12*MIB&&at<58*MIB&&span<=58*MIB-at) return 0;
+#ifndef HEARTH_ROOT0_ONLY
+    if(at>=116*MIB&&at<124*MIB&&span<=124*MIB-at) return 0;
+#endif
     return -1;
 }
 static int valid_io(const struct hf_io *io)

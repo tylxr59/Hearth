@@ -1603,3 +1603,52 @@ protected snapshot kernel), so original DATA can be privately packaged compresse
 without host linking/executing proprietary ELF. Source docs now reflect bounded
 RAM backing rather than avoiding all whole-file caches. No Google fix installed.
 See docs/research/network-ram-result-2026-11-01.md.
+
+## CURRENT: root0-only network writer preparation (not executed)
+
+New firmware/network_writer has scoped kernel/action/data/profile/session/run.
+Root0-only conditional gate/partition registration and four-target lifecycle mask
+retain old nine-file defaults. Kernel build/network-writer-kernel-20261101-v2 and
+-v2-repro passed offline checks and all6 kernel/bootstrap artifact bytes match.
+Original pinned public source archives were used offline; initial v1 source draft
+failed for a missing protection header, corrected before v2. Preserve draft/logs.
+No new loader or write has been armed. Native USB independently remains normal.
+
+Device has64MiB RAM. Action packages all4 original files as root-only0400 DATA,
+read-only original mmap/private COW candidate mmap, complete SHA/span validation,
+then mprotect READ. No vendor ELF executes/links on host. Both aliases mount only
+root0 (/native,/archive), with plan-specific root0 rollback archive; user-config
+not registered/allowed. Forced NONE/GZIP kernel and old encoding audit retained.
+24MiB MemFree guard; install space3*sum+2MiB, restore largest+4MiB; dirty statfs
+space is not a guarantee. Existing transaction/sync/rename/restore behavior reused.
+
+Separate immutable local backup private/local-recovery-20261101-network/backup
+verified equal fresh snapshot, under existing owner one-local-unencrypted-archive
+exception; no second target/encryption permission question. Current reviewed
+plan/pin still network-plan-v2/reviewed-network-plan-v2.json. Kernel includes exact
+plan/receipt binding. Profile recipes inspect critical pinned public kernel sources.
+New run never commits automatically:61 synthetic checks ->ACK root RO preflight ->
+resource-info ->READY ->separate local commit/abort. Persistent intent durable before
+USB token; no automatic retry. Direct RAM recovery only accepts matching exited
+persistent attempt and prepared restore action2. Protected old profiles remain
+immutable; updated source checkers are not licenses to rerun them.
+
+Host full suite1086 passed/five optional skips before adding final large mapped
+install/restore case (that focused11-test suite also passes); make check passed.
+Final source checks/profile reproducibility and full tally still need recording.
+Unexecuted draft1/draft2 and network-install-v1 images remain private, never run.
+Final pair preparation in progress; confirm manifests against current recipes
+before selecting exact next payload. Whole-firmware/power-loss and large-file
+NAND restoration remain unverified. Advance concrete notification/readiness and
+fresh filtered primary/5.9.4-5 are needed before this new persistent operation.
+
+Final preparation verified:1087 host tests passed/five optional skips, make check,
+11 large mapped-data custody/install/restore checks, root0 gate/lifecycle fault
+checks. Selected private profiles network-install-v1 / network-restore-v1 under
+private/network-snapshot-20261101; matching network-install-repro-v1 /
+network-restore-repro-v1 are offline-only. All10 artifacts per action reproduce;
+install/restore USB images4167686/4167667 bytes. Offline checked_pair passes.
+Neither selected profile has executed; execution-started marker must be absent.
+Preserve older unexecuted draft1/draft2 packages. Sources/recipes are immutable
+once an attempt starts. Await owner filtered primary/version and new persistent
+operation readiness before arming. Do not mark Google traffic removed yet.

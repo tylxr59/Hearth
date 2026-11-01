@@ -221,7 +221,14 @@ FLAGS = {
 }
 
 
-def validate_result(payload, action):
+def validate_result(payload, action, *, target_count=9):
+    if (
+        type(target_count) is not int
+        or target_count not in (4, 9)
+        or (target_count == 4 and action not in (1, 2))
+    ):
+        raise ValueError("reviewed four/nine-target result scope required")
+    mask = (1 << target_count) - 1
     if len(payload) > MAX_PAYLOAD:
         raise ValueError("file-action result exceeds bound")
     row = loads(payload)
@@ -237,21 +244,21 @@ def validate_result(payload, action):
         raise ValueError("exact bound file-action result required")
     if (
         not 0 <= row.get("diagnostic", 0) <= 200
-        or not -1 <= row.get("snapshot_target", -1) <= 8
+        or not -1 <= row.get("snapshot_target", -1) < target_count
         or not 0 <= row.get("settings_state", 5) <= 7
     ):
         raise ValueError("bounded startup diagnostic fields required")
     if (
         any(row[key] not in (0, 1) for key in FLAGS)
         or row["initial_error"] not in (0, 1, 2)
-        or not -1 <= row["preflight_target"] <= 8
+        or not -1 <= row["preflight_target"] < target_count
         or not 0 <= row["stage_error"] <= 5
         or not -8 <= row["error"] <= 0
         or row["rw_attempted"] not in (0, 1, 3)
         or not 0 <= row["unmount_errors"] <= 3
         or row["phase"] not in (0, 1, 2)
-        or not 0 <= row["attempted"] <= 511
-        or not 0 <= row["restored"] <= 511
+        or not 0 <= row["attempted"] <= mask
+        or not 0 <= row["restored"] <= mask
         or row["restored"] & ~row["attempted"]
         or any(not 0 <= row[key] < 2**32 for key in ("program", "erase", "marker", "failed"))
         or row["failed"] > row["program"] + row["erase"] + row["marker"]
@@ -276,7 +283,7 @@ def validate_result(payload, action):
     if (row["attempted"] or row["restored"] or row["committed"]) and not row["transaction_called"]:
         raise ValueError("transaction outcome lacks invocation evidence")
     if row["committed"] and (
-        action != 1 or row["attempted"] != 511 or row["error"] or row["restored"]
+        action != 1 or row["attempted"] != mask or row["error"] or row["restored"]
     ):
         raise ValueError("committed outcome contradicts complete installation")
     if row["snapshot_available"] and row["initial_error"] != 2:
@@ -304,9 +311,9 @@ def validate_result(payload, action):
             "rollback_error": 0,
             "journal_error": 0,
             "cleanup_error": 0,
-            "attempted": 511,
+            "attempted": mask,
             "committed": int(action == 1),
-            "restored": 0 if action == 1 else 511,
+            "restored": 0 if action == 1 else mask,
             "release_error": 0,
             "unmount_errors": 0,
             "seal_error": 0,

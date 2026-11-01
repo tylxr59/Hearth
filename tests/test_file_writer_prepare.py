@@ -38,7 +38,7 @@ def test_writer_patch_preserves_initial_guards_and_registers_only_two_views(monk
         "hfw_save(&info->mtd)",
         "hearth_block_mtd_writes",
         "hfw_install(&info->mtd)",
-        "add_mtd_partitions(&info->mtd, hfw_partitions, 2)",
+        "add_mtd_partitions(&info->mtd, hfw_partitions, ARRAY_SIZE(hfw_partitions))",
         "hfw_register(&pdev->dev)",
     ]
     positions = [patched.index(item) for item in ordered]

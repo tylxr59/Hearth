@@ -1,0 +1,22 @@
+{
+  "scope": "Original public git-archive source tar bytes, not owner firmware; retain upstream licenses.",
+  "archives": {
+    "nestdfu": {
+      "paths": [
+        "Dev/linux",
+        "Dev/u-boot"
+      ],
+      "repository": "https://github.com/exploiteers/NestDFUAttack",
+      "revision": "930b834b7f1f082b8761aa5c5af765b4b3e99dc9",
+      "sha256": "926f54c5cdf972336aa675af6551295c6698023f70f655f1ae23f0fb08053e3c"
+    },
+    "xloader": {
+      "paths": [
+        "x-loader"
+      ],
+      "repository": "https://nest-open-source.googlesource.com/nest-learning-thermostat/5.9.4/x-loader",
+      "revision": "9b7bb7281b715544e6f5201390d8dac416a4a494",
+      "sha256": "2cc2a15cfbf815de076047947578f157fe3fd9d3bc950e97f29d6c1211823ae9"
+    }
+  }
+}

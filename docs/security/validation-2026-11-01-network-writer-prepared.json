@@ -1,0 +1,22 @@
+{
+  "status": "network-writer-offline-preparation-checked",
+  "host_tests_passed": 1087,
+  "optional_integration_skips": 5,
+  "make_check": "passed",
+  "kernel_artifacts_reproduced": 6,
+  "install_artifacts_reproduced": 10,
+  "restore_artifacts_reproduced": 10,
+  "install_image_bytes": 4167686,
+  "restore_image_bytes": 4167667,
+  "target_count": 4,
+  "scope": "root0 only; whole-file fixed-plan replacement and restoration",
+  "ram_cases_required_before_real_preflight": 61,
+  "prior_protected_arm_cases_observed": 61,
+  "mapped_data_host_checks": 11,
+  "device_executed_new_profile": false,
+  "new_flash_writes": false,
+  "google_removal_observed": false,
+  "large_file_nand_restore_verified": false,
+  "whole_firmware_recovery_verified": false,
+  "physical_hvac_verified": false
+}

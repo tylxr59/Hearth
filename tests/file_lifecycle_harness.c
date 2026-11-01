@@ -3,6 +3,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include "../firmware/file_writer/lifecycle.h"
+#ifndef HEARTH_FILE_MASK
+#define HEARTH_FILE_MASK 511U
+#endif
 struct fake { int scenario,restoring,transacted,wanted_new;char calls[64];unsigned int used; };
 static void add(struct fake *f,char c) { assert(f->used<sizeof(f->calls)-1);f->calls[f->used++]=c;f->calls[f->used]=0; }
 static int preflight(void *p) { struct fake *f=p;add(f,'p');return f->scenario==1?-1:0; }
@@ -11,9 +14,9 @@ static int remount(void *p,unsigned int i) { struct fake *f=p;add(f,'0'+i);retur
 static void transact(void *p,struct hearth_install_result *r)
 {
     struct fake *f=p;add(f,'t');f->transacted=1;memset(r,0,sizeof(*r));
-    r->attempted=511;r->committed=!f->restoring;if(f->restoring) r->restored=511;
+    r->attempted=HEARTH_FILE_MASK;r->committed=!f->restoring;if(f->restoring) r->restored=HEARTH_FILE_MASK;
     if(f->scenario==11||f->scenario==12) {
-        r->error=HEARTH_ACTIVATE_FAILED;r->committed=0;r->restored=511;
+        r->error=HEARTH_ACTIVATE_FAILED;r->committed=0;r->restored=HEARTH_FILE_MASK;
         if(f->scenario==12) { r->rollback_error=1;r->restored=0; }
     }
     if(f->scenario==13) r->cleanup_error=1;

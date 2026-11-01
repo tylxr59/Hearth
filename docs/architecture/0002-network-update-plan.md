@@ -74,8 +74,10 @@ networking is needed inside the RAM harness.
 
 The [combined ARM run](../research/network-ram-result-2026-11-01.md) subsequently
 passed all 61 synthetic cases and four real preflights. Source/artifact and complete
-host-custody verification also pass. Persistent kernel/lifecycle/restore packaging
-is still unfinished; these measurements do not authorize bypassing those checks.
+host-custody verification also pass. The subsequent [root0-only writer preparation](../research/network-writer-preparation-2026-11-01.md)
+closes offline kernel/lifecycle/restore packaging and reproducibility. The new
+write-capable images remain unexecuted; the protected measurements do not
+authorize bypassing their actual read-only preflight or separate write decision.
 
 Only after those pass may a fresh owner-timed boot perform read-only real-file
 preflight and pause. A separate scoped commit must remain bound to its session,

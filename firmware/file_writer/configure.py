@@ -95,7 +95,7 @@ def patch_driver(original):
     text = (
         text[:start]
         + (
-            "\n\terr = add_mtd_partitions(&info->mtd, hfw_partitions, 2);\n"
+            "\n\terr = add_mtd_partitions(&info->mtd, hfw_partitions, ARRAY_SIZE(hfw_partitions));\n"
             "\tif (!err) err = hfw_register(&pdev->dev);\n"
             "\tif (err) {\n\t\tdel_mtd_partitions(&info->mtd);\n"
             "\t\tgoto out_release_mem_region;\n\t}\n"

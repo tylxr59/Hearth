@@ -7,8 +7,18 @@ from firmware.file_writer import protocol as p
 
 
 class Session:
-    def __init__(self, binding, save):
+    def __init__(
+        self,
+        binding,
+        save,
+        *,
+        selftest_validator=p.validate_selftest,
+        result_validator=p.validate_result,
+    ):
         self.binding, self.save = binding, save
+        if not callable(selftest_validator) or not callable(result_validator):
+            raise TypeError("trusted explicit evidence validators required")
+        self.selftest_validator, self.result_validator = selftest_validator, result_validator
         self.selftest = self.ready = self.committed = self.aborted = False
         self.snapshot = self.result = None
         self.info = None
@@ -26,7 +36,7 @@ class Session:
             raise ValueError("USB integrity failure; no automatic retry")
         if kind == p.SELFTEST:
             self.save("selftest.jsonl", payload)
-            p.validate_selftest(payload)
+            self.selftest_validator(payload)
             self.selftest = True
             reply = self.binding.prefix(b"HFW_ACK1")
         elif kind == p.READY:
@@ -69,7 +79,7 @@ class Session:
             reply = None
         elif kind == p.RESULT:
             self.save("result.json", payload)
-            row = p.validate_result(payload, self.binding.action)
+            row = self.result_validator(payload, self.binding.action)
             if not self.selftest or row["commit_received"] != int(self.committed):
                 raise ValueError("result disagrees with host commit history")
             if bool(row["snapshot_available"]) != (self.snapshot is not None):
