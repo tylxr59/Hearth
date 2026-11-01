@@ -77,3 +77,18 @@ The paired restore/reencode profiles are prepared but unexecuted. Native UI
 startup under the newly installed files is the next owner check; it has not yet
 passed. Keep Wi-Fi unconfigured for that check. No native network, MQTT control,
 whole-firmware/power-loss recovery or HVAC claim follows from this installation.
+
+
+## Native UI after corrected installation
+
+The owner followed the requested USB-disconnected, completely unwired-base
+startup check and reported that the UI works. This is the first owner-observed
+working native UI under the corrected nine-file installation. Private
+native-ui-return.json attributes the observation; it does not establish physical
+TLS/time, backend telemetry or control/HVAC behavior.
+
+The backend management endpoint is reachable with its owner CA and management
+credential. A new read-only ten-minute watch began with unavailable/no-state,
+before Wi-Fi commissioning. The owner has been prompted to join the isolated IoT
+SSID through the thermostat's normal UI, entering its password only there. No
+physical network exchange has been observed yet, and commands remain disabled.

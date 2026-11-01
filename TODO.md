@@ -214,3 +214,8 @@ committed all nine files, verified exact contents/modes plus active flash encodi
 and sealed write protection:131 page programs, zero failures. Host exited0.
 Next native UI check under the new installation, then isolated native networking;
 neither is passed yet. See docs/research/recommissioning-preparation-2026-10-31.md.
+
+
+Owner subsequently confirmed the working native UI under the corrected nine-file
+installation. Fresh read-only HTTPS backend watch is active; first isolated Wi-Fi
+commissioning and actual native state exchange are pending. Commands remain disabled.

@@ -1343,3 +1343,24 @@ network/TLS/time/native protocol/MQTTcontrols/HVAC remain unverified. Backend pa
 retained. See docs/research/recommissioning-preparation-2026-10-31.md. Host852/five
 optional skips/makecheck remain latest source validation; no runtime source edits
 since78ad40d. Pending source changes now document these actual observations only.
+
+
+## CURRENT: modified native UI works; first Wi-Fi bench pending
+
+Owner reported "yeah, UI is working" after the requested USB-disconnected fully
+unwired-base restart. Private recommission-install-attempt-1/native-ui-return.json
+preserves this. Do not call this stock configuration now: corrected nine-file
+modifications are installed, selected bytes/encoding verified, native UI works.
+No loader running; USB is disconnected and base completely unwired for Wi-Fi.
+
+Fresh read-only HTTPS watch from new machine-local
+build/watch-private-native-bench-recommissioned-20261031.py is active10min, output
+private/native-deployment-20261031/native-wifi-bench-20261031-attempt-2.
+Uses current capsulev4 CA, actual manager credential; only sanitized availability/
+state-field names printed. Initial GET succeeded with unavailable/no state.
+Watch exec session18753; bounded process exits itself. Never run old enroll script
+or overwrite existing watch output. Owner was prompted through async input to use
+normal Wi-Fi UI to join dedicated IoT SSID and report resulting screen/error;
+password only on device. Await their result; poll read-only watch sensibly while
+working. No commands/HVAC. If watch expires, preserve and use a fresh output for
+any new observation. Physical native network/TLS/time/backend exchange still pending.
