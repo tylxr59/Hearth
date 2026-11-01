@@ -65,3 +65,28 @@ Only credential hashes persist in the backend. State and commands are volatile; 
 ## Consequences
 
 Python runs on a current host, never imposed on the old ARM userspace. MQTT gives a small HA boundary without a custom HA integration dependency. No management UI or additional UI listener exists; HA is the control UI. Hardware commissioning and secure stock-client transport remain critical path. If TLS cannot be verified on stock nlclient, evaluate a mutually authenticated local tunnel on a proven-compatible runtime; until then keep devices offline, with no plaintext production fallback.
+
+
+## 2026-10-31 owner decision: native Home Assistant endpoint
+
+The owner explicitly selected a native HA integration and immediate retirement
+of Hearth's MQTT deployment after the broker-backed telemetry baseline passed.
+The updated target retains the native HTTPS protocol but hosts its receiver
+inside HA Core and publishes entity updates directly. The generated integration
+package reuses the canonical transport/authentication implementation and excludes
+MQTT and provisioning material. It is independently tested against HA2026.10.4.
+
+```mermaid
+flowchart LR
+  N[Native Nest client and control] -->|HTTPS and unique assigned credential| H[Hearth listener inside HA Core]
+  H --> S[Native HA sensor entities]
+```
+
+The integration is now physically observed receiving the three sensor readings,
+with owner-confirmed HA display. The old app/bridge is retired and its owned
+retained entities cleared. Existing device and server trust/enrollment were retained;
+the advertised transport origin uses the owner's IoT address, while the stored
+registration URL's final update remains pending. Native command delivery is still
+disabled, and the observed Google connectivity/time dependencies remain unresolved.
+This supersedes the MQTT host deployment target, without claiming HVAC safety or
+complete legacy-protocol/outbound compatibility.

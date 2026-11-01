@@ -11,9 +11,9 @@ container-test: image
 	HEARTH_CONTAINER_ENGINE=$(CONTAINER_ENGINE) HEARTH_CONTAINER_TEST=1 $(PYTHON) -m pytest -q tests/test_container.py
 
 check:
-	$(PYTHON) -m ruff check backend firmware provisioning tools tests
-	$(PYTHON) -m ruff format --check backend firmware provisioning tools tests
-	$(PYTHON) -m bandit -q -r backend firmware provisioning tools
+	$(PYTHON) -m ruff check backend firmware provisioning tools tests homeassistant/custom_components
+	$(PYTHON) -m ruff format --check backend firmware provisioning tools tests homeassistant/custom_components
+	$(PYTHON) -m bandit -q -r backend firmware provisioning tools homeassistant/custom_components
 
 audit:
 	$(PYTHON) -m pip_audit --disable-pip --require-hashes -r requirements.lock

@@ -1406,3 +1406,94 @@ names. Initialcounters empty/stateempty. Review actual reason before altering
 protocol validation; no hypothetical relaxation. All earlier executedprofiles and
 watchoutputs preserved. If watch expires, usefreshoutput; no automaticdevice retry.
 See docs/research/native-wifi-result-2026-10-31.md.
+
+
+## CURRENT OWNER OVERRIDE: native HA target; MQTT retired; first handoff underway
+
+Read-only native→backend→MQTT→HA telemetry succeeded after a fresh native startup:
+one bucket_shape refusal then accepted temperature/humidity/target_temperature,
+online>4min, independent TLSMQTT subscriber received3 discovery/state+availability,
+HAregistry3enabled and ownerallnumeric confirmed. Private native-mqtt-observation-
+20261031-v1 preserves proof. No decoder relaxation or command delivery occurred.
+
+Owner then chose nativeHA, supplied HA IoT address (ONLY in private/native-ha-
+migration-20261031/targets.json), and explicitly said nukeMQTTnow. This supersedes
+keep-it-running advice. Stopped local_hearth0.1.1, cleared7ownedretainedtopics with
+PUBACK success, fresh subscriberfoundnone, HA MQTTregistryentriesgone. Otherbroker/
+HA MQTTdevices untouched. Old app/source/privatebackups preserved but stopped;
+DO NOT start Hearth Laboratory: it would reintroduceMQTT and conflictport8443.
+
+Built original native HA customintegration under homeassistant/custom_components/
+hearth, packaged by tools.package_native_ha. Canonicalbackend modules copied with
+AST-limited relative-import rewrite; CLI/MQTTmodule/provisioning/credentials excluded.
+Generated deployment path build/native-ha-package-20261031-v2/repro, all19files
+reproduce. Raw source template lacks generated _backend: install built package.
+Three pushsensors, expiry/unload, configflow/importunique ID; TLS/profile checks;
+no keys/creds in configentrydata, commands disabled. Profilefixed5privatefiles under
+HAconfig/.storage/hearth, parent0700/files0600/non-symlink, registryenrollment,
+CAissuer/signature, leafvalidity/IP SAN/keymatching verified.
+
+Host857passed/fiveoptional, makecheck passed inclnewcomponentlint/Bandit. Real HA
+2026.10.4 official container (digest pinned tools.check_native_ha) with networknone
+passes userflow/duplicate, TLSauth,3sensorupdates/zero, expiry/recovery, disabled
+commands, unloadlistenerclosure,4badprofilecases. Syntheticfixtures only; no MQTT.
+Repro command tools.check_native_ha FRESHBUILD --engine podman. Realownerprofile
+also validated read-only innetworknonecontainer without startinglistener.
+
+Private profile-v2 preservesactualregistry/admin/devicepair, installedownerCA and
+existingRSAserverkey, freshleafSANcoversIoT+previousentryaddresses, CRL+IPverify.
+Unused initialprofile EC candidate preserved/uninstalled; useprofile-v2 only.
+NativeoriginnewIoTIP:8443. Old device registrationURL not yetrewritten; listener
+bindsallHAinterfaces and accepts oldaddress, entry advertisesnewIoTtransport.
+BothIPsverifiedonHAnetworkinfo. PCcanreachtrustedoldendpoint, IoTfromPCtimesout
+(VLANpolicy). Do not demandnewfirewallrules basedonthatalone. HAtokenAPIproxyfrom
+SSHapp401; usemanager endpoint oruserHAUI, no needrequestnewHAcredential yet.
+
+Integration+5profilefiles staged/readback to /homeassistant/custom_components/hearth
+and /homeassistant/.storage/hearth. No globalHAconfig edited. Owner authorized one
+HAcore restart, commandexit0, thenaddedHearthviaUI. Entitiesappearproperly butno
+readingsinitially. BotholdHTTPSendpoint+managerauth work; counters empty. Core
+runtime ownslistener; retired App muststaystopped. Askedownerfreshnativebooton
+unwiredbase; they justsaid "It's booting back up now". No ROMloader running.
+Read-only watch execsession85848, build/watch-private-native-ha-20261031.py, output
+private/native-ha-migration-20261031/first-native-ha-watch; viaoldtrustedHTTPSmanager
+monitorbecausePCIoTaddressnotreachable. Initialfalse/no state/emptyrejections.
+Next inspect this watch foractualhandoff; ifneeded inspectHA-specificlogs privately.
+Do NOT flash merely to troubleshoot backend. OwnerphoneUIconfirms actual sensor
+values; no globalHAcredential required. Actualnative0.2.0 telemetry pending.
+
+GOOGLE FOLLOWUP STILL ACTIVE: usercapture shows clients3.google.com HTTP and
+GoogleNTP. Recovered nlclient andconnmand each contain exact39-byte HTTP204probeURL.
+ConnMan1.29 recovered main.conf General has FallbackTimeservers=time.nest.com and
+PreferFallbackTimeservers=true; original ntp.conf edit did notcoverthisdaemon.
+No on-device Googlefix yet. nlclient5,122,360bytes exceeds current1MiB filewriter
+limit, connmand687,028. Do not blindly extend/publish privateELFs or relax write
+bounds. Trace configurable/targeted remedy andlocal204service before anynewpatch;
+new persistent operation needs reviewedbackup/advanceconcretenotice. No HVAC.
+Uncommitted source/docs currently nativeHAimplementation+validation+handoff; commit/
+push checkedmilestone per existing authorization, private material excluded.
+
+
+## CURRENT OBSERVED: native HA readings work; MQTT app removed; Google fix next
+
+Ownerfreshnativeboot returnednormalthermostatdial, thenconfirmedlive3sensorreadings
+inHearthintegrationdevicepage. Watch85848 reportsavailabletrue,3statefields andone
+initialbucket_shape followedbyaccepteduploads. Private activation/native-ha-telemetry-
+observed.json preservesowner+managerproof. This isdirectHA0.2.0, no MQTT. Device
+on completelyunwiredbase/WiFi; no loaderarmed. Watchbounded10min, canexpire.
+
+AfterverifieddirectHA, ownerexplicitnuke scopecompletedretiredappremoval:
+private retired-app/configuration-archive.out wasreadback/matchedregistry+serverkey,
+then ha addons uninstall local_hearth succeeded, its /local_apps/hearth source
+moved /homeassistant/.hearth-retired-laboratory-source-20261031 andstorereloaded.
+Privatebackups/sourcepreserved; nativeintegrationprofilesseparateunchanged. Do not
+attempttostart/reinstalloldapp orreintroduceMQTT. ProducttargetnativeHAonly.
+
+Newsourceallchecks857/fiveskips+realpinnedHAcheck passed. Packagingmanifest now
+also coversLICENSE/THIRD_PARTY; focused2packageregressions passedafterthatmetadata
+change. Sourcecomponents stagedbytesunchanged. Finishcheckedcommit/push including
+nativeHA source/docs/validation; no actualprivateIP, keys, screenshots or firmware.
+GOOGLEremediation remainsprioritybeforecommands. CurrentcallbackHAHTTPSendpoint
+healthy, storedregistrationoldIPstillpendingupdate; entryadvertisesIoTtransport.
+AvoidspeculativeNANDchanges; literalnlclientURLpatchwouldtouch5MBfile exceeding
+current1MiBbound. Needtargeted/configurable remedy andseparatefreshbackup/writeplan.

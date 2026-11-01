@@ -1,0 +1,17 @@
+{
+  "title": "Hearth",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect your local Nest thermostat",
+        "description": "Use the locally prepared Hearth commissioning profile to receive your thermostat's readings directly in Home Assistant."
+      }
+    },
+    "error": {
+      "profile_not_ready": "The local commissioning profile is missing or invalid. Check the Hearth installation instructions."
+    },
+    "abort": {
+      "already_configured": "Hearth is already configured."
+    }
+  }
+}

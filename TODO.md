@@ -228,3 +228,25 @@ rejection rather than more TLS/flash experiments. HA app0.1.1 finite manager-onl
 rejection counters are deployed and checked; host855/five skips/make check pass.
 Fresh read-only watch awaits one native startup. No telemetry/control/HVAC pass.
 See docs/research/native-wifi-result-2026-10-31.md.
+
+
+CURRENT architecture supersession: real native→Hearth→MQTT→HA readings were
+verified, but the owner then chose native HA and explicitly retired MQTT now.
+Bridge stopped, seven retained topics cleared/absence verified, old entities gone.
+Native integration0.2.0 is staged and configured in HA2026.10.4 after an authorized
+Core restart. Host857/five skips plus real pinned HA sandbox tests pass. First
+physical HA-native readings are pending one fresh thermostat startup. No new flash.
+Use docs/home-assistant-native.md; do not restart the retired app.
+
+Also trace/remove residual Google HTTP connectivity calls and ConnMan's preferred
+fallback time source. Changing ntp.conf alone was insufficient. Native firmware
+still retains two hardcoded probe callers; no full-outbound-isolation claim.
+After that, complete native command delivery/reconciliation and separately
+approved unwired/dummy-load tests. MQTT is no longer the deployed target.
+
+
+Observed native HA milestone: direct integration0.2.0 now receives real native
+state; manager available and owner confirms all three numeric HA sensors. MQTT
+is off/cleared and retired app uninstalled after verified full private backup.
+Next remove residual Google probes/time dependencies and finalize stored IoT URL,
+then complete guarded native commands. No physical HVAC/control pass.

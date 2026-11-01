@@ -2,15 +2,24 @@
 
 A local-first laboratory for Nest Learning Thermostat Gen 2, with Gen 1 as a secondary research target. Preserve Nest's hardware control; replace remote services only where behavior is understood.
 
-**Current hardware result:** [original-file recovery](docs/research/compression-recovery-2026-10-31.md)
-restored the working primary native UI. The [corrected nine-file installation](docs/research/recommissioning-preparation-2026-10-31.md)
-now passes exact readback and active native-compatible encoding checks, with
-write protection asserted. The owner confirmed the working native UI afterward;
-[physical Wi-Fi/HTTPS discovery](docs/research/native-wifi-result-2026-10-31.md) now succeeds,
-but the first upload receives HTTP 400. Bounded host diagnostics are deployed
-to identify that rejection. Do not use the old LZO-writing images.
+**Current target: native Home Assistant integration, without MQTT.** The owner
+retired Hearth's MQTT bridge after verifying its three sensor readings end to
+end. The [native HA integration](docs/home-assistant-native.md) is staged and
+configured, and the owner confirmed live readings for all three sensors. It receives
+the existing Nest HTTPS protocol directly inside HA Core and exposes HA entities.
+The separate Hearth Laboratory app has been retired and uninstalled.
 
-**Status: experimental same-unit investigation, not a supported thermostat release.** The first [nine-file install](docs/research/file-install-result-2026-10-31.md) passed readback but the native UI stalled. The selected original files have now been [restored and verified](docs/research/file-restore-result-2026-10-31.md); the owner confirmed the working stock UI, and the native plist confirms the primary slot remains selected on firmware `5.9.4-5`. Live native networking, complete protocol/control, power-loss/whole-firmware recovery and HVAC remain unverified. The local HAOS backend runs in telemetry-only mode, with commands disabled. Do not connect this prototype to live HVAC equipment. This iteration does not meet the physical firmware compatibility portion of the definition of done.
+**Hardware result:** the corrected [nine-file installation](docs/research/recommissioning-preparation-2026-10-31.md)
+passes byte/mode and native-compatible flash-encoding checks, and the owner
+confirmed the working primary UI on5.9.4-5. Do not use the old LZO-writing images.
+
+**Status: experimental same-unit development, not a supported thermostat release.**
+Residual Google connectivity/time dependencies are under investigation. Native
+commands, full protocol reconciliation, power-loss/whole-firmware recovery and
+physical HVAC remain unverified; command delivery is disabled. Keep this prototype
+on its unwired bench base. The [first physical HTTPS/telemetry result](docs/research/native-wifi-result-2026-10-31.md)
+records the earlier broker-backed measurement separately from the HA-native migration.
+
 
 An authorized restart exposed OMAP ROM mode on the unit reporting `Display-2.6` /
 `5.9.4-5`. A separate [experimental RAM heartbeat probe](firmware/probe/README.md)

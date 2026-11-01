@@ -1,0 +1,40 @@
+{
+  "scope": "Native HA custom integration preparation, not physical activation",
+  "ha_core_version": "2026.10.4",
+  "ha_core_image": "ghcr.io/home-assistant/home-assistant@sha256:21935614df6d9f24f680a1ef749f0570d2d6b7936c606c0a44253ae875865c04",
+  "host_tests_passed": 857,
+  "optional_host_tests_skipped": 5,
+  "make_check": "passed",
+  "public_package_reproduced": true,
+  "real_ha_container": {
+    "physical_networking": false,
+    "synthetic_credentials_and_certificates": true,
+    "config_flow_and_duplicate_refusal": "passed",
+    "tls_and_authentication": "passed",
+    "direct_sensor_updates": 3,
+    "zero_value_preservation": "passed",
+    "availability_expiry_and_recovery": "passed",
+    "commands_disabled": true,
+    "unload_closes_listener": "passed",
+    "invalid_profile_refusals": 4,
+    "mqtt_used": false
+  },
+  "owner_profile_validated_readonly_in_pinned_runtime": true,
+  "mqtt_retirement": {
+    "hearth_app_stopped": true,
+    "owned_retained_topics_cleared": 7,
+    "fresh_subscriber_verified_absence": true,
+    "remaining_hearth_mqtt_entities": 0
+  },
+  "live_native_ha_entities": {
+    "sensors": 3,
+    "numeric_readings_owner_confirmed": true,
+    "available_state_observed": true,
+    "mqtt_running_for_hearth": false,
+    "initial_rejection": "bucket_shape",
+    "subsequent_uploads": "accepted"
+  },
+  "residual_google_dependencies": "not removed",
+  "hvac_validation": "not performed",
+  "retired_lab_app_uninstalled": true
+}

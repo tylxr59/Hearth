@@ -58,3 +58,30 @@ The first immediate readiness probe raced startup and was refused; a later probe
 succeeded. No thermostat command or persistent modification occurred. The next
 owner-timed native startup will identify the actual upload rejection reason;
 the decoder has not been relaxed or declared compatible.
+
+
+## Retried startup produced real telemetry and HA readings
+
+The next native startup produced one `bucket_shape` rejection, then accepted
+uploads containing temperature, humidity and target temperature. No decoder
+relaxation was made. The bounded watch observed availability continuously for
+more than four minutes. A separate trusted/authenticated MQTT subscriber received
+all three read-only discovery messages, live state and bridge/device availability;
+no climate/control entity was advertised. HA's registry contained the three
+matching enabled sensors, and the owner confirmed numeric readings for all three.
+This was the first measured end-to-end native-to-HA telemetry milestone.
+
+## Owner-selected replacement of MQTT
+
+The owner then explicitly chose a native Home Assistant integration, supplied
+HA's IoT address privately, and requested immediate MQTT retirement. The Hearth
+app was stopped, seven owned retained topics were cleared, and a fresh subscriber
+verified absence. HA removed those MQTT entities. The new deployment target has
+no MQTT bridge or broker credentials; private historical evidence remains intact.
+See [the native integration](../home-assistant-native.md) for the separate migration.
+
+The owner also observed Google HTTP/NTP traffic. Static review identifies the
+hardcoded HTTP connectivity URL in both nlclient and ConnMan, and an additional
+ConnMan preferred fallback time-server setting untouched by the original ntp.conf
+edit. Those dependencies are not yet removed. Do not equate working local
+telemetry with complete outbound isolation.
