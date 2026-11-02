@@ -56,6 +56,13 @@ after15 minutes. Current data older than two hours or unsupported units/values
 refuse. The source is selected explicitly when multiple HA weather entities
 exist; a sole entity may be selected automatically, and weather can be disabled.
 
+A subsequent read-only review traced the weather fetch creation and native fetch
+library: weather does not enable Basic auth, the event defaults that flag off,
+and the library applies curl Basic credentials only when that flag is enabled.
+The initial0.5.0 authenticated weather endpoint therefore mismatched this native
+request contract.0.5.1 corrects the single read-only weather route; transport and
+management remain authenticated. No firmware was executed for this review.
+
 These additions are host/real-HA build results. Unit eco changes, schedule
 replacement/restore, native weather parsing and physical HVAC remain unverified
 until separately measured. Whole-firmware recovery remains unverified.

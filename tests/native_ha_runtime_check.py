@@ -558,8 +558,11 @@ async def check(root, profile):
             assert weather["current"] == {"temp_c": 20, "humidity": 50, "icon": "partlycloudy"}
             assert weather["forecast"]["hourly"][0]["temp_c"] == 21
             assert weather["forecast"]["daily"][0]["temp_low_c"] == 12
-            async with client.get(base + "/nest/weather/v1", ssl=context) as response:
-                assert response.status == 401
+            async with client.get(
+                base + "/nest/weather/v1?query=00000,US", ssl=context
+            ) as response:
+                assert response.status == 200
+                assert (await response.json())["location"]["timezone_long"] == hass.config.time_zone
             async with client.get(
                 base + "/nest/weather/v1?url=https://invalid.example", headers=headers, ssl=context
             ) as response:

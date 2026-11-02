@@ -2063,3 +2063,39 @@ values. Needactualrestart/nativeconnectionthenchecknewhome/schedulebaselines.
 NativeweatheracceptancecanbecheckedonunitUI; managercurrentlydoesnotexport
 weatherproviderdiagnostics, avoidclaimbasedonhostprobealone. ExistingHAadmin
 SupervisorAPI401restrictionstillapplies; donotseekextraauth/privilegeunnecessarily.
+
+OwnerrestartconfirmedWiFi. Postrestartwatch29090showsavailabletrue,newmode
+field+13PUT/13SUB accepted, onebucket_shape refusalinitially. ActualcapsOFFONLY
+(expectedemptybase);home_reference/eco/weekstillabsent(health-v4). Noedits/intents.
+OwnercannotfindweatherUIandreportsclock3hbehind(westcoast)despiteEastcoastpostal
+configured. PrivatehostweatherresponseACTUALtimezoneAmerica/New_York, expected
+Eastcoast;nativezoneinfofileexists. DoNOTblameHAconfigoraskchangeZIP. Oldnative
+clientweatheroverrideenable0/poll3900s. Needtraceweatherdelivery/nativeapply.
+PinnedNLEdevice_auth.py(originalhashverified)EXPLICITLYleavesweatheroutside
+transportauth. Hearth0.5weathercurrentlyrequiresassigneddeviceBasic; plausible
+compatibilityissue,NOTyetactualrequestproven. ReadonlyGhidrafetchclassreview
+running355? seeprivate/native-weather-fetch-review-20261101/headless.log; derives
+RTTI/vtablefromprivateELF, nofirmwareexecution. Mustnotclaimweatherworkingonunit
+basedhostGET. Noschedule/eco commands andnopersistentfirmwareworkauthorized.
+
+Concrete0.5weatherAUTHBUG: nativeweatherstartFUN00153fb8 allocatesfetchURL event,
+InitdoesNOTenableBasic;libconstructor+0x54defaults0;IsBasicAuthEnabledreadsfield;
+AddFetchattachescurlUSERPWD/HTTPAUTHonlyiftrue. ComparedpinnedNLEweatherexcluded
+fromtransportauth. Hostauthenticated200wasINSUFFICIENTandmissedthiscompatibility
+constraint. Nativeweather0.5.1candidateallowsONLYreadonlyoutdoorGETwithoutdevice
+auth. Otherentry/transport/manageauthunchanged, TLSunchanged. ExposesonlyHA
+outdoorconditions/forecast/tz+boundedcallerpostalcountry, no unitstate/control.
+Nativeweathergetterqueryfallbackipv4/countrylessSTILLREFUSED; ownerhaspostal
+configured, no geolocationguessingadded. Nativeclockactualapplicationunverified.
+
+0.5.1addsvalue-freeweatherstatsinmanagerstatusandHAdiagnostics:requests,served,
+invalid_query,unavailable,client_requests,host_checks. HostprobesMUSTsetUA
+HearthReadOnlyCheck/1; classificationisdagnosticnotauth. Usecountstoverifyreal
+clientfetchbeforeclaimingclockfixed. HostoldprobestemusedPythonUA; afternewCore
+counterresetusefixedUAalways.
+
+0.5.1FINAL32filesbuild/native-ha-weather-auth-20261101-v051-1 +v051-reproexact;
+1205host/fiveoptionalskips+makecheck+realHA17roundtrips/unauthweatherGETallpass.
+Stageprivate/native-ha-v051-20261101/stage-v1/remote.hearth-native-stage-20261101-
+v051readbackwitholdACTIVE0.5.0sourcebackup. NOTACTIVATED; owner0.5approvalconsumed,
+neednewCore restartreadinessafterconcretereadyfix. NoROM/NAND/commands.

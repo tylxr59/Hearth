@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.event import async_track_time_interval
 
 from ._backend import reported_store
-from ._backend.api import NATIVE, WEATHER, WEATHER_ENABLED, create_app
+from ._backend.api import NATIVE, WEATHER, WEATHER_ENABLED, WEATHER_STATS, create_app
 from ._backend.core import Core
 from ._backend.validation import Invalid
 from .const import DOMAIN
@@ -166,5 +166,5 @@ class HearthRuntime:
     def diagnostics(self):
         return self.app[NATIVE].diagnostics() | {
             "reported_cache": dict(self.cache_errors),
-            "weather": self.weather.diagnostics(),
+            "weather": self.weather.diagnostics() | {"http": dict(self.app[WEATHER_STATS])},
         }

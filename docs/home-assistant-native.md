@@ -227,3 +227,27 @@ A new weather URL may require a fresh native entry handshake. No automatic eco,
 schedule, mode or target change accompanies activation. All these features are
 measured in a synthetic real-HA sandbox; actual native weather fetch and control
 acceptance remain separate supervised bench checks on the completely unwired base.
+
+
+### Native weather authentication correction (0.5.1)
+
+The0.5.0 weather route incorrectly required the thermostat's assigned Basic
+credentials. Static review confirms the native weather event leaves Basic auth
+disabled; the fetch service only attaches those credentials when explicitly
+enabled. This differs from the authenticated telemetry/control transport.
+A successful authenticated host probe did not test that native request behavior.
+
+Version0.5.1 serves only the fixed read-only outdoor-weather GET route without
+device authentication. It returns configured HA outdoor conditions/forecasts,
+HA's timezone, and the caller's bounded postal/country query. It exposes no
+thermostat state, enrollment or command operation. Transport, management and
+entry routes retain their existing authentication. TLS behavior is unchanged.
+This local outdoor-weather data is readable by clients able to reach Hearth's
+HTTPS listener. Missing sources, unsupported queries and unavailable data still
+refuse.
+
+Authenticated manager diagnostics include bounded weather request/served/error
+counts, with a separate fixed-tag host-check counter. These contain no addresses,
+query values, locations or weather readings. They distinguish a working host
+probe from other client requests; the marker is diagnostic, not authentication.
+Physical native fetch/timezone application still needs supervised observation.

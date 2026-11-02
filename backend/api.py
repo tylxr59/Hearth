@@ -29,6 +29,7 @@ NATIVE_HOLD = web.AppKey("native_hold_seconds", float)
 NATIVE_ACTIVE = web.AppKey("native_active", dict)
 NATIVE_STOP = web.AppKey("native_stop", asyncio.Event)
 WEATHER = web.AppKey("native_weather_provider", object)
+WEATHER_STATS = web.AppKey("native_weather_stats", dict)
 WEATHER_ENABLED = web.AppKey("native_weather_enabled", object)
 AUTH_GENERATION = web.RequestKey("credential_generation", str)
 
@@ -48,6 +49,12 @@ def basic(header):
 @web.middleware
 async def guard(request, handler):
     try:
+        # The stock weather fetcher never enables Basic auth. This single
+        # read-only outdoor-weather route has no device state/control access.
+        if request.path == "/nest/weather/v1" and request.method == "GET":
+            response = await handler(request)
+            response.headers["Cache-Control"] = "no-store"
+            return response
         core = request.app[CORE]
         header = request.headers.get("Authorization", "")
         if request.path.startswith("/v1/manage/"):
@@ -117,6 +124,7 @@ async def status(request):
     result = {"devices": [core.view(i) for i in core.registry.data["devices"]]}
     if NATIVE in request.app:
         result["native_diagnostics"] = request.app[NATIVE].diagnostics()
+        result["weather_diagnostics"] = dict(request.app[WEATHER_STATS])
         if isinstance(request.app[NATIVE], NativeControls):
             for device in result["devices"]:
                 device["native_controls"] = request.app[NATIVE].control_view(device["serial"])
@@ -189,18 +197,35 @@ async def native_entry(request):
 
 
 async def native_weather(request):
+    counters = request.app[WEATHER_STATS]
+
+    def count(name):
+        counters[name] = min(counters.get(name, 0) + 1, 2147483647)
+
+    count("requests")
+    count(
+        "host_checks"
+        if request.headers.get("User-Agent") == "HearthReadOnlyCheck/1"
+        else "client_requests"
+    )
     if request.can_read_body or len(request.query_string) > 256 or set(request.query) - {"query"}:
+        count("invalid_query")
         raise web.HTTPBadRequest()
-    require_current(request)
     if WEATHER not in request.app or not request.app[WEATHER_ENABLED]():
+        count("unavailable")
         raise web.HTTPServiceUnavailable()
-    location = query_location(request.query.get("query", ""))
+    try:
+        location = query_location(request.query.get("query", ""))
+    except Invalid:
+        count("invalid_query")
+        raise
     try:
         result = await request.app[WEATHER]()
         result["location"].update(location)
     except Invalid:
+        count("unavailable")
         raise web.HTTPServiceUnavailable() from None
-    require_current(request)
+    count("served")
     return web.json_response(result)
 
 
@@ -322,6 +347,14 @@ def create_app(
         ):
             raise Invalid("native hold exceeds the selected transport timing limit")
         app[NATIVE] = NativeControls(core) if native_controls else NativeTelemetry(core)
+        app[WEATHER_STATS] = {
+            "requests": 0,
+            "client_requests": 0,
+            "host_checks": 0,
+            "served": 0,
+            "invalid_query": 0,
+            "unavailable": 0,
+        }
         app[NATIVE_HOLD] = float(native_hold_seconds)
         core.command_delivery_enabled = False
         core.pending.clear()

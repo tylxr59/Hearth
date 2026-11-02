@@ -1,7 +1,7 @@
 import pytest
 from aiohttp.test_utils import TestClient, TestServer
 
-from backend.api import WEATHER, WEATHER_ENABLED, create_app
+from backend.api import WEATHER, WEATHER_ENABLED, WEATHER_STATS, create_app
 from backend.native_weather import payload
 from backend.validation import Invalid
 from tests.test_security import auth
@@ -50,7 +50,10 @@ async def test_weather_disabled_auth_query_limits_and_payload(rig):
 
     app[WEATHER], app[WEATHER_ENABLED] = provider, lambda: enabled[0]
     async with TestClient(TestServer(app)) as client:
-        assert (await client.get("/nest/weather/v1")).status == 401
+        assert (await client.get("/nest/weather/v1")).status == 503
+        assert (await client.get("/v1/manage/devices")).status == 401
+        assert (await client.get("/nest/entry")).status == 401
+        assert (await client.post("/nest/transport/put", json={})).status == 401
         headers = auth(rig[1])
         assert (await client.get("/nest/weather/v1", headers=headers)).status == 503
         entry = await (await client.get("/nest/entry", headers=headers)).json()
@@ -72,6 +75,14 @@ async def test_weather_disabled_auth_query_limits_and_payload(rig):
             == expected
         )
         assert len(requests) == 1
+        public = await client.get("/nest/weather/v1?query=00000,US")
+        assert public.status == 200 and (await public.json()) == expected
+        assert app[WEATHER_STATS]["served"] == 2
+        await client.get(
+            "/nest/weather/v1?query=00000,US", headers={"User-Agent": "HearthReadOnlyCheck/1"}
+        )
+        assert app[WEATHER_STATS]["host_checks"] == 1
+        assert app[WEATHER_STATS]["client_requests"] > 0
 
 
 @pytest.mark.parametrize(
