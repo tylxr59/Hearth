@@ -255,6 +255,20 @@ unchanged (owner previously Heat to Off), saved63Frestore baseline. Guard requir
 live connection/no pending commands/Heat-only/room3C above target. Physical heating
 call still unapproved; equipment described oil furnace/baseboard, exacttypeunknown.
 
+Owner explicitly requested finish Eco quickly; authorized one0.6.9on/off feedback
+cycle. ONEEcoOn and ONEEcoOffrestore executed via fresh069 helper paths; no retry.
+Both confirmed from fresh accepted device_eco_mode reports, with zero pending
+intents after each. Restore followed native ON confirmation within this same
+owner-authorized cycle; no separate physical-on observation was requested/claimed.
+Private069/eco-{on,off}-v1 and eco-{on,off}-confirmation-v1 preserve scopedrequests,
+preflights/responses/confirmationreceipts. SSH post-eco-state-v1 verifies actual
+mode schedule, Heat mode and unchanged Eco low/high values relative to current
+saved baseline. No limits/mode/target changes, NAND writes or Core restart.
+Owner final physical check CONFIRMED StartEco menu, dial63F and heatingidle.
+Eco feedback cycle is COMPLETE and RESTORED. No more Eco controls needed.
+This closes native Eco feedback confirmed status instead of expired under0.6.9;
+prior0.6.8 on/off physical behavior was already measured. No intentional heatcall.
+
 ## Purpose and current status
 
 Build a local-first Nest Learning Thermostat modification that preserves native hardware/HVAC control. Gen 2 is the primary target; Gen 1 is secondary. Prefer a verified local on-device interface if feasible; otherwise retain the native transport behind a minimal local backend. Do not rewrite HVAC control loops.

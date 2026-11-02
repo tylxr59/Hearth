@@ -235,3 +235,15 @@ Owner confirmed empty UI, Heat63°F and no heating activity. Private HA backups 
 verified for both original revision4 and acknowledged revision5. Full native value
 echoes remain distinct from metadata acknowledgement; no explicit echo is claimed.
 No hardware control loop or thermostat firmware changed during these tests.
+
+
+##0.6.9 Eco feedback result
+
+The owner authorized one manual Eco on/off feedback cycle. Each step was queued
+once, with no retry or limit changes. Both ended confirmed from fresh accepted
+`device.eco.mode` reports, with no pending intent. Off restoration was followed by
+a private cache showing mode schedule and native Heat mode; saved Eco limits were
+unchanged. This verifies the new confirmation path instead of the earlier expired
+status. The owner confirmed the final Start Eco menu, dial63°F and heating idle. No
+intentional heat call, Core restart or thermostat firmware change occurred during
+this cycle.

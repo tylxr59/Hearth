@@ -1,0 +1,32 @@
+{
+  "date": "2026-11-02",
+  "version": "0.6.9",
+  "owner_authorized_on_off_cycle": true,
+  "requests": {
+    "eco_on": 1,
+    "eco_off_restore": 1,
+    "automatic_retries": 0
+  },
+  "on": {
+    "status": "confirmed",
+    "source": "device_eco_mode",
+    "pending_after_confirmation": false
+  },
+  "off": {
+    "status": "confirmed",
+    "source": "device_eco_mode",
+    "pending_after_confirmation": false,
+    "reported_device_mode": "schedule",
+    "reported_hvac_mode": "heat"
+  },
+  "configured_eco_limits_unchanged": true,
+  "original_baseline": "manual eco off, Heat63F",
+  "intentional_equipment_call": false,
+  "owner_final_physical_restore_check": {
+    "eco_menu": "Start Eco",
+    "target_fahrenheit": 63,
+    "heating_idle": true
+  },
+  "core_restart": false,
+  "thermostat_firmware_write": false
+}
