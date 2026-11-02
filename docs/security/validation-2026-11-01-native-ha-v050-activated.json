@@ -1,0 +1,27 @@
+{
+  "status": "native-ha-v050-activated-awaiting-native-reconnect",
+  "integration_version": "0.5.0",
+  "source_commit": "5c7e366",
+  "owner_authorized_activation_and_one_core_restart": true,
+  "core_restart_cli_exit": 0,
+  "active_source_files_exact_readback": 32,
+  "previous_source_preserved": true,
+  "registered_entities": 4,
+  "disabled_entities": 0,
+  "scoped_hearth_error_lines": 0,
+  "reported_cache_permissions_verified": true,
+  "reported_state_cache_loaded_without_warning": true,
+  "host_weather_endpoint_status": 200,
+  "host_weather_current_fields": [
+    "humidity",
+    "icon",
+    "temp_c"
+  ],
+  "host_weather_hourly_points": 48,
+  "host_weather_daily_points": 6,
+  "native_weather_acceptance_verified": false,
+  "eco_or_schedule_commands_sent": false,
+  "thermostat_flash_operation": false,
+  "physical_hvac_verified": false,
+  "nle_feature_parity_complete": false
+}

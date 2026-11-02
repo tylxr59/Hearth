@@ -2036,3 +2036,30 @@ v050-20261101 readback/old0.4sourcebackupchecked. REMOTESTAGE-v3ANDOLDERsupersed
 Activationbuild/activate-native-ha-v050-20261101.py updatedtostage-v4,stillNOTRUN.
 Prior0.5Core restartreadinessquestionSTILLPENDING; logomessagewasNOTapproval.
 KeepactiveHA0.4.0/Nestunchangeduntilownerreadyreply. Brandingwillloadwith0.5.
+
+OwnerEXPLICITLYapproved0.5activation+oneCore restart. Executedprepared
+build/activate-native-ha-v050-20261101.py (LATESTstage-v4/32files),session66502
+possiblystillrunning. Stagedandoldactivesourcebothrechecked, newsourceactivated
+andreadback32filesbeforeha core restart. Previous0.4sourcepreservedremote
+/homeassistant/.hearth-native-previous-20261101-050. Receiptactivation-v1.
+Read-onlywatch25630 private/native-ha-v050-20261101/reconnect-watch-v1. New
+healthscriptbuild/check-native-ha-v050-20261101.py (freshhealth-v1) andread-only
+serverweatherprobe build/check-native-ha-v050-weather-20261101.py preparedbut
+NOTRUNyet. Weatherprobeusesownassignedauth+syntheticpostalquery; doesNOTcontact
+unit/modifysettings. Privateweatherresponsekept600, printsfields/countsonly.
+Noeco/schedule/mode/target/fancommandssent. WaitCoreexitthenhealthandweather
+checks; actualnativefetch/eco/scheduleacceptanceUNVERIFIED. Emptybaseonly.
+
+0.5activation66502 exited0: approvedCore restartcompletedONCE. Liveactive32files
+exactreadback, 4entities/none disabled,0scopedHearthERRORs; cacheloads/600/1device
+verified, warningsonlyusualcustomintegrationnotice. HostREADONLYweatherprobe
+weather-host-check-v1returns200/currenttemp+humidity+icon/48hourly/6daily/tz,
+privatepayload0600. ThisrequestcameFROMHOST,notproofunitweatherfetch. Noeco/
+schedule/controlcommands. Watch25630firstseesrestored3cachedreadingfieldsbut
+initialavailablefalse/norequests. Askedownernormal10sechold/release/singlepress
+ONEMPTYbase/USBunpluggedtoforceentry; awaitWiFi/dialreply. Noloaderorflash.
+Featurecachehealth-v2 pending71727reads ONLYfieldpresence/bucketnames, noowner
+values. Needactualrestart/nativeconnectionthenchecknewhome/schedulebaselines.
+NativeweatheracceptancecanbecheckedonunitUI; managercurrentlydoesnotexport
+weatherproviderdiagnostics, avoidclaimbasedonhostprobealone. ExistingHAadmin
+SupervisorAPI401restrictionstillapplies; donotseekextraauth/privilegeunnecessarily.

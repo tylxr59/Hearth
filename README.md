@@ -18,7 +18,7 @@ confirmed the working primary UI on5.9.4-5. Do not use the old LZO-writing image
 **Status: experimental same-unit development, not a supported thermostat release.**
 The targeted local-connectivity/NIST update and native HA telemetry have been
 observed on the owner unit. Experimental native climate controls are live; the
-eco/schedule/HA-weather0.5 build is staged for supervised acceptance. Full protocol
+eco/schedule/HA-weather0.5 build is active and awaiting supervised native acceptance. Full protocol
 reconciliation, power-loss/whole-firmware recovery and physical HVAC remain
 unverified. Keep this prototype
 on its unwired bench base. The [first physical HTTPS/telemetry result](docs/research/native-wifi-result-2026-10-31.md)
