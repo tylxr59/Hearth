@@ -6,7 +6,7 @@
   "active_files_verified": 33,
   "registered_entities": 4,
   "scoped_errors": 0,
-  "eco_off_attempts_this_version": 1,
+  "eco_off_attempts_this_version": 2,
   "eco_off_outcome": "expired",
   "active_subscription_at_enqueue": true,
   "server_stream_write_completed": true,
@@ -17,5 +17,8 @@
   "automatic_retry": false,
   "physical_hvac_exercised": false,
   "current_weather_requests_served": 1,
-  "owner_returned_display_to_unwired_base": true
+  "owner_returned_display_to_unwired_base": true,
+  "owner_physical_screen": "eco-temperature-dial",
+  "second_attempt_on_unwired_base": "expired-with-zero-matching-fields",
+  "current_weather_requests_rejected": 1
 }

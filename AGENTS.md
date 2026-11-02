@@ -9,13 +9,15 @@ passed with no scoped errors. The owner has now returned the charged display to
 its completely unwired base. No loader or NAND writer runs.
 
 **Eco-off restoration remains unconfirmed.** Two scoped requests under 0.6.4 and
-one under 0.6.5 expired. The latest had an active subscription and a successful
+two under 0.6.5 expired. The latest had an active subscription and a successful
 server stream write, but zero of two requested fields were freshly reported.
 That write does not prove device receipt/execution; stale cached None is not proof.
-Do not resend blindly or start another Eco-on test. Await the owner's physical
-screen observation and fresh native evidence. Device Eco mode has not been reported
-this runtime. One current weather request was served without rejection; this does
-not close the historical intermittent weather failure.
+Do not resend blindly or start another Eco-on test. The owner observed Eco with a temperature dial. A second attempt made on the
+unwired base also expired with a successful stream write and zero matching fields.
+Investigate native application before any further command; base absence alone does
+not explain this failure. Device Eco mode has not been reported
+this runtime. One current weather request was served; a subsequent request failed location
+validation with a four-character, no-comma shape. No raw location was retained.
 
 0.6.5 keeps quiet subscriptions open, preserves inline/CAS acknowledgements,
 tracks bounded delivery receipts and requires all desired fields freshly reported.

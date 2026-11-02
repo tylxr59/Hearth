@@ -105,3 +105,10 @@ one successful observation, not proof that historical query failures are resolve
 Further read-only schedule review found optional point provenance in addition to
 entry classification. These fields must be preserved or explicitly accounted for
 before a native week can become a replacement/restore baseline.
+
+After the owner confirmed an Eco temperature dial on the completely unwired base,
+a second original-Eco-off attempt was sent on an active carrier. It likewise
+expired after a successful server write with zero matching fields. Base absence
+alone does not explain the failure. No further command was sent. A subsequent
+weather query failed location validation; its retained shape is a four-character
+string with no comma. Raw location data was not recorded in diagnostics.
