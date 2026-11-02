@@ -1968,7 +1968,7 @@ usesHAwholeFprecision; targetSensorhadnosuggesteddisplayprecision.0.4.1source
 changesONLYtargetsuggestionto0F/1Cbasedonentityactualunit; rawvalues/history/
 commands/measuredtemperatureunchanged. RealHA sandboxv041-2passes12roundtrips
 plusall3fractionalexamples/rawpreservation/Celsiusoverridechecks. v041-1failed
-onlytestundefinedregistryname,corrected; doNOTdeployoldprofile. Fullchecksongoing
-49825. LiveHAremains0.4.0; noactivation/restartfor0.4.1authorizedorperformed. Told
+onlytestundefinedregistryname,corrected; doNOTdeployoldprofile. Fullmakecheck+1158hosttests
+pass/fiveoptionalskips. LiveHAremains0.4.0; noactivation/restartfor0.4.1authorizedorperformed. Told
 ownerimmediateHAUI TargettemperaturesensorgearDisplayprecision0 needsnorestart.
 Package/releasecorrectioncanbundlewithnextfeatures; noneedinterruptHAforthisalone.
