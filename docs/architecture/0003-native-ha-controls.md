@@ -125,6 +125,8 @@ including Fahrenheit conversion, range pairs and emergency preset transitions.
 It also checks unload/reload, absence of command replay, cache source labels,
 payload-free diagnostics and continued native operation when cache permissions
 are refused. These use synthetic data on an isolated host runtime, not firmware
-or physical equipment. The0.4 package still needs owner-host activation and a
-normal reconnect/cache-reload check. Eco, schedules, weather and the remaining
-NLE settings are separate unfinished work.
+or physical equipment. The owner activated0.4 with one approved Core restart. Fresh native readings
+seeded a private cache. A later owner-triggered integration reload retained all
+three readings exactly, with an authenticated subscription and no new PUT yet;
+no pending intent was restored. Eco, schedules, weather and the remaining NLE
+settings are separate unfinished work.

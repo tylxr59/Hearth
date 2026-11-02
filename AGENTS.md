@@ -1950,3 +1950,13 @@ AskedownerHASettingsDevicesServicesHearththree-dotReload (ONLYintegration,no
 Coreorunitrestart) totestwarmcache. AwaitReloadreply; cache-reload-watch-v1 uses
 freshprivatepath. Checkvaluesretained/nointent/nativefreshconnectionbeforeclaiming
 owner-hostreloadverified. No setpoint/mode/fancommandswere sent.
+
+OwnerconfirmedHearthintegrationReloadwithoutunitrestart. cache-reload-watch-v1
+showsrequestcounterresetfromGET1/PUT14/SUB11 toSUB1alone,availabletrue andall3
+readingsEXACTLYequalbefore/afterwhilePUTcountzero. LaterPUTsresumednormally; use
+firstpostreloadobservation,notlastrow,toverifycacheproof. Targetbaselinerestored,
+pendingempty. Privatecache-reload-observed.json preservesboundedproof. Thiscloses
+ownerhostcachewarmreload/reconnecttest; no commandsreplayed/sent, noCore/unitrestart
+required. Currentmode/fanbaselinefalse onemptybase; doNOTinferfullcontrolverification.
+Continueeco/schedules/settings/weatherparityafterthismilestone; physicalHVACrequires
+separateauthorizationandappropriateequipment.
