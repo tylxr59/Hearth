@@ -4,7 +4,7 @@ import hashlib
 import hmac
 import json
 
-from backend.native import MAPPINGS, Bucket, canonical
+from backend.native import MAPPINGS, Bucket, ScheduleOverwrite, canonical
 from backend.reported_cache import FIELDS, FORMAT, reported_value, validate
 from backend.validation import Invalid, state
 
@@ -23,16 +23,23 @@ def capture(native, ident, key, kind, value):
         # Keep the identity actually uploaded by the Nest; never synthesize a device field.
         item["key"] = key
     if kind == "schedule":
+        from backend.native_features import schedule_shape
+
+        native._schedule_shapes[ident] = schedule_shape(value)
         # Never persist partial/unknown schedule content. Retain the last full
         # validated week; refuse schedule commands until that baseline exists.
         from backend.native_features import schedule_record
 
         try:
-            complete = schedule_record(item["values"] | value)
+            complete = schedule_record(
+                value if isinstance(value, ScheduleOverwrite) else item["values"] | value
+            )
         except Invalid:
             saved.pop(kind, None)
             native.reported_changed(ident)
             return
+        if isinstance(value, ScheduleOverwrite):
+            item["values"] = {}
         value = complete
     for name, data in value.items():
         if name not in FIELDS[kind]:

@@ -206,22 +206,21 @@ class HearthClimate(ClimateEntity):
             raise HomeAssistantError("Unsupported preset")
         if preset_mode == "eco":
             self._enqueue("eco", True)
-        elif self.preset_mode == "eco":
-            if preset_mode != "none":
-                raise HomeAssistantError("Clear eco before requesting emergency heat")
-            if ("structure", "manual_eco_all") in self.runtime.controls.restored_fields.get(
-                self.ident, set()
-            ):
-                raise HomeAssistantError("A fresh eco report is required to clear eco")
-            self._enqueue("eco", False)
+        elif preset_mode == "none":
+            # Explicit clearing must reach the Nest even when the reported preset
+            # is stale after an offered-but-unconfirmed command.
+            if self.preset_mode == "emergency_heat":
+                if self.runtime.controls.state_source(self.ident, "mode") != "device":
+                    raise HomeAssistantError(
+                        "A fresh device mode report is required to clear emergency heat"
+                    )
+                self._enqueue("mode", "heat")
+            if "eco" in self.preset_modes:
+                self._enqueue("eco", False)
         elif preset_mode == "emergency_heat":
+            if self.preset_mode == "eco":
+                raise HomeAssistantError("Clear eco before requesting emergency heat")
             self._enqueue("mode", "emergency")
-        elif self.runtime.controls.state_source(self.ident, "mode") != "device":
-            raise HomeAssistantError(
-                "A fresh device mode report is required to clear emergency heat"
-            )
-        elif self.preset_mode == "emergency_heat":
-            self._enqueue("mode", "heat")
 
     async def async_set_fan_mode(self, fan_mode):
         self._enqueue("fan", fan_mode)

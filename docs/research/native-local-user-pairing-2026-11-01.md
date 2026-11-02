@@ -185,3 +185,44 @@ Hearth currently closes it immediately after the first held update. This is a
 concrete timing difference to investigate, not a proven cause of the failed Eco
 attempt. A quiet battery-powered unit and an offered command without fresh native
 feedback are insufficient to establish whether it rejected or delayed the change.
+
+## Late Eco application and 0.6.3 correction
+
+The owner subsequently restarted the native display and saw Eco on the physical
+unit. The earlier expired request therefore applied late; expiry was not device
+cancellation or proof that the old preset remained in effect. Restoration is
+still pending. A requested HA `none` action sent no command because the handler
+looked only at its stale None report. The physical Stop Eco path was inaccessible
+behind the wiring screen. The base remains completely unwired; no popup or native
+wiring/HVAC checks were disabled.
+
+Fresh diagnostics also observed a rejected schedule PUT with an additional
+outer member and repeated revision/timestamp errors. Static builder review shows
+that native schedule replacements can carry `op: OVERWRITE`. 0.6.3 accepts that
+operation only on owned schedule PUTs. It replaces fingerprints and the reported
+snapshot rather than merging with the previous week's shape. Unknown/partial
+native schedule content may be observed, but cannot enter the validated schedule
+cache or authorize schedule controls. Unsupported operations and subscription
+operations remain refused before mutation. No received schedule is sent back as
+a command merely because it was received.
+
+The pinned reference treats `base_object_revision` as informational, rather than
+as CAS. Only the integer -1 unknown-base sentinel is additionally accepted on PUT;
+negative conditional revisions, object revisions, timestamps and subscription
+metadata remain refused. A finite diagnostic now names the failing metadata field,
+its type/sign class and bucket kind, without retaining identifiers or numeric
+values. This does not prove which field caused every owner-unit revision error;
+remaining failures must be measured rather than bypassed. Schedule schema/type
+summaries similarly omit names, point times and temperatures.
+
+The HA handler now sends an explicit Eco-off request for `none` even when its
+reported preset is already None. Clearing emergency heat retains its fresh-mode
+requirement. A confirmed original-value restore remains required on the unit;
+host tests are not that measurement. The staged update has not been activated.
+
+A separately prepared private manager script can queue exactly the saved original
+Eco-off value once, after an accepted fresh native subscription, live connection,
+known home/eco baseline and no pending commands. It uses the existing authenticated
+manager API, not Supervisor/Core privilege workarounds. Offline checking opens no
+network. No restore command has yet been sent through it; the request remains
+subject to normal native confirmation and will not retry automatically.

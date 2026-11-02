@@ -84,3 +84,25 @@ def schedule_record(value):
 def schedule_week(value):
     value = schedule_record(value)
     return value.get("manual_schedule", value)
+
+
+def schedule_shape(value):
+    """Finite schema/type evidence only; no names, times or temperatures."""
+    from backend.native import json_type
+
+    wrapped = isinstance(value, dict) and set(value) == {"manual_schedule"}
+    inner = value.get("manual_schedule") if wrapped else value
+    fields = inner if isinstance(inner, dict) else {}
+    known = {"ver", "name", "schedule_mode", "days"}
+    mode = fields.get("schedule_mode")
+    days = fields.get("days")
+    return {
+        "format": "wrapped" if wrapped else "bare",
+        "value_type": json_type(inner),
+        "known_member_types": {
+            key: json_type(fields[key]) for key in sorted(known & fields.keys())
+        },
+        "unknown_member_count": min(len(fields.keys() - known), 257),
+        "mode_class": mode if isinstance(mode, str) and mode in {*MODES, "OFF"} else "other",
+        "day_count": min(len(days), 8) if isinstance(days, dict) else None,
+    }

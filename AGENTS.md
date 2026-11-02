@@ -2346,3 +2346,40 @@ reviewv1scriptfailedOSGibuildpath; correctedv2tools/ghidra temphelperworked,expo
 3functions;helperREMOVED. Alllogmodes600. NoARMexecution/newflash/HVAC.
 PinnedNLEheldpush waits3s batchbeforeEOF vsHearthimmediateEOF: concretecomparison,
 NOTprovencauseyet. No transportpatchmade. Preserveexistingprofiles/reports.
+
+URGENTCURRENTUNITRESTORE: Owner native restart thenphysicaldisplayECO confirmed
+late application ofexpiredrequest. HA cache stillNONE/stale; don'ttrustit.
+Owner didrequested climate.set_preset_mode none;NOnewintentbecauseclimate.py
+skipsclearwhenreportedpresetalreadyNone. OwnerphysicalStopEco blockedbywiring
+screen. Askedabouttemporarilydisablingpopup: answerednotnow/preservechecks.
+No popup/wiring/HVAC bypasspatch. BaseEMPTY. RestorationSTILLPENDING.
+Nativepostrestartdiag actuallysawSCHEDULE PUT extramember+revision errors.
+Exactprivatebuilderd28ec shows op OVERWRITE schedule; d2c64 writesenvelope.
+Noauto retry ECOON. Latestrestorewatchprivatev062/eco-restore-watch-v1session22625
+hasonlyexpiredoldrequest. Weatherfetchedsuccessfullytwiceafterstartupbutmany
+invalidqueriesremain; don'tclaimcompleteweathertest/regressionresolved.
+
+0.6.3 PREPAREDNOTACTIVE: HA explicitnone enqueuesEcoFalseevenifreportedNone
+(stale/current), emergencyclearstillfreshmodegated. NativeopOVERWRITE schedule
+PUT ONLY; markerreplacesfingerprints/reportedvalues notmerge. Unknownnativeweek
+canbeseenbutinvalidweekNOTcached/NOTauthorizedforcontrols; schemaevidencefinite
+(noactualname/time/temp). Base_object_revision -1 informationalPUTonly, notCAS;
+negativeotherrevisions/timestampsstillrefused. Newlast_revision_error finite
+field/kind/type/sign booleans exposesNOactualnumbers/IDs; remainingownerrejection
+fieldcurrentlyunknown, don'tbroadennegativefilterwithoutreview.
+1252host/fiveoptionalskips+makecheck+realHA18roundtripspassed, includingNonefrom
+alreadyNone +nativeOVERWRITE/-1basePUT. New11 overwrite/atomic/CAS/diagnostic tests.
+33sourcefilesreproducebuild/native-ha-overwrite-restore-20261101-v063-final/repro.
+Stageprivate/native-ha-v063-20261101/stage-v1 remote.hearth-native-stage-
+20261101-v063 exactreadback, current0.6.2source+user/homeconfig+cachepreserved.
+NeedNEWownerONECore restartapprovaltoloadPython0.6.3. Notactivatedyet.
+Preparedbuild/activate-native-ha-v063-20261101.py +health/watch; noexecutionyet.
+
+RESTOREAUTHORIZEDbyownerexplicitNoneaction. Preparedignoredscript
+build/restore-native-eco-v063-20261101.py defaultoffline verifiesoriginalFalse
+inprivatev062/eco-baseline-v1. Executionflag --execute-authorized-eco-off creates
+freshprivatev063/eco-restore-v1; managerAPIqueueEXACTFalseONLYwhenliveaccepted
+freshSUB,actualeco/homebaselineknown,nopendingcommands; noautomaticretry.
+Usesexistingmanagercredential/intendedAPI, NOTCoreSupervisor401bypass. Canrun
+AFTERnew0.6.3Corehealth/freshnativecarrier; ifrefused preserveoutandreview.
+DoNOTmarkrestoreduntilphysical/freshnative confirmation. NoHVACauthorization.

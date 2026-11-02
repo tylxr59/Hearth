@@ -436,7 +436,12 @@ async def check(root, profile):
                         },
                     },
                     {"object_key": "shared." + IDENT, "value": {"schedule_mode": "HEAT"}},
-                    {"object_key": "schedule." + IDENT, "value": {"manual_schedule": week}},
+                    {
+                        "object_key": "schedule." + IDENT,
+                        "base_object_revision": -1,
+                        "op": "OVERWRITE",
+                        "value": {"manual_schedule": week},
+                    },
                 ]
             }
             async with client.post(
@@ -445,6 +450,10 @@ async def check(root, profile):
                 assert response.status == 200
             await hass.async_block_till_done()
             assert "eco" in hass.states.get(climate_id).attributes["preset_modes"]
+            explicit_clear = await command_roundtrip(
+                "set_preset_mode", {"preset_mode": "none"}, None
+            )
+            assert explicit_clear["manual_eco_all"] is False
             eco = await command_roundtrip("set_preset_mode", {"preset_mode": "eco"}, None)
             assert eco["manual_eco_all"] is True
             assert abs(eco["manual_eco_timestamp"] - int(__import__("time").time())) < 10
@@ -995,7 +1004,9 @@ async def check(root, profile):
                     "zero_preserved": True,
                     "availability_expiry": True,
                     "canonical_command_poll_disabled": True,
-                    "native_climate_roundtrips": 17,
+                    "native_climate_roundtrips": 18,
+                    "explicit_none_sends_clear_from_reported_none": True,
+                    "native_schedule_overwrite_put": True,
                     "native_eco_roundtrips": True,
                     "schedule_backup_and_replace": True,
                     "ha_weather_local_response": True,

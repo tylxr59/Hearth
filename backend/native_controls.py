@@ -62,6 +62,7 @@ class NativeControls(NativeTelemetry):
         self._local_user_acknowledged = set()
         self._local_home_offered = set()
         self._local_home_acknowledged = set()
+        self._schedule_shapes = {}
 
     def _records_for(self, ident):
         self.core.caps(ident)
@@ -79,6 +80,7 @@ class NativeControls(NativeTelemetry):
             self._local_user_acknowledged.discard(ident)
             self._local_home_offered.discard(ident)
             self._local_home_acknowledged.discard(ident)
+            self._schedule_shapes.pop(ident, None)
         return super()._records_for(ident)
 
     def home_key(self, ident):
@@ -342,6 +344,7 @@ class NativeControls(NativeTelemetry):
                 "home_reference_validated": self.home_key(ident) is not None,
                 "native_eco_field_observed": device is not None and "eco" in device.fingerprints,
                 "schedule_bucket_observed": f"schedule.{ident}" in records,
+                "schedule_shape": self._schedule_shapes.get(ident),
                 "schedule_schema_validated": bool(self.reported.get(ident, {}).get("schedule")),
                 "schedule_fresh": bool(self.reported.get(ident, {}).get("schedule"))
                 and not any(

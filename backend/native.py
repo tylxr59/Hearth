@@ -40,9 +40,11 @@ META = {
     "object_timestamp",
     "base_object_revision",
     "if_object_revision",
+    "op",
 }
 REJECTION_REASONS = {
     "invalid native revision or timestamp": "revision_or_timestamp",
+    "unsupported native operation": "operation",
     "native value nesting limit exceeded": "value_depth",
     "nonfinite native value": "nonfinite_value",
     "native object key required": "object_key",
@@ -76,6 +78,26 @@ MAPPINGS = {
     },
     "shared": {"current_temperature": "temperature", "target_temperature": "target_temperature"},
 }
+
+
+class ScheduleOverwrite(dict):
+    """Explicit native schedule replacement. Feature/schema validation remains separate."""
+
+
+class RevisionError(Invalid):
+    """Finite field/type/sign evidence, without retaining numeric values or IDs."""
+
+    def __init__(self, name, value, kind, subscription):
+        super().__init__("invalid native revision or timestamp")
+        self.observation = {
+            "field": name,
+            "known_bucket_kind": kind,
+            "subscription": subscription,
+            "value_type": json_type(value),
+            "is_minus_one": type(value) is int and value == -1,
+            "negative": type(value) is int and value < 0,
+            "above_limit": type(value) is int and value > MAX_INTEGER,
+        }
 
 
 class BucketShapeError(Invalid):
@@ -209,9 +231,21 @@ def envelope(ident, body, *, subscription=False, structure_key=None, user_key=No
         if key in seen:
             raise Invalid("duplicate native bucket")
         seen.add(key)
-        for name in META - {"object_key"}:
+        for name in sorted(META - {"object_key", "op"}):
             if name in obj and obj[name] is not None:
-                integer(obj[name])
+                # The pinned reference treats the base revision as informational.
+                # Only its explicit unknown-base sentinel is accepted on PUT.
+                if (
+                    not subscription
+                    and name == "base_object_revision"
+                    and type(obj[name]) is int
+                    and obj[name] == -1
+                ):
+                    continue
+                try:
+                    integer(obj[name])
+                except Invalid as exc:
+                    raise RevisionError(name, obj[name], kind, subscription) from exc
         value = obj.get("value")
         if kind in UNBOUND_BUCKETS and key not in (structure_key, user_key):
             # Account ownership cannot be learned from this request. Leave its
@@ -235,6 +269,10 @@ def envelope(ident, body, *, subscription=False, structure_key=None, user_key=No
             )
         ):
             raise Invalid("inline native bootstrap value requires zero revision and timestamp")
+        if "op" in obj:
+            if subscription or kind != "schedule" or obj["op"] != "OVERWRITE":
+                raise Invalid("unsupported native operation")
+            value = ScheduleOverwrite(value)
         normalized.append(
             (
                 key,
@@ -271,6 +309,7 @@ class NativeTelemetry:
         self._records, self._generation = {}, {}
         self._rejections, self._last_rejection = {}, None
         self._last_bucket_shape = None
+        self._last_revision_error = None
         self._empty_filters_accepted = False
 
     def reject(self, error):
@@ -281,11 +320,15 @@ class NativeTelemetry:
         self._last_rejection = reason
         if isinstance(error, BucketShapeError):
             self._last_bucket_shape = error.observation
+        if isinstance(error, RevisionError):
+            self._last_revision_error = error.observation
 
     def diagnostics(self):
         result = {"rejections": dict(self._rejections), "last_rejection": self._last_rejection}
         if self._last_bucket_shape is not None:
             result["last_bucket_shape"] = json.loads(json.dumps(self._last_bucket_shape))
+        if self._last_revision_error is not None:
+            result["last_revision_error"] = dict(self._last_revision_error)
         if self._empty_filters_accepted:
             result["empty_subscription_filters_accepted"] = True
         return result
@@ -358,7 +401,11 @@ class NativeTelemetry:
             if conditional is not None and conditional != previous.revision:
                 replies.append(previous.metadata(key))
                 continue
-            merged = previous.fingerprints | fingerprints
+            merged = (
+                fingerprints
+                if isinstance(value, ScheduleOverwrite)
+                else previous.fingerprints | fingerprints
+            )
             if len(merged) > MAX_FIELDS:
                 raise Invalid("native bucket field limit exceeded")
             changed = merged != previous.fingerprints
