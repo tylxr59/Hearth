@@ -391,3 +391,11 @@ The owner physically verified one future schedule point through HA and restored
 the empty week under0.6.8, with Heat63°F and the furnace idle. That test exposed the
 old getter mismatch. Version0.6.9 fixes the feedback path; its activation and live
 reconnection are separate from that physical result.
+
+
+The owner subsequently verified the0.6.9 schedule path: HA returned the applied
+future point at revision5/source acknowledged, matching the physical Nest. Original
+empty-week restoration was acknowledged at revision6; its saved configuration
+matched the original exactly. Backups before both changes retained the corresponding
+week/revision/source. The physical dial was63°F with heating idle afterward. This
+verifies the tested Gen2 full-week cycle, not every schedule mode or equipment type.

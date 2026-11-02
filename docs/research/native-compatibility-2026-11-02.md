@@ -222,3 +222,16 @@ and command feedback remain bugs. The next correction must associate each week
 with its own revision/source, keep requested/acknowledged configuration separate
 from reported native values, and retain backup, generation, CAS and no-intent-replay
 gates. No further thermostat operation is needed during this offline correction.
+
+
+##0.6.9 schedule feedback result
+
+A fresh physical add/remove produced native revisions3/4 with corresponding known
+complete weeks. HA replacement then received an exact post-write metadata ACK at
+revision5. Owner get_schedule returned the actual proposed week/revision5/source
+acknowledged, and the physical future point was present. The separate original
+restore completed at revision6; its saved week equalled the preserved original.
+Owner confirmed empty UI, Heat63°F and no heating activity. Private HA backups were
+verified for both original revision4 and acknowledged revision5. Full native value
+echoes remain distinct from metadata acknowledgement; no explicit echo is claimed.
+No hardware control loop or thermostat firmware changed during these tests.

@@ -223,6 +223,38 @@ will execute the HA action once; observer schedule-ha-apply-watch-v1 is read-onl
 Restore must use preserved original and a newly observed matching revision; do not
 reuse068actions. No intentional equipment call, mode/Eco change or restart authorized.
 
+Owner executed0.6.9 apply.yaml ONCE and reported success. Read-only observer proves
+schedule pending→acknowledged, actual stream_write_completed=true and subsequent
+metadata_acknowledged=true, no pending delivery left. SSH capture private069/
+schedule-ha-apply-capture-v1 proves known configuration sourceacknowledged/revision5
+matches proposed full week exactly; older reported cache still empty/revision4,
+kept separate as intended. No rejected native uploads. Native weather GET served.
+Prepared fresh069/schedule-ha-bench-v1/restore.yaml uses original empty week and
+revision5; NOTexecuted yet. Need owner physical future point + HA get_schedule
+readback check, then owner restore once. Do not leave the temporary point installed.
+Owner current63F/idle has not been separately reconfirmed this turn. No additional
+HA commands/restart/physical heat request sent by agent.
+
+0.6.9 schedule cycle COMPLETE and physically RESTORED. Owner full get_schedule
+response now returns actual proposed week/revision5/sourceacknowledged with future
+noon62Fpoint; owner verified point on Nest. Owner then executed fresh restore.yaml
+and confirmed empty physical schedule, dial63F, no heating activity. SSH snapshot
+known-schedules revision6/sourceacknowledged equals original empty week exactly.
+Both new HA archives verified:revision4/source device original before apply, and
+revision5/source acknowledged applied week before restore. This closes current
+values/revision readback, metadata acknowledgement, persisted configuration and
+backup path for actual Gen2 full-week replacement/restore. No full native week echo
+is claimed. Source0.6.9/live code unchanged, no extra restart/NAND work.
+Private069/schedule-ha-bench-v1 contains owner-readback/restore-observation/
+backup-validation; preserve all actions/results and NEVER rerun either action.
+Next prepared helper:build/native-ha-v069-eco-cycle-20261102.py (no-arg offline
+checks pass, no network/control). It reuses exact previously checked guards but
+fresh069 paths and current restored-state capture, not old commands. No on/off
+step executed. Need owner readiness for one Eco on/off feedback cycle, limits
+unchanged (owner previously Heat to Off), saved63Frestore baseline. Guard requires
+live connection/no pending commands/Heat-only/room3C above target. Physical heating
+call still unapproved; equipment described oil furnace/baseboard, exacttypeunknown.
+
 ## Purpose and current status
 
 Build a local-first Nest Learning Thermostat modification that preserves native hardware/HVAC control. Gen 2 is the primary target; Gen 1 is secondary. Prefer a verified local on-device interface if feasible; otherwise retain the native transport behind a minimal local backend. Do not rewrite HVAC control loops.
