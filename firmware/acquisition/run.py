@@ -151,6 +151,8 @@ def receive(fd, deadline, session, output):
                 return preserve_inputs(output, decoder)
         raise TimeoutError("acquisition incomplete; private partial output preserved")
     finally:
+        if decoder.failure is not None:
+            save(output, "failure.json", encode(decoder.failure))
         if decoder.buffer:
             save(output, "incomplete-frame.bin", bytes(decoder.buffer))
 
@@ -233,9 +235,17 @@ if __name__ == "__main__":
     parser.add_argument("output", nargs="?")
     parser.add_argument("--execute-read-only-installer-acquisition", action="store_true")
     args = parser.parse_args()
-    print(
-        json.dumps(
-            run(args.profile, args.output, execute=args.execute_read_only_installer_acquisition),
-            indent=2,
+    try:
+        print(
+            json.dumps(
+                run(
+                    args.profile, args.output, execute=args.execute_read_only_installer_acquisition
+                ),
+                indent=2,
+            )
         )
-    )
+    except (OSError, ValueError, subprocess.SubprocessError) as exc:
+        parser.exit(
+            1,
+            f"Protected acquisition incomplete ({type(exc).__name__}). Private evidence preserved; no automatic retry. After command exit, manually restart to native startup.\n",
+        )

@@ -8,34 +8,41 @@
 #include "../network_snapshot/reader.h"
 #define ACQ_LIMIT (16U*1024U*1024U)
 static unsigned char acquisition[ACQ_LIMIT];
+/* Fixed value-free I/O diagnostics: operation enum, errno and inode type only. */
+static unsigned int io_stage,io_error,io_type;
+static long io_result(unsigned int stage,long result)
+{ if(result<0) { io_stage=stage;io_error=(unsigned int)-result; } return result; }
 static unsigned int get32(const unsigned char *p)
 { return p[0]|(unsigned int)p[1]<<8|(unsigned int)p[2]<<16|(unsigned int)p[3]<<24; }
 static int acq_open(int fd,const char *name)
 {
  unsigned long long data[16];unsigned int type;
  /* Check without following links before opening: never open a device/FIFO. */
- if(raw(327,fd,(long)name,(long)data,256,0)) return -1;
+ if(io_result(1,raw(327,fd,(long)name,(long)data,256,0))) return -1;
  type=get32((unsigned char *)data+16)&0170000;
- if(type!=0040000&&type!=0100000) return -1;
- return (int)raw(322,fd,(long)name,2048|32768|524288,0,0);
+ if(type!=0040000&&type!=0100000) { io_stage=2;io_type=type;return -1; }
+ return (int)io_result(3,raw(322,fd,(long)name,2048|32768|524288,0,0));
 }
-static int acq_close(int fd) { return (int)raw(6,fd,0,0,0,0); }
+static int acq_close(int fd) { return (int)io_result(9,raw(6,fd,0,0,0,0)); }
 static int acq_metadata(int fd,struct hfd_stat *m)
 {
  unsigned long long data[16];unsigned char *p=(unsigned char *)data;
- if(raw(197,fd,(long)data,0,0,0)||get32(p+52)) return -1;
+ if(io_result(4,raw(197,fd,(long)data,0,0,0))) return -1;
+ if(get32(p+52)) { io_stage=4;io_error=75;return -1; }
  m->mode=get32(p+16);m->owner=get32(p+24);m->group=get32(p+28);m->size=get32(p+48);return 0;
 }
 static int acq_directory(int fd)
 {
  unsigned long long data[16];unsigned char *p=(unsigned char *)data;
- return raw(100,fd,(long)data,0,0,0)||get32(p)!=0x72b6||!(get32(p+44)&1)?-1:0;
+ if(io_result(5,raw(100,fd,(long)data,0,0,0))) return -1;
+ if(get32(p)!=0x72b6||!(get32(p+44)&1)) { io_stage=5;io_error=22;return -1; }
+ return 0;
 }
 static long acq_entries(int fd,unsigned char *out,unsigned int capacity)
-{ return raw(217,fd,(long)out,capacity,0,0); }
+{ return io_result(6,raw(217,fd,(long)out,capacity,0,0)); }
 static long acq_read(int fd,unsigned char *out,unsigned int capacity)
-{ return raw(3,fd,(long)out,capacity,0,0); }
-static long acq_seek(int fd,unsigned int at) { return raw(19,fd,at,0,0,0); }
+{ return io_result(7,raw(3,fd,(long)out,capacity,0,0)); }
+static long acq_seek(int fd,unsigned int at) { return io_result(8,raw(19,fd,at,0,0,0)); }
 static const struct hfd_ops ops={acq_open,acq_close,acq_metadata,acq_directory,acq_entries,acq_read,acq_seek};
 static int await_session(int fd)
 {
@@ -80,10 +87,21 @@ static int export_groups(int fd)
  unsigned int i,j,length;int root;
  for(i=0;i<4;i++) {
   unsigned char header[52]={'H','A','C','Q','L','I','B','1'};
+  io_stage=io_error=io_type=0;
   root=(int)raw(5,(long)paths[i],16384|32768|524288,0,0,0);
   if(root<0) return -1;
   length=hfd_capture(&ops,root,acquisition,sizeof(acquisition));
-  if(acq_close(root)||length<16||get32(acquisition)!=0) return -1;
+  if(acq_close(root)||length<16||get32(acquisition)!=0) {
+   unsigned char diagnostic[48]={'H','A','C','Q','E','R','R','1'},words[32];
+   for(j=0;j<32;j++) diagnostic[8+j]=hearth_session[j];
+   put(words,i);put(words+4,length>=16?get32(acquisition):3);
+   put(words+8,length>=16?get32(acquisition+4):0);put(words+12,length>=16?get32(acquisition+8):0);
+   put(words+16,length>=16?get32(acquisition+12):0);
+   put(words+20,io_stage);put(words+24,io_error);put(words+28,io_type);
+   put(diagnostic+40,sizeof(words));put(diagnostic+44,crc(words,sizeof(words)));
+   send_all(fd,diagnostic,sizeof(diagnostic));send_all(fd,words,sizeof(words));
+   send_all(fd,(const unsigned char *)"HACQERND",8);return -1;
+  }
   for(j=0;j<32;j++) header[8+j]=hearth_session[j];
   put(header+40,i);put(header+44,length);put(header+48,crc(acquisition,length));
   if(send_all(fd,header,sizeof(header))||send_all(fd,acquisition,length)||send_all(fd,footer,8)) return -1;

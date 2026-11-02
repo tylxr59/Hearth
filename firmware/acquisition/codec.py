@@ -14,6 +14,8 @@ MAGIC = b"HACQLIB1"
 END = b"HACQEND1"
 DONE = b"HACQDONE"
 FAILURE = b"HEARTH_ACQUISITION_FAILED_V1\n"
+ERROR = b"HACQERR1"
+ERROR_END = b"HACQERND"
 GROUPS = ("lib", "usr/lib", "nestlabs/lib", "nestlabs/sbin")
 LIMIT = 16 * 1024 * 1024
 FILE_LIMIT = 8 * 1024 * 1024
@@ -50,7 +52,7 @@ def decode_group(payload, prefix):
             raise ValueError("regular complete acquisition file required")
         raw = payload[at : at + length]
         at += length
-        if any(c < 32 or c > 126 for c in raw) or b"\\" in raw:
+        if any(c < 32 or c > 126 for c in raw) or b"\\" in raw or b"/" in raw:
             raise ValueError("bounded acquisition path required")
         name = raw.decode("ascii")
         if (
@@ -80,6 +82,7 @@ class Decoder:
         self.snapshot, self.files = None, []
         self.network = None
         self.group, self.complete = 0, False
+        self.failure = None
 
     def feed(self, chunk):
         if not isinstance(chunk, bytes) or len(chunk) > 65536 or self.complete:
@@ -88,6 +91,51 @@ class Decoder:
         if len(self.buffer) > LIMIT + 65600:
             raise ValueError("acquisition buffer limit")
         while True:
+            if self.buffer.startswith(ERROR):
+                if len(self.buffer) < 48:
+                    return
+                length, crc = struct.unpack_from("<2I", self.buffer, 40)
+                if self.buffer[8:40] != self.session or length != 32:
+                    raise ValueError("bounded diagnostic session required")
+                if len(self.buffer) < 88:
+                    return
+                frame = bytes(self.buffer[:88])
+                del self.buffer[:88]
+                self.preserve("failure-frame.bin", frame)
+                words = frame[48:-8]
+                if frame[-8:] != ERROR_END or zlib.crc32(words) != crc:
+                    raise ValueError("directory diagnostic integrity failure")
+                values = struct.unpack("<8I", words)
+                group, status, count, scanned, limited, stage, error, inode = values
+                if not (
+                    group == self.group < 4
+                    and status <= 3
+                    and count <= 256
+                    and scanned <= 513
+                    and limited <= 1
+                    and stage <= 9
+                    and error <= 4095
+                    and inode
+                    in (0, 0o10000, 0o20000, 0o40000, 0o60000, 0o100000, 0o120000, 0o140000)
+                ):
+                    raise ValueError("bounded directory diagnostic fields required")
+                self.failure = dict(
+                    zip(
+                        (
+                            "group",
+                            "status",
+                            "files",
+                            "scanned",
+                            "limited",
+                            "io_stage",
+                            "errno",
+                            "inode_type",
+                        ),
+                        values,
+                        strict=True,
+                    )
+                )
+                raise ValueError("protected directory export failed; private diagnostic preserved")
             if self.snapshot is None:
                 if self.buffer.startswith(FAILURE):
                     raise ValueError("device acquisition failed")

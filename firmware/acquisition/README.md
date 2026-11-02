@@ -1,7 +1,7 @@
 # Protected installer input acquisition
 
 This original reader combines the existing nine-file and four-file snapshots
-with four bounded directory exports: `/lib`, `/usr/lib`, `/nestlabs/lib` and
+with four bounded top-level regular-file exports: `/lib`, `/usr/lib`, `/nestlabs/lib` and
 `/nestlabs/sbin` from the protected root0 view. It acquires the user's existing
 native libraries as private data for a future local kit builder. Nothing from
 these exports belongs in a release archive or source checkout.
@@ -12,13 +12,15 @@ native application execution. The reader opens regular files/directories only,
 does not follow symlinks, requires read-only JFFS2 directories and refuses partial
 files or exceeded bounds. Symlink targets are not recreated on the host.
 
-Each of the four groups permits at most256 files,512 scanned entries, depth4,
+Each of the four groups permits at most256 files and512 scanned entries,
 8MiB per file and16MiB per frame. A fresh32-byte session binds the ordered
 snapshots and groups. The host preserves bounded raw frames before decoding,
 requires matching overlapping files and an exact completion marker, then writes
 the corpus and two independently verified snapshot archives below a fresh private
 directory. Files are0600 and directories0700; original modes are metadata only.
-No acquired program is run on the host. This is selected-file custody, not a
+Subdirectories such as kernel modules and locales are skipped; the native
+dependency resolver uses the direct files' names/SONAMEs. No acquired program
+is run on the host. This is selected-file custody, not a
 whole-firmware backup or verified restoration procedure.
 
 Prepare and check offline from an existing verified protected kernel build:

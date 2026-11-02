@@ -1,5 +1,8 @@
 /* Original MIT. No write, exec, networking or symlink traversal operation. */
 #include "logs.h"
+#ifndef HFD_RECURSE
+#define HFD_RECURSE 1
+#endif
 struct state { const struct hfd_ops *ops;unsigned char *out;unsigned int capacity,at,files,scanned,status; };
 static void put(unsigned char *p,unsigned int n)
 { unsigned int i;for(i=0;i<4;i++) p[i]=(unsigned char)(n>>(8*i)); }
@@ -41,7 +44,9 @@ static void walk(struct state *s,int parent,const char *prefix,unsigned int leng
    fd=s->ops->open(parent,name);
    if(fd<0) { s->status=1;return; }
    if(s->ops->metadata(fd,&before)) { s->ops->close(fd);s->status=1;return; }
-   if((before.mode&0170000)==0040000) walk(s,fd,path,path_length,depth+1);
+   if((before.mode&0170000)==0040000) {
+    if(HFD_RECURSE) walk(s,fd,path,path_length,depth+1);
+   }
    else if((before.mode&0170000)==0100000) {
     tail=before.size>HFD_TAIL?HFD_TAIL:before.size;
     if(s->at>s->capacity||24U+path_length+tail>s->capacity-s->at) { s->status=2;s->ops->close(fd);return; }

@@ -108,6 +108,62 @@ def test_missing_completion_and_partial_group_are_not_success():
         assert not decoder.complete
 
 
+def diagnostic(values=(0, 1, 0, 1, 0, 1, 38, 0)):
+    data = struct.pack("<8I", *values)
+    return (
+        codec.ERROR
+        + SESSION
+        + struct.pack("<2I", len(data), zlib.crc32(data))
+        + data
+        + codec.ERROR_END
+    )
+
+
+def test_directory_failure_is_bounded_private_metadata_never_a_success():
+    decoder, frames = decoded()
+    prefix = frames["capture.bin"] + frames["network-capture.bin"]
+    saved = {}
+    decoder = codec.Decoder(SESSION, lambda name, data: saved.__setitem__(name, data))
+    decoder.feed(prefix)
+    value = diagnostic()
+    for byte in value[:-1]:
+        decoder.feed(bytes([byte]))
+    with pytest.raises(ValueError, match="private diagnostic"):
+        decoder.feed(value[-1:])
+    assert decoder.failure == {
+        "group": 0,
+        "status": 1,
+        "files": 0,
+        "scanned": 1,
+        "limited": 0,
+        "io_stage": 1,
+        "errno": 38,
+        "inode_type": 0,
+    }
+    assert saved["failure-frame.bin"] == value and not decoder.complete
+
+
+@pytest.mark.parametrize("fault", ("nonce", "crc", "footer", "length", "enum", "group"))
+def test_corrupt_or_unbounded_diagnostic_is_not_accepted(fault):
+    value = bytearray(diagnostic())
+    if fault == "nonce":
+        value[8] ^= 1
+    elif fault == "crc":
+        value[44] ^= 1
+    elif fault == "footer":
+        value[-1] ^= 1
+    elif fault == "length":
+        value[40:44] = struct.pack("<I", 2**32 - 1)
+    elif fault == "enum":
+        value = diagnostic((0, 1, 0, 1, 0, 99, 0, 0))
+    else:
+        value = diagnostic((3, 1, 0, 1, 0, 1, 38, 0))
+    decoder = codec.Decoder(SESSION, lambda *_: None)
+    with pytest.raises(ValueError):
+        decoder.feed(bytes(value))
+    assert decoder.failure is None and not decoder.complete
+
+
 @pytest.mark.parametrize("path", (b"../secret", b"/absolute", b"a//b", b"a/./b", b"a\\b", b"a\0b"))
 def test_group_rejects_paths_outside_private_corpus(path):
     with pytest.raises(ValueError):
@@ -250,7 +306,21 @@ def test_original_walker_acquires_full_files_larger_than_log_tail(harness, tmp_p
     assert not result.stderr
     rows = {row.path: row for row in codec.decode_group(result.stdout, "lib")}
     assert rows["lib/large"].data == data
-    assert set(rows) == {"lib/large", "lib/nested/file"}
+    assert set(rows) == {"lib/large"}
+
+
+def test_library_capture_skips_deep_modules_without_expanding_the_log_reader(harness, tmp_path):
+    (tmp_path / "libfixture.so").write_bytes(b"original synthetic library")
+    nested = tmp_path
+    for _ in range(8):
+        nested = nested / "nested"
+        nested.mkdir()
+    (nested / "kernel-module").write_bytes(b"out of scope")
+    result = subprocess.run(
+        [str(harness), str(tmp_path)], check=True, capture_output=True, timeout=5
+    )
+    rows = codec.decode_group(result.stdout, "lib")
+    assert len(rows) == 1 and rows[0].path == "lib/libfixture.so"
 
 
 def test_original_walker_limit_is_not_accepted_as_complete(harness, tmp_path):
