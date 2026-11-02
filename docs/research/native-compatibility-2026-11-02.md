@@ -54,3 +54,21 @@ passes. Final and independent reproduction packages match exactly. All 33 staged
 integration files read back exactly; old code, cache and pairing are backed up.
 Activation and Core restart await owner approval. No thermostat flash or remote
 HVAC operation was performed for this update.
+
+## 0.6.6 activation and reconnect
+
+The owner explicitly approved activation and one Core restart. All active source
+bytes matched the staged package; the previous source remains preserved. Core
+restart returned zero, with four registered entities and no scoped errors. The
+owner saved the fallback location in HA options. A read-only host request to the
+literal fallback path returned valid configured location/timezone, current weather,
+48 hourly rows and six daily rows. This checks the server response, not native UI
+rendering of every forecast field.
+
+The Nest reconnected without another restart. Fresh native GET, PUT and subscription
+requests were observed, with an active subscription, local user/home metadata
+acknowledgements and one native weather request served without rejection. Effective
+modes were off/heat, with no pending commands. The successful native weather request
+is not evidence of which query form it used. No thermostat command, flash or
+physical HVAC switching was performed during this activation. Actual schedule
+replacement and remote control confirmation remain outstanding.

@@ -3,7 +3,7 @@
 
 ## Current handoff: 2026-11-02
 
-Live HA is **0.6.5**. The owner has now installed the Nest on actual HVAC wiring.
+Live HA is **0.6.6**. The owner has now installed the Nest on actual HVAC wiring.
 E22 is gone; the physical dial shows Heat at 59 F and the owner reports no furnace
 activity with room temperature above target. A read-only manager check found no
 pending commands. Do not assume this installation proves HVAC switching, cooling,
@@ -17,20 +17,28 @@ commands expired without fresh field confirmation; this physical observation
 resolves current state but does not prove those commands caused it. Preserve the
 original baseline/attempts; no further Eco-off or Eco-on command is needed now.
 
-0.6.6 is checked and staged, NOT activated. It adds explicit local postal/country
-fallback for the native ipv4 weather query and preserves recognized point entry_type
-and integer provenance/optional user identity through schedule cache and backup.
-Unknown fields and incomplete provenance still refuse validation. All 1303 host
-tests pass (five optional skips), make check passes, and real HA2026.10.4 passes
-18 synthetic control round trips including native point provenance and local fallback.
-The final/repro packages match (33 integration files plus inventory). Remote
-stage-v1 readback passed; active code, cache and pairing are preserved privately
-under private/native-ha-v066-20261102/stage-v1. Activation script is prepared but
-NOT RUN. Owner Core restart approval is pending; no more control commands sent.
-NLE pinned source comparison confirms the same Eco fields/timestamp units. Its
-weather proxy still calls Nest, which is not used by Hearth's HA weather source.
-Live 0.6.5 source, cache and pairing backups remain private. A new Core restart
-requires approval after the checked package is concrete and staged.
+The owner explicitly approved 0.6.6 activation and ONE Core restart. Activation-v1
+rechecked staged/old code, switched 33 files, verified exact active bytes and
+preserved old 0.6.5. Restart returned zero. Health-v1/options-check-v1 found four
+registered entities, no scoped errors and a private single-link 0600 reported cache.
+The owner saved the fallback postal/country in HA options. A read-only host check
+returned HTTP200, correct configured location/timezone and 48 hourly/six daily rows.
+The Nest subsequently reconnected by itself: fresh GET/PUT/subscription, active
+subscription, user/home metadata ACK, effective modes off/heat, no pending commands,
+and one native weather request served without rejection. No wake/reboot is needed.
+These receipts are private/native-ha-v066-20261102; post-options-wake-watch-v1 is
+read-only. No thermostat control command or flashing occurred during activation.
+
+0.6.6 preserves recognized native schedule point classification and provenance;
+unknown fields/incomplete provenance still refuse. Preparation passed 1303 host
+tests/five optional skips, make check and 18 real-HA synthetic control round trips.
+The final/repro packages match. An actual full native week has not yet been
+received/validated this runtime; no owner schedule replacement is verified.
+Physical Eco is off (owner Start Eco menu), but prior remote Eco execution remains
+unverified. Next prepare a supervised bounded setpoint decrease/restore, with fresh
+heat-mode/room-above-both-targets preflight and original target preserved. Do not
+activate HVAC outputs or modes automatically. The 0.6.6 Core restart approval is
+consumed; any later restart needs a new applicable approval.
 
 ## Purpose and current status
 
