@@ -47,8 +47,10 @@ hold the ring for10 seconds, release, then press/release once. There is no
 automatic boot or collection retry. After the host command exits, use the same
 manual sequence to return to native startup and confirm the screen/USB identity.
 
-Host protocol, storage and original C sanitizer fixtures pass. ARM helper build
-and offline reproducibility are checked separately. This consolidated image has
-not yet been measured on hardware; passing earlier individual snapshots does
-not establish this new image's execution. A stock-source kernel/bootstrap build
-and per-device install/restore kit assembly still need orchestration.
+Host protocol, storage and original C sanitizer fixtures pass. The public-source
+kernel/bootstrap and helper build pass, with eight reader artifacts reproducing.
+The corrected top-level image completed a supervised owner-unit run:136 private
+files and34 native dependencies verified, followed by confirmed native UI/USB
+return. Earlier traversal-bound failures remain preserved privately. See the
+dated observed validation record. Per-device install/restore kit assembly and
+a pristine stock-unit installation still remain.

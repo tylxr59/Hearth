@@ -10,9 +10,11 @@ The historical investigation is archived under `docs/development/history/` and
   native subscriptions; do not implement relay or replacement regulation logic.
 - Gen2 Display-2.6, primary firmware5.9.4-5 is the measured target. Do not claim
   Gen1, other firmware, cooling, emergency heat or fan operation from simulations.
-- Live owner HA is0.6.9. The thermostat is on actual oil/baseboard HVAC wiring,
-  Heat63F, Ecooff, empty schedule, owner-confirmed heating idle. Do not treat it
-  as an unwired bench. No loader is armed.
+- Live owner HA is0.6.9. Its base is wired to actual oil/baseboard HVAC;
+  the display is currently detached and charging by USB after the supervised
+  installer-reader test. Last on-base state was Heat63F, Ecooff, empty schedule,
+  owner-confirmed heating idle. No loader is armed. Do not assume an unwired
+  base when it is reattached.
 - The owner authorizes local implementation, docs, packaging, tests and commits/
   pushes. The current public-product work does not authorize another HA Core
   restart, a new persistent device write or an intentional HVAC call.

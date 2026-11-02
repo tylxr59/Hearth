@@ -16,9 +16,11 @@ read-only preflight, explicit commit, encoding audit or matching restore image.
 The public reader pipeline is now automated by `hearth sources`, `build-reader`
 and `acquire`. A fresh end-to-end source build passed offline, including the host
 loader's USB simulation. Eight acquisition artifacts reproduce against its
-protected base. The rebuilt bootstrap files differ from the historical measured
-build and the consolidated reader has not run on hardware. This is not a new
-hardware validation or completed per-device installer.
+protected base. The rebuilt bootstrap code/data match the earlier build, with
+only version timestamps differing. A supervised corrected reader run acquired
+both snapshots and four top-level groups, verified136 private files and the full
+34-library closure, and returned to native UI/USB. The existing owner unit was
+already commissioned; this is not a stock installation or completed write kit.
 
 `hearth check-inputs` independently reconstructs all saved frames, checks the
 completion marker, exact corpus/index equality and both custody archives, then

@@ -100,9 +100,10 @@ Acquisition requires a terminal, matching fresh identity and an explicit READY
 confirmation before the owner-timed restart. It reads two fixed snapshots plus
 four library directories into private custody, without a flash writer or native
 application execution. Nothing acquired is made executable on the host. Return
-to native startup after the command exits. The consolidated reader and rebuilt
-boot chain still require a supervised hardware measurement; earlier individual
-snapshot results are not that measurement.
+to native startup after the command exits. The corrected consolidated reader
+and rebuilt boot chain completed a supervised read-only run on the existing
+owner unit, including native UI/USB return. This does not establish a pristine
+stock installation or whole-firmware recovery.
 
 The final offline check reconstructs the ordered raw frames, checks the saved
 completion marker, compares every private corpus file and metadata record, and

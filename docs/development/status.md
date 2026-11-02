@@ -24,10 +24,16 @@ diagnostics include voltage, RSSI, filter, outdoor and native activity fields.
 The guided writer consumes separately prepared device-bound install/restore
 profiles. Pinned source fetching, isolated reader compilation and consolidated
 read-only acquisition now have public CLI commands. The fresh source-to-reader
-build passes offline and eight reader artifacts reproduce; the rebuilt boot
-chain/consolidated reader have not yet been measured on hardware. Per-unit
+build passes offline and eight reader artifacts reproduce. The rebuilt boot
+chain and corrected top-level reader passed a supervised read-only boot: both
+snapshots, all four groups,136 private files and the complete34-library closure
+validate, with owner-confirmed UI and independently observed native USB return.
+This was the already-commissioned owner unit, not a pristine stock install. Per-unit
 replacement construction and write-kit assembly remain an explicit release gap.
 Do not confuse an implemented frontend with a turnkey stock-device installer.
+
+The display is now detached from its HVAC base and charging by USB. No loader
+is armed. Latest complete host suite:1,467 passed, five optional skips.
 
 Canonical sources: `backend/`, `custom_components/hearth/`, `installer/`,
 `provisioning/`, `firmware/`. Generated HA transport is checked for exact equality.

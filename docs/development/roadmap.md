@@ -8,8 +8,8 @@
 - Verify an actual timed schedule transition and sustained multi-day operation.
 - Validate new settings types/bounds and acknowledgements on supported firmware.
 - Verify physical outdoor-weather rendering and unavailable-provider behavior.
-- Validate the consolidated acquisition/boot chain on hardware and complete
-  source-based, per-device firmware-kit preparation so
+- Extend the measured consolidated reader to pristine supported units and
+  complete source-based, per-device firmware-kit preparation so
   the guided installer does not need developer-prepared profiles.
 - Exercise the public installer/restore workflow on supported hosts and supported
   stock units; retain exact originals and interrupted-write refusal/recovery.
