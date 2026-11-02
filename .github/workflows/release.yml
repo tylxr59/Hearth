@@ -1,0 +1,47 @@
+name: Release preview
+on:
+  push:
+    tags: ["v*"]
+permissions:
+  contents: read
+jobs:
+  package:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Prepare build environment
+        run: |
+          python3 -m venv .venv
+          .venv/bin/pip install --require-hashes -r requirements-dev.lock
+      - name: Verify tag and checked source
+        run: |
+          .venv/bin/python -c 'import json,os,tomllib; v=json.load(open("custom_components/hearth/manifest.json"))["version"]; assert os.environ["GITHUB_REF_NAME"] == "v"+v; assert tomllib.load(open("pyproject.toml","rb"))["project"]["version"] == v'
+          .venv/bin/python -m tools.sync_integration --check
+          make check test
+      - name: Build deterministic public artifacts
+        run: |
+          .venv/bin/python -m tools.public_release build/public-release
+          .venv/bin/python -m tools.public_release build/public-release-repro
+          diff -r build/public-release build/public-release-repro
+      - name: Upload reviewed artifacts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: hearth-release
+          path: build/public-release/*
+  publish:
+    needs: package
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: hearth-release
+          path: release
+      - name: Publish preview
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: gh release create "$GITHUB_REF_NAME" release/* --verify-tag --prerelease --generate-notes --title "Hearth $GITHUB_REF_NAME"

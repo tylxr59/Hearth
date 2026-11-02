@@ -110,6 +110,30 @@ def register(hass, entry):
         except (Invalid, OSError, ValueError) as exc:
             raise HomeAssistantError("Schedule not queued: " + str(exc)) from exc
 
+    async def set_device_settings(call):
+        if call.data["confirm_equipment_changes"]:
+            user = (
+                await hass.auth.async_get_user(call.context.user_id)
+                if call.context.user_id
+                else None
+            )
+            if user is None or not user.is_admin:
+                raise HomeAssistantError("Equipment configuration requires an HA administrator")
+        ident = identity(call.data["entity_id"])
+        try:
+            runtime.enqueue(
+                ident,
+                {
+                    "operation": "device_settings",
+                    "value": {
+                        "settings": call.data["settings"],
+                        "confirm_equipment_changes": call.data["confirm_equipment_changes"],
+                    },
+                },
+            )
+        except Invalid as exc:
+            raise HomeAssistantError(str(exc)) from exc
+
     async def eco_limits(call):
         ident = identity(call.data["entity_id"])
         values = {name: call.data[name] for name in ("low", "high")}
@@ -148,6 +172,17 @@ def register(hass, entry):
             SupportsResponse.OPTIONAL,
         ),
         "get_schedule": (get_schedule, vol.Schema(target), SupportsResponse.ONLY),
+        "set_device_settings": (
+            set_device_settings,
+            vol.Schema(
+                target
+                | {
+                    vol.Required("settings"): dict,
+                    vol.Optional("confirm_equipment_changes", default=False): bool,
+                }
+            ),
+            SupportsResponse.NONE,
+        ),
         "set_schedule": (
             set_schedule,
             vol.Schema(

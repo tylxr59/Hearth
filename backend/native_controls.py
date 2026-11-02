@@ -13,7 +13,7 @@ import time
 import uuid
 from dataclasses import dataclass, field
 
-from backend import native_features, native_pairing, reported_state
+from backend import device_settings, native_features, native_pairing, reported_state
 from backend.native import NativeTelemetry, canonical, envelope, has_empty_filters, integer
 from backend.schedule_state import ScheduleState
 from backend.validation import Invalid, command, number
@@ -518,6 +518,7 @@ class NativeControls(NativeTelemetry):
             "eco_temperatures",
             "schedule",
             "schedule_mode",
+            "device_settings",
         ):
             return None
         op = body["operation"]
@@ -528,6 +529,8 @@ class NativeControls(NativeTelemetry):
         ):
             raise Invalid("invalid native feature command")
         value = body["value"]
+        if op == "device_settings":
+            return device_settings.plan(self, ident, value)
         if op == "eco":
             if type(value) is not bool or self.home_key(ident) is None:
                 raise Invalid("eco requires a reported home reference and boolean")
@@ -620,6 +623,8 @@ class NativeControls(NativeTelemetry):
         if not self.core.available(ident):
             raise Invalid("device unavailable")
         operation, value = validated["operation"], validated["value"]
+        if operation == "device_settings":
+            operation = "settings:" + ",".join(sorted(body["value"]["settings"]))
         kind, wire_field = "shared", "target_temperature"
         extras = {}
         if advanced is not None:

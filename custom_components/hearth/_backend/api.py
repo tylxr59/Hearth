@@ -1,0 +1,432 @@
+"""Authenticated API; plaintext permitted only on loopback for local development."""
+
+import argparse
+import asyncio
+import base64
+import binascii
+import ipaddress
+import json
+import secrets
+import ssl
+import time
+
+from aiohttp import web
+
+from .core import Core
+from .native import MAX_BODY as NATIVE_MAX_BODY
+from .native import NativeTelemetry
+from .native_controls import NativeControls
+from .native_weather import query_location, query_shape
+from .nest import reports
+from .registry import Registry
+from .validation import Invalid, endpoint, loads, serial
+
+CORE = web.AppKey("core", Core)
+ORIGIN = web.AppKey("origin", str)
+IDENT = web.RequestKey("serial", str)
+NATIVE = web.AppKey("native_telemetry", NativeTelemetry)
+NATIVE_HOLD = web.AppKey("native_hold_seconds", float)
+NATIVE_ACTIVE = web.AppKey("native_active", dict)
+NATIVE_STOP = web.AppKey("native_stop", asyncio.Event)
+WEATHER = web.AppKey("native_weather_provider", object)
+WEATHER_STATS = web.AppKey("native_weather_stats", dict)
+WEATHER_ENABLED = web.AppKey("native_weather_enabled", object)
+AUTH_GENERATION = web.RequestKey("credential_generation", str)
+
+
+def basic(header):
+    try:
+        kind, encoded = header.split(" ", 1)
+        if kind != "Basic":
+            raise ValueError
+        user, token = base64.b64decode(encoded, validate=True).decode().split(":", 1)
+        user = user.removeprefix("nest.")
+        return serial(user), token
+    except (ValueError, UnicodeError, binascii.Error) as exc:
+        raise Invalid("invalid credentials") from exc
+
+
+@web.middleware
+async def guard(request, handler):
+    try:
+        # The stock weather fetcher never enables Basic auth. This single
+        # read-only outdoor-weather route has no device state/control access.
+        if request.path == "/nest/weather/v1" and request.method == "GET":
+            response = await handler(request)
+            response.headers["Cache-Control"] = "no-store"
+            return response
+        core = request.app[CORE]
+        header = request.headers.get("Authorization", "")
+        if request.path.startswith("/v1/manage/"):
+            if not header.startswith("Bearer ") or not core.registry.admin(header[7:]):
+                raise web.HTTPUnauthorized()
+            request[AUTH_GENERATION] = core.registry.data["admin"]
+        else:
+            try:
+                ident, token = basic(header)
+            except Invalid:
+                raise web.HTTPUnauthorized() from None
+            if not core.registry.authenticate(ident, token):
+                raise web.HTTPUnauthorized()
+            request[IDENT] = ident
+            request[AUTH_GENERATION] = core.registry.data["devices"][ident]["hash"]
+        response = await handler(request)
+        response.headers["Cache-Control"] = "no-store"
+        return response
+    except Invalid as exc:
+        if NATIVE in request.app and request.path.startswith("/nest/"):
+            request.app[NATIVE].reject(exc)
+        return web.json_response({"error": str(exc)}, status=400)
+
+
+def require_current(request):
+    registry = request.app[CORE].registry.data
+    expected = (
+        registry["admin"]
+        if request.path.startswith("/v1/manage/")
+        else registry["devices"].get(request[IDENT], {}).get("hash", "")
+    )
+    if not secrets.compare_digest(request[AUTH_GENERATION], expected):
+        raise web.HTTPUnauthorized()
+
+
+async def body(request, limit=16384):
+    if request.content_type != "application/json":
+        raise web.HTTPUnsupportedMediaType()
+    raw = await request.read()
+    require_current(request)
+    if len(raw) > limit:
+        raise web.HTTPRequestEntityTooLarge(max_size=limit, actual_size=len(raw))
+    return loads(raw)
+
+
+async def report(request):
+    core, ident = request.app[CORE], request[IDENT]
+    core.report(ident, await body(request))
+    return web.json_response({"accepted": True})
+
+
+async def poll(request):
+    if NATIVE in request.app:
+        return web.json_response(
+            {"error": "native telemetry mode has no command delivery"}, status=409
+        )
+    return web.json_response({"commands": request.app[CORE].poll(request[IDENT])})
+
+
+async def ack(request):
+    request.app[CORE].ack(request[IDENT], await body(request))
+    return web.json_response({"accepted": True})
+
+
+async def status(request):
+    core = request.app[CORE]
+    result = {"devices": [core.view(i) for i in core.registry.data["devices"]]}
+    if NATIVE in request.app:
+        result["native_diagnostics"] = request.app[NATIVE].diagnostics()
+        result["weather_diagnostics"] = dict(request.app[WEATHER_STATS])
+        if isinstance(request.app[NATIVE], NativeControls):
+            for device in result["devices"]:
+                device["native_controls"] = request.app[NATIVE].control_view(device["serial"])
+                device["native_controls"]["transport"] = {
+                    "active_subscriptions": request.app[NATIVE_ACTIVE].get(device["serial"], 0)
+                }
+    return web.json_response(result)
+
+
+async def enqueue(request):
+    if NATIVE in request.app:
+        native = request.app[NATIVE]
+        if not isinstance(native, NativeControls):
+            return web.json_response(
+                {"error": "native telemetry mode has no command delivery"}, status=409
+            )
+        result = native.enqueue(serial(request.match_info["serial"]), await body(request))
+    else:
+        result = request.app[CORE].enqueue(
+            serial(request.match_info["serial"]), await body(request)
+        )
+    return web.json_response(result, status=202)
+
+
+async def register(request):
+    data = await body(request)
+    if not isinstance(data, dict) or set(data) != {"capabilities"}:
+        raise Invalid("capabilities required; credential is generated by the server")
+    core, ident = request.app[CORE], serial(request.match_info["serial"])
+    rotate = request.method == "PUT"
+    if rotate and ident not in core.registry.data["devices"]:
+        raise Invalid("cannot rotate unknown device")
+    credential = secrets.token_hex(32)
+    core.registry.register(ident, credential, data["capabilities"], rotate=rotate)
+    core.forget(ident)
+    return web.json_response(
+        {"registered": ident, "credential": credential},
+        status=201,
+        headers={"Cache-Control": "no-store"},
+    )
+
+
+async def revoke(request):
+    core, ident = request.app[CORE], serial(request.match_info["serial"])
+    core.registry.revoke(ident)
+    core.forget(ident)
+    return web.json_response({"revoked": ident})
+
+
+async def nest_put(request):
+    core, ident = request.app[CORE], request[IDENT]
+    core.report(ident, reports(ident, await body(request)))
+    # No merged-state echo: it can overwrite local schedule-derived setpoints.
+    return web.json_response({"objects": []})
+
+
+async def nest_entry(request):
+    origin = request.app[ORIGIN]
+    # Empty URLs hit an unsafe native trim path; tier/update fields can mutate
+    # settings/buckets. Omit services whose native disable behavior is unverified.
+    result = {"transport_url": origin + "/nest/transport"}
+    if WEATHER in request.app and request.app[WEATHER_ENABLED]():
+        result["weather_url"] = origin + "/nest/weather/v1?query="
+    return web.json_response(result)
+
+
+async def native_entry(request):
+    raw = await request.read()
+    require_current(request)
+    if len(raw) > 16384:
+        raise web.HTTPRequestEntityTooLarge(max_size=16384, actual_size=len(raw))
+    return await nest_entry(request)
+
+
+async def native_weather(request):
+    counters = request.app[WEATHER_STATS]
+
+    def count(name):
+        counters[name] = min(counters.get(name, 0) + 1, 2147483647)
+
+    count("requests")
+    count(
+        "host_checks"
+        if request.headers.get("User-Agent") == "HearthReadOnlyCheck/1"
+        else "client_requests"
+    )
+    if request.can_read_body or len(request.query_string) > 256 or set(request.query) - {"query"}:
+        count("invalid_query")
+        counters["last_invalid_query"] = query_shape(request.query.get("query")) | {
+            "reason": "envelope",
+            "unknown_member_count": min(len(set(request.query) - {"query"}), 8),
+        }
+        raise web.HTTPBadRequest()
+    if WEATHER not in request.app or not request.app[WEATHER_ENABLED]():
+        count("unavailable")
+        raise web.HTTPServiceUnavailable()
+    query = request.query.get("query", "")
+    try:
+        # An explicit fallback location is supplied by the local weather source.
+        # Never infer it from the unauthenticated caller, IP address or an earlier query.
+        location = None if query == "ipv4" else query_location(query)
+    except Invalid:
+        count("invalid_query")
+        counters["last_invalid_query"] = query_shape(request.query.get("query")) | {
+            "reason": "location",
+            "unknown_member_count": 0,
+        }
+        raise
+    try:
+        result = await request.app[WEATHER]()
+        if location is None:
+            location = query_location(query, result.get("location", {}).get("fallback"))
+        # Configuration is not part of the native weather JSON contract.
+        result["location"].pop("fallback", None)
+        result["location"].update(location)
+    except Invalid:
+        count("unavailable")
+        raise web.HTTPServiceUnavailable() from None
+    count("served")
+    return web.json_response(result)
+
+
+def native_touch(app, ident):
+    was_available = app[CORE].available(ident)
+    app[CORE].touch(ident)
+    if not was_available:
+        app[NATIVE].notify(ident)
+
+
+def native_headers(app, result=None):
+    if not isinstance(app[NATIVE], NativeControls):
+        return {}
+    headers = {
+        "X-nl-service-timestamp": str(int(time.time() * 1000)),
+        "X-nl-suspend-time-max": str(int(app[NATIVE_HOLD]) + 10),
+        "X-nl-defer-device-window": "15",
+    }
+    if result and any("value" in obj for obj in result["objects"]):
+        headers["X-nl-disable-defer-window"] = "60"
+    return headers
+
+
+async def native_put(request):
+    result = request.app[NATIVE].apply(request[IDENT], await body(request, NATIVE_MAX_BODY))
+    if isinstance(request.app[NATIVE], NativeControls):
+        native_touch(request.app, request[IDENT])
+    return web.json_response(result, headers=native_headers(request.app))
+
+
+async def native_get(request):
+    if request.match_info["serial"].removeprefix("device.") != request[IDENT]:
+        raise web.HTTPForbidden()
+    if isinstance(request.app[NATIVE], NativeControls):
+        request.app[NATIVE].note_request(request[IDENT], "get")
+        native_touch(request.app, request[IDENT])
+    native = request.app[NATIVE]
+    result = (
+        native.bootstrap_listing(request[IDENT])
+        if isinstance(native, NativeControls)
+        else native.listing(request[IDENT])
+    )
+    return web.json_response(result, headers=native_headers(request.app, result))
+
+
+async def native_subscribe(request):
+    app, ident = request.app, request[IDENT]
+    incoming = await body(request, NATIVE_MAX_BODY)
+    active = app[NATIVE_ACTIVE]
+    if active.get(ident, 0) >= 2:
+        raise web.HTTPTooManyRequests(headers={"Retry-After": "30"})
+    result = app[NATIVE].apply(ident, incoming, subscription=True)
+    if isinstance(app[NATIVE], NativeControls):
+        native_touch(app, ident)
+    if not incoming.get("chunked", False):
+        return web.json_response(result, headers=native_headers(app, result))
+    response = web.StreamResponse(
+        headers={
+            "Content-Type": "application/json",
+            "Cache-Control": "no-store",
+            **native_headers(app, result),
+        }
+    )
+    response.enable_chunked_encoding()
+    generation = app[CORE].registry.data["devices"][ident]["hash"]
+    active[ident] = active.get(ident, 0) + 1
+    try:
+        await response.prepare(request)
+        if result["objects"]:
+            await response.write(json.dumps(result).encode())
+            if (
+                isinstance(app[NATIVE], NativeControls)
+                and app[CORE].registry.data["devices"].get(ident, {}).get("hash") == generation
+            ):
+                app[NATIVE].note_stream_write(ident, result)
+        else:
+            end = time.monotonic() + app[NATIVE_HOLD]
+            while time.monotonic() < end and not app[NATIVE_STOP].is_set():
+                record = app[CORE].registry.data["devices"].get(ident)
+                if not record or record["hash"] != generation:
+                    break
+                if request.transport is None or request.transport.is_closing():
+                    break
+                if isinstance(app[NATIVE], NativeControls):
+                    native_touch(app, ident)
+                    changed = app[NATIVE].updates(ident, incoming)
+                    if changed["objects"]:
+                        await response.write(json.dumps(changed).encode())
+                        if (
+                            app[CORE].registry.data["devices"].get(ident, {}).get("hash")
+                            == generation
+                        ):
+                            app[NATIVE].note_stream_write(ident, changed)
+                        # Match the reviewed native/NLE held-push settle window.
+                        # Shutdown interrupts it immediately; no unbounded batch.
+                        try:
+                            await asyncio.wait_for(app[NATIVE_STOP].wait(), 3.0)
+                        except TimeoutError:
+                            pass
+                        break
+                try:
+                    await asyncio.wait_for(
+                        app[NATIVE_STOP].wait(), min(0.25, end - time.monotonic())
+                    )
+                except TimeoutError:
+                    pass
+        await response.write_eof()
+    except ConnectionError:
+        # No payload/header or credential logging on peer disconnect.
+        pass
+    finally:
+        active[ident] -= 1
+        if not active[ident]:
+            del active[ident]
+    return response
+
+
+def create_app(
+    core,
+    origin="https://127.0.0.1:8443",
+    experimental_nest=False,
+    native_telemetry=False,
+    native_hold_seconds=30,
+    native_controls=False,
+):
+    if type(native_controls) is not bool or (native_controls and not native_telemetry):
+        raise Invalid("native controls require explicit native transport mode")
+    if experimental_nest and native_telemetry:
+        raise Invalid("select only one native laboratory mode")
+    if experimental_nest or native_telemetry:
+        origin = endpoint(origin)
+    app = web.Application(
+        middlewares=[guard], client_max_size=NATIVE_MAX_BODY if native_telemetry else 16384
+    )
+    app[CORE], app[ORIGIN] = core, origin
+    if native_telemetry:
+        if type(native_hold_seconds) not in (int, float) or not 0 < native_hold_seconds <= (
+            290 if native_controls else 30
+        ):
+            raise Invalid("native hold exceeds the selected transport timing limit")
+        app[NATIVE] = NativeControls(core) if native_controls else NativeTelemetry(core)
+        app[WEATHER_STATS] = {
+            "requests": 0,
+            "client_requests": 0,
+            "host_checks": 0,
+            "served": 0,
+            "invalid_query": 0,
+            "unavailable": 0,
+        }
+        app[NATIVE_HOLD] = float(native_hold_seconds)
+        core.command_delivery_enabled = False
+        core.pending.clear()
+        app[NATIVE_ACTIVE], app[NATIVE_STOP] = {}, asyncio.Event()
+
+        async def shutdown(app):
+            app[NATIVE_STOP].set()
+
+        app.on_shutdown.append(shutdown)
+    app.router.add_post("/v1/device/state", report)
+    app.router.add_get("/v1/device/commands", poll)
+    app.router.add_post("/v1/device/ack", ack)
+    app.router.add_get("/v1/manage/devices", status)
+    app.router.add_post("/v1/manage/devices/{serial}/commands", enqueue)
+    app.router.add_post("/v1/manage/devices/{serial}", register)
+    app.router.add_put("/v1/manage/devices/{serial}", register)
+    app.router.add_delete("/v1/manage/devices/{serial}", revoke)
+    if experimental_nest:
+        app.router.add_post("/nest/transport/put", nest_put)
+        app.router.add_post("/nest/transport/v7/put", nest_put)
+        app.router.add_post("/nest/entry", nest_entry)
+    elif native_telemetry:
+        app.router.add_get("/nest/weather/v1", native_weather)
+        app.router.add_get("/nest/entry", native_entry)
+        app.router.add_post("/nest/entry", native_entry)
+        # Same authenticated handshake, with a fixed-width migration alias.
+        app.router.add_get("/nest/init", native_entry)
+        app.router.add_post("/nest/init", native_entry)
+        for path in ("/nest/transport/put", "/nest/transport/v7/put"):
+            app.router.add_post(path, native_put)
+        for path in ("/nest/transport/device/{serial}", "/nest/transport/v7/device/{serial}"):
+            app.router.add_get(path, native_get)
+        for path in ("/nest/transport", "/nest/transport/v7/subscribe"):
+            app.router.add_post(path, native_subscribe)
+    return app
+
+

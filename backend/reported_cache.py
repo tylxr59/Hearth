@@ -7,7 +7,7 @@ unknown native values, credentials and runtime fingerprints are excluded.
 import json
 import re
 
-from backend import native_features
+from backend import device_reports, device_settings, native_features
 from backend.native import integer
 from backend.validation import Invalid, loads, number, serial
 
@@ -57,7 +57,17 @@ FIELDS = {
 }
 
 
+FIELDS["device"] |= {name for name, spec in device_settings.SETTINGS.items() if not spec.sensitive}
+FIELDS["device"] |= {"heatpump_ready", "has_hot_water_control"}
+FIELDS["device"] |= device_reports.NUMBERS.keys() | device_reports.BOOLEANS
+FLAGS |= {"heatpump_ready", "has_hot_water_control"}
+
+
 def reported_value(name, value):
+    if name in device_reports.NUMBERS or name in device_reports.BOOLEANS:
+        return device_reports.validate(name, value)
+    if name in device_settings.SETTINGS:
+        return device_settings.validate(name, value)
     if name == "manual_schedule":
         return native_features.schedule(value)
     elif name == "eco":
@@ -104,7 +114,7 @@ def reported_value(name, value):
             "target_temperature": (5, 35),
             "target_temperature_low": (5, 35),
             "target_temperature_high": (5, 35),
-            "away_temperature_low": (5, 35),
+            "away_temperature_low": (4, 35),
             "away_temperature_high": (5, 35),
         }[name]
         number(value, low, high)

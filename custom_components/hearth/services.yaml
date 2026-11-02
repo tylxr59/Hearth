@@ -1,6 +1,6 @@
 get_schedule:
   name: Read weekly schedule
-  description: Read the last validated native week and its revision. Temperatures are Celsius; days 0–6 are Monday–Sunday.
+  description: Read the corresponding weekly data, revision and source. Temperatures are Celsius; days 0–6 are Monday–Sunday.
   fields:
     entity_id:
       required: true
@@ -116,5 +116,24 @@ associate_local_home:
           domain: climate
     confirm:
       required: true
+      selector:
+        boolean:
+
+set_device_settings:
+  name: Set device settings
+  description: Change allowlisted native settings using fresh reported baselines. Safety and equipment settings require explicit confirmation. Values use native units (temperatures Celsius).
+  fields:
+    entity_id:
+      required: true
+      selector:
+        entity:
+          integration: hearth
+          domain: climate
+    settings:
+      required: true
+      selector:
+        object:
+    confirm_equipment_changes:
+      default: false
       selector:
         boolean:

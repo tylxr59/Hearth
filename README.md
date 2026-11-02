@@ -1,108 +1,132 @@
-# Hearth
+<p align="center">
+  <img src="assets/logo.png" alt="Hearth flame" width="112" height="112">
+</p>
 
-<img src="homeassistant/custom_components/hearth/brand/icon.png" alt="Hearth flame logo" width="128" height="128">
+<h1 align="center">Hearth</h1>
 
-A local-first laboratory for Nest Learning Thermostat Gen 2, with Gen 1 as a secondary research target. Preserve Nest's hardware control; replace remote services only where behavior is understood.
+<p align="center">Keep your Nest thermostat. Bring its connected features home to Home Assistant.</p>
 
-**Current target: native Home Assistant integration, without MQTT.** The owner
-retired Hearth's MQTT bridge after verifying its three sensor readings end to
-end. The [native HA integration](docs/home-assistant-native.md) is staged and
-configured, and the owner confirmed live readings for all three sensors. It receives
-the existing Nest HTTPS protocol directly inside HA Core and exposes HA entities.
-The separate Hearth Laboratory app has been retired and uninstalled.
+<p align="center">
+  <a href="https://github.com/tylxr59/Hearth/releases"><img alt="Releases" src="https://img.shields.io/github/v/release/tylxr59/Hearth?include_prereleases"></a>
+  <a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/badge/license-MIT-97ca00"></a>
+  <a href="https://github.com/tylxr59/Hearth/actions"><img alt="Checks" src="https://github.com/tylxr59/Hearth/actions/workflows/check.yml/badge.svg"></a>
+</p>
 
-**Hardware result:** the corrected [nine-file installation](docs/research/recommissioning-preparation-2026-10-31.md)
-passes byte/mode and native-compatible flash-encoding checks, and the owner
-confirmed the working primary UI on5.9.4-5. Do not use the old LZO-writing images.
+<p align="center">
+  <a href="#-features">Features</a> · <a href="#-quick-start">Quick start</a> ·
+  <a href="#-usage">Usage</a> · <a href="#-troubleshooting">Troubleshooting</a>
+</p>
 
-**Status: experimental same-unit development, not a supported thermostat release.**
-The targeted local-connectivity/NIST update and native HA telemetry have been
-observed on the owner unit. Experimental native climate controls are live; the
-eco/schedule/HA-weather0.5 build is active and awaiting supervised native acceptance. Full protocol
-reconciliation, power-loss/whole-firmware recovery and physical HVAC remain
-unverified. Keep this prototype
-on its unwired bench base. The [first physical HTTPS/telemetry result](docs/research/native-wifi-result-2026-10-31.md)
-records the earlier broker-backed measurement separately from the HA-native migration.
+---
 
+Hearth connects a modified Nest Learning Thermostat directly to Home Assistant
+through its native local HTTPS protocol. The thermostat keeps its own display,
+schedule engine and equipment-control logic. Your HA installation supplies the
+connected controls, readings and weather.
 
-An authorized restart exposed OMAP ROM mode on the unit reporting `Display-2.6` /
-`5.9.4-5`. A separate [experimental RAM heartbeat probe](firmware/probe/README.md)
-has now booted on this unit, emitted its expected USB heartbeat and returned to
-native startup after a manual restart. It does not acquire flash or provide recovery. [Current evidence and next test](docs/research/acquisition-review-2026-10-30.md).
+<p align="center"><img src="assets/screenshot.png" alt="Hearth temperature, humidity and target readings in Home Assistant" width="720"></p>
 
-A separate [NAND geometry-only RAM profile](firmware/nand_metadata/README.md)
-has booted once and reported 256 MiB NAND with 2 KiB pages. It reads
-master geometry through sysfs with layered write guards, without acquiring
-firmware contents or establishing recovery.
+> [!NOTE]
+> **Experimental preview.** Real Gen2 telemetry, target changes, Eco and weekly
+> schedule replacement/restoration are verified. Actual equipment switching and
+> unattended outage behavior still need validation. The guided USB frontend is
+> implemented, but a stock thermostat still needs a separately prepared, device-bound
+> firmware kit. This is not yet a turnkey installer or a stable v1 release.
 
-Two full raw NAND reads are now preserved privately. Their raw bit differences
-were resolved in separate offline BCH-derived data views, which match; four boot
-image payload CRCs pass and native `nlclient`/`osm` were reconstructed for static
-inspection. This is acquisition evidence, not verified restoration or a usable
-native control API. [Measurement and limits](docs/research/nand-capture-2026-10-30.md).
+## 🎯 Features
 
-The [native interface review](docs/research/native-interface-2026-10-30.md)
-identified a loopback temperature-control candidate. Startup and request framing
-remain unverified; the host transport remains provisional and no native bridge
-is enabled.
+| Feature | What it does |
+| --- | --- |
+| Native HA integration | Climate controls, temperature and humidity through local HTTPS |
+| Eco and weekly schedules | Native presets, full-week readback, checked replacement and backups |
+| Weather and time | Uses an HA weather entity; local endpoint and chosen time source |
+| Device settings | Learning, Early-On, Sunblock, display and equipment configuration, gated by reported support |
+| Local operation | Retains Nest's native UI and control loops |
+| Guided USB workflow | Identity/bundle checks, protected preflight, explicit install decision and paired restore |
 
-A [private RAM-only TLS experiment](firmware/tls_probe/README.md) now completed
-all 18 expected callback cases on the device; the candidate accepted valid and
-rejected all eight invalid cases. Native startup returned afterward. See the
-[measured scope](docs/research/tls-probe-result-2026-10-30.md): nothing was installed,
-and full transport/configuration, credential persistence, recovery and HVAC
-remain unverified.
+New settings have automated protocol coverage. Their presence in the UI does not
+mean every field or equipment configuration has been physically tested. See the
+[compatibility matrix](docs/compatibility.md).
 
-An opt-in [authenticated native telemetry laboratory](docs/research/native-telemetry-2026-10-31.md) now accepts bounded NLE-style entry/PUT/metadata/subscription requests and publishes read-only MQTT sensors. Host validation does not establish physical Nest compatibility.
+## 📋 Requirements
 
-Implemented:
+- Nest Learning Thermostat Gen2, reported `Display-2.6`, primary firmware `5.9.4-5`.
+- Home Assistant Core2026.10.4 (the tested version) and a network path from the Nest to HA.
+- A Linux computer and data-capable USB cable for thermostat installation.
+- A private commissioning bundle and separately checked per-device firmware kit.
+  See [installation and current limits](docs/installation.md).
 
-- TLS local API, separate device/management authentication, registration, rotation and revocation.
-- Validated state, constrained commands, reported-state separation, availability and command expiry.
-- MQTT climate discovery and commands, tested with a real authenticated TLS Mosquitto broker and simulated devices.
-- Linux credential preparation, read-only USB inventory/watch, allowlisted diagnostic metadata, SHA-256 input verification, deterministic inert firmware review bundles and offline hardening replacements.
-- Unprivileged container, locally assembled HAOS add-on, hash-locked dependencies, scans, regression and property tests.
+## 🚀 Quick start
 
-Nothing implements HVAC control loops. No proprietary firmware or upstream executables are bundled. No telemetry, weather provider, cloud registration, remote support, public defaults, executable upload or automatic update mechanism is included.
+For an already commissioned thermostat, add
+`https://github.com/tylxr59/Hearth` to **HACS → Custom repositories**, category
+**Integration**, install Hearth, then restart HA and add **Hearth** under
+**Settings → Devices & services**. Tagged previews provide the `hearth.zip`
+release asset; before the first tagged preview, use the source packaging steps
+in the [installation guide](docs/installation.md).
 
-## Start locally
+For a stock thermostat, start with the supported-device and firmware-kit
+requirements in that guide. The USB tools can inspect the device without writing:
 
-Requires Linux, Python 3.12+ (tested with 3.13.16); Docker and OpenSSL for broker/container tests.
+```sh
+python -m installer.cli doctor
+python -m installer.cli identify --info 'Technical Info.plist'
+```
+
+HACS installs the HA integration. Modifying the thermostat is a separate USB step.
+
+## 🧭 Usage
+
+Use the Hearth climate card for supported modes, target temperature and Eco.
+Configuration entities expose reported settings; equipment-specific options are
+initially disabled and require supported baselines. Select an existing HA weather
+entity in Hearth's options. Schedule actions preserve a private backup before a
+revision-checked replacement.
+
+[Controls and schedules](docs/usage.md) · [Installation](docs/installation.md) ·
+[Compatibility](docs/compatibility.md) · [Recovery](docs/recovery.md)
+
+## 🩺 Troubleshooting
+
+| Symptom | What to check |
+| --- | --- |
+| Unavailable readings | Power, Wi-Fi, thermostat-facing HA address and local HTTPS reachability |
+| A setting is unavailable | The Nest must report that field and the required equipment capability |
+| A target is labelled assumed | A protocol acknowledgement arrived; an explicit native value echo has not |
+| Schedule revision changed | Read the latest week before replacing it; do not retry an old action |
+| Installer refuses a kit | Check model, firmware, identity, exact originals and matching restore profile |
+
+See [troubleshooting](docs/troubleshooting.md). Never unplug during a persistent
+write or assume a failed session is safe to reboot.
+
+## 👋 Development
 
 ```sh
 python3 -m venv .venv
 .venv/bin/pip install --require-hashes -r requirements-dev.lock
 make test
-make integration
-make container-test
 make check
-make audit
-make demo
 ```
 
-`make container-test` builds and tests the unprivileged HTTPS container. `make integration` starts an ephemeral TLS Mosquitto container on loopback and removes it afterward. It does not access USB or HVAC hardware. `make demo` creates synthetic input, `build/demo/review.tar`, a SHA-256 manifest and private offline replacement files. All firmware artifacts are inert and explicitly marked non-flashable. Offline replacements also prepare `uploadlogs=0`; the config editor requires the reviewed XML structure and preserves other bytes. Native storage error handling and a complete outbound-service audit remain unresolved; see [storage review](docs/research/native-storage-2026-10-30.md).
+[Contributor guide](docs/development.md) · [Release checklist](docs/development/roadmap.md) ·
+[Research archive](docs/research/) · [Report an issue](https://github.com/tylxr59/Hearth/issues)
 
-Prepare a simulated device (secrets are written to private files, never printed):
+## 📦 Releases
 
-```sh
-.venv/bin/python -m provisioning.cli init --registry private/registry.json --admin-file private/admin.json
-.venv/bin/python -m provisioning.cli prepare --registry private/registry.json \
-  --output private/device --serial 02AA01AB501203EQ --generation 2 \
-  --endpoint https://127.0.0.1:8443 --modes off heat cool
-```
+The [release workflow](.github/workflows/release.yml) builds a self-contained
+`hearth.zip`, a public installer-source archive and checksums from a matching
+version tag. Development builds do not update HA or flash a thermostat.
 
-Generation is a user claim, **not** detection or verification. See [local setup](docs/development.md) for certificates, the simulator, commands and MQTT configuration. `detect` reads sysfs only and refuses to infer a generation from TI USB identity.
+## 🤝 Acknowledgements
 
-## Read next
+[NLE](https://github.com/codykociemba/NoLongerEvil-SelfHosted) provides the pinned
+native-protocol reference. Hearth's transport and settings implementations are
+original. [NestDFUAttack](https://github.com/exploiteers/NestDFUAttack) and the OMAP
+loader projects underpin the reviewed RAM-boot research. See
+[licensing and provenance](THIRD_PARTY.md).
 
-- [Next-agent handoff and instructions](AGENTS.md)
+## 📃 License
 
-- [Implementation plan and status](docs/implementation-plan.md)
-- [Research and evidence](docs/research/findings.md), [pinned upstream sources](docs/research/upstreams.json)
-- [Architecture decision](docs/architecture/0001-local-transport.md), [protocol](docs/protocol/nest.md)
-- [Threat model](docs/security/threat-model.md), [audit](docs/security/audit.md), [network policy](docs/security/network.md)
-- [HAOS installation and upgrades](homeassistant/DOCS.md)
-- [Hardware validation and recovery gates](docs/hardware.md)
-- [Licensing and provenance](THIRD_PARTY.md), [remaining work](TODO.md)
-
-Research references: [NLE thermostat](https://github.com/codykociemba/NoLongerEvil-Thermostat), [backend](https://github.com/codykociemba/NoLongerEvil-SelfHosted), [HA add-on](https://github.com/codykociemba/NoLongerEvil-HomeAssistant), [Valetudo](https://github.com/Hypfer/Valetudo). Exact revisions and individual source hashes are recorded; moving branches are not build inputs.
+Hearth's original code is available under the [MIT License](LICENSE). Referenced
+components retain their own licenses. Proprietary Nest firmware, per-device keys
+and owner recovery images are not included in releases.

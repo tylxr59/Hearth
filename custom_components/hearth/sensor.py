@@ -6,6 +6,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 
 from .const import DOMAIN
+from .diagnostic_sensor import DIAGNOSTICS, HearthDiagnosticSensor
 
 SENSORS = (
     ("temperature", "Temperature", SensorDeviceClass.TEMPERATURE, UnitOfTemperature.CELSIUS),
@@ -25,6 +26,11 @@ async def async_setup_entry(hass, entry, async_add_entities):
         HearthSensor(runtime, ident, field, name, device_class, unit)
         for ident in runtime.core.registry.data["devices"]
         for field, name, device_class, unit in SENSORS
+    )
+    async_add_entities(
+        HearthDiagnosticSensor(runtime, ident, *spec)
+        for ident in runtime.core.registry.data["devices"]
+        for spec in DIAGNOSTICS
     )
 
 

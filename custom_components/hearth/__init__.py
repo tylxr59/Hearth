@@ -7,13 +7,21 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
+from .commissioning_view import HearthCommissioningView
 from .const import DOMAIN
 from .probe import HearthConnectivityView
 from .profile import load_profile
 from .runtime import HearthRuntime
 from .services import register as register_services
 
-PLATFORMS = [Platform.SENSOR, Platform.CLIMATE]
+PLATFORMS = [
+    Platform.SENSOR,
+    Platform.CLIMATE,
+    Platform.SWITCH,
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.BINARY_SENSOR,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -32,6 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         register_services(hass, entry)
         if not hass.data.get(DOMAIN + "_probe_registered"):
             hass.http.register_view(HearthConnectivityView(hass))
+            hass.http.register_view(HearthCommissioningView(hass))
             hass.data[DOMAIN + "_probe_registered"] = True
     except Exception:
         hass.data.pop(DOMAIN, None)

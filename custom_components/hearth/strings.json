@@ -4,7 +4,11 @@
     "step": {
       "user": {
         "title": "Connect your local Nest thermostat",
-        "description": "Use the locally prepared Hearth commissioning profile to receive your thermostat's readings directly in Home Assistant."
+        "description": "Enter the HA HTTPS address reachable from the thermostat and the device ID read by the USB installer. Existing profiles are preserved. After setup, use the USB installer download step to save your private commissioning bundle.",
+        "data": {
+          "origin": "Thermostat-facing HTTPS endpoint",
+          "device_id": "Thermostat device ID"
+        }
       }
     },
     "error": {

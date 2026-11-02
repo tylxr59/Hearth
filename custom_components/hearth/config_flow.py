@@ -7,6 +7,7 @@ from homeassistant.core import callback
 
 from homeassistant import config_entries
 
+from ._backend.commissioning import create_profile
 from ._backend.native_weather import query_location
 from ._backend.validation import Invalid
 from .const import DOMAIN
@@ -25,16 +26,30 @@ class HearthConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id("hearth-native-endpoint")
         self._abort_if_unique_id_configured()
         errors = {}
+        directory = Path(self.hass.config.path(".storage", DOMAIN))
+        existing = directory.exists()
         if user_input is not None:
             try:
-                await self.hass.async_add_executor_job(
-                    load_profile, Path(self.hass.config.path(".storage", DOMAIN))
-                )
-            except PROFILE_ERRORS:
+                if not existing:
+                    await self.hass.async_add_executor_job(
+                        create_profile, directory, user_input["origin"], user_input["device_id"]
+                    )
+                await self.hass.async_add_executor_job(load_profile, directory)
+            except (*PROFILE_ERRORS, KeyError):
                 errors["base"] = "profile_not_ready"
             else:
                 return self.async_create_entry(title="Hearth", data={})
-        return self.async_show_form(step_id="user", errors=errors)
+        schema = (
+            vol.Schema({})
+            if existing
+            else vol.Schema(
+                {
+                    vol.Required("origin"): str,
+                    vol.Required("device_id"): str,
+                }
+            )
+        )
+        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
 
 class HearthOptionsFlow(config_entries.OptionsFlow):

@@ -14,7 +14,25 @@ jobs:
           python3 -m venv .venv
           .venv/bin/pip install --require-hashes -r requirements-dev.lock
       - run: make check
-      - run: make integration
+      - run: make test
+      - run: .venv/bin/python -m tools.check_native_ha build/ha-ci --engine docker
       - run: make audit
-      - run: make demo addon release image wheel
-      - run: make container-test
+      - run: make release
+
+  hassfest:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: home-assistant/actions/hassfest@86d4564712fa02543c808e3a693dd04f9d3f8361
+  hacs:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: hacs/action@1ebf01c408f29afcb6406bd431bc98fd8cbb15aa
+        with:
+          category: integration
+          comment: "false"

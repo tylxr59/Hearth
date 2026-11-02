@@ -13,7 +13,7 @@ import tempfile
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
-from aiohttp import ClientConnectorError, ClientSession
+from aiohttp import ClientConnectorError, ClientSession, web
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -135,9 +135,12 @@ async def check(root, profile):
         owned_entity_ids = {
             row.entity_id
             for row in er.async_get(hass).entities.values()
-            if row.config_entry_id == entry.entry_id and row.platform == "hearth"
+            if row.config_entry_id == entry.entry_id
+            and row.platform == "hearth"
+            and row.disabled_by is None
         }
-        assert len(owned_entity_ids) == 4
+        assert sum(i.startswith(("climate.", "sensor.")) for i in owned_entity_ids) == 4
+        assert any(i.startswith("switch.") for i in owned_entity_ids)
         climate_id = next(i for i in owned_entity_ids if i.startswith("climate."))
 
         def sensor_states():
@@ -147,7 +150,42 @@ async def check(root, profile):
                 if entity_id.startswith("sensor.")
             ]
 
+        import io
+        import zipfile
+
+        from custom_components.hearth._backend.commissioning import create_profile
         from custom_components.hearth.profile import PROFILE_ERRORS, load_profile
+
+        fresh_profile = root / "new-profile"
+        await hass.async_add_executor_job(
+            create_profile, fresh_profile, "https://127.0.0.1:18443", IDENT
+        )
+        prepared = await hass.async_add_executor_job(load_profile, fresh_profile)
+        assert prepared.origin == "https://127.0.0.1:18443"
+        with zipfile.ZipFile(
+            io.BytesIO((fresh_profile / "commissioning.zip").read_bytes())
+        ) as archive:
+            assert set(archive.namelist()) == {"commissioning.json", "ca.pem", "ca.crl"}
+            exported = json.loads(archive.read("commissioning.json"))
+            assert prepared.registry.authenticate(IDENT, exported["credential"])
+        assert (fresh_profile / "server.key").stat().st_mode & 0o777 == 0o600
+        from types import SimpleNamespace
+
+        from custom_components.hearth.commissioning_view import HearthCommissioningView
+
+        bundle_data = (fresh_profile / "commissioning.zip").read_bytes()
+        (profile / "commissioning.zip").write_bytes(bundle_data)
+        (profile / "commissioning.zip").chmod(0o600)
+        download_view = HearthCommissioningView(hass)
+        assert download_view.requires_auth is True
+        try:
+            await download_view.get({"hass_user": SimpleNamespace(is_admin=False)})
+        except web.HTTPForbidden:
+            pass
+        else:
+            raise AssertionError("non-admin commissioning export accepted")
+        downloaded = await download_view.get({"hass_user": SimpleNamespace(is_admin=True)})
+        assert downloaded.body == bundle_data and downloaded.headers["Cache-Control"] == "no-store"
 
         async def refused():
             try:
@@ -224,6 +262,8 @@ async def check(root, profile):
                             "fan_timer_timeout": 0,
                             "has_fan": True,
                             "has_emer_heat": True,
+                            "learning_mode": False,
+                            "preconditioning_enabled": False,
                         },
                     },
                     {
@@ -269,6 +309,55 @@ async def check(root, profile):
             from custom_components.hearth._backend.api import NATIVE
 
             native = entry.runtime_data.app[NATIVE]
+            from custom_components.hearth.diagnostic_sensor import (
+                DIAGNOSTICS,
+                HearthDiagnosticSensor,
+            )
+
+            native.apply(
+                IDENT,
+                {
+                    "objects": [
+                        {
+                            "object_key": "device." + IDENT,
+                            "value": {
+                                "battery_level": 3.8,
+                                "rssi": 60,
+                                "outside_temperature": 0,
+                                "time_to_target": int(native.clock()) + 120,
+                            },
+                        }
+                    ]
+                },
+            )
+            diagnostics = {
+                spec[0]: HearthDiagnosticSensor(entry.runtime_data, IDENT, *spec)
+                for spec in DIAGNOSTICS
+            }
+            assert diagnostics["battery_level"].native_value == 3.8
+            assert diagnostics["rssi"].native_value == -60
+            assert diagnostics["outdoor_temperature"].native_value == 0
+            assert 1.9 < diagnostics["time_to_target"].native_value <= 2
+
+            from homeassistant.exceptions import HomeAssistantError
+
+            try:
+                await hass.services.async_call(
+                    "hearth",
+                    "set_device_settings",
+                    {
+                        "entity_id": climate_id,
+                        "settings": {"lower_safety_temp_enabled": False},
+                        "confirm_equipment_changes": True,
+                    },
+                    blocking=True,
+                )
+            except HomeAssistantError as exc:
+                assert "administrator" in str(exc)
+            else:
+                raise AssertionError("equipment change accepted without administrator context")
+            assert not native.intents.get(IDENT)
+
             # Reproduce the statically reviewed native subscription filters.
             filter_rows = [
                 {**row, "filters": []}
@@ -446,6 +535,19 @@ async def check(root, profile):
                 if "target_change_pending" in row["value"]:
                     assert not hass.states.get(climate_id).attributes.get("assumed_state", False)
                 return row["value"]
+
+            await command_roundtrip(
+                "set_device_settings",
+                {"settings": {"learning_mode": True, "preconditioning_enabled": True}},
+                {"learning_mode": True, "preconditioning_enabled": True},
+                domain="hearth",
+            )
+            await command_roundtrip(
+                "set_device_settings",
+                {"settings": {"learning_mode": False, "preconditioning_enabled": False}},
+                {"learning_mode": False, "preconditioning_enabled": False},
+                domain="hearth",
+            )
 
             await command_roundtrip(
                 "set_temperature", {"temperature": 23}, {"target_temperature": 23}
@@ -682,8 +784,9 @@ async def check(root, profile):
             assert saved_week["schedule"] == week and saved_week["temperature_unit"] == "°C"
             new_week = json.loads(json.dumps(week))
             new_week["days"]["0"] = {}
-            from custom_components.hearth._backend import schedule_backup
             from homeassistant.exceptions import HomeAssistantError
+
+            from custom_components.hearth._backend import schedule_backup
 
             archive_function = schedule_backup.archive
 
@@ -1270,7 +1373,7 @@ async def check(root, profile):
                     "zero_preserved": True,
                     "availability_expiry": True,
                     "canonical_command_poll_disabled": True,
-                    "native_climate_roundtrips": 22,
+                    "native_climate_roundtrips": 24,
                     "fresh_native_eco_mode_confirms_without_structure_echo": True,
                     "schedule_acknowledgement_data_revision_consistent": True,
                     "acknowledged_schedule_cache_without_command_replay": True,

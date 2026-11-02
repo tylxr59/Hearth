@@ -55,9 +55,9 @@ are not proof of on-device command acceptance or equipment operation.
 | Off/heat/cool and fan timer | Host and real HA sandbox pass | Actual native capability/report mapping and bench acceptance |
 | Reported HVAC operating action | Boolean mapping implemented | Compare against real equipment states |
 | Heat/cool range and emergency mode | Implemented in0.4; host and real HA sandbox pass | Actual native range/preset acceptance on suitable bench |
-| Eco preset and eco bounds | Physical manual on/off and restoration verified; Heat-to Off unchanged |0.6.9 fresh-mode feedback verification; bounds writes untested |
-| Weekly schedules and schedule mode | Native week acquired; HA future point and original restore physically verified |0.6.9 consistent readback/revision verification; schedule-mode writes untested |
-| Learning/preconditioning and other NLE device settings | Not implemented | Per-field native writability/types/bounds; no generic arbitrary setter |
+| Eco preset and eco bounds | Physical manual on/off and restoration verified; Heat-to Off unchanged |0.6.9 fresh-mode feedback verified; bounds writes untested |
+| Weekly schedules and schedule mode | Native week acquired; HA future point and original restore physically verified |0.6.9 readback/revision/restore verified; schedule-mode writes untested |
+| Learning/preconditioning and other NLE device settings |0.7 source implements all34 pinned allowlist fields with typed/fresh-baseline guards | Per-field hardware validation; no arbitrary setter |
 | Weather/outdoor data and useful diagnostics | HA weather bridge and local native JSON in0.5; payload-free diagnostics | Native weather-fetch acceptance; advanced fault entities |
 | Native local operation when HA/network is unavailable | Native logic preserved | Supervised outage/return tests, no stale replay |
 | Actual heating/cooling/fan and equipment protections | Unverified | Separate equipment inspection/authorization and supervised test |

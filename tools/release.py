@@ -13,6 +13,9 @@ def release(output):
     output.mkdir(parents=True, exist_ok=False)
     allowed_dirs = (
         "backend",
+        "custom_components",
+        "installer",
+        "assets",
         "firmware",
         "provisioning",
         "homeassistant",
@@ -34,7 +37,7 @@ def release(output):
             "README.md",
             "LICENSE",
             "THIRD_PARTY.md",
-            "TODO.md",
+            "hacs.json",
             "Makefile",
             "Dockerfile",
             "pyproject.toml",

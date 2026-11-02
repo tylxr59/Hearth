@@ -1,12 +1,17 @@
 {
   "domain": "hearth",
   "name": "Hearth",
-  "version": "0.6.9",
-  "dependencies": ["http"],
-  "codeowners": ["@tylxr59"],
+  "codeowners": [
+    "@tylxr59"
+  ],
   "config_flow": true,
+  "dependencies": [
+    "http"
+  ],
   "documentation": "https://github.com/tylxr59/Hearth",
   "integration_type": "hub",
   "iot_class": "local_push",
-  "requirements": []
+  "issue_tracker": "https://github.com/tylxr59/Hearth/issues",
+  "requirements": [],
+  "version": "0.7.0"
 }

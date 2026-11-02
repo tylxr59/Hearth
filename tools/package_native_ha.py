@@ -16,6 +16,9 @@ BACKEND_FILES = (
     "__init__.py",
     "api.py",
     "core.py",
+    "commissioning.py",
+    "device_settings.py",
+    "device_reports.py",
     "native.py",
     "native_controls.py",
     "native_features.py",
@@ -38,9 +41,16 @@ INTEGRATION_FILES = (
     "runtime.py",
     "config_flow.py",
     "sensor.py",
+    "binary_sensor.py",
+    "diagnostic_sensor.py",
     "climate.py",
     "probe.py",
+    "commissioning_view.py",
     "diagnostics.py",
+    "settings_entity.py",
+    "switch.py",
+    "number.py",
+    "select.py",
     "services.py",
     "services.yaml",
     "weather_source.py",
@@ -82,7 +92,7 @@ def package(output):
     output.mkdir(parents=True, exist_ok=False)
     destination = output / "custom_components/hearth"
     destination.mkdir(parents=True)
-    source = ROOT / "homeassistant/custom_components/hearth"
+    source = ROOT / "custom_components/hearth"
     inventory = {}
     for name in INTEGRATION_FILES:
         path = source / name

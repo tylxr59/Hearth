@@ -1,0 +1,38 @@
+{
+  "title": "Hearth",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect your local Nest thermostat",
+        "description": "Enter the HA HTTPS address reachable from the thermostat and the device ID read by the USB installer. Existing profiles are preserved. After setup, use the USB installer download step to save your private commissioning bundle.",
+        "data": {
+          "origin": "Thermostat-facing HTTPS endpoint",
+          "device_id": "Thermostat device ID"
+        }
+      }
+    },
+    "error": {
+      "profile_not_ready": "The local commissioning profile is missing or invalid. Check the Hearth installation instructions."
+    },
+    "abort": {
+      "already_configured": "Hearth is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Weather source",
+        "description": "Use an existing Home Assistant weather entity. Optionally provide the thermostat postal code and two-letter country for its automatic-location fallback; Hearth does not perform IP geolocation.",
+        "data": {
+          "weather_entity": "Weather entity",
+          "weather_postal_code": "Fallback postal code (optional)",
+          "weather_country_code": "Fallback country code (optional, e.g. US)"
+        }
+      }
+    },
+    "error": {
+      "weather_not_found": "Choose an available Home Assistant weather entity.",
+      "weather_location_invalid": "Provide both a valid postal code and a two-letter country, or leave both empty."
+    }
+  }
+}
