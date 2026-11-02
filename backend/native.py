@@ -159,7 +159,7 @@ def object_key(value, ident):
     return kind
 
 
-def envelope(ident, body, *, subscription=False, structure_key=None):
+def envelope(ident, body, *, subscription=False, structure_key=None, user_key=None):
     """Normalize only the two pinned NLE shapes; never infer device identity."""
     if not isinstance(body, dict):
         raise Invalid("native object envelope required")
@@ -213,7 +213,7 @@ def envelope(ident, body, *, subscription=False, structure_key=None):
             if name in obj and obj[name] is not None:
                 integer(obj[name])
         value = obj.get("value")
-        if kind in UNBOUND_BUCKETS and key != structure_key:
+        if kind in UNBOUND_BUCKETS and key not in (structure_key, user_key):
             # Account ownership cannot be learned from this request. Leave its
             # bucket unacknowledged; do not retain or reflect an account value.
             if value is not None:

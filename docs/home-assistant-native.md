@@ -259,3 +259,25 @@ probe. After a normal Nest restart on the completely unwired base, the owner
 confirmed the physical clock changed to the correct local time. This verifies
 the weather/timezone handoff on this unit. The outdoor forecast display, eco
 commands, weekly replacement/restore and physical HVAC are still unverified.
+
+
+## Explicit local user setup (0.6 preparation)
+
+The first local pairing step is available as **Hearth: Begin local pairing** in
+HA Actions. It requires an administrator session, the Hearth climate entity and
+explicit confirmation. It supplies only a local `Hearth` user name to the enrolled
+Nest; it can change native account/setup state. It creates no home, eco setting,
+schedule or equipment capability. Keep the base unwired for the initial check.
+The action refuses an existing reported home association rather than replacing it.
+
+The private `.storage/hearth/local-pairing.json` stores the local identity and
+credential-generation binding. It contains no plaintext device/manager credential.
+It is configuration, separate from saved readings or pending commands. Configured
+identity is reapplied after an integration reload; control intents remain volatile.
+`local_pairing` diagnostics distinguish configured, offered and metadata-acknowledged.
+Acknowledged metadata alone does not establish complete native pairing or an
+observed eco/schedule baseline. No announcement is made on a new installation
+until the explicit action is performed.
+
+Gen2 `manual_schedule` wrappers are now preserved when observed; the HA schedule
+actions still use the same canonical weekly format and backup/revision safeguards.

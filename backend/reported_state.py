@@ -21,10 +21,10 @@ def capture(native, ident, key, kind, value):
     if kind == "schedule":
         # Never persist partial/unknown schedule content. Retain the last full
         # validated week; refuse schedule commands until that baseline exists.
-        from backend.native_features import schedule
+        from backend.native_features import schedule_record
 
         try:
-            complete = schedule(item["values"] | value)
+            complete = schedule_record(item["values"] | value)
         except Invalid:
             saved.pop(kind, None)
             native.reported_changed(ident)

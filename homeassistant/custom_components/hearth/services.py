@@ -31,10 +31,26 @@ def register(hass, entry):
             raise Invalid("No reported weekly schedule available yet")
         return record.revision
 
+    async def begin_local_pairing(call):
+        user = (
+            await hass.auth.async_get_user(call.context.user_id) if call.context.user_id else None
+        )
+        if user is None or not user.is_admin:
+            raise HomeAssistantError(
+                "Local pairing requires a Home Assistant administrator session"
+            )
+        ident = identity(call.data["entity_id"])
+        try:
+            return await runtime.begin_local_pairing(ident)
+        except Invalid as exc:
+            raise HomeAssistantError(str(exc)) from exc
+        except OSError as exc:
+            raise HomeAssistantError("Local pairing configuration could not be preserved") from exc
+
     async def get_schedule(call):
         ident = identity(call.data["entity_id"])
         try:
-            week = native_features.schedule(
+            week = native_features.schedule_week(
                 runtime.controls.reported.get(ident, {}).get("schedule", {}).get("values", {})
             )
             return {
@@ -81,7 +97,9 @@ def register(hass, entry):
             }
             # Check before disk I/O, then again after the backup has been synced.
             runtime.controls.advanced_plan(ident, body, True)
-            previous = copy.deepcopy(runtime.controls.reported[ident]["schedule"]["values"])
+            previous = native_features.schedule_week(
+                copy.deepcopy(runtime.controls.reported[ident]["schedule"]["values"])
+            )
             generation = runtime.core.registry.data["devices"][ident]["hash"]
             await hass.async_add_executor_job(
                 schedule_backup.archive,
@@ -124,6 +142,11 @@ def register(hass, entry):
 
     target = {vol.Required("entity_id"): cv.entity_id}
     handlers = {
+        "begin_local_pairing": (
+            begin_local_pairing,
+            vol.Schema(target | {vol.Required("confirm"): vol.All(bool, vol.In([True]))}),
+            SupportsResponse.OPTIONAL,
+        ),
         "get_schedule": (get_schedule, vol.Schema(target), SupportsResponse.ONLY),
         "set_schedule": (
             set_schedule,

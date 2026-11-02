@@ -88,3 +88,18 @@ set_eco_temperatures:
           options:
             - "°C"
             - "°F"
+
+begin_local_pairing:
+  name: Begin local pairing
+  description: Explicitly configure a local Hearth user association and announce its name to this Nest. This first step creates no home, schedule, eco setting or equipment capability.
+  fields:
+    entity_id:
+      required: true
+      selector:
+        entity:
+          integration: hearth
+          domain: climate
+    confirm:
+      required: true
+      selector:
+        boolean:

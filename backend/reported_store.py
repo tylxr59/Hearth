@@ -26,9 +26,19 @@ def directory(path):
         raise
 
 
-def read_fd(root):
+def checked_name(name):
+    if name not in (NAME, "local-pairing.json"):
+        raise Invalid("fixed private document name required")
+    return name
+
+
+def read_fd(root, name=NAME, decoder=decode):
     try:
-        fd = os.open(NAME, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK | os.O_CLOEXEC, dir_fd=root)
+        fd = os.open(
+            checked_name(name),
+            os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK | os.O_CLOEXEC,
+            dir_fd=root,
+        )
     except FileNotFoundError:
         return None
     try:
@@ -43,26 +53,27 @@ def read_fd(root):
             raise Invalid("private bounded reported-state file required")
         with os.fdopen(os.dup(fd), "rb") as stream:
             raw = stream.read(LIMIT + 1)
-        return decode(raw)
+        return decoder(raw)
     finally:
         os.close(fd)
 
 
-def load(path):
+def load(path, name=NAME, decoder=decode):
     root = directory(path)
     try:
-        return read_fd(root)
+        return read_fd(root, name, decoder)
     finally:
         os.close(root)
 
 
-def save(path, data):
-    raw = encode(data)
+def save(path, data, name=NAME, encoder=encode, decoder=decode):
+    checked_name(name)
+    raw = encoder(data)
     root = directory(path)
     temporary = ".reported-" + secrets.token_hex(16) + ".new"
     created = False
     try:
-        read_fd(root)  # Refuse an unexpected existing inode; don't follow/repair it.
+        read_fd(root, name, decoder)  # Refuse an unexpected existing inode; don't follow/repair it.
         fd = os.open(
             temporary,
             os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW | os.O_CLOEXEC,
@@ -74,10 +85,10 @@ def save(path, data):
             stream.write(raw)
             stream.flush()
             os.fsync(stream.fileno())
-        os.replace(temporary, NAME, src_dir_fd=root, dst_dir_fd=root)
+        os.replace(temporary, name, src_dir_fd=root, dst_dir_fd=root)
         created = False
         os.fsync(root)
-        if read_fd(root) != decode(raw):
+        if read_fd(root, name, decoder) != decoder(raw):
             raise Invalid("reported-state custody readback failed")
     finally:
         if created:

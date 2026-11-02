@@ -70,3 +70,17 @@ def eco_temperatures(value):
     if low >= high:
         raise Invalid("eco low must be below high")
     return {"away_temperature_low": low, "away_temperature_high": high}
+
+
+def schedule_record(value):
+    """Preserve observed wire shape: Gen2 wrapper or the supported bare week."""
+    if not isinstance(value, dict):
+        raise Invalid("native schedule record required")
+    if set(value) == {"manual_schedule"}:
+        return {"manual_schedule": schedule(value["manual_schedule"])}
+    return schedule(value)
+
+
+def schedule_week(value):
+    value = schedule_record(value)
+    return value.get("manual_schedule", value)

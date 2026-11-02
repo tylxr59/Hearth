@@ -262,9 +262,13 @@ async def native_get(request):
     if isinstance(request.app[NATIVE], NativeControls):
         request.app[NATIVE].note_request(request[IDENT], "get")
         native_touch(request.app, request[IDENT])
-    return web.json_response(
-        request.app[NATIVE].listing(request[IDENT]), headers=native_headers(request.app)
+    native = request.app[NATIVE]
+    result = (
+        native.bootstrap_listing(request[IDENT])
+        if isinstance(native, NativeControls)
+        else native.listing(request[IDENT])
     )
+    return web.json_response(result, headers=native_headers(request.app, result))
 
 
 async def native_subscribe(request):

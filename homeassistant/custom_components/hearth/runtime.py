@@ -10,7 +10,7 @@ from aiohttp import web
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.event import async_track_time_interval
 
-from ._backend import reported_store
+from ._backend import native_pairing, reported_store
 from ._backend.api import NATIVE, WEATHER, WEATHER_ENABLED, WEATHER_STATS, create_app
 from ._backend.core import Core
 from ._backend.validation import Invalid
@@ -61,6 +61,8 @@ class HearthRuntime:
         self.cache_directory = hass.config.path(".storage", DOMAIN)
         self.cache_generation = self.cache_saved_generation = 0
         self.cache_lock = asyncio.Lock()
+        self.pairing_lock = asyncio.Lock()
+        self.pairing_load_failed = False
         self.cache_task = None
         self.cache_errors = {"load_failed": False, "save_failed": False}
         self.runner: web.AppRunner | None = None
@@ -116,6 +118,20 @@ class HearthRuntime:
             _LOGGER.warning(
                 "Hearth reported-state cache could not be loaded; waiting for native reports"
             )
+        try:
+            pairing = await self.hass.async_add_executor_job(
+                reported_store.load,
+                self.cache_directory,
+                native_pairing.NAME,
+                native_pairing.decode,
+            )
+            if pairing is not None:
+                self.controls.configure_local_users(pairing)
+        except (OSError, Invalid):
+            self.pairing_load_failed = True
+            _LOGGER.warning(
+                "Hearth local pairing configuration refused; native reports remain enabled"
+            )
         runner = web.AppRunner(self.app, access_log=None)
         self.runner = runner
         try:
@@ -163,8 +179,45 @@ class HearthRuntime:
     def enqueue(self, ident, body):
         return self.controls.enqueue(ident, body)
 
+    async def begin_local_pairing(self, ident):
+        async with self.pairing_lock:
+            if not self.core.available(ident):
+                raise Invalid("A live authenticated Nest connection is required")
+            generation = self.core.registry.data["devices"][ident]["hash"]
+            data = await self.hass.async_add_executor_job(
+                reported_store.load,
+                self.cache_directory,
+                native_pairing.NAME,
+                native_pairing.decode,
+            )
+            if data is None:
+                data = {"format": native_pairing.FORMAT, "devices": {}}
+            record = data["devices"].get(ident)
+            if record is None or record["generation"] != generation:
+                if self.controls.home_key(ident) is not None:
+                    raise Invalid(
+                        "An existing native home reference needs migration review before local pairing"
+                    )
+                record = native_pairing.create(generation, int(self.controls.clock() * 1000))
+                data["devices"][ident] = record
+                await self.hass.async_add_executor_job(
+                    reported_store.save,
+                    self.cache_directory,
+                    data,
+                    native_pairing.NAME,
+                    native_pairing.encode,
+                    native_pairing.decode,
+                )
+            if self.core.registry.data["devices"].get(ident, {}).get("hash") != generation:
+                raise Invalid("Device enrollment changed during local pairing preparation")
+            self.controls.configure_local_users(
+                {"format": native_pairing.FORMAT, "devices": {ident: record}}
+            )
+            return self.controls.local_user_view(ident)
+
     def diagnostics(self):
         return self.app[NATIVE].diagnostics() | {
             "reported_cache": dict(self.cache_errors),
             "weather": self.weather.diagnostics() | {"http": dict(self.app[WEATHER_STATS])},
+            "local_pairing_load_failed": self.pairing_load_failed,
         }

@@ -1,0 +1,22 @@
+{
+  "status": "local-user-announcement-and-gen2-schedule-wrapper-staged-not-activated",
+  "integration_version": "0.6.0",
+  "host_tests_passed": 1229,
+  "optional_integration_skips": 5,
+  "make_check": "passed",
+  "real_ha_core": "2026.10.4",
+  "synthetic_control_roundtrips": 17,
+  "explicit_admin_and_confirmation_required": true,
+  "existing_home_not_silently_migrated": true,
+  "local_identity_enrollment_scoped_and_private": true,
+  "name_configuration_separate_from_observed_baselines": true,
+  "no_home_eco_schedule_capability_defaults_created": true,
+  "gen2_observed_schedule_format_preserved": true,
+  "pending_control_intents_not_replayed": true,
+  "source_reproduces": true,
+  "staged_exact_source_files": 33,
+  "previous_source_backed_up": true,
+  "native_user_announcement_performed": false,
+  "owner_native_home_eco_schedule_resolved": false,
+  "physical_hvac_verified": false
+}

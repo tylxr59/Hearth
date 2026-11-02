@@ -52,12 +52,14 @@ FIELDS = {
     }
     | FLAGS,
     "structure": {"manual_eco_all", "manual_eco_timestamp"},
-    "schedule": {"ver", "name", "schedule_mode", "days"},
+    "schedule": {"ver", "name", "schedule_mode", "days", "manual_schedule"},
 }
 
 
 def reported_value(name, value):
-    if name == "structure_id":
+    if name == "manual_schedule":
+        return native_features.schedule(value)
+    elif name == "structure_id":
         native_features.structure_key(value)
     elif name == "manual_eco_all":
         if type(value) is not bool:
@@ -139,7 +141,9 @@ def validate(data):
                 "values": {name: reported_value(name, value) for name, value in values.items()},
             }
         if "schedule" in clean:
-            clean["schedule"]["values"] = native_features.schedule(clean["schedule"]["values"])
+            clean["schedule"]["values"] = native_features.schedule_record(
+                clean["schedule"]["values"]
+            )
         if "structure" in clean and "structure_id" not in clean.get("device", {}).get("values", {}):
             raise Invalid("cached home state requires device reference")
         result[ident] = {"generation": entry["generation"], "records": clean}

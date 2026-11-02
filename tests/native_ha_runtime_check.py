@@ -436,7 +436,7 @@ async def check(root, profile):
                         },
                     },
                     {"object_key": "shared." + IDENT, "value": {"schedule_mode": "HEAT"}},
-                    {"object_key": "schedule." + IDENT, "value": week},
+                    {"object_key": "schedule." + IDENT, "value": {"manual_schedule": week}},
                 ]
             }
             async with client.post(
@@ -504,7 +504,7 @@ async def check(root, profile):
                     "expected_revision": saved_week["revision"],
                     "temperature_unit": "°C",
                 },
-                new_week,
+                {"manual_schedule": new_week},
                 domain="hearth",
             )
             backups = list(profile.glob("schedule-backup-*.json"))
@@ -620,6 +620,110 @@ async def check(root, profile):
                 "cool",
                 "heat_cool",
             }
+            # Explicit pairing config supplies only the reviewed user.name field.
+            # It is not a home, schedule, equipment flag or reported baseline.
+            import voluptuous as vol
+            from homeassistant.auth.const import GROUP_ID_ADMIN
+            from homeassistant.core import Context
+            from homeassistant.exceptions import HomeAssistantError
+
+            lab_admin = await hass.auth.async_create_system_user(
+                "Hearth laboratory", group_ids=[GROUP_ID_ADMIN]
+            )
+            owner_context = Context(user_id=lab_admin.id)
+            try:
+                await hass.services.async_call(
+                    "hearth",
+                    "begin_local_pairing",
+                    {"entity_id": climate_id, "confirm": True},
+                    blocking=True,
+                )
+            except HomeAssistantError:
+                pass
+            else:
+                raise AssertionError("local pairing accepted without an administrator")
+
+            try:
+                await hass.services.async_call(
+                    "hearth",
+                    "begin_local_pairing",
+                    {"entity_id": climate_id, "confirm": True},
+                    blocking=True,
+                    context=owner_context,
+                )
+            except HomeAssistantError:
+                pass
+            else:
+                raise AssertionError("existing home silently migrated")
+            assert not (profile / "local-pairing.json").exists()
+            async with client.post(
+                base + "/nest/transport/put",
+                headers=headers,
+                json={
+                    "objects": [{"object_key": "device." + IDENT, "value": {"structure_id": None}}]
+                },
+                ssl=context,
+            ) as response:
+                assert response.status == 200
+            await hass.async_block_till_done()
+            try:
+                await hass.services.async_call(
+                    "hearth",
+                    "begin_local_pairing",
+                    {"entity_id": climate_id, "confirm": False},
+                    blocking=True,
+                    context=owner_context,
+                )
+            except (HomeAssistantError, vol.Invalid):
+                pass
+            else:
+                raise AssertionError("local pairing accepted without explicit confirmation")
+            assert not (profile / "local-pairing.json").exists()
+            before_pair_state = json.loads(json.dumps(native.core.states[IDENT]))
+            before = native.listing(IDENT)["objects"]
+            async with client.post(
+                base + "/nest/transport/v7/subscribe",
+                headers=headers,
+                json={"objects": before, "chunked": True},
+                ssl=context,
+            ) as pending:
+                paired = await hass.services.async_call(
+                    "hearth",
+                    "begin_local_pairing",
+                    {"entity_id": climate_id, "confirm": True},
+                    blocking=True,
+                    context=owner_context,
+                    return_response=True,
+                )
+                assert paired["configured"]
+                result = await pending.json(content_type=None)
+            user = result["objects"][0]
+            assert user["object_key"].startswith("user.") and user["value"] == {"name": "Hearth"}
+            assert native.core.states[IDENT] == before_pair_state
+            assert native.core.pending == {} and not native.intents[IDENT]
+            saved_pair = json.loads((profile / "local-pairing.json").read_bytes())
+            assert (profile / "local-pairing.json").stat().st_mode & 0o777 == 0o600
+            assert TOKEN not in json.dumps(saved_pair) and ADMIN not in json.dumps(saved_pair)
+            async with client.post(
+                base + "/nest/transport/v7/subscribe",
+                headers=headers,
+                json={
+                    "objects": [{k: v for k, v in user.items() if k != "value"}],
+                    "chunked": False,
+                },
+                ssl=context,
+            ) as response:
+                assert response.status == 200 and not (await response.json())["objects"]
+            assert native.local_user_view(IDENT)["metadata_acknowledged"]
+            # Re-running the explicit action reuses the private identity.
+            await hass.services.async_call(
+                "hearth",
+                "begin_local_pairing",
+                {"entity_id": climate_id, "confirm": True},
+                blocking=True,
+                context=owner_context,
+            )
+            assert json.loads((profile / "local-pairing.json").read_bytes()) == saved_pair
             duplicate = await hass.config_entries.flow.async_init(
                 "hearth", context={"source": "user"}
             )
@@ -658,7 +762,16 @@ async def check(root, profile):
                     ssl=context,
                 ) as response:
                     assert response.status == 200
-                    assert all("value" not in r for r in (await response.json())["objects"])
+                    objects = (await response.json())["objects"]
+                    assert all(
+                        "value" not in r
+                        or (
+                            r["object_key"] == user["object_key"]
+                            and r["value"] == {"name": "Hearth"}
+                        )
+                        for r in objects
+                    )
+                    assert not native.intents
                 await hass.async_block_till_done()
                 assert runtime.core.available(IDENT)
                 assert (
@@ -734,6 +847,10 @@ async def check(root, profile):
                     "local_brand_icon_and_logo_fallbacks": True,
                     "native_report_confirmation": True,
                     "native_empty_subscription_filters": True,
+                    "explicit_local_user_announcement": True,
+                    "local_pairing_private_configuration_reload": True,
+                    "gen2_manual_schedule_wire_shape_preserved": True,
+                    "existing_home_not_silently_migrated": True,
                     "mode_selector_tracks_reported_capabilities": True,
                     "fahrenheit_to_celsius": True,
                     "heat_cool_range_targets": True,

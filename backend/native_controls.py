@@ -2,7 +2,8 @@
 
 Only allowlisted control scalars are retained. Responses carry partial values,
 never raw bucket echoes. Delivery is not confirmation; only accepted native PUT
-values update reported state. Nothing is persisted or replayed across restart.
+values update reported state. Control intents are never persisted or replayed.
+Reported-state caching and explicit local-user configuration are separate.
 """
 
 import hashlib
@@ -12,7 +13,7 @@ import time
 import uuid
 from dataclasses import dataclass, field
 
-from backend import native_features, reported_state
+from backend import native_features, native_pairing, reported_state
 from backend.native import NativeTelemetry, canonical, envelope, has_empty_filters, integer
 from backend.validation import Invalid, command, number
 
@@ -56,6 +57,9 @@ class NativeControls(NativeTelemetry):
         self.requests = {}
         self.last_request = {}
         self.notify = lambda _ident: None
+        self._local_users = {}
+        self._local_user_offered = set()
+        self._local_user_acknowledged = set()
 
     def _records_for(self, ident):
         self.core.caps(ident)
@@ -68,6 +72,9 @@ class NativeControls(NativeTelemetry):
             self.restored_fields.pop(ident, None)
             self.requests.pop(ident, None)
             self.last_request.pop(ident, None)
+            self._local_users.pop(ident, None)
+            self._local_user_offered.discard(ident)
+            self._local_user_acknowledged.discard(ident)
         return super()._records_for(ident)
 
     def home_key(self, ident):
@@ -91,9 +98,75 @@ class NativeControls(NativeTelemetry):
                 home = native_features.structure_key(value["structure_id"])
             except Invalid:
                 home = None
-        result = envelope(ident, body, subscription=subscription, structure_key=home)
+        user = self._local_users.get(ident) if subscription else None
+        user_key = native_pairing.metadata(user)["object_key"] if user is not None else None
+        result = envelope(
+            ident, body, subscription=subscription, structure_key=home, user_key=user_key
+        )
         self._empty_filters_accepted |= subscription and has_empty_filters(body)
-        return result
+        # User configuration stays separate from observed device buckets. Validate
+        # its metadata before any mutation, then leave its values unretained.
+        return [row for row in result if row[1] != "user"]
+
+    def configure_local_users(self, data):
+        data = native_pairing.validate(data)
+        for ident, record in data["devices"].items():
+            enrolled = self.core.registry.data["devices"].get(ident)
+            if enrolled is None or enrolled["hash"] != record["generation"]:
+                continue
+            self._records_for(ident)
+            self._local_users[ident] = dict(record)
+            self._local_user_offered.discard(ident)
+            self._local_user_acknowledged.discard(ident)
+            self.notify(ident)
+
+    def local_user_view(self, ident):
+        self._records_for(ident)
+        return {
+            "configured": ident in self._local_users,
+            "offered": ident in self._local_user_offered,
+            "metadata_acknowledged": ident in self._local_user_acknowledged,
+        }
+
+    def _local_user_response(self, ident, body, response):
+        record = self._local_users.get(ident)
+        if record is None:
+            return response
+        meta = native_pairing.metadata(record)
+        rows = envelope(
+            ident,
+            body,
+            subscription=True,
+            structure_key=self.home_key(ident),
+            user_key=meta["object_key"],
+        )
+        own = next((row for row in rows if row[0] == meta["object_key"]), None)
+        matches = own is not None and own[4:] == (meta["object_revision"], meta["object_timestamp"])
+        if matches:
+            self._local_user_acknowledged.add(ident)
+        # One offer after configuration/server reload. Thereafter resend only
+        # on an explicit request for our user key with different metadata.
+        # Missing acknowledgement does not create an unbounded push loop.
+        if ident in self._local_user_offered and (own is None or matches):
+            return response
+        self._local_user_offered.add(ident)
+        return {"objects": [native_pairing.announcement(record), *response["objects"]]}
+
+    def bootstrap_listing(self, ident):
+        response = self.listing(ident)
+        record = self._local_users.get(ident)
+        if record is not None:
+            response["objects"][0] = native_pairing.announcement(record)
+            self._local_user_offered.add(ident)
+            self._local_user_acknowledged.discard(ident)
+        return response
+
+    def listing(self, ident):
+        response = super().listing(ident)
+        record = self._local_users.get(ident)
+        if record is not None:
+            response["objects"].insert(0, native_pairing.metadata(record))
+        return response
 
     def snapshot_reported(self):
         return reported_state.snapshot(self, integer(int(self.clock() * 1000)))
@@ -161,6 +234,7 @@ class NativeControls(NativeTelemetry):
                 ),
                 "observed_bucket_kinds": sorted({key.partition(".")[0] for key in records}),
             },
+            "local_pairing": self.local_user_view(ident),
             "baseline_fields": {
                 "temperature": shared is not None and "target_temperature" in shared.fingerprints,
                 "mode": shared is not None and MODE_FIELD in shared.fingerprints,
@@ -279,11 +353,13 @@ class NativeControls(NativeTelemetry):
         if record is None or integer(body["expected_revision"]) != record.revision:
             raise Invalid("schedule changed; read and back up the current week again")
         baseline = self.reported.get(ident, {}).get("schedule", {}).get("values", {})
-        native_features.schedule(baseline)
+        native_features.schedule_record(baseline)
         if any(kind == "schedule" for kind, _ in self.restored_fields.get(ident, set())):
             raise Invalid("a fresh native weekly schedule report is required before replacement")
         if not schedule_backed_up:
             raise Invalid("use the HA schedule action to preserve the current week first")
+        if "manual_schedule" in baseline:
+            return "schedule", "manual_schedule", normalized, {}
         return "schedule", "ver", 2, {k: v for k, v in normalized.items() if k != "ver"}
 
     def enqueue(self, ident, body, *, schedule_backed_up=False):
@@ -410,7 +486,7 @@ class NativeControls(NativeTelemetry):
                 previous.revision != revision or previous.timestamp != timestamp
             ):
                 replies.append(previous.metadata(key))
-        return self._values(ident, {"objects": replies})
+        return self._local_user_response(ident, body, self._values(ident, {"objects": replies}))
 
     def apply(self, ident, body, *, subscription=False):
         objects = self.normalize(ident, body, subscription=subscription)
@@ -493,4 +569,8 @@ class NativeControls(NativeTelemetry):
         # PUT is an acknowledgement of the device's own dirty fields. Adding
         # control values here can overwrite local changes and clear dirty flags.
         # Desired values travel only through the subscription response.
-        return self._values(ident, response) if subscription else response
+        return (
+            self._local_user_response(ident, body, self._values(ident, response))
+            if subscription
+            else response
+        )

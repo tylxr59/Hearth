@@ -19,6 +19,7 @@ BACKEND_FILES = (
     "native.py",
     "native_controls.py",
     "native_features.py",
+    "native_pairing.py",
     "native_weather.py",
     "schedule_backup.py",
     "reported_cache.py",

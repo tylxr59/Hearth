@@ -2176,3 +2176,55 @@ Updatedtests1216/fiveoptional+makecheck+realHA17allPASS. FinalremoteSTAGE-v2
 private/native-ha-v052-20261101/stage-v2; .hearth-native-stage-20261101-v052-v2.
 OLD-v1stageandfiltersonlybuildSUPERSEDED. Mustactivatev2ONLYafterownernewCore
 restartapproval. Noapprovalyet. No generationofuser/home/bootstrap/control.
+
+Ownerapproved0.5.2Core restart; scriptactivation-v1/stage-v2source32fileexact,
+previous0.5.1savedremote.previous-20261101-052; restart34284exit0. Health-v1
+0.5.2/4entities/0errors/cacheprivate. Watch94269thenownerordinaryrestartreported
+WiFi: no rejectionobserved/empty_filtersflagNOTSEEN,home/eco/weekallabsent;
+onlydevice/shared. DoNOTclaimfilterswascause. RequestsGET1/PUT8/SUB7atlast
+review, target+mode+sensorreportingcontinues,weatherclientserved1. No commands
+orbootstrap. private/native-ha-v052-20261101/startup-review-observed.json
+preserved. OwnerHeat/Coolmenuansweredalreadydynamiccaps; physicalHVACoffered
+BUTNOTAUTHORIZED,advisedkeepunwired/oldthermostatcontrolling.
+
+NextactivelyreviewNLElocalpairinggap: upstreaminjectsuser.nameFIRSTthenhome
+name/devicesandassignsdevice.structure_id. Needlocalenrollmentscopedexplicit
+configuration, NOTfakeobservedeco/week. NativeRTTIreviewuser/structure/schedule
+vtables found; Ghidraprivate/native-pairing-review-20261101/headless.log currently
+running12functionselectors(readonlynoARMexecution). Needinspectnativecallbacks
+sideeffects+schema beforeimplementingapprovedfuturepairaction. Physicalunit
+currently0.5.2/emptybase/workingclock/weather; nolivepairingauthorizationyet.
+
+0.6.0PREPARATIONWIPtested(nextnotlive): Nativeuser.namecallbacka0920calls
+58d38(clear/copynametoRAM); doesnotprovesecondayflowpersistenceeffectsabsent.
+Gen2scheduleInit9e5bc registersmanual_schedule; custom9e68chandleralsoimports
+wholeJSONwithdays. Newcodecacceptsboth/preservesOBSERVEDwireformat(notclaim
+bareNLEunsupported). Actual0.5.2unitstilldevice/sharedonly,nohome/week.
+
+Newbackend/native_pairing.py strictseparateprivateconfig(local-pairing.json),
+randomperunituserUUID/enrollmentgeneration,constantHearthname. ExplicitHA
+ADMINONLY+confirmTrue begin_local_pairing actionneedsactualconnection/refuses
+existinghomeunlessalreadyconfiguredsamegeneration. Privateatomiccodecuses
+reported_storegeneralizedfixednamedocumenthandlersONLYreported-state/local-
+pairing. NoIDs/namesleakindiagnostics;local_pairingbooleansconfigured/offered/
+metadata_acknowledged. ONLYuser.nameannouncedviaauthenticatedGETorSUB,notPUT;
+nohome/eco/schedule/capsdefaults. Userconfigurationdistinctfromreportedcache,
+reappliedafterHAreload/GET; nocontrolintentreplay. Incomingownuserpayloadignored,
+metadatafullyvalidatedBEFOREmutatingdevicestate. Noendlessmissingackpushloop.
+
+0.6FINAL33filesbuild/native-ha-local-user-20261101-v060-final+v060-reproexact.
+1229host/fiveoptionalskips+makecheck+realHA17controlroundtripsANDadmin/confirmation
+refusal/privatepair/reload/userack/no controlreplay/Gen2wrappedweekallPASS.
+Stageprivate/native-ha-v060-20261101/stage-v1andremote.hearth-native-stage-
+20261101-v060 readback33/old0.5.2backupchecked. Preactivationhealth-v1checks
+oldlive0.5.2andpairingfileABSENTbeforeactivation(noautonamefromexistingconfig).
+StillNOTACTIVATED/nounitNameannounced. NeedownernewCore restartreadinesswhen
+fullycommitted,thenafterhealthaskownerHADevToolsActionsHearthBeginlocalpairing
+chooseclimate+confirm. Can'tcallHAserviceviaSupervisorAPI(401alreadyknown);
+DO NOTseekextraHA tokenwhenownerUIactionworks. UnitremainEMPTYbase.
+
+Fullhome/eco/weekresolutionNOTclaimed; thisfirstexplicituserbootstrapisreviewed
+subset, no fabricatedbaselines. Ifneedsfuturehomeassociation, reviewstructure
+fields/ownership/nativeeffectsfirst. AllprivateGhidraexportsbelowprivate/;temp
+Java helperremovedfromtools. Source0.6genfields/profilecodecanremainuncommitted
+untilfinalpublicscan/push; live0.5.2immutable. NoHVACauthorizationgiven.

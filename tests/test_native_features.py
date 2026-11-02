@@ -283,3 +283,41 @@ def test_partial_schedule_delta_does_not_freshen_cached_days(featured, rig):
     n.apply(SERIAL, {"objects": [{"object_key": f"schedule.{SERIAL}", "value": week()}]})
     body["expected_revision"] = n._records_for(SERIAL)[f"schedule.{SERIAL}"].revision
     assert n.advanced_plan(SERIAL, body, True)[0] == "schedule"
+
+
+def test_gen2_manual_schedule_wrapper_is_preserved_in_commands_and_cache(featured, rig):
+    featured._records_for(SERIAL).pop(f"schedule.{SERIAL}")
+    featured.reported[SERIAL].pop("schedule")
+    featured.apply(
+        SERIAL,
+        {"objects": [{"object_key": f"schedule.{SERIAL}", "value": {"manual_schedule": week()}}]},
+    )
+    original = featured.reported[SERIAL]["schedule"]["values"]
+    assert set(original) == {"manual_schedule"}
+    assert features.schedule_week(original) == features.schedule(week())
+    request = sub(featured)
+    revision = featured._records_for(SERIAL)[f"schedule.{SERIAL}"].revision
+    changed = week()
+    changed["days"]["0"] = []
+    featured.enqueue(
+        SERIAL,
+        {"operation": "schedule", "value": changed, "expected_revision": revision},
+        schedule_backed_up=True,
+    )
+    row = featured.updates(SERIAL, request)["objects"][0]
+    assert (
+        set(row["value"]) == {"manual_schedule"}
+        and row["value"]["manual_schedule"]["days"]["0"] == {}
+    )
+    snapshot = featured.snapshot_reported()
+    assert snapshot["devices"][SERIAL]["records"]["schedule"]["values"] == original
+    rig[0].states.clear()
+    rig[0].seen.clear()
+    n = NativeControls(rig[0], clock=lambda: 1000)
+    n.restore_reported(snapshot)
+    assert n.reported[SERIAL]["schedule"]["values"] == original
+
+
+def test_mixed_schedule_formats_are_not_silently_merged():
+    with pytest.raises(Invalid):
+        features.schedule_record(week() | {"manual_schedule": week()})

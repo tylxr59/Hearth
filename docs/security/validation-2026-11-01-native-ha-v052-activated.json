@@ -1,0 +1,13 @@
+{
+  "status": "native-ha-v052-startup-observed-baselines-still-missing",
+  "integration_version": "0.5.2",
+  "owner_authorized_one_core_restart": true,
+  "core_restart_exit": 0,
+  "exact_source_files": 32,
+  "owner_reported_normal_nest_restart": true,
+  "empty_subscription_filters_observed": false,
+  "home_eco_schedule_baselines_present": false,
+  "only_device_shared_buckets_observed": true,
+  "control_commands_sent": false,
+  "local_user_announced": false
+}

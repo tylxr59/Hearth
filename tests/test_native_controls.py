@@ -266,6 +266,7 @@ def test_manager_control_diagnostics_are_bounded_and_value_free(native):
         "last_request_age",
         "baseline_fields",
         "feature_baselines",
+        "local_pairing",
     }
     assert row["feature_baselines"]["observed_bucket_kinds"] == ["device", "shared"]
     assert row["feature_baselines"]["home_reference_observed"] is False
