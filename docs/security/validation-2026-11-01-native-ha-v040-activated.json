@@ -1,5 +1,5 @@
 {
-  "status": "native-ha-v040-activated-health-checked-awaiting-device",
+  "status": "native-ha-v040-activated-fresh-readings-and-cache-observed",
   "source_commit": "d20dcec",
   "integration_version": "0.4.0",
   "owner_authorized_activation_and_one_core_restart": true,
@@ -9,10 +9,17 @@
   "registered_entities": 4,
   "disabled_entities": 0,
   "scoped_hearth_error_lines": 0,
-  "reported_cache_seeded": false,
+  "reported_cache_seeded": true,
   "owner_reports_unit_on_usb_charging": true,
   "thermostat_files_changed": false,
   "control_commands_sent": false,
   "physical_hvac_verified": false,
-  "nle_feature_parity_complete": false
+  "nle_feature_parity_complete": false,
+  "reported_cache_permissions_verified": true,
+  "fresh_native_state_fields": [
+    "humidity",
+    "target_temperature",
+    "temperature"
+  ],
+  "cache_reload_on_owner_host_verified": false
 }
