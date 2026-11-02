@@ -221,8 +221,11 @@ async def native_weather(request):
     if WEATHER not in request.app or not request.app[WEATHER_ENABLED]():
         count("unavailable")
         raise web.HTTPServiceUnavailable()
+    query = request.query.get("query", "")
     try:
-        location = query_location(request.query.get("query", ""))
+        # An explicit fallback location is supplied by the local weather source.
+        # Never infer it from the unauthenticated caller, IP address or an earlier query.
+        location = None if query == "ipv4" else query_location(query)
     except Invalid:
         count("invalid_query")
         counters["last_invalid_query"] = query_shape(request.query.get("query")) | {
@@ -232,6 +235,10 @@ async def native_weather(request):
         raise
     try:
         result = await request.app[WEATHER]()
+        if location is None:
+            location = query_location(query, result.get("location", {}).get("fallback"))
+        # Configuration is not part of the native weather JSON contract.
+        result["location"].pop("fallback", None)
         result["location"].update(location)
     except Invalid:
         count("unavailable")

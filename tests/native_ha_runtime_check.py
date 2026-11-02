@@ -452,6 +452,13 @@ async def check(root, profile):
                     str(i): {"0": {"time": 21600, "type": "HEAT", "temp": 20}} for i in range(7)
                 },
             }
+            week["days"]["0"]["0"].update(
+                entry_type="setpoint",
+                touched_by=1,
+                touched_at=1793556000,
+                touched_tzo=-18000,
+                touched_user_id="SYNTHETIC-LOCAL-USER",
+            )
             feature_body = {
                 "objects": [
                     {
@@ -690,6 +697,36 @@ async def check(root, profile):
                 assert response.status == 400
             options = await hass.config_entries.options.async_init(entry.entry_id)
             assert options["type"] == "form" and options["step_id"] == "init"
+            invalid_options = await hass.config_entries.options.async_configure(
+                options["flow_id"],
+                {"weather_entity": "auto", "weather_postal_code": "00000"},
+            )
+            assert invalid_options["type"] == "form"
+            assert invalid_options["errors"] == {"base": "weather_location_invalid"}
+            # Exercise the actual HA weather source without changing the live entry
+            # or triggering its options listener/reload during the remaining checks.
+            from types import SimpleNamespace
+
+            original_weather_entry = entry.runtime_data.weather.entry
+            try:
+                async with client.get(
+                    base + "/nest/weather/v1?query=ipv4", ssl=context
+                ) as response:
+                    assert response.status == 503
+                entry.runtime_data.weather.entry = SimpleNamespace(
+                    options={"weather_postal_code": "00000", "weather_country_code": "US"}
+                )
+                async with client.get(
+                    base + "/nest/weather/v1?query=ipv4", ssl=context
+                ) as response:
+                    assert response.status == 200
+                    fallback_weather = await response.json()
+                assert fallback_weather["location"]["zip"] == "00000"
+                assert fallback_weather["location"]["country"] == "US"
+                assert "fallback" not in fallback_weather["location"]
+                assert fallback_weather["current"] == weather["current"]
+            finally:
+                entry.runtime_data.weather.entry = original_weather_entry
             async with client.post(
                 base + "/nest/transport/put",
                 headers=headers,
@@ -1113,7 +1150,10 @@ async def check(root, profile):
                     "eco_confirmation_requires_fresh_bool_and_timestamp": True,
                     "delivery_receipts_payload_free": True,
                     "schedule_backup_and_replace": True,
+                    "native_schedule_point_provenance_preserved": True,
                     "ha_weather_local_response": True,
+                    "native_ipv4_weather_uses_explicit_local_location": True,
+                    "incomplete_weather_fallback_options_refused": True,
                     "local_brand_icon_and_logo_fallbacks": True,
                     "native_report_confirmation": True,
                     "native_empty_subscription_filters": True,

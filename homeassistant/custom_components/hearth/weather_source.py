@@ -114,13 +114,20 @@ class HAWeatherSource:
                     except (Invalid, KeyError, TypeError, ValueError):
                         self.failures = min(self.failures + 1, 2147483647)
                 forecasts[kind].sort(key=lambda row: row["time"])
-            return native_weather.payload(
+            result = native_weather.payload(
                 current,
                 forecasts["hourly"],
                 forecasts["daily"],
                 self.hass.config.time_zone,
                 int(now.timestamp()),
             )
+            postal = self.entry.options.get("weather_postal_code", "")
+            country = self.entry.options.get("weather_country_code", "")
+            if postal and country:
+                result["location"]["fallback"] = native_weather.query_location(
+                    "ipv4", {"zip": postal, "country": country}
+                )
+            return result
 
     def diagnostics(self):
         return {"configured": self.enabled(), "requests": self.requests, "failures": self.failures}

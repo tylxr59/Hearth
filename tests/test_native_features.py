@@ -60,6 +60,77 @@ def test_complete_week_canonicalization_and_detached_copy(mode):
     assert original["days"]["0"][0]["time"] == 21600
 
 
+@pytest.mark.parametrize("entry_type", ["setpoint", "continuation"])
+def test_native_entry_classification_survives_cache_and_backup(featured, tmp_path, entry_type):
+    original = week()
+    original["days"]["0"][0]["entry_type"] = entry_type
+    featured.apply(SERIAL, {"objects": [{"object_key": f"schedule.{SERIAL}", "value": original}]})
+    saved = featured.snapshot_reported()
+    record = saved["devices"][SERIAL]["records"]["schedule"]["values"]
+    assert features.schedule_week(record)["days"]["0"]["0"]["entry_type"] == entry_type
+    tmp_path.chmod(0o700)
+    name = schedule_backup.archive(
+        tmp_path, SERIAL, saved["devices"][SERIAL]["generation"], 1, record
+    )
+    archived = json.loads((tmp_path / name).read_text())
+    assert archived["schedule"]["days"]["0"]["0"]["entry_type"] == entry_type
+    assert original["days"]["0"][0]["entry_type"] == entry_type
+
+
+@pytest.mark.parametrize("entry_type", [None, True, 0, "unknown", {}, []])
+def test_unknown_schedule_classification_is_not_silently_dropped(entry_type):
+    original = week()
+    original["days"]["0"][0]["entry_type"] = entry_type
+    with pytest.raises(Invalid):
+        features.schedule(original)
+
+
+def test_native_schedule_provenance_survives_full_backup(featured, tmp_path):
+    original = week()
+    provenance = {
+        "entry_type": "setpoint",
+        "touched_by": 1,
+        "touched_at": 1793556000,
+        "touched_tzo": -18000,
+        "touched_user_id": "LOCAL-LAB-USER",
+    }
+    original["days"]["0"][0].update(provenance)
+    featured.apply(
+        SERIAL,
+        {"objects": [{"object_key": f"schedule.{SERIAL}", "op": "OVERWRITE", "value": original}]},
+    )
+    saved = featured.snapshot_reported()
+    record = saved["devices"][SERIAL]["records"]["schedule"]["values"]
+    tmp_path.chmod(0o700)
+    name = schedule_backup.archive(
+        tmp_path, SERIAL, saved["devices"][SERIAL]["generation"], 1, record
+    )
+    archived = json.loads((tmp_path / name).read_text())["schedule"]
+    point = archived["days"]["0"]["0"]
+    assert {key: point[key] for key in provenance} == provenance
+    assert (tmp_path / name).stat().st_mode & 0o777 == 0o600
+    shape = features.schedule_shape(original)
+    assert shape["point_unknown_member_count_max"] == 0
+    assert "LOCAL-LAB-USER" not in json.dumps(shape)
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        {"touched_by": 1},
+        {"touched_by": True, "touched_at": 0, "touched_tzo": 0},
+        {"touched_by": 1 << 31, "touched_at": 0, "touched_tzo": 0},
+        {"touched_by": 1, "touched_at": 1 << 53, "touched_tzo": 0},
+        {"touched_by": 1, "touched_at": 0, "touched_tzo": 0, "touched_user_id": "bad\nidentity"},
+    ],
+)
+def test_partial_or_unbounded_native_schedule_provenance_refused(change):
+    original = week()
+    original["days"]["0"][0].update(change)
+    with pytest.raises(Invalid):
+        features.schedule(original)
+
+
 @pytest.mark.parametrize(
     "fault",
     [

@@ -5,6 +5,36 @@ import re
 from backend.validation import Invalid, number
 
 MODES = {"HEAT": "heat", "COOL": "cool", "RANGE": "heat_cool"}
+POINT_METADATA = {"entry_type", "touched_by", "touched_at", "touched_tzo", "touched_user_id"}
+
+
+def point_metadata(point):
+    """Preserve reviewed native point provenance; never silently discard it."""
+    result = {}
+    if "entry_type" in point:
+        if point["entry_type"] not in ("setpoint", "continuation"):
+            raise Invalid("supported native schedule entry type required")
+        result["entry_type"] = point["entry_type"]
+    touched = {"touched_by", "touched_at", "touched_tzo"}
+    if POINT_METADATA.intersection(point) - {"entry_type"}:
+        if not touched <= point.keys():
+            raise Invalid("complete native schedule provenance required")
+        for name in touched:
+            value = point[name]
+            low, high = (
+                (-(1 << 31), (1 << 31) - 1)
+                if name == "touched_by"
+                else (-(1 << 53) + 1, (1 << 53) - 1)
+            )
+            if type(value) is not int or not low <= value <= high:
+                raise Invalid("bounded native schedule provenance integer required")
+            result[name] = value
+        if "touched_user_id" in point:
+            value = point["touched_user_id"]
+            if not isinstance(value, str) or re.fullmatch(r"[\x20-\x7e]{1,128}", value) is None:
+                raise Invalid("bounded native schedule provenance identity required")
+            result["touched_user_id"] = value
+    return result
 
 
 def structure_key(value):
@@ -46,7 +76,7 @@ def schedule(value):
             mode = value["schedule_mode"]
             fields = {"time", "type"} | ({"temp-min", "temp-max"} if mode == "RANGE" else {"temp"})
             if (
-                set(point) != fields
+                set(point) - POINT_METADATA != fields
                 or point["type"] != mode
                 or type(point["time"]) is not int
                 or not previous < point["time"] < 86400
@@ -54,6 +84,7 @@ def schedule(value):
                 raise Invalid("ordered local-day times and matching schedule mode required")
             previous = point["time"]
             item = {"time": point["time"], "type": mode}
+            item.update(point_metadata(point))
             for key in fields - {"time", "type"}:
                 item[key] = number(point[key], 10, 30)
             if mode == "RANGE" and item["temp-min"] >= item["temp-max"]:
@@ -121,7 +152,7 @@ def schedule_shape(value):
                 if not isinstance(point, dict):
                     point_types.add(json_type(point))
                     continue
-                known_point = {"time", "type", "temp", "temp-min", "temp-max"}
+                known_point = {"time", "type", "temp", "temp-min", "temp-max"} | POINT_METADATA
                 unknown_points = max(unknown_points, min(len(point.keys() - known_point), 257))
                 for key in known_point & point.keys():
                     point_fields.setdefault(key, set()).add(json_type(point[key]))

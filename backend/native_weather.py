@@ -25,10 +25,19 @@ ICONS = {
 }
 
 
-def query_location(value):
+def query_location(value, fallback=None):
     # The reviewed native fetcher appends its own postal code and country.
     # Reflect only those bounded fields so a weather response cannot silently
     # replace the unit's country/units with empty location defaults.
+    if value == "ipv4":
+        # Native fallback token, not an instruction to geolocate the caller.
+        # Only explicit local configuration can supply missing location fields.
+        if not isinstance(fallback, dict) or set(fallback) != {"zip", "country"}:
+            raise Invalid("configured native weather fallback required")
+        postal, country = fallback["zip"], fallback["country"]
+        if not isinstance(postal, str) or not postal or not isinstance(country, str):
+            raise Invalid("configured native weather fallback required")
+        return query_location(postal + "," + country)
     if not isinstance(value, str) or value.count(",") != 1:
         raise Invalid("native postal/country weather query required")
     postal, country = value.split(",")
@@ -54,6 +63,7 @@ def query_shape(value):
         and re.fullmatch(r"[A-Za-z]{2}", parts[1]) is not None,
         "coordinate_pair_shape": len(parts) == 2
         and all(re.fullmatch(r"[+-]?[0-9]+(?:\.[0-9]+)?", part) is not None for part in parts),
+        "native_ipv4_fallback": value == "ipv4",
     }
 
 

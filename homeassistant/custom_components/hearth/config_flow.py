@@ -7,6 +7,8 @@ from homeassistant.core import callback
 
 from homeassistant import config_entries
 
+from ._backend.native_weather import query_location
+from ._backend.validation import Invalid
 from .const import DOMAIN
 from .profile import PROFILE_ERRORS, load_profile
 
@@ -47,12 +49,27 @@ class HearthOptionsFlow(config_entries.OptionsFlow):
         errors = {}
         if user_input is not None:
             selected = user_input["weather_entity"]
+            postal = user_input.get("weather_postal_code", "").strip()
+            country = user_input.get("weather_country_code", "").strip()
             if selected not in choices:
                 errors["base"] = "weather_not_found"
             else:
-                return self.async_create_entry(
-                    title="", data={} if selected == "auto" else {"weather_entity": selected}
-                )
+                try:
+                    location = (
+                        query_location("ipv4", {"zip": postal, "country": country})
+                        if postal or country
+                        else None
+                    )
+                except Invalid:
+                    errors["base"] = "weather_location_invalid"
+                else:
+                    data = {} if selected == "auto" else {"weather_entity": selected}
+                    if location:
+                        data.update(
+                            weather_postal_code=location["zip"],
+                            weather_country_code=location["country"],
+                        )
+                    return self.async_create_entry(title="", data=data)
         selected = self.config_entry.options.get("weather_entity", "auto")
         return self.async_show_form(
             step_id="init",
@@ -60,7 +77,15 @@ class HearthOptionsFlow(config_entries.OptionsFlow):
                 {
                     vol.Required(
                         "weather_entity", default=selected if selected in choices else "disabled"
-                    ): vol.In(choices)
+                    ): vol.In(choices),
+                    vol.Optional(
+                        "weather_postal_code",
+                        default=self.config_entry.options.get("weather_postal_code", ""),
+                    ): str,
+                    vol.Optional(
+                        "weather_country_code",
+                        default=self.config_entry.options.get("weather_country_code", ""),
+                    ): str,
                 }
             ),
             errors=errors,

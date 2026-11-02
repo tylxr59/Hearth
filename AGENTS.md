@@ -3,33 +3,34 @@
 
 ## Current handoff: 2026-11-02
 
-Live HA is **0.6.5**, activated with owner approval and one successful Core restart.
-The 33 active files read back exactly; Core health and four registered entities
-passed with no scoped errors. The owner has now returned the charged display to
-its completely unwired base. No loader or NAND writer runs.
+Live HA is **0.6.5**. The owner has now installed the Nest on actual HVAC wiring.
+E22 is gone; the physical dial shows Heat at 59 F and the owner reports no furnace
+activity with room temperature above target. A read-only manager check found no
+pending commands. Do not assume this installation proves HVAC switching, cooling,
+fan or emergency heat. The owner requests continued completion; keep remote
+commands paused while investigating and obtain a concrete supervised test before
+operating equipment. No ROM loader or NAND writer runs.
 
-**Eco-off restoration remains unconfirmed.** Two scoped requests under 0.6.4 and
-two under 0.6.5 expired. The latest had an active subscription and a successful
-server stream write, but zero of two requested fields were freshly reported.
-That write does not prove device receipt/execution; stale cached None is not proof.
-Do not resend blindly or start another Eco-on test. The owner observed Eco with a temperature dial. A second attempt made on the
-unwired base also expired with a successful stream write and zero matching fields.
-Investigate native application before any further command; base absence alone does
-not explain this failure. Device Eco mode has not been reported
-this runtime. One current weather request was served; a subsequent request failed location
-validation with a four-character, no-comma shape. No raw location was retained.
+The owner opened the physical Eco menu and observed **Start Eco**, confirming Eco
+is currently off. The leaf alone was an efficiency indicator. Earlier Eco-off
+commands expired without fresh field confirmation; this physical observation
+resolves current state but does not prove those commands caused it. Preserve the
+original baseline/attempts; no further Eco-off or Eco-on command is needed now.
 
-0.6.5 keeps quiet subscriptions open, preserves inline/CAS acknowledgements,
-tracks bounded delivery receipts and requires all desired fields freshly reported.
-Preparation passed 1279 host tests/five optional skips, make check and 18 real-HA
-sandbox synthetic control round trips. Package final-v3 / remote stage-v3 was used;
-activation and attempt records remain private and immutable. No further Core restart
-is authorized by the consumed activation approval.
-
-Native schedule writes remain gated: serializer points include entry_type and
-optional provenance fields, which require preservation before replacement can be
-called complete. Keep native wiring/HVAC checks intact. No physical HVAC switching
-or wiring is authorized. Preserve the original Eco-off baseline and all attempts.
+0.6.6 is checked and staged, NOT activated. It adds explicit local postal/country
+fallback for the native ipv4 weather query and preserves recognized point entry_type
+and integer provenance/optional user identity through schedule cache and backup.
+Unknown fields and incomplete provenance still refuse validation. All 1303 host
+tests pass (five optional skips), make check passes, and real HA2026.10.4 passes
+18 synthetic control round trips including native point provenance and local fallback.
+The final/repro packages match (33 integration files plus inventory). Remote
+stage-v1 readback passed; active code, cache and pairing are preserved privately
+under private/native-ha-v066-20261102/stage-v1. Activation script is prepared but
+NOT RUN. Owner Core restart approval is pending; no more control commands sent.
+NLE pinned source comparison confirms the same Eco fields/timestamp units. Its
+weather proxy still calls Nest, which is not used by Hearth's HA weather source.
+Live 0.6.5 source, cache and pairing backups remain private. A new Core restart
+requires approval after the checked package is concrete and staged.
 
 ## Purpose and current status
 

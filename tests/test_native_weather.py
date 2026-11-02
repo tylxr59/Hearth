@@ -102,6 +102,65 @@ def test_weather_query_preserves_native_country_and_postal():
     assert query_location("SW1A 1AA,GB") == {"zip": "SW1A 1AA", "country": "GB"}
 
 
+def test_native_ipv4_token_uses_only_explicit_location():
+    from backend.native_weather import query_location, query_shape
+
+    assert query_location("ipv4", {"zip": "SW1A 1AA", "country": "gb"}) == {
+        "zip": "SW1A 1AA",
+        "country": "GB",
+    }
+    assert query_shape("ipv4")["native_ipv4_fallback"] is True
+    # A normal request must not be replaced by the configured fallback.
+    assert query_location("00000,US", {"zip": "SW1A 1AA", "country": "GB"})["country"] == "US"
+
+
+@pytest.mark.parametrize(
+    "fallback",
+    [
+        None,
+        {},
+        {"zip": "", "country": "US"},
+        {"zip": "00000", "country": ""},
+        {"zip": "00000", "country": "USA"},
+        {"zip": "../../etc", "country": "US"},
+        {"zip": 123, "country": "US"},
+        {"zip": "00000", "country": "US", "url": "https://invalid.example"},
+    ],
+)
+def test_ipv4_fallback_requires_complete_bounded_configuration(fallback):
+    from backend.native_weather import query_location
+
+    with pytest.raises(Invalid):
+        query_location("ipv4", fallback)
+
+
+async def test_ipv4_weather_no_external_lookup_no_query_poisoning(rig):
+    app = create_app(rig[0], native_telemetry=True)
+    configured = [False]
+
+    async def provider():
+        result = weather()
+        if configured[0]:
+            result["location"]["fallback"] = {"zip": "00000", "country": "US"}
+        return result
+
+    app[WEATHER], app[WEATHER_ENABLED] = provider, lambda: True
+    async with TestClient(TestServer(app)) as client:
+        # A public request cannot seed a location for subsequent callers.
+        assert (await client.get("/nest/weather/v1?query=SW1A%201AA,GB")).status == 200
+        assert (await client.get("/nest/weather/v1?query=ipv4")).status == 503
+        configured[0] = True
+        response = await client.get("/nest/weather/v1?query=ipv4")
+        assert response.status == 200
+        result = await response.json()
+        assert result["location"]["zip"] == "00000"
+        assert result["location"]["country"] == "US"
+        assert "fallback" not in result["location"]
+        assert result["location"]["timezone_long"] == "America/New_York"
+        assert app[WEATHER_STATS]["invalid_query"] == 0
+        assert app[WEATHER_STATS]["unavailable"] == 1
+
+
 @pytest.mark.parametrize("query", ["PRIVATE-POSTAL,", "12.3456,-45.6789", "PRIVATE-LOCATION"])
 def test_weather_shape_never_retains_location_values(query):
     import json

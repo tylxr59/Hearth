@@ -145,6 +145,26 @@ watch. This does not establish that every future endpoint has been removed.
 See [the feature checklist](architecture/0003-native-ha-controls.md) for remaining
 eco, scheduling, settings, weather and supervised equipment work.
 
+## Native weather fallback and schedule metadata (0.6.6)
+
+Some native weather requests use the literal `ipv4` token instead of a postal
+code/country pair. In Hearth's integration options, select your HA weather entity
+and optionally supply the thermostat's postal code and two-letter country. These
+two location fields must be supplied together. They let Hearth answer the fallback
+locally using the selected HA weather entity; Hearth never geolocates the caller
+or contacts a Nest weather endpoint. Ordinary postal/country requests retain their
+own location. Without configured fallback fields, fallback requests return unavailable
+rather than clearing the thermostat's country or inventing a location.
+
+Version-2 schedules now preserve recognized point classification (`setpoint` or
+`continuation`) and optional native provenance through cache, HA schedule reads,
+replacement preparation and private pre-change backups. Provenance identities
+remain in the private schedule data, not diagnostics. Unknown fields and incomplete
+provenance still refuse validation; no schedule is silently stripped to make it
+pass. These compatibility changes do not establish a successful owner-unit
+schedule replacement. A fresh native schedule and supervised confirmation remain
+required before calling that feature verified.
+
 
 ## Target sensor display precision (0.4.1)
 

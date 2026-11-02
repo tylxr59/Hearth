@@ -18,14 +18,17 @@
     "step": {
       "init": {
         "title": "Weather source",
-        "description": "Use an existing Home Assistant weather entity for the Nest. Hearth does not contact a weather provider directly.",
+        "description": "Use an existing Home Assistant weather entity. Optionally provide the thermostat postal code and two-letter country for its automatic-location fallback; Hearth does not perform IP geolocation.",
         "data": {
-          "weather_entity": "Weather entity"
+          "weather_entity": "Weather entity",
+          "weather_postal_code": "Fallback postal code (optional)",
+          "weather_country_code": "Fallback country code (optional, e.g. US)"
         }
       }
     },
     "error": {
-      "weather_not_found": "Choose an available Home Assistant weather entity."
+      "weather_not_found": "Choose an available Home Assistant weather entity.",
+      "weather_location_invalid": "Provide both a valid postal code and a two-letter country, or leave both empty."
     }
   }
 }

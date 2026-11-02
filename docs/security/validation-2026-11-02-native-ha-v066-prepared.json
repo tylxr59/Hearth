@@ -1,0 +1,23 @@
+{
+  "status": "native-feature-compatibility-staged-not-active",
+  "version": "0.6.6",
+  "host_tests_passed": 1303,
+  "optional_tests_skipped": 5,
+  "make_check": "passed",
+  "real_ha_core": "2026.10.4",
+  "synthetic_control_roundtrips": 18,
+  "native_ipv4_weather_local_fallback": "passed",
+  "weather_fallback_query_poisoning_refused": true,
+  "incomplete_location_options_refused": true,
+  "native_schedule_classification_and_provenance_preserved": true,
+  "unknown_schedule_metadata_refused": true,
+  "reproducible_integration_files": 33,
+  "staged_exact_readback": true,
+  "active_code_cache_and_pairing_backed_up": true,
+  "activated": false,
+  "owner_observed_eco_menu": "Start Eco",
+  "current_physical_eco_off_confirmed": true,
+  "prior_remote_eco_execution_verified": false,
+  "remote_hvac_switching_tested": false,
+  "owner_schedule_replacement_verified": false
+}
