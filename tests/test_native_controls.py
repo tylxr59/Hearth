@@ -265,6 +265,7 @@ def test_manager_control_diagnostics_are_bounded_and_value_free(native):
     assert row["pending"]["temperature"] == {
         "offered": False,
         "stream_write_completed": False,
+        "notification_acknowledged": False,
         "seconds_remaining": 30,
     }
     assert row["baseline_fields"] == {"temperature": True, "mode": True, "fan": True}

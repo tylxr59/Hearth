@@ -134,3 +134,21 @@ remained Heat at 63 F with the room more than 3 C above target, and effective
 capabilities remained off/heat only. No thermostat commands were sent during
 activation. The feedback change is not yet verified on the unit; a separate
 supervised bounded cycle has been proposed to the owner.
+
+## 0.6.7 owner feedback measurement
+
+The owner authorized one repeat bounded cycle. Fresh guards passed before one
+62 F request; the owner confirmed the physical dial reached62 F. One original-target
+restoration followed, and the owner confirmed63 F with no furnace activity
+throughout. Native report confirmation still did not follow within the intent
+window. Additional accepted PUT/subscription traffic occurred after the notification
+was introduced, but its contents were not retained in the observer. Thus the
+observation does not independently prove a successful notification clear.
+
+The pinned NLE transport explicitly handles the device clearing
+`target_change_pending` back to false. The0.6.8 candidate separates that accepted
+client acknowledgement from an actual target-value report. This is an explicit
+protocol inference with an assumed-state UI label, not a claim that server writes,
+metadata or clearing a flag prove equipment execution. See the control architecture
+note for limits and invalidation rules. No additional thermostat command was sent
+while preparing this correction.

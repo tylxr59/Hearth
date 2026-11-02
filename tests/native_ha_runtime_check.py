@@ -327,6 +327,33 @@ async def check(root, profile):
                         }
                     ]
                 }
+                if "target_change_pending" in row["value"]:
+                    async with client.post(
+                        base + "/nest/transport/put",
+                        headers=headers,
+                        ssl=context,
+                        json={
+                            "objects": [
+                                {
+                                    "object_key": row["object_key"],
+                                    "value": {"target_change_pending": False},
+                                }
+                            ]
+                        },
+                    ) as response:
+                        assert response.status == 200
+                    await hass.async_block_till_done()
+                    assert hass.states.get(climate_id).attributes["assumed_state"] is True
+                    for field, value in row["value"].items():
+                        if field.startswith("target_temperature"):
+                            assert native.target_value(IDENT, field) == value
+                            assert native.state_source(IDENT, field) == "acknowledged"
+                    assert native.updates(IDENT, {"objects": native.listing(IDENT)["objects"]}) == {
+                        "objects": []
+                    }
+                    ack["objects"][0]["if_object_revision"] = native._records_for(IDENT)[
+                        row["object_key"]
+                    ].revision
                 if row["value"].get("manual_eco_all") is False:
                     partial = {
                         "objects": [
@@ -363,6 +390,8 @@ async def check(root, profile):
                 ) as response:
                     assert response.status == 200
                 await hass.async_block_till_done()
+                if "target_change_pending" in row["value"]:
+                    assert not hass.states.get(climate_id).attributes.get("assumed_state", False)
                 return row["value"]
 
             await command_roundtrip(

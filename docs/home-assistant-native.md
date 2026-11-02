@@ -350,3 +350,15 @@ shown under `reported_state_source.preset`.
 Invalid weather request diagnostics record shape flags and bounded lengths only,
 not location values or arbitrary query parameter names. Weather response/authentication
 rules are unchanged by this diagnostic addition.
+
+## Target acknowledgement display (0.6.8)
+
+When the thermostat clears a target notification that Hearth actually sent, HA
+can show the acknowledged target as an assumed state. The climate entity and
+target sensor use the same value and expose source `acknowledged`; measured room
+temperature and HVAC operating action still use native reports. A later target
+report replaces the assumption. Enqueueing alone does not change the displayed
+target. Assumptions are not restored from disk after restart, and no command is
+replayed. `acknowledged` means the notification was cleared, while `confirmed`
+requires an actual matching target value report. Device validation of this path
+is still pending in the prepared0.6.8 update.

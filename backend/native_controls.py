@@ -40,6 +40,8 @@ class Intent:
     expires: float
     sent: bool = False
     stream_write_completed: bool = False
+    notification_sent: bool = False
+    notification_acknowledged: bool = False
     extra_values: dict = field(default_factory=dict)
     observed_fields: set = field(default_factory=set)
 
@@ -54,6 +56,7 @@ class NativeControls(NativeTelemetry):
         self.features = {}
         self.outcomes = {}
         self.receipts = {}
+        self.acknowledged_targets = {}
         self.reported = {}
         self.restored_fields = {}
         self.reported_changed = lambda _ident: None
@@ -75,6 +78,7 @@ class NativeControls(NativeTelemetry):
             self.features.pop(ident, None)
             self.outcomes.pop(ident, None)
             self.receipts.pop(ident, None)
+            self.acknowledged_targets.pop(ident, None)
             self.reported.pop(ident, None)
             self.restored_fields.pop(ident, None)
             self.requests.pop(ident, None)
@@ -294,6 +298,8 @@ class NativeControls(NativeTelemetry):
 
     def state_source(self, ident, field):
         self._records_for(ident)
+        if field in self.acknowledged_targets.get(ident, {}):
+            return "acknowledged"
         records = self.reported.get(ident, {})
         shared = records.get("shared", {}).get("values", {})
         source = {
@@ -314,6 +320,15 @@ class NativeControls(NativeTelemetry):
         if source is None or source[1] not in records.get(source[0], {}).get("values", {}):
             return "unknown"
         return "cache" if source in self.restored_fields.get(ident, set()) else "device"
+
+    def target_value(self, ident, field="target_temperature"):
+        self._records_for(ident)
+        assigned = self.acknowledged_targets.get(ident, {})
+        if field in assigned:
+            return assigned[field]
+        if field == "target_temperature":
+            return self.core.states.get(ident, {}).get(field)
+        return self.reported.get(ident, {}).get("shared", {}).get("values", {}).get(field)
 
     def note_request(self, ident, kind):
         self._records_for(ident)
@@ -338,6 +353,7 @@ class NativeControls(NativeTelemetry):
                 op: {
                     "offered": i.sent,
                     "stream_write_completed": i.stream_write_completed,
+                    "notification_acknowledged": i.notification_acknowledged,
                     "seconds_remaining": max(0, round(i.expires - self.core.clock(), 1)),
                 }
                 for op, i in self.intents.get(ident, {}).items()
@@ -421,10 +437,15 @@ class NativeControls(NativeTelemetry):
         return None
 
     def _finish(self, ident, op, item, outcome):
+        if outcome in ("superseded", "superseded_by_device"):
+            assigned = self.acknowledged_targets.get(ident, {})
+            for name in item.desired():
+                assigned.pop(name, None)
         self.receipts.setdefault(ident, {})[op] = {
             "outcome": outcome,
             "offered": item.sent,
             "stream_write_completed": item.stream_write_completed,
+            "notification_acknowledged": item.notification_acknowledged,
             "matching_reported_field_count": len(item.observed_fields),
             "required_field_count": len(item.desired()),
         }
@@ -445,17 +466,28 @@ class NativeControls(NativeTelemetry):
                     )
                 ):
                     item.stream_write_completed = True
+                    if row["value"].get("target_change_pending") is True and item.field in (
+                        "target_temperature",
+                        "target_temperature_low",
+                    ):
+                        item.notification_sent = True
 
     def _expire(self, ident):
         now = self.core.clock()
         for op, item in list(self.intents.get(ident, {}).items()):
             if item.expires <= now:
-                self._finish(ident, op, item, "expired")
+                self._finish(
+                    ident, op, item, "acknowledged" if item.notification_acknowledged else "expired"
+                )
 
     def command_status(self, ident):
         self._records_for(ident)
         self._expire(ident)
-        return dict(self.outcomes.get(ident, {}))
+        result = dict(self.outcomes.get(ident, {}))
+        for op, item in self.intents.get(ident, {}).items():
+            if item.notification_acknowledged:
+                result[op] = "acknowledged"
+        return result
 
     def advanced_plan(self, ident, body, schedule_backed_up):
         if not isinstance(body, dict) or body.get("operation") not in (
@@ -631,6 +663,8 @@ class NativeControls(NativeTelemetry):
         # it received a pending desired value. Until native values confirm it,
         # include that live intent even when the client claims matching metadata.
         for item in self.intents.get(ident, {}).values():
+            if item.notification_acknowledged:
+                continue
             record = records.get(item.key)
             if record is not None and record.revision == item.revision:
                 rows.setdefault(item.key, record.metadata(item.key))
@@ -638,7 +672,9 @@ class NativeControls(NativeTelemetry):
             values = {
                 name: data
                 for i in self.intents.get(ident, {}).values()
-                if i.key == row["object_key"] and i.revision == row["object_revision"]
+                if i.key == row["object_key"]
+                and i.revision == row["object_revision"]
+                and not i.notification_acknowledged
                 for name, data in i.desired().items()
             }
             if values:
@@ -677,6 +713,8 @@ class NativeControls(NativeTelemetry):
         return self._local_user_response(ident, body, self._values(ident, {"objects": replies}))
 
     def apply(self, ident, body, *, subscription=False):
+        self._records_for(ident)
+        self._expire(ident)
         objects = self.normalize(ident, body, subscription=subscription)
         records = self._records_for(ident)
         accepted = {
@@ -707,6 +745,26 @@ class NativeControls(NativeTelemetry):
                 for name in FEATURES & value.keys():
                     observed[name] = value[name] if type(value[name]) is bool else None
             if kind == "shared":
+                assigned = self.acknowledged_targets.get(ident, {})
+                for name in assigned.keys() & value.keys():
+                    assigned.pop(name)
+                # This is a client acknowledgement of a written notification,
+                # not an explicit target report or proof of equipment operation.
+                if value.get("target_change_pending") is False:
+                    for item in self.intents.get(ident, {}).values():
+                        if (
+                            item.key == key
+                            and item.notification_sent
+                            and not item.notification_acknowledged
+                        ):
+                            item.notification_acknowledged = True
+                            self.acknowledged_targets.setdefault(ident, {}).update(
+                                {
+                                    name: target
+                                    for name, target in item.desired().items()
+                                    if name not in value and name not in item.observed_fields
+                                }
+                            )
                 observed = self.features.setdefault(ident, {})
                 for name in OUTPUTS & value.keys():
                     observed[name] = value[name] if type(value[name]) is bool else None

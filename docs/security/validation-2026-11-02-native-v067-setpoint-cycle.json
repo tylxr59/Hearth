@@ -1,0 +1,20 @@
+{
+  "status": "owner-observed-cycle-complete-native-report-unconfirmed",
+  "version": "0.6.7",
+  "owner_supervised": true,
+  "physical_targets_f": [
+    63,
+    62,
+    63
+  ],
+  "lower_requests_sent": 1,
+  "restore_requests_sent": 1,
+  "owner_confirmed_lower": true,
+  "owner_confirmed_restore": true,
+  "owner_reported_furnace_activity": false,
+  "backend_value_confirmation_verified": false,
+  "additional_native_traffic_observed": true,
+  "notification_clear_success_verified": false,
+  "automatic_host_command_retry": false,
+  "additional_live_commands_for_v068_preparation": 0
+}

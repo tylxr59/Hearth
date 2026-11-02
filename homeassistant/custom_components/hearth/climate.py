@@ -87,14 +87,23 @@ class HearthClimate(ClimateEntity):
     def target_temperature(self):
         if self.hvac_mode == HVACMode.HEAT_COOL:
             return None
-        return self.runtime.core.states.get(self.ident, {}).get("target_temperature")
+        return self.runtime.controls.target_value(self.ident)
+
+    @property
+    def assumed_state(self):
+        fields = (
+            ("target_temperature_low", "target_temperature_high")
+            if self.hvac_mode == HVACMode.HEAT_COOL
+            else ("target_temperature",)
+        )
+        return any(
+            self.runtime.controls.state_source(self.ident, field) == "acknowledged"
+            for field in fields
+        )
 
     def range_target(self, field):
-        values = (
-            self.runtime.controls.reported.get(self.ident, {}).get("shared", {}).get("values", {})
-        )
-        low = values.get("target_temperature_low")
-        high = values.get("target_temperature_high")
+        low = self.runtime.controls.target_value(self.ident, "target_temperature_low")
+        high = self.runtime.controls.target_value(self.ident, "target_temperature_high")
         if (
             self.hvac_mode != HVACMode.HEAT_COOL
             or type(low) not in (int, float)
@@ -102,7 +111,7 @@ class HearthClimate(ClimateEntity):
             or low >= high
         ):
             return None
-        return values[field]
+        return low if field == "target_temperature_low" else high
 
     @property
     def target_temperature_low(self):

@@ -96,7 +96,7 @@ def test_target_notification_clear_does_not_confirm_or_supersede_temperature(rig
         SERIAL,
         {"objects": [{"object_key": row["object_key"], "value": {"target_change_pending": False}}]},
     )
-    assert n.command_status(SERIAL)["temperature"] == "pending"
+    assert n.command_status(SERIAL)["temperature"] == "acknowledged"
     assert n.intents[SERIAL]["temperature"].observed_fields == set()
     assert n.intents[SERIAL]["temperature"].stream_write_completed
     assert "target_change_pending" not in json.dumps(n.snapshot_reported())

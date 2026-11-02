@@ -130,3 +130,34 @@ seeded a private cache. A later owner-triggered integration reload retained all
 three readings exactly, with an authenticated subscription and no new PUT yet;
 no pending intent was restored. Eco, schedules, weather and the remaining NLE
 settings are separate unfinished work.
+
+## Acknowledged targets versus native reports (0.6.8)
+
+Two supervised physical cycles under0.6.6/0.6.7 changed the dial from63 to62 F and
+restored63 F without furnace activity. Explicit target reports did not confirm the
+requests during their windows. Under0.6.7 the transient notification also produced
+more PUT/subscription traffic. This is evidence that a working physical command
+and a returned target value are separate events, not proof that any arbitrary
+notification clear establishes physical execution.
+
+The0.6.8 candidate recognizes only an accepted shared-bucket clear of a notification
+actually written with the still-live target intent. It stops resending that
+acknowledged target while continuing to accept explicit value reports. A queued
+request, metadata-only acknowledgement, unsent/expired notification or rejected CAS
+cannot create this state. Only single/range target notification acknowledgements
+use this path; Eco, mode, fan and schedule confirmation rules are unchanged.
+
+HA can display that target as **assumed**, with state source acknowledged and
+command status acknowledged. It is not a measured target report or proof of HVAC
+operation. The separate reported snapshot and management state remain unchanged;
+measured temperature, humidity and HVAC action never derive from the request.
+A later actual target report takes precedence. A conflicting device value drops
+the assumption. Partially reported range targets retain their individual source
+labels. These assumptions stay only in memory, clear on enrollment change, and
+are excluded from private reported caches and command replay.
+
+The original observation window remains bounded. An acknowledged intent without
+a full value report ends as acknowledged rather than confirmed or expired. A full
+accepted matching native report can still confirm within that window. The owner
+unit must separately demonstrate this acknowledgement path before calling its
+feedback behavior verified. No HVAC output is changed by this display behavior.

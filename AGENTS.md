@@ -67,14 +67,28 @@ GET, two PUTs and a subscription; user/home metadata ACK, active carrier and no
 rejections/pending commands. Owner also confirmed display awake. Fresh report:
 Heat63 F, room more than3 C above target, effective off/heat only. Read-only
 reconnect-check-v1 preserves the manager response. No thermostat commands sent.
-Prepared new helper build/native-ha-v067-setpoint-check-20261102.py uses fresh
-private067 paths but has NOT executed either control step. Before a new test,
-native reconnect is verified; owner readiness for a new63/62/63 feedback test has
-been requested and remains pending. The0.6.7 restart approval is
-consumed; do not restart again automatically.
-Current helper: build/native-ha-v066-setpoint-check-v2-20261102.py. Neither step may
-be rerun; original v1 also uses the obsolete 59/58 baseline. No further HVAC
-operation or Core restart has been approved after the completed bounded test.
+The owner approved the0.6.7 feedback test. ONE62 F request and ONE original-target
+restore were sent with the same guarded preflight. Owner confirmed both physical
+62 F and return to63 F, with no furnace activity throughout. Native receipts still
+expired without matching target reports. The notification produced additional PUT/
+subscription traffic; no proof yet that these PUTs cleared the flag successfully.
+Keep private067/setpoint-lower-v1, setpoint-restore-v1 and lower-watch-v1 immutable.
+Neither helper step may be repeated. No additional controls or restart approved.
+
+0.6.8 is checked and staged, NOT active. It recognizes an accepted client
+clear of a notification that was actually written. That stops repeated target
+values, gives acknowledged status, and supplies a volatile HA assumed target with
+source acknowledged. It never changes measured temperature/HVAC outputs or
+fabricates an explicit target report. Fresh target reports win; acknowledgement
+and assumed targets are not persisted/replayed. Unknown/stale/unsent/expired clears
+cannot produce an assumed target. All1317 host tests pass/five optional skips,
+make check passes, realHA2026.10.4/18 synthetic round trips pass including assumed
+state then explicit native-report replacement. Final/repro packages match. Remote
+stage-v1 verifies all33 source files exactly; live0.6.7 code, reported cache and
+pairing are backed up in private/native-ha-v068-20261102/stage-v1. Activation script
+is prepared but NOT RUN. Obtain new owner approval for one Core restart; activation
+must send no thermostat commands. Owner-unit acknowledgement behavior remains
+unverified, despite the successful physical cycles under0.6.6/0.6.7.
 
 ## Purpose and current status
 

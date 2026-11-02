@@ -58,7 +58,13 @@ class HearthSensor(SensorEntity):
 
     @property
     def native_value(self):
+        if self.field == "target_temperature":
+            return self.runtime.controls.target_value(self.ident)
         return self.runtime.core.states.get(self.ident, {}).get(self.field)
+
+    @property
+    def assumed_state(self):
+        return self.runtime.controls.state_source(self.ident, self.field) == "acknowledged"
 
     @property
     def extra_state_attributes(self):
