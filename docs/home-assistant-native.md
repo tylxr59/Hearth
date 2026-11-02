@@ -144,3 +144,19 @@ watch. This does not establish that every future endpoint has been removed.
 
 See [the feature checklist](architecture/0003-native-ha-controls.md) for remaining
 eco, scheduling, settings, weather and supervised equipment work.
+
+
+## Target sensor display precision (0.4.1)
+
+The native client reports Celsius setpoints. Converting a reported fractional
+value can produce65.9F while the physical Nest displays66F. The separate target
+sensor now suggests zero decimal places for Fahrenheit and one for Celsius,
+using the entity's actual display unit, including a per-entity override. This
+changes display formatting, not the native value, history or command conversion.
+Measured temperature keeps its existing precision. An explicit user-selected
+precision continues to take precedence over the integration's suggestion.
+
+On an existing installation, open the Target temperature sensor settings and
+set Display precision to0 for whole-degree Fahrenheit immediately; this does
+not require restarting HA. The climate entity already uses whole-degree
+Fahrenheit display through HA's standard climate conversion.

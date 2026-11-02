@@ -308,6 +308,37 @@ async def check(root, profile):
                 "set_temperature", {"temperature": 77}, {"target_temperature": 25}
             )
             assert entry.runtime_data.core.states[IDENT]["target_temperature"] == 25
+            # Display-only precision: reproduce the fractional Fahrenheit
+            # examples without changing native values or issuing commands.
+            from homeassistant.components.sensor import DATA_COMPONENT
+
+            target_id = next(key for key in owned_entity_ids if key.endswith("_target_temperature"))
+            target_sensor = hass.data[DATA_COMPONENT].get_entity(target_id)
+            assert target_sensor.suggested_display_precision == 0
+            assert target_sensor._get_adjusted_display_precision() == 0
+            for fahrenheit, expected in ((66.8, 67), (60.9, 61), (65.9, 66)):
+                raw_celsius = (fahrenheit - 32) * 5 / 9
+                native.core.states[IDENT]["target_temperature"] = raw_celsius
+                native.notify(IDENT)
+                await hass.async_block_till_done()
+                assert target_sensor.native_value == raw_celsius
+                assert round(float(hass.states.get(target_id).state), 1) == fahrenheit
+                assert hass.states.get(climate_id).attributes["temperature"] == expected
+                assert round(float(hass.states.get(target_id).state)) == expected
+            native.core.states[IDENT]["target_temperature"] = 25
+            hass.config.units = original_units
+            assert target_sensor.suggested_display_precision == 1
+            assert target_sensor._get_adjusted_display_precision() == 1
+            # A per-entity Celsius unit override also retains decimal display.
+            hass.config.units = US_CUSTOMARY_SYSTEM
+            er.async_get(hass).async_update_entity_options(
+                target_id, "sensor", {"unit_of_measurement": "°C"}
+            )
+            await hass.async_block_till_done()
+            assert target_sensor.unit_of_measurement == "°C"
+            assert target_sensor.suggested_display_precision == 1
+            er.async_get(hass).async_update_entity_options(target_id, "sensor", {})
+            await hass.async_block_till_done()
             hass.config.units = original_units
             await command_roundtrip(
                 "set_hvac_mode", {"hvac_mode": "heat"}, {"target_temperature_type": "heat"}

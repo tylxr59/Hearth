@@ -1,4 +1,4 @@
-"""Native read-only sensors; control is a separately verified future capability."""
+"""Native reported sensors; preserve values and suggest appropriate display precision."""
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorStateClass
 from homeassistant.const import PERCENTAGE, UnitOfTemperature
@@ -46,6 +46,15 @@ class HearthSensor(SensorEntity):
         )
         if field != "target_temperature":
             self._attr_state_class = SensorStateClass.MEASUREMENT
+
+    @property
+    def suggested_display_precision(self):
+        # The native Celsius setpoint may convert to e.g.65.9F while the Nest
+        # displays66F. Suggest the dial's display precision, without changing
+        # telemetry, history, commands or the user's explicit precision option.
+        if self.field == "target_temperature":
+            return 0 if self.unit_of_measurement == UnitOfTemperature.FAHRENHEIT else 1
+        return None
 
     @property
     def native_value(self):
