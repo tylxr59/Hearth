@@ -100,7 +100,7 @@ def loader(work, log):
         )
 
 
-def build(cache, output, profile, *, engine="podman"):
+def require_engine(engine="podman"):
     if engine not in ("podman", "docker") or shutil.which(engine) is None:
         raise ValueError("installed Podman or Docker required")
     if engine == "podman":
@@ -116,6 +116,10 @@ def build(cache, output, profile, *, engine="podman"):
             raise ValueError("rootless Podman required")
     else:
         raise ValueError("public firmware builder currently requires rootless Podman")
+
+
+def build(cache, output, profile, *, engine="podman"):
+    require_engine(engine)
     sources.verify(cache)
     cache, output = sources.build_path(cache), sources.build_path(output)
     # Check the private destination before spending time on a build.

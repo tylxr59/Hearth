@@ -106,8 +106,10 @@ directory; a failed build preserves `build.log` and is not automatically retried
 Acquisition requires a terminal, matching fresh identity and an explicit READY
 confirmation before the owner-timed restart. It reads two fixed snapshots plus
 four library directories into private custody, without a flash writer or native
-application execution. Nothing acquired is made executable on the host. Return
-to native startup after the command exits. The corrected consolidated reader
+application execution. Nothing acquired is made executable on the host. To continue
+directly to installation, keep USB connected in the exited RAM session while
+building the kit. If stopping here, follow the command's manual restart guidance;
+native startup can change settings and invalidate the saved snapshot. The corrected consolidated reader
 and rebuilt boot chain completed a supervised read-only run on the existing
 owner unit, including native UI/USB return. This does not establish a pristine
 stock installation or whole-firmware recovery.
@@ -118,39 +120,71 @@ revalidates both backup receipts. It then resolves the native library closure
 from ELF SONAME metadata without host symlinks or native execution. It refuses
 modified, missing, extra or permissively stored inputs before kit preparation.
 
-## Current firmware-kit requirement
+## Build the private kit
 
-The guided frontend does **not yet assemble a stock unit's entire install kit**.
-After acquisition, compatible install/restore profiles must still be prepared
-from that owner's fresh originals using the public capsule, source-build and
-packaging modules. The
-[builder guide](development/firmware-kit.md) explains those boundaries. A kit from
-another unit, an old executed profile, a missing restore image or a changed source
-recipe is refused. Never distribute proprietary native libraries with a release.
-
-Once matching fresh install/restore profiles exist:
+The experimental stock-kit builder constructs nine commissioning replacements,
+three disjoint connectivity/time replacements, and matching restore images from
+this acquisition. It refuses an existing or partial Hearth installation; this
+is not an upgrade command. The complete public workflow still needs a measured
+stock-unit installation and restore before stable release. See the
+[builder guide](development/firmware-kit.md) for validation limits.
 
 ```sh
-.venv/bin/python -m installer.cli install \
-  --session private/my-install --disk /dev/sdX \
-  --profile private/my-kit/install \
-  --restore-profile private/my-kit/restore
+.venv/bin/python -m installer.cli build-kit \
+  --session private/my-install --sources build/installer-sources \
+  --reader-build build/installer-reader --build build/my-kit --output private/my-kit
+.venv/bin/python -m installer.cli check-kit --kit private/my-kit
+```
+
+Keep all output private, including the originals, commissioning bundle and native
+libraries. A kit from another unit, an old executed profile, a missing restore
+image or a changed source recipe is refused. Do not delete failed attempts to
+make their paths reusable.
+
+For the explicitly supervised experimental installation:
+
+```sh
+.venv/bin/python -m installer.cli install-kit --kit private/my-kit --disk /dev/sdX
 ```
 
 The current low-level writer/ACL profile uses physical USB port1-1; the doctor
 shows the observed port. Other ports need a separately reviewed scoped profile,
 not global USB or block-device write permissions.
 
-The tool re-reads device identity, checks the prepared credential, CA/CRL and
-endpoint against the commissioning bundle, and verifies the complete profile pair.
-It prompts READY before arming one RAM boot. Keep the display detached from the
+The tool checks the intake identity, prepared credential, CA/CRL, endpoint and
+both profile pairs. In native USB mode it re-reads the current identity; an
+acquisition-to-install RAM handoff requires the completed acquisition evidence.
+It prompts READY before each RAM boot. Keep the display detached from the
 base and USB connected. When the loader is scanning, hold the ring for10seconds,
 release, then press/release once.
 
 After RAM tests and real-file read-only preflight pass, a separate INSTALL prompt
-permits one persistent write. Enter aborts. No automatic retry occurs. Restart
+permits one persistent write. Enter aborts. The nine-file phase must finish and
+verify before the separate three-file phase can start. Each phase gets its own
+READY and INSTALL confirmations. Stay in RAM between phases and follow the
+loader's prompt for the next button sequence. No automatic retry occurs. Restart
 only when the checked result explicitly reports safe_to_restart. A failed or
 uncertain post-write session needs recovery review with USB retained.
+
+## Selected-file restoration
+
+```sh
+.venv/bin/python -m installer.cli check-kit --kit private/my-kit --for-restore
+.venv/bin/python -m installer.cli restore-kit --kit private/my-kit --disk /dev/sdX
+```
+
+This restores the three network files first, then the nine commissioning files,
+with separate READY/RESTORE confirmations and exact journal/original-byte checks.
+Expired HA certificate metadata does not prevent restoring originals. Changed
+source recipes, unknown current bytes or used profiles still stop the operation.
+An incomplete installation requires review of its saved results before selecting
+the explicit `--phase cleanup` or `--phase commissioning` recovery scope.
+
+These are exact selected-file recovery images, not a general uninstall or
+whole-firmware recovery tool. Later native configuration changes can invalidate
+the original settings comparison. Do not bypass that refusal or overwrite current
+HVAC configuration with an old snapshot. Preserve the entire private kit and its
+pinned source version for recovery.
 
 After successful native startup, connect normal Wi-Fi on the appropriate base,
 verify fresh HA readings, and perform supervised equipment validation before

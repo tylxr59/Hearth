@@ -66,7 +66,15 @@ def require_entry(binding, previous=None, *, sysfs=Path("/sys/bus/usb/devices"))
     return {"status": "reviewed-network-ram-recovery-entry"}
 
 
-def boot(root, recovery, output=None, *, execute=False, recover_from=None):
+def boot(
+    root,
+    recovery,
+    output=None,
+    *,
+    execute=False,
+    recover_from=None,
+    handoff_from_commissioning=None,
+):
     root, recovery = private_path(root), private_path(recovery)
     record, binding = checked_pair(root, recovery)
     if not execute:
@@ -86,7 +94,14 @@ def boot(root, recovery, output=None, *, execute=False, recover_from=None):
         or (root / "execution-started.json").exists()
     ):
         raise ValueError("fresh one-use private profile and output required")
-    require_entry(binding, recover_from)
+    if handoff_from_commissioning is not None:
+        if recover_from is not None:
+            raise ValueError("one explicit RAM entry reason required")
+        from firmware.file_writer.chain import commissioning_to_cleanup
+
+        commissioning_to_cleanup(record, binding, handoff_from_commissioning)
+    else:
+        require_entry(binding, recover_from)
     output.mkdir(mode=0o700)
     execution = {
         "profile": str(root),

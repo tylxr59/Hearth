@@ -28,13 +28,15 @@ def collected_files(decoder):
         (decoder.network.records, network_backup.TARGETS),
     ):
         for item, target in zip(records, targets, strict=True):
-            if not item.existed:
-                continue
             name = (
                 "media/user-config/settings.config"
                 if targets is file_backup.TARGETS and item.target == 7
                 else target.lstrip("/")
             )
+            if not item.existed:
+                if name in files:
+                    raise ValueError("absent fixed target appeared in acquired directory")
+                continue
             value = (
                 item.data,
                 item.mode,
@@ -184,6 +186,9 @@ def run(root, output=None, *, execute=False):
         encode(
             {
                 "profile": str(root),
+                "profile_sha256": hashlib.sha256(
+                    private_read(root / "profile.json", 65536)
+                ).hexdigest(),
                 "session": record["session"],
                 "flash_writes": False,
                 "library_scope": list(codec.GROUPS),

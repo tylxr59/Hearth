@@ -29,9 +29,9 @@ connected controls, readings and weather.
 > [!NOTE]
 > **Experimental preview.** Real Gen2 telemetry, target changes, Eco and weekly
 > schedule replacement/restoration are verified. Actual equipment switching and
-> unattended outage behavior still need validation. The guided USB frontend is
-> implemented, but a stock thermostat still needs a separately prepared, device-bound
-> firmware kit. This is not yet a turnkey installer or a stable v1 release.
+> unattended outage behavior still need validation. The source-built USB reader
+> is measured; the complete stock install/restore kit now builds offline, but
+> still needs a supervised stock-device measurement. This is not a stable v1 release.
 
 ## 🎯 Features
 

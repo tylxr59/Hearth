@@ -27,7 +27,7 @@ completion marker, exact corpus/index equality and both custody archives, then
 resolves native ELF dependencies by filename/SONAME. It creates no host aliases
 and executes no acquired code. Symlink-only names therefore need not be exported.
 
-The remaining preparation stages are:
+The preparation stages are:
 
 1. `installer.sources` fetches pinned public Git commits and hash-checks the
    historical compiler. `installer.build` builds the bootstrap/protected kernel
@@ -35,8 +35,9 @@ The remaining preparation stages are:
    original bounded reader. `hearth acquire` requires a separately confirmed,
    owner-timed read-only boot and preserves all captured native files privately.
 2. `provisioning.file_backup` verifies and preserves snapshot custody.
-3. `provisioning.native_settings`, `native_startup`, `native_network` and the
-   reviewed native TLS/logging edits prepare bounded replacements from originals.
+3. `installer.replacements` coordinates `provisioning.native_settings`,
+   `native_startup`, `native_network`, `native_tls` and the GNU storage shim to
+   prepare bounded replacements from originals.
    No proprietary original or patched binary is distributed by Hearth.
 4. `provisioning.file_capsule.prepare` binds exactly nine files and a plan-specific
    rollback archive. Use the separately observed supported native selection.
@@ -67,10 +68,35 @@ A changed settings serialization can invalidate a snapshot even when values look
 identical. Preserve the failed zero-write attempt and use the reviewed bounded
 RAM handoff path when appropriate. Never weaken exact original-byte comparison.
 
-## Remaining public-installer work
+## Public orchestration and remaining measurements
 
-Per-device replacement construction, end-to-end disjoint phase coordination,
-and reproducible install/restore kit
-orchestration remain blockers for a turnkey stock-unit release. A new user's kit
-cannot be synthesized from the development owner's ignored directories. This
-restriction is explicit in the installer documentation and release metadata.
+`installer.kit` now coordinates the two source-built kernels, private native
+library closure, helpers and four install/restore profiles. `check-kit`
+reconstructs the replacements against the original acquisition and bundle, checks
+source recipes, and verifies both bound profile pairs. Existing or partially
+commissioned units are refused before replacement compilation.
+
+`installer.workflow` runs commissioning9 then cleanup3, with independent READY
+and persistent-write confirmations. The first phase must produce a complete,
+encoding-verified result before the second is offered. Acquisition-to-install and
+inter-phase RAM handoffs require sealed prior execution, custody, completion and
+known USB identity; they do not infer success from an uploaded image. Restoration
+uses the reverse order. No automatic retry or native reboot happens between
+phases. The old low-level single-pair commands remain development tools.
+
+The guarded TLS recipe changes only the callback-argument instruction after
+validating the exported function, ARM call/PLT/GOT relocation and imported
+`SSL_CTX_set_verify` symbol. The recipe uses the public
+[Arm ELF ABI](https://github.com/ARM-software/abi-aa/blob/main/aaelf32/aaelf32.rst)
+and an original synthetic ELF fixture; no vendor instructions or binary hashes
+are included in public source. Applied privately to the owner's preserved original,
+it reproduces the currently installed reviewed candidate exactly.
+
+The complete stock workflow and new three-file writer still require target
+measurement. Review-only composed fixtures can exercise source builds offline;
+their kit marker makes the supervised workflow refuse USB access. Such fixtures
+are not fresh stock acquisitions and cannot establish installation or recovery.
+USB port/ACL portability and a configuration-preserving uninstall remain release
+gaps. Exact old-settings restoration must refuse later unknown native changes.
+A new user's kit must come from that user's own acquisition, never the developer's
+ignored directories. Whole-firmware and power-loss recovery remain unverified.

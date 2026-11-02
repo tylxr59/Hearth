@@ -28,19 +28,33 @@ build passes offline and eight reader artifacts reproduce. The rebuilt boot
 chain and corrected top-level reader passed a supervised read-only boot: both
 snapshots, all four groups,136 private files and the complete34-library closure
 validate, with owner-confirmed UI and independently observed native USB return.
-This was the already-commissioned owner unit, not a pristine stock install. Per-unit
-replacement construction and write-kit assembly remain an explicit release gap.
-Do not confuse an implemented frontend with a turnkey stock-device installer.
+This was the already-commissioned owner unit, not a pristine stock install.
+Per-unit replacement construction and two-phase write-kit assembly now build
+end-to-end offline. A composed replay of preserved originals and acquired libraries
+produced four checked profiles; their34 artifacts reproduce against the same
+compiled kernels. The replay is explicitly marked review-only and cannot open USB
+through the guided workflow. It is not a pristine-stock hardware installation.
 
 The display is now detached from its HVAC base and charging by USB. No loader
-is armed. Latest complete host suite:1,503 passed, five optional skips; expanded lifecycle
-mask checks also pass for cleanup3, legacy4 and commissioning9.
+is armed. Latest complete host suite:1,619 passed, five optional skips. Static,
+formatting and security checks pass. Release archives reproduce; the extracted
+installer includes all recipe inputs and its CLI starts independently.
 
 Further offline kit work adds the disjoint three-file network cleanup format,
 keeping client configuration exclusively in the nine-file commissioning phase.
 Both legacy4 and cleanup3 pass host fault/restore checks; cleanup3 has not run
 on hardware. Packaging resolves its libc/interpreter directly from verified
 acquisition. The public GNU shim build exactly matches the installed owner copy.
+The guarded original TLS recipe also reproduces the installed reviewed candidate.
+Source contains only original parsing/instruction logic and synthetic fixtures.
+
+The guided kit coordinates acquisition-to-install RAM handoff, commissioning9,
+cleanup3 and reverse-order restoration, retaining separate owner confirmations.
+Unknown or incomplete prior evidence stops the next phase. Expired HA leaf
+metadata does not block restoring originals. Existing/partial Hearth units are
+refused by the stock builder; unknown later native settings stop exact restoration.
+Portable USB permissions, a configuration-preserving uninstall and complete stock
+install/restore hardware measurement remain public-release gaps.
 
 Canonical sources: `backend/`, `custom_components/hearth/`, `installer/`,
 `provisioning/`, `firmware/`. Generated HA transport is checked for exact equality.

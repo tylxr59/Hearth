@@ -400,6 +400,8 @@ def run(
     handoff_from=None,
     resume_from_readonly=None,
     handoff_from_snapshot=None,
+    handoff_from_acquisition=None,
+    handoff_from_cleanup_restore=None,
 ):
     root, recovery = private_path(root), private_path(recovery)
     record, binding = checked_pair(root, recovery)
@@ -413,12 +415,27 @@ def run(
     if (
         sum(
             value is not None
-            for value in (recover_from, handoff_from, resume_from_readonly, handoff_from_snapshot)
+            for value in (
+                recover_from,
+                handoff_from,
+                resume_from_readonly,
+                handoff_from_snapshot,
+                handoff_from_acquisition,
+                handoff_from_cleanup_restore,
+            )
         )
         > 1
     ):
         raise ValueError("one explicit RAM entry reason required")
-    if handoff_from_snapshot is not None:
+    if handoff_from_acquisition is not None:
+        from firmware.file_writer.chain import acquisition_install
+
+        acquisition_install(record, binding, handoff_from_acquisition)
+    elif handoff_from_cleanup_restore is not None:
+        from firmware.file_writer.chain import cleanup_restore_to_commissioning
+
+        cleanup_restore_to_commissioning(record, binding, handoff_from_cleanup_restore)
+    elif handoff_from_snapshot is not None:
         require_snapshot_source(record, binding, handoff_from_snapshot)
     elif resume_from_readonly is not None:
         if handoff_from is not None or recover_from is not None:

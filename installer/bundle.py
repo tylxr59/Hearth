@@ -14,7 +14,9 @@ from provisioning.intake import UniqueKeys, inspect_info
 FORMAT = "hearth-commissioning-v1"
 
 
-def read_bundle(raw):
+def read_bundle(raw, *, for_restore=False):
+    if type(for_restore) is not bool:
+        raise Invalid("explicit bundle purpose required")
     if not isinstance(raw, bytes) or len(raw) > 65536:
         raise Invalid("bounded commissioning ZIP required")
     try:
@@ -55,7 +57,7 @@ def read_bundle(raw):
         raise Invalid("unsupported commissioning compatibility profile")
     try:
         expires = datetime.fromisoformat(data["certificate_expires"])
-        if expires.tzinfo is None or expires <= datetime.now(expires.tzinfo):
+        if expires.tzinfo is None or (not for_restore and expires <= datetime.now(expires.tzinfo)):
             raise Invalid("commissioning certificate expired")
         ssl.create_default_context(cadata=ca.decode("ascii"))
     except (ValueError, UnicodeError, ssl.SSLError) as exc:

@@ -226,6 +226,18 @@ def test_conflicting_group_and_fixed_file_refuse_preservation(tmp_path):
     assert not (tmp_path / "corpus").exists()
 
 
+def test_absent_fixed_file_cannot_be_present_in_a_later_readonly_group(tmp_path):
+    decoder, _ = decoded()
+    decoder.files.append(
+        codec.AcquiredFile(
+            "nestlabs/sbin/hearth-nlclient", stat.S_IFREG | 0o750, 0, 0, b"unexpected"
+        )
+    )
+    with pytest.raises(ValueError, match="absent fixed target"):
+        run.preserve_inputs(tmp_path, decoder)
+    assert not (tmp_path / "corpus").exists()
+
+
 def test_receiver_sends_one_start_token_and_preserves_complete_private_frames(tmp_path):
     left, right = socket.socketpair()
     observed = []

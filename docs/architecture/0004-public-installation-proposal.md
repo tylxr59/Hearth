@@ -1,7 +1,8 @@
 # Public distribution and installation
 
-Status: implemented preview packaging and guided checked-profile frontend; turnkey
-stock-device acquisition/build remains unfinished.
+Status: implemented preview packaging, measured read-only acquisition, source-built
+private kit and guided phases. A complete stock install/restore measurement and
+portable USB setup remain unfinished.
 
 Use one authoritative development repository. `backend/` is canonical, and
 `tools.sync_integration` checks the generated self-contained HACS transport under
@@ -18,9 +19,12 @@ against it, and run a checked install/restore pair through independent RAM and
 persistent-write prompts. No cloud account, firmware redistribution or arbitrary
 downloaded executable is required.
 
-The writer still needs per-device prepared profiles. Auto acquisition, replacement
-construction and source-build orchestration must be completed before a turnkey
-stock-device claim. Do not weaken the exact source/plan/custody binding.
+Every writer image is bound to this owner's acquisition and commissioning bundle.
+The public builder constructs two disjoint phases and their reverse-order restore
+images. Its complete offline replay build and artifact reproduction do not establish
+a fresh stock hardware installation. USB setup on other ports, configuration-
+preserving uninstall and remaining recovery measurements must be completed before
+a turnkey stock-device claim. Do not weaken the exact source/plan/custody binding.
 
 HA code updates never silently reflash the thermostat. Proprietary native originals
 come from each owner and remain private. See the current [installation guide](../installation.md)

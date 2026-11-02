@@ -100,7 +100,8 @@ def release(output):
                 "installer_archive": "hearth-installer-source.zip",
                 "per_device_firmware_included": False,
                 "private_keys_included": False,
-                "stock_device_kit_generation": "developer-prepared",
+                "stock_device_kit_generation": "experimental-source-builder",
+                "stock_install_restore_hardware_verified": False,
             },
             indent=2,
         )

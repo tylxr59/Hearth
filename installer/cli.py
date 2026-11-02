@@ -2,6 +2,7 @@
 
 import argparse
 import getpass
+import hashlib
 import json
 import shutil
 import subprocess  # nosec B404
@@ -59,7 +60,17 @@ def supported_kit(profile, recovery, bundle):
     return record, binding
 
 
-def execute(profile, recovery, output, *, restore=False, ask=input, engine=writer):
+def execute(
+    profile,
+    recovery,
+    output,
+    *,
+    restore=False,
+    ask=input,
+    engine=writer,
+    entry=None,
+    restart_after=True,
+):
     """Run one checked preflight, then ask separately before one scoped commit."""
     profile, recovery, output = map(private_path, (profile, recovery, output))
     _record, binding = engine.checked_pair(profile, recovery)
@@ -76,7 +87,7 @@ def execute(profile, recovery, output, *, restore=False, ask=input, engine=write
 
     def worker():
         try:
-            result.append(engine.run(profile, recovery, output, execute=True))
+            result.append(engine.run(profile, recovery, output, execute=True, **(entry or {})))
         except (OSError, ValueError, subprocess.SubprocessError, RuntimeError) as exc:
             failures.append(type(exc).__name__)
 
@@ -112,7 +123,11 @@ def execute(profile, recovery, output, *, restore=False, ask=input, engine=write
             "error_type": failures[0] if failures else "interrupted",
         }
     outcome = result[0]
-    if outcome.get("safe_to_restart"):
+    if outcome.get("safe_to_restart") and not restart_after and outcome.get("complete"):
+        print(
+            "Phase verified. Stay on USB in RAM; wait for the next loader prompt before restarting."
+        )
+    elif outcome.get("safe_to_restart"):
         print(
             "Device report says safe to restart. Hold 10 seconds, release, then press/release once."
         )
@@ -133,6 +148,29 @@ def main(argv=None):
     build_reader.add_argument("--sources", type=Path, required=True)
     build_reader.add_argument("--output", type=Path, required=True)
     build_reader.add_argument("--profile", type=Path, required=True)
+    replacements = commands.add_parser("prepare-replacements")
+    replacements.add_argument("--session", type=Path, required=True)
+    replacements.add_argument("--build", type=Path, required=True)
+    replacements.add_argument("--output", type=Path, required=True)
+    replacements.add_argument("--probe-port", type=int, default=8123)
+    build_kit = commands.add_parser("build-kit")
+    build_kit.add_argument("--session", type=Path, required=True)
+    build_kit.add_argument("--sources", type=Path, required=True)
+    build_kit.add_argument("--reader-build", type=Path, required=True)
+    build_kit.add_argument("--build", type=Path, required=True)
+    build_kit.add_argument("--output", type=Path, required=True)
+    build_kit.add_argument("--probe-port", type=int, default=8123)
+    check_kit = commands.add_parser("check-kit")
+    check_kit.add_argument("--kit", type=Path, required=True)
+    check_kit.add_argument("--for-restore", action="store_true")
+    install_kit = commands.add_parser("install-kit")
+    install_kit.add_argument("--kit", type=Path, required=True)
+    install_kit.add_argument("--disk", required=True)
+    install_kit.add_argument("--continue-cleanup", action="store_true")
+    restore_kit = commands.add_parser("restore-kit")
+    restore_kit.add_argument("--kit", type=Path, required=True)
+    restore_kit.add_argument("--disk", required=True)
+    restore_kit.add_argument("--phase", choices=("all", "cleanup", "commissioning"), default="all")
     fetch = commands.add_parser("download")
     fetch.add_argument("--ha-url", required=True)
     fetch.add_argument("--output", type=Path, required=True)
@@ -192,6 +230,45 @@ def main(argv=None):
             from installer.build import build
 
             print(json.dumps(build(args.sources, args.output, args.profile), indent=2))
+        elif args.command in ("install-kit", "restore-kit"):
+            from installer.workflow import install, restore
+
+            result = (
+                install(args.kit, args.disk, continue_cleanup=args.continue_cleanup)
+                if args.command == "install-kit"
+                else restore(args.kit, args.disk, phase=args.phase)
+            )
+            print(json.dumps(result, indent=2))
+            return 0 if result["complete"] else 1
+        elif args.command == "build-kit":
+            from installer.kit import build
+
+            print(
+                json.dumps(
+                    build(
+                        args.session,
+                        args.sources,
+                        args.reader_build,
+                        args.build,
+                        args.output,
+                        probe_port=args.probe_port,
+                    ),
+                    indent=2,
+                )
+            )
+        elif args.command == "check-kit":
+            from installer.kit import check
+
+            print(json.dumps(check(args.kit, for_restore=args.for_restore), indent=2))
+        elif args.command == "prepare-replacements":
+            from installer.replacements import prepare
+
+            print(
+                json.dumps(
+                    prepare(args.session, args.build, args.output, probe_port=args.probe_port),
+                    indent=2,
+                )
+            )
         elif args.command == "check-inputs":
             from installer.corpus import inspect
 
@@ -223,7 +300,8 @@ def main(argv=None):
             )
         elif args.command in ("install", "acquire"):
             session = private_path(args.session)
-            bundle, ca, crl = read_bundle(private_read(session / "commissioning.zip", 65536))
+            bundle_raw = private_read(session / "commissioning.zip", 65536)
+            bundle, ca, crl = read_bundle(bundle_raw)
             info = json.loads(private_read(session / "identity.json", MAX_INFO_BYTES))
             if info["serial"] != bundle["serial"]:
                 raise Invalid("session identity differs from commissioning bundle")
@@ -243,9 +321,22 @@ def main(argv=None):
                     "When the loader says scanning: hold the ring for 10 seconds, release, then press/release once."
                 )
                 result = acquire_inputs(args.profile, session / "acquisition", execute=True)
+                acquired = json.loads(private_read(session / "acquisition/execution.json", 65536))
+                writer.save(
+                    session / "acquisition",
+                    "intake-binding.json",
+                    writer.encode(
+                        {
+                            "format": "hearth-acquisition-session-v1",
+                            "identity": info,
+                            "bundle_sha256": hashlib.sha256(bundle_raw).hexdigest(),
+                            "session": acquired["session"],
+                        }
+                    ),
+                )
                 print(json.dumps(result, indent=2))
                 print(
-                    "Acquisition exited. Hold 10 seconds, release, then press/release once to return to native startup."
+                    "Acquisition exited. Keep USB connected and the base detached while building the kit; wait for its loader prompt before restarting. To stop here instead, hold 10 seconds, release, then press/release once to return to native startup."
                 )
                 return 0
             supported_kit(args.profile, args.restore_profile, bundle | {"_ca": ca, "_crl": crl})
