@@ -153,6 +153,8 @@ def main(argv=None):
     acquire.add_argument("--session", type=Path, required=True)
     acquire.add_argument("--profile", type=Path, required=True)
     acquire.add_argument("--disk", required=True)
+    inspect_inputs = commands.add_parser("check-inputs")
+    inspect_inputs.add_argument("--session", type=Path, required=True)
     restore = commands.add_parser("restore")
     restore.add_argument("--profile", type=Path, required=True)
     restore.add_argument("--output", type=Path, required=True)
@@ -190,6 +192,10 @@ def main(argv=None):
             from installer.build import build
 
             print(json.dumps(build(args.sources, args.output, args.profile), indent=2))
+        elif args.command == "check-inputs":
+            from installer.corpus import inspect
+
+            print(json.dumps(inspect(private_path(args.session) / "acquisition"), indent=2))
         elif args.command == "download":
             from installer.download import download
 

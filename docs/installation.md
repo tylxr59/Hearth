@@ -87,6 +87,7 @@ its independent signature and complete compiler reconstruction are not verified.
   --profile private/my-reader
 .venv/bin/python -m installer.cli acquire \
   --session private/my-install --profile private/my-reader --disk /dev/sdX
+.venv/bin/python -m installer.cli check-inputs --session private/my-install
 ```
 
 Only source fetching and container image assembly need internet access. Kernel
@@ -102,6 +103,12 @@ application execution. Nothing acquired is made executable on the host. Return
 to native startup after the command exits. The consolidated reader and rebuilt
 boot chain still require a supervised hardware measurement; earlier individual
 snapshot results are not that measurement.
+
+The final offline check reconstructs the ordered raw frames, checks the saved
+completion marker, compares every private corpus file and metadata record, and
+revalidates both backup receipts. It then resolves the native library closure
+from ELF SONAME metadata without host symlinks or native execution. It refuses
+modified, missing, extra or permissively stored inputs before kit preparation.
 
 ## Current firmware-kit requirement
 

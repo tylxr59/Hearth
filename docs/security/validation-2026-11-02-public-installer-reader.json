@@ -2,9 +2,9 @@
   "scope": "public-source protected installer reader; no device execution",
   "date": "2026-11-02",
   "host_tests": {
-    "passed": 1448,
+    "passed": 1459,
     "optional_skipped": 5,
-    "log": "build/public-installer-host-tests.log"
+    "log": "build/public-installer-custody-host-tests.log"
   },
   "targeted_installer_tests": {
     "passed": 53,
@@ -47,5 +47,16 @@
     "per-device replacements and matching write/restore kit orchestration",
     "overlapping client configuration across commissioning/network update scopes",
     "stable v1 hardware and release gates in docs/development/roadmap.md"
-  ]
+  ],
+  "custody_checks": {
+    "independent_frame_reconstruction": "passed",
+    "completion_marker": "required",
+    "index_corpus_and_backup_verification": "passed",
+    "soname_closure_without_host_symlinks": "passed with original synthetic ARM DSOs",
+    "native_code_executed": false
+  },
+  "public_bootstrap_comparison": {
+    "text_and_data_equal_to_historical_build": true,
+    "rodata_difference": "one build timestamp string in each of x-loader and U-Boot; normalized sections match"
+  }
 }

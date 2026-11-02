@@ -157,6 +157,7 @@ class Decoder:
                     return
                 if bytes(self.buffer) != DONE:
                     raise ValueError("exact acquisition completion required")
+                self.preserve("completion.bin", bytes(self.buffer))
                 self.buffer.clear()
                 self.complete = True
                 return

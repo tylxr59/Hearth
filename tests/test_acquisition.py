@@ -70,7 +70,8 @@ def test_ordered_stream_handles_usb_fragmentation_and_coalescing(chunk_size):
     assert decoder.complete and not decoder.buffer
     assert len(decoder.snapshot) == 9 and len(decoder.network.records) == 4
     assert [row.path for row in decoder.files] == [p + "/file" for p in codec.GROUPS]
-    assert len(frames) == 6 and frames["capture.bin"] == snapshot_frame()
+    assert len(frames) == 7 and frames["capture.bin"] == snapshot_frame()
+    assert frames["completion.bin"] == codec.DONE
     with pytest.raises(ValueError):
         decoder.feed(b"extra")
 

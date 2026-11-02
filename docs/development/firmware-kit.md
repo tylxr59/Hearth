@@ -20,6 +20,11 @@ protected base. The rebuilt bootstrap files differ from the historical measured
 build and the consolidated reader has not run on hardware. This is not a new
 hardware validation or completed per-device installer.
 
+`hearth check-inputs` independently reconstructs all saved frames, checks the
+completion marker, exact corpus/index equality and both custody archives, then
+resolves native ELF dependencies by filename/SONAME. It creates no host aliases
+and executes no acquired code. Symlink-only names therefore need not be exported.
+
 The remaining preparation stages are:
 
 1. `installer.sources` fetches pinned public Git commits and hash-checks the

@@ -17,7 +17,7 @@ from provisioning import file_backup, network_backup
 from tools.elf_review import private_path
 
 
-def preserve_inputs(output, decoder):
+def collected_files(decoder):
     if not decoder.complete or decoder.snapshot is None or decoder.network is None:
         raise ValueError("complete original acquisition required")
     files = {}
@@ -45,6 +45,11 @@ def preserve_inputs(output, decoder):
             if name in files and files[name] != value:
                 raise ValueError("overlapping acquired file bytes/metadata differ")
             files[name] = value
+    return files
+
+
+def preserve_inputs(output, decoder):
+    files = collected_files(decoder)
     root = output / "corpus"
     root.mkdir(mode=0o700)
     index = []
