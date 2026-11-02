@@ -120,7 +120,8 @@ def test_negative_control_metadata_remains_rejected_with_value_free_evidence(rig
     assert "value" not in evidence
 
 
-def test_unknown_base_sentinel_is_put_only_and_does_not_disable_cas(rig):
+@pytest.mark.parametrize("base", [-1, -2, -(1 << 31), -1000000000])
+def test_signed_base_is_put_only_and_does_not_disable_cas(rig, base):
     n = NativeControls(rig[0])
     n.apply(
         SERIAL,
@@ -128,7 +129,7 @@ def test_unknown_base_sentinel_is_put_only_and_does_not_disable_cas(rig):
             "objects": [
                 {
                     "object_key": f"device.{SERIAL}",
-                    "base_object_revision": -1,
+                    "base_object_revision": base,
                     "if_object_revision": 99,
                     "value": {"current_humidity": 51},
                 }
@@ -139,6 +140,72 @@ def test_unknown_base_sentinel_is_put_only_and_does_not_disable_cas(rig):
     with pytest.raises(RevisionError):
         n.apply(
             SERIAL,
-            {"objects": [{"object_key": f"device.{SERIAL}", "base_object_revision": -1}]},
+            {"objects": [{"object_key": f"device.{SERIAL}", "base_object_revision": base}]},
             subscription=True,
         )
+
+
+@pytest.mark.parametrize("base", [-(1 << 31) - 1, -1.0, True])
+def test_signed_base_bounds_and_type_are_enforced(rig, base):
+    n = NativeControls(rig[0])
+    with pytest.raises(RevisionError):
+        n.apply(
+            SERIAL,
+            {
+                "objects": [
+                    {
+                        "object_key": f"device.{SERIAL}",
+                        "base_object_revision": base,
+                        "value": {"current_humidity": 51},
+                    }
+                ]
+            },
+        )
+    assert not n.core.states
+
+
+@pytest.mark.parametrize("revision", [-1, -123456789, -(1 << 31)])
+def test_signed_subscription_version_only_requests_current_metadata(rig, revision):
+    n = NativeControls(rig[0], clock=lambda: 1000)
+    baseline(n)
+    before = copy.deepcopy(n.core.states)
+    key = f"device.{SERIAL}"
+    previous = n._records_for(SERIAL)[key].metadata(key)
+    result = n.apply(
+        SERIAL,
+        {"objects": [{"object_key": key, "object_revision": revision, "object_timestamp": 0}]},
+        subscription=True,
+    )
+    assert result == {"objects": [previous]}
+    assert n._records_for(SERIAL)[key].revision >= 0
+    assert n.core.states == before and not n.intents.get(SERIAL)
+    with pytest.raises(RevisionError):
+        n.apply(
+            SERIAL,
+            {
+                "objects": [
+                    {
+                        "object_key": key,
+                        "object_revision": revision,
+                        "value": {"current_humidity": 77},
+                    }
+                ]
+            },
+            subscription=True,
+        )
+
+
+def test_subscription_signed_version_is_bounded_and_never_relaxes_timestamps(rig):
+    n = NativeControls(rig[0])
+    for fields in (
+        {"object_revision": -(1 << 31) - 1},
+        {"object_revision": -1, "object_timestamp": -1},
+        {"object_revision": -1, "if_object_revision": -1},
+    ):
+        with pytest.raises(RevisionError):
+            n.apply(
+                SERIAL,
+                {"objects": [{"object_key": f"device.{SERIAL}", **fields}]},
+                subscription=True,
+            )
+    assert not n.core.states

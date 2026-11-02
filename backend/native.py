@@ -233,15 +233,15 @@ def envelope(ident, body, *, subscription=False, structure_key=None, user_key=No
         seen.add(key)
         for name in sorted(META - {"object_key", "op"}):
             if name in obj and obj[name] is not None:
-                # The pinned reference treats the base revision as informational.
-                # Only its explicit unknown-base sentinel is accepted on PUT.
-                if (
-                    not subscription
-                    and name == "base_object_revision"
-                    and type(obj[name]) is int
-                    and obj[name] == -1
-                ):
-                    continue
+                # Native JSONBuilder formats this informational base as signed32.
+                # It is never the conditional-write revision or a server revision.
+                if type(obj[name]) is int and -(1 << 31) <= obj[name] < 0:
+                    if not subscription and name == "base_object_revision":
+                        continue
+                    # A metadata-only subscription compares a client version;
+                    # it does not assign a server revision or authorize a write.
+                    if subscription and name == "object_revision" and obj.get("value") is None:
+                        continue
                 try:
                     integer(obj[name])
                 except Invalid as exc:

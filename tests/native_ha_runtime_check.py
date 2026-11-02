@@ -438,7 +438,7 @@ async def check(root, profile):
                     {"object_key": "shared." + IDENT, "value": {"schedule_mode": "HEAT"}},
                     {
                         "object_key": "schedule." + IDENT,
-                        "base_object_revision": -1,
+                        "base_object_revision": -(1 << 31),
                         "op": "OVERWRITE",
                         "value": {"manual_schedule": week},
                     },
@@ -449,6 +449,21 @@ async def check(root, profile):
             ) as response:
                 assert response.status == 200
             await hass.async_block_till_done()
+            signed_metadata = native.listing(IDENT)["objects"]
+            for row in signed_metadata:
+                if row["object_key"] == "structure.LABHOME":
+                    row["object_revision"] = -(1 << 31)
+            async with client.post(
+                base + "/nest/transport/v7/subscribe",
+                headers=headers,
+                json={"objects": signed_metadata, "chunked": False},
+                ssl=context,
+            ) as response:
+                assert response.status == 200
+                rows = (await response.json())["objects"]
+                assert rows and all(
+                    row["object_revision"] >= 0 and "value" not in row for row in rows
+                )
             assert "eco" in hass.states.get(climate_id).attributes["preset_modes"]
             explicit_clear = await command_roundtrip(
                 "set_preset_mode", {"preset_mode": "none"}, None
@@ -1007,6 +1022,8 @@ async def check(root, profile):
                     "native_climate_roundtrips": 18,
                     "explicit_none_sends_clear_from_reported_none": True,
                     "native_schedule_overwrite_put": True,
+                    "native_signed32_base_revision_put": True,
+                    "native_signed32_metadata_subscription": True,
                     "native_eco_roundtrips": True,
                     "schedule_backup_and_replace": True,
                     "ha_weather_local_response": True,

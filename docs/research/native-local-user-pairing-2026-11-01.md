@@ -226,3 +226,32 @@ known home/eco baseline and no pending commands. It uses the existing authentica
 manager API, not Supervisor/Core privilege workarounds. Offline checking opens no
 network. No restore command has yet been sent through it; the request remains
 subject to normal native confirmation and will not retry automatically.
+
+## 0.6.3 observation and signed revision correction
+
+The owner approved the 0.6.3 Core update, then restarted the native display and
+confirmed Wi-Fi. The fresh decoder evidence identified two integer failures:
+a negative, non-minus-one `base_object_revision` on schedule PUT and a negative,
+non-minus-one `object_revision` on a metadata-only structure subscription. No
+accepted subscription or fresh eco-field report followed, so the prepared restore
+script was not run. Physical Eco-off restoration remains unverified.
+
+The reviewed native JSON builder formats its 32-bit revision member using a
+signed decimal format; the bounded offline ELF reader independently corroborated
+the format at the already reviewed static address. No firmware was executed.
+Restricting the informational base to the single -1 sentinel was too narrow.
+0.6.4 accepts negative signed-32 base revisions on PUT, while retaining the
+existing positive bounds. The base is not used as a conditional write guard.
+
+Metadata-only subscriptions may also carry signed-32 client revisions. Those
+remain client comparisons: a mismatch returns the current nonnegative server
+metadata. The negative value never becomes a server revision, persisted state or
+authorization to write. Negative inline-value subscription revisions, conditional
+revisions, timestamps and values below the signed-32 range remain refused. The
+shared positive integer validator is unchanged. Host and real-HA tests exercise
+the minimum signed-32 value and verify no state mutation or CAS bypass.
+
+This correction is prepared separately from 0.6.3. The next authorized device
+action remains the original Eco-off restore after a genuinely accepted fresh
+subscription and known eco/home baseline. Do not retry Eco-on, disable the wiring
+screen, or claim a successful restore from an old cache value.

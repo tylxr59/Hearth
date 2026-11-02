@@ -2383,3 +2383,36 @@ freshSUB,actualeco/homebaselineknown,nopendingcommands; noautomaticretry.
 Usesexistingmanagercredential/intendedAPI, NOTCoreSupervisor401bypass. Canrun
 AFTERnew0.6.3Corehealth/freshnativecarrier; ifrefused preserveoutandreview.
 DoNOTmarkrestoreduntilphysical/freshnative confirmation. NoHVACauthorization.
+
+Owner approved0.6.3 activation/Core restart; exact33fileschecked/preservedold0.6.2.
+Activation-v1 CLI56958exit0. Health-v1 source0.6.3/4entities/cacheprivate; CoreHTTPS
+newfieldsloaded. Reconnect-watch-v1/session60912 active5min; first61secondsNO
+native requests. NoEco restorecommand sent. Owneraskedringwakebutreported
+REBOOTEDinstead, nowhomeicon/booting. Toldletbootnofurtherrestart. Needfresh
+nativecarrier andactualmetadataerrorsbeforequeuedauthorizedFalse via scopedscript.
+DoNOTblindlyrelaxnegativeconditionalmetadata; newdiaglast_revision_errorfinite.
+Privatev063receiptspaths; eco-restore-v1notcreated/executed yet.
+
+0.6.3 freshownerWiFiconnected but decoderDIAG nowPRECISE: schedule PUT negative
+NON-minusone base_object_revision; structure SUB negativeNON-minusone object_revision.
+NoactualSUB accepted (requestsget1/put1), noactualfreshnativeecofield. Authorized
+restore script NOTexecuted/eco-restore-v1notcreated. PhysicalEcoOFFstillPENDING.
+Nativebuildergenericd2c64 usesrevisionformatDAT003c8094; originalboundedArmElf
+readerreadconfirm exact signed%d format. pyelftools unavailable(system+venv),
+usedexistingtools.elf_review.ArmElf (no installation, no nativeexecution).
+
+0.6.4PREPAREDNOTACTIVE: informationalbasePUT acceptsfullSIGNED32 negative range,
+metadataONLY SUBobject_revision acceptsSIGNED32negative clientcomparison ONLY.
+Negativeinlinevalue revision/conditionalrevision/timestamp/belowS32stillrefused.
+Negativeclientversion neverassigned/persistedserver-side; sendscurrentnonnegative
+metadata onmismatch. Globalintegerhelperunchanged. NoCASbypass. RealHA reproduces
+S32MIN base scheduleOVERWRITE ANDS32MINstructuremetadataSUB, no state mutation.
+1262host/fiveoptionalskips+makecheck+realHA18roundtripsallpass. FINAL-v2 hasBOTH
+fixes; initialv064-final (baseonly) superseded/unexecuted. Repro-v2 exact33files.
+Buildnative-ha-signed-base-20261101-v064-final-v2/repro-v2. Privatev064 stage-v1
+remote.hearth-native-stage-20261101-v064 exactreadback, old0.6.3source/config/cache
+preserved. NeedNEWownerCore restartpermissionfor0.6.4 (0.6.3onceconsumed).
+Preparedactivate/check/watchv064 andrestore-native-eco-v064-20261101.py, identical
+one-shotauthorizedFalseoriginalbaseline guard. Defaultofflinepreflight notnetwork.
+AfterfreshacceptedSUB+ecobaseline sendFalseONCE; confirmnative/physicalbefore
+claimrestored. Do notqueuebeforedecoderfreshcarrierpasses/noEcoONretry. BaseEMPTY.
