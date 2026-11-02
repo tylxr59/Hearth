@@ -198,6 +198,31 @@ startup-check-v1,reconnect-watch-v1,wake-watch-v1}. No thermostat controls/NAND 
 Owner described equipment as oil furnace with baseboard heat; exact boiler versus
 furnace and equipment arrangement are still unverified. No deliberate heat call.
 
+0.6.9 schedule migration: owner get_schedule returned original week/revision2/source
+cache, correctly paired. Owner then added ONE future point tomorrow noon62 F through
+the physical UI. Fresh complete native week now observed:7days,1setpoint plus7
+continuations, revision3/source device/fresh=true. Private capture and known schedule
+file match values/revision/timestamp exactly. Actual native point preserves its
+fractional Celsius value (rounds to62 F); do not require exact inverse conversion.
+Private069/schedule-point-capture-v1/validated.json records match; owner point remains
+installed pending removal. Next ask owner remove ONLY that point, then capture full
+empty week and known schedule proof. Current dial baseline63 F; no HA command sent.
+Do not repeat old HA apply/restore actions. Native schedule window is now fresh,
+but0.6.9 HA-request/metadata-ACK cycle has not yet been physically retested.
+
+Owner removed the0.6.9 temporary native point. Fresh full empty week received:
+revision4,0setpoints/7continuations. Known complete file equals captured native
+values/revision/timestamp; source=device. Private069/schedule-empty-capture-v1
+preserves both raw private JSON and validated.json. Eco mode schedule/Heat mode
+remain reported; target approximately63 F. Owner has not separately reconfirmed
+physical dial/idle on this removal turn. No HA control has been sent.
+Fresh069/schedule-ha-bench-v1 preserves original week, synced/read-back original
+archive and a prepared full-week apply.yaml adding only tomorrow noon62 F using
+revision4. Schema fields reviewed (no confirm field), native codec passes. Owner
+will execute the HA action once; observer schedule-ha-apply-watch-v1 is read-only.
+Restore must use preserved original and a newly observed matching revision; do not
+reuse068actions. No intentional equipment call, mode/Eco change or restart authorized.
+
 ## Purpose and current status
 
 Build a local-first Nest Learning Thermostat modification that preserves native hardware/HVAC control. Gen 2 is the primary target; Gen 1 is secondary. Prefer a verified local on-device interface if feasible; otherwise retain the native transport behind a minimal local backend. Do not rewrite HVAC control loops.
