@@ -10,7 +10,7 @@ from aiohttp import web
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.event import async_track_time_interval
 
-from ._backend import native_pairing, reported_store
+from ._backend import native_pairing, reported_store, schedule_state
 from ._backend.api import NATIVE, WEATHER, WEATHER_ENABLED, WEATHER_STATS, create_app
 from ._backend.core import Core
 from ._backend.validation import Invalid
@@ -65,6 +65,7 @@ class HearthRuntime:
         self.pairing_load_failed = False
         self.cache_task = None
         self.cache_errors = {"load_failed": False, "save_failed": False}
+        self.schedule_load_failed = False
         self.runner: web.AppRunner | None = None
         self.cancel_timer: Callable[[], None] | None = None
 
@@ -95,8 +96,17 @@ class HearthRuntime:
             generation = self.cache_generation
             try:
                 snapshot = self.controls.snapshot_reported()
+                schedules = self.controls.schedules.snapshot()
                 await self.hass.async_add_executor_job(
                     reported_store.save, self.cache_directory, snapshot
+                )
+                await self.hass.async_add_executor_job(
+                    reported_store.save,
+                    self.cache_directory,
+                    schedules,
+                    schedule_state.NAME,
+                    schedule_state.encode,
+                    schedule_state.decode,
                 )
             except (OSError, Invalid):
                 if not self.cache_errors["save_failed"]:
@@ -118,6 +128,18 @@ class HearthRuntime:
             _LOGGER.warning(
                 "Hearth reported-state cache could not be loaded; waiting for native reports"
             )
+        try:
+            schedules = await self.hass.async_add_executor_job(
+                reported_store.load,
+                self.cache_directory,
+                schedule_state.NAME,
+                schedule_state.decode,
+            )
+            if schedules is not None:
+                self.controls.schedules.restore(schedules)
+        except (OSError, Invalid):
+            self.schedule_load_failed = True
+            _LOGGER.warning("Hearth acknowledged schedule cache could not be loaded")
         try:
             pairing = await self.hass.async_add_executor_job(
                 reported_store.load,
@@ -282,6 +304,7 @@ class HearthRuntime:
     def diagnostics(self):
         return self.app[NATIVE].diagnostics() | {
             "reported_cache": dict(self.cache_errors),
+            "schedule_state_load_failed": self.schedule_load_failed,
             "weather": self.weather.diagnostics() | {"http": dict(self.app[WEATHER_STATS])},
             "local_pairing_load_failed": self.pairing_load_failed,
         }

@@ -360,5 +360,34 @@ temperature and HVAC operating action still use native reports. A later target
 report replaces the assumption. Enqueueing alone does not change the displayed
 target. Assumptions are not restored from disk after restart, and no command is
 replayed. `acknowledged` means the notification was cleared, while `confirmed`
-requires an actual matching target value report. Device validation of this path
-is still pending in the prepared0.6.8 update.
+requires an actual matching target value report. The owner verified a 63→62→63°F cycle in both HA and the physical dial, with the furnace idle.
+
+
+## Eco confirmation and consistent schedules (0.6.9)
+
+A fresh accepted native `device.eco.mode` can confirm manual Eco on/off without
+requiring the structure request fields to echo. `manual-eco` confirms on;
+`schedule` or `auto-eco` confirms manual-off. Clearing manual Eco does not disable
+automatic Eco. Cached modes and rejected uploads cannot confirm a request.
+
+`hearth.get_schedule` pairs the weekly data with its own revision. Its source is
+`device`, `pending`, `unconfirmed`, `acknowledged` or `cache`. Pending is a queued
+request; acknowledged means the client subscribed with the exact revision and
+timestamp that Hearth successfully wrote. Neither is an explicit native week
+report. After acknowledgement the week stops retransmitting. A fresh complete
+native week remains authoritative.
+
+Private `known-schedules.json` retains complete native weeks and acknowledged
+configuration, bound to the enrollment generation. Pending requests and delivery
+intents are excluded. After restart these values are cache only; matching fresh
+client metadata can reaffirm a previously known complete week without replaying a
+command. Ordinary reported caches without that proof cannot become fresh merely
+from a metadata subscription. Partial native deltas after a replacement require a
+complete new week before further edits. Schedule backups use the same corresponding
+week, revision and source as the getter; stale transport metadata cannot silently
+be attached to an older reported week.
+
+The owner physically verified one future schedule point through HA and restored
+the empty week under0.6.8, with Heat63°F and the furnace idle. That test exposed the
+old getter mismatch. Version0.6.9 fixes the feedback path; its activation and live
+reconnection are separate from that physical result.

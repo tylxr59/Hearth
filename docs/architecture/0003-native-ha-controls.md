@@ -51,12 +51,12 @@ are not proof of on-device command acceptance or equipment operation.
 | --- | --- | --- |
 | Local authenticated transport and telemetry | Working on owner unit | Long-duration reliability |
 | Local connectivity checks and chosen time service | Updated; owner traffic and HA reconnect observed | Bounded observation, not all future endpoints |
-| Native HA climate entity and single target | Host and real HA sandbox pass | Unwired-device command/confirmation test |
+| Native HA climate entity and single target | Physical63→62→63°F and HA target acknowledgement verified | Long-duration reliability; explicit target echoes remain separate |
 | Off/heat/cool and fan timer | Host and real HA sandbox pass | Actual native capability/report mapping and bench acceptance |
 | Reported HVAC operating action | Boolean mapping implemented | Compare against real equipment states |
 | Heat/cool range and emergency mode | Implemented in0.4; host and real HA sandbox pass | Actual native range/preset acceptance on suitable bench |
-| Eco preset and eco bounds | Implemented in0.5; host and real HA sandbox pass | Fresh device/home baselines and unwired-unit acceptance |
-| Weekly schedules and schedule mode | Implemented in0.5; full-week schema, backups and revision checks | Native week acquisition and supervised same-week/restore measurement |
+| Eco preset and eco bounds | Physical manual on/off and restoration verified; Heat-to Off unchanged |0.6.9 fresh-mode feedback verification; bounds writes untested |
+| Weekly schedules and schedule mode | Native week acquired; HA future point and original restore physically verified |0.6.9 consistent readback/revision verification; schedule-mode writes untested |
 | Learning/preconditioning and other NLE device settings | Not implemented | Per-field native writability/types/bounds; no generic arbitrary setter |
 | Weather/outdoor data and useful diagnostics | HA weather bridge and local native JSON in0.5; payload-free diagnostics | Native weather-fetch acceptance; advanced fault entities |
 | Native local operation when HA/network is unavailable | Native logic preserved | Supervised outage/return tests, no stale replay |
@@ -161,3 +161,24 @@ a full value report ends as acknowledged rather than confirmed or expired. A ful
 accepted matching native report can still confirm within that window. The owner
 unit must separately demonstrate this acknowledgement path before calling its
 feedback behavior verified. No HVAC output is changed by this display behavior.
+
+
+## Schedule configuration evidence and Eco mode (0.6.9)
+
+Physical tests under0.6.8 verified manual Eco on/off and a future weekly point
+followed by original-week restoration. Both ended with Heat63°F, Eco off and the
+furnace idle. The old schedule getter returned older native values with the newer
+transport revision, and Eco delivery receipts expired despite fresh actual mode.
+
+Eco now accepts a fresh validated device mode as a separate confirmation source.
+Schedule state separates requested, known complete configuration and native reports.
+Only an exact post-write subscription metadata match completes schedule delivery
+as acknowledged. Complete native reports supersede it. The getter and backup use
+one corresponding values/revision/source view. A private enrollment-bound file
+persists known complete configuration but no pending intent; reload is cache-only
+and cannot emit a control. Fresh matching metadata can reaffirm that known proof.
+Unproven merged caches cannot be promoted by metadata alone. Partial native deltas
+after a replacement invalidate its baseline until a complete week arrives.
+
+These acknowledgements describe protocol evidence. They do not establish actual
+HVAC switching or an explicit complete-week echo. No native control loop changes.

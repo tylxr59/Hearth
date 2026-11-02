@@ -1,0 +1,51 @@
+{
+  "date": "2026-11-02",
+  "version": "0.6.9",
+  "state": "prepared-not-activated",
+  "host_tests": {
+    "passed": 1340,
+    "optional_skipped": 5,
+    "make_check": "passed"
+  },
+  "real_ha_sandbox": {
+    "core": "2026.10.4",
+    "network": "none",
+    "synthetic_roundtrips": 22,
+    "fresh_eco_mode_confirmation": true,
+    "schedule_values_revision_consistent": true,
+    "schedule_metadata_ack_stops_resend": true,
+    "private_known_schedule_reload_without_command_replay": true
+  },
+  "package": {
+    "source_files": 34,
+    "separate_inventory_files": 1,
+    "final_repro_sandbox_identical": true
+  },
+  "physical_baseline": {
+    "mode": "heat",
+    "target_fahrenheit": 63,
+    "eco": "off",
+    "schedule_ui": "empty",
+    "furnace": "idle",
+    "owner_confirmed": true
+  },
+  "live_version": "0.6.8",
+  "thermostat_commands_sent": false,
+  "thermostat_files_modified": false,
+  "limitations": [
+    "0.6.9 has not been activated or observed with the actual Nest",
+    "Metadata acknowledgement is not a complete native value echo",
+    "First migration cannot promote an unproven older reported cache",
+    "Actual heating call, cooling, fan, emergency heat and whole-firmware recovery remain unverified"
+  ],
+  "staging": {
+    "exact_source_readback": true,
+    "files_verified": 34,
+    "old_code_backed_up": true,
+    "reported_cache_backed_up": true,
+    "local_user_and_home_configuration_preserved": true,
+    "known_schedule_file_present": false,
+    "activated": false,
+    "core_restarted": false
+  }
+}

@@ -284,7 +284,14 @@ async def check(root, profile):
                 assert all("value" not in row for row in (await response.json())["objects"])
             assert entry.runtime_data.controls.diagnostics()["empty_subscription_filters_accepted"]
 
-            async def command_roundtrip(service, fields, expected, domain="climate"):
+            async def command_roundtrip(
+                service,
+                fields,
+                expected,
+                domain="climate",
+                eco_mode_only=False,
+                schedule_metadata_only=False,
+            ):
                 before = native.listing(IDENT)["objects"]
                 for metadata in before:
                     metadata["object_revision"] = -(1 << 31)
@@ -313,6 +320,30 @@ async def check(root, profile):
                         }
                         else expected
                     )
+                if schedule_metadata_only:
+                    metadata = {key: value for key, value in row.items() if key != "value"}
+                    async with client.post(
+                        base + "/nest/transport/v7/subscribe",
+                        headers=headers,
+                        json={"objects": [metadata], "chunked": False},
+                        ssl=context,
+                    ) as response:
+                        assert response.status == 200 and not (await response.json())["objects"]
+                    readback = await hass.services.async_call(
+                        "hearth",
+                        "get_schedule",
+                        {"entity_id": climate_id},
+                        blocking=True,
+                        return_response=True,
+                    )
+                    assert (
+                        readback["revision"] == row["object_revision"]
+                        and readback["source"] == "acknowledged"
+                    )
+                    assert readback["schedule"] == row["value"].get("manual_schedule", row["value"])
+                    assert native.command_status(IDENT)["schedule"] == "acknowledged"
+                    assert native.updates(IDENT, {"objects": [metadata]}) == {"objects": []}
+                    return row["value"]
                 ack = {
                     "objects": [
                         {
@@ -354,7 +385,22 @@ async def check(root, profile):
                     ack["objects"][0]["if_object_revision"] = native._records_for(IDENT)[
                         row["object_key"]
                     ].revision
-                if row["value"].get("manual_eco_all") is False:
+                if eco_mode_only:
+                    ack = {
+                        "objects": [
+                            {
+                                "object_key": "device." + IDENT,
+                                "value": {
+                                    "eco": {
+                                        "mode": "manual-eco"
+                                        if row["value"]["manual_eco_all"]
+                                        else "schedule"
+                                    }
+                                },
+                            }
+                        ]
+                    }
+                elif row["value"].get("manual_eco_all") is False:
                     partial = {
                         "objects": [
                             {
@@ -371,7 +417,7 @@ async def check(root, profile):
                         assert response.status == 200
                     assert native.command_status(IDENT)["eco"] == "pending"
                     ack["objects"][0]["value"] = {"manual_eco_all": False}
-                if "manual_eco_all" in row["value"]:
+                if "manual_eco_all" in row["value"] and not eco_mode_only:
                     ack["objects"].append(
                         {
                             "object_key": "device." + IDENT,
@@ -390,6 +436,13 @@ async def check(root, profile):
                 ) as response:
                     assert response.status == 200
                 await hass.async_block_till_done()
+                if eco_mode_only:
+                    assert (
+                        native.control_view(IDENT)["delivery_receipts"]["eco"][
+                            "confirmation_source"
+                        ]
+                        == "device_eco_mode"
+                    )
                 if "target_change_pending" in row["value"]:
                     assert not hass.states.get(climate_id).attributes.get("assumed_state", False)
                 return row["value"]
@@ -589,6 +642,12 @@ async def check(root, profile):
             await hass.async_block_till_done()
             assert hass.states.get(climate_id).attributes["preset_mode"] == "eco"
             await command_roundtrip("set_preset_mode", {"preset_mode": "none"}, None)
+            await command_roundtrip(
+                "set_preset_mode", {"preset_mode": "eco"}, None, eco_mode_only=True
+            )
+            await command_roundtrip(
+                "set_preset_mode", {"preset_mode": "none"}, None, eco_mode_only=True
+            )
             # Automatic Eco is observed separately from the manual preset.
             async with client.post(
                 base + "/nest/transport/put",
@@ -671,6 +730,26 @@ async def check(root, profile):
                 "set_schedule_mode", {"mode": "COOL"}, {"schedule_mode": "COOL"}, domain="hearth"
             )
             assert native.command_status(IDENT)["schedule"] == "confirmed"
+            # A Gen2 may acknowledge the written metadata without echoing the week.
+            for requested in (week, new_week):
+                current = await hass.services.async_call(
+                    "hearth",
+                    "get_schedule",
+                    {"entity_id": climate_id},
+                    blocking=True,
+                    return_response=True,
+                )
+                await command_roundtrip(
+                    "set_schedule",
+                    {
+                        "schedule": requested,
+                        "expected_revision": current["revision"],
+                        "temperature_unit": "°C",
+                    },
+                    {"manual_schedule": requested},
+                    domain="hearth",
+                    schedule_metadata_only=True,
+                )
             # HA-owned source and real HA weather service, no external requests.
             from homeassistant.components.weather import (
                 DATA_COMPONENT as WEATHER_COMPONENT,
@@ -1089,6 +1168,15 @@ async def check(root, profile):
             assert native.core.states[IDENT]["target_temperature"] == 25
             assert not native.core.available(IDENT) and not native.intents
             assert native.state_source(IDENT, "target_temperature") == "cache"
+            schedule_cache = await hass.services.async_call(
+                "hearth",
+                "get_schedule",
+                {"entity_id": climate_id},
+                blocking=True,
+                return_response=True,
+            )
+            assert schedule_cache["schedule"] == new_week and schedule_cache["source"] == "cache"
+            assert (profile / "known-schedules.json").stat().st_mode & 0o777 == 0o600
             assert native.home_key(IDENT) == home_row["object_key"]
             assert native.local_home_view(IDENT)["structure_identity_observed"]
             before = native.listing(IDENT)["objects"]
@@ -1182,7 +1270,10 @@ async def check(root, profile):
                     "zero_preserved": True,
                     "availability_expiry": True,
                     "canonical_command_poll_disabled": True,
-                    "native_climate_roundtrips": 18,
+                    "native_climate_roundtrips": 22,
+                    "fresh_native_eco_mode_confirms_without_structure_echo": True,
+                    "schedule_acknowledgement_data_revision_consistent": True,
+                    "acknowledged_schedule_cache_without_command_replay": True,
                     "explicit_none_sends_clear_from_reported_none": True,
                     "native_schedule_overwrite_put": True,
                     "native_signed32_base_revision_put": True,

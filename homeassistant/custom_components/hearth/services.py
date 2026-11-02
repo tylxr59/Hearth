@@ -25,12 +25,6 @@ def register(hass, entry):
                     return ident
         raise HomeAssistantError("Choose a Hearth thermostat climate entity")
 
-    def revision(ident):
-        record = runtime.controls._records_for(ident).get(f"schedule.{ident}")
-        if record is None:
-            raise Invalid("No reported weekly schedule available yet")
-        return record.revision
-
     async def begin_local_pairing(call):
         user = (
             await hass.auth.async_get_user(call.context.user_id) if call.context.user_id else None
@@ -65,20 +59,7 @@ def register(hass, entry):
     async def get_schedule(call):
         ident = identity(call.data["entity_id"])
         try:
-            week = native_features.schedule_week(
-                runtime.controls.reported.get(ident, {}).get("schedule", {}).get("values", {})
-            )
-            return {
-                "schedule": week,
-                "temperature_unit": "°C",
-                "revision": revision(ident),
-                "source": "cache"
-                if any(
-                    kind == "schedule"
-                    for kind, _ in runtime.controls.restored_fields.get(ident, set())
-                )
-                else "device",
-            }
+            return runtime.controls.schedules.view(ident) | {"temperature_unit": "°C"}
         except Invalid as exc:
             raise HomeAssistantError(str(exc)) from exc
 
@@ -112,9 +93,7 @@ def register(hass, entry):
             }
             # Check before disk I/O, then again after the backup has been synced.
             runtime.controls.advanced_plan(ident, body, True)
-            previous = native_features.schedule_week(
-                copy.deepcopy(runtime.controls.reported[ident]["schedule"]["values"])
-            )
+            previous = runtime.controls.schedules.view(ident)
             generation = runtime.core.registry.data["devices"][ident]["hash"]
             await hass.async_add_executor_job(
                 schedule_backup.archive,
@@ -122,7 +101,8 @@ def register(hass, entry):
                 ident,
                 generation,
                 call.data["expected_revision"],
-                previous,
+                previous["schedule"],
+                previous["source"],
             )
             if runtime.core.registry.data["devices"].get(ident, {}).get("hash") != generation:
                 raise Invalid("device enrollment changed during backup")

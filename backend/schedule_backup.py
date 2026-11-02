@@ -11,10 +11,12 @@ from backend.reported_store import directory
 from backend.validation import Invalid, serial
 
 
-def archive(path, ident, generation, revision, previous):
+def archive(path, ident, generation, revision, previous, source="device"):
     serial(ident)
     if not token_valid(generation):
         raise Invalid("schedule credential generation required")
+    if source not in ("device", "acknowledged"):
+        raise Invalid("live native or acknowledged schedule backup required")
     raw = json.dumps(
         {
             "format": "hearth-schedule-backup-v1",
@@ -22,6 +24,7 @@ def archive(path, ident, generation, revision, previous):
             "generation": generation,
             "revision": integer(revision),
             "schedule": schedule(previous),
+            "source": source,
         },
         sort_keys=True,
         separators=(",", ":"),

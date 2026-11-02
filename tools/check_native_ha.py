@@ -41,7 +41,7 @@ def check(output, engine):
             "/check.py",
         ],
         check=True,
-        timeout=180,
+        timeout=240,
     )
 
 

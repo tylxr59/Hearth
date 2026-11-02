@@ -27,7 +27,12 @@ def directory(path):
 
 
 def checked_name(name):
-    if name not in (NAME, "local-pairing.json", "local-pairing-before-home.json"):
+    if name not in (
+        NAME,
+        "local-pairing.json",
+        "local-pairing-before-home.json",
+        "known-schedules.json",
+    ):
         raise Invalid("fixed private document name required")
     return name
 

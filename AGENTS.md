@@ -154,6 +154,29 @@ acknowledged configuration, never pending intents or auto replay. Actual native
 week reports always win. Current live0.6.8 remains unchanged. No further control,
 Core restart, firmware write or physical HVAC heat call is authorized right now.
 
+0.6.9 source is now fully checked:1340 host tests pass/five optional skips,
+make check passes, pinned real HA2026.10.4 sandbox passes22 synthetic round trips.
+Eco recognizes a fresh accepted device mode as confirmation; cached/stale/rejected
+modes cannot confirm. Schedules pair values/revision/source, finish delivery on an
+exact post-write metadata subscription and stop retransmitting. Private
+known-schedules.json stores only complete native weeks or acknowledged configuration,
+never pending requests. Reload is cache-only; matching client metadata can reaffirm
+known complete proof. An unproven reported cache cannot be promoted by metadata.
+Complete native weeks win; partial deltas after assignment invalidate the baseline.
+Equal-metadata/different-data restore refuses known proof; newer native cache wins.
+
+Final/repro/sandbox packages match exactly:34 integration source files plus separate
+inventory. Remote stage-v1 read back all34 source files exactly; active0.6.8 source, reported
+cache and local user/home configuration are backed up. No known-schedules file
+exists in live0.6.8. Private root:private/native-ha-v069-20261102. Prepared
+activation helper has NOT run. Current live0.6.8 remains intact.
+Need NEW explicit owner approval for ONE0.6.9Core restart; no thermostat command or
+firmware write accompanies activation. After restart observe native reconnect first;
+existing0.6.8 native schedule cache may have older metadata than the restored physical
+week. Do not fabricate its revision or bypass freshness gates. No repeat of prior
+apply/restore scripts, no new physical HVAC test authorized. Owner's latest physical
+confirmation is empty schedule, Heat63 F, furnace idle.
+
 ## Purpose and current status
 
 Build a local-first Nest Learning Thermostat modification that preserves native hardware/HVAC control. Gen 2 is the primary target; Gen 1 is secondary. Prefer a verified local on-device interface if feasible; otherwise retain the native transport behind a minimal local backend. Do not rewrite HVAC control loops.

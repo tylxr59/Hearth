@@ -15,6 +15,7 @@ from dataclasses import dataclass, field
 
 from backend import native_features, native_pairing, reported_state
 from backend.native import NativeTelemetry, canonical, envelope, has_empty_filters, integer
+from backend.schedule_state import ScheduleState
 from backend.validation import Invalid, command, number
 
 FEATURES = {"can_heat", "can_cool", "has_fan", "has_emer_heat"}
@@ -42,6 +43,9 @@ class Intent:
     stream_write_completed: bool = False
     notification_sent: bool = False
     notification_acknowledged: bool = False
+    metadata_acknowledged: bool = False
+    written_metadata: tuple | None = None
+    confirmation_source: str | None = None
     extra_values: dict = field(default_factory=dict)
     observed_fields: set = field(default_factory=set)
 
@@ -60,6 +64,7 @@ class NativeControls(NativeTelemetry):
         self.reported = {}
         self.restored_fields = {}
         self.reported_changed = lambda _ident: None
+        self.schedules = ScheduleState(self)
         self.requests = {}
         self.last_request = {}
         self.notify = lambda _ident: None
@@ -79,6 +84,7 @@ class NativeControls(NativeTelemetry):
             self.outcomes.pop(ident, None)
             self.receipts.pop(ident, None)
             self.acknowledged_targets.pop(ident, None)
+            self.schedules.forget(ident)
             self.reported.pop(ident, None)
             self.restored_fields.pop(ident, None)
             self.requests.pop(ident, None)
@@ -343,6 +349,10 @@ class NativeControls(NativeTelemetry):
         self._expire(ident)
         shared = records.get(f"shared.{ident}")
         device = records.get(f"device.{ident}")
+        try:
+            schedule_view = self.schedules.view(ident)
+        except Invalid:
+            schedule_view = None
         return {
             "capabilities": self.capabilities(ident),
             "command_status": self.command_status(ident),
@@ -354,6 +364,7 @@ class NativeControls(NativeTelemetry):
                     "offered": i.sent,
                     "stream_write_completed": i.stream_write_completed,
                     "notification_acknowledged": i.notification_acknowledged,
+                    "metadata_acknowledged": i.metadata_acknowledged,
                     "seconds_remaining": max(0, round(i.expires - self.core.clock(), 1)),
                 }
                 for op, i in self.intents.get(ident, {}).items()
@@ -380,11 +391,10 @@ class NativeControls(NativeTelemetry):
                 "native_eco_field_observed": device is not None and "eco" in device.fingerprints,
                 "schedule_bucket_observed": f"schedule.{ident}" in records,
                 "schedule_shape": self._schedule_shapes.get(ident),
-                "schedule_schema_validated": bool(self.reported.get(ident, {}).get("schedule")),
-                "schedule_fresh": bool(self.reported.get(ident, {}).get("schedule"))
-                and not any(
-                    kind == "schedule" for kind, _ in self.restored_fields.get(ident, set())
-                ),
+                "schedule_schema_validated": schedule_view is not None,
+                "schedule_state_source": schedule_view["source"] if schedule_view else "unknown",
+                "schedule_fresh": schedule_view is not None
+                and schedule_view["source"] in ("device", "acknowledged"),
                 "observed_bucket_kinds": sorted({key.partition(".")[0] for key in records}),
             },
             "local_pairing": self.local_user_view(ident),
@@ -446,9 +456,16 @@ class NativeControls(NativeTelemetry):
             "offered": item.sent,
             "stream_write_completed": item.stream_write_completed,
             "notification_acknowledged": item.notification_acknowledged,
+            "metadata_acknowledged": item.metadata_acknowledged,
             "matching_reported_field_count": len(item.observed_fields),
-            "required_field_count": len(item.desired()),
+            "required_field_count": 1
+            if item.confirmation_source == "device_eco_mode"
+            else len(item.desired()),
         }
+        if item.confirmation_source:
+            self.receipts[ident][op]["confirmation_source"] = item.confirmation_source
+        if op == "schedule":
+            self.schedules.finished(ident, item, outcome)
         self.outcomes.setdefault(ident, {})[op] = outcome
         self.intents.get(ident, {}).pop(op, None)
 
@@ -466,6 +483,7 @@ class NativeControls(NativeTelemetry):
                     )
                 ):
                     item.stream_write_completed = True
+                    item.written_metadata = (row["object_revision"], row["object_timestamp"])
                     if row["value"].get("target_change_pending") is True and item.field in (
                         "target_temperature",
                         "target_temperature_low",
@@ -477,7 +495,12 @@ class NativeControls(NativeTelemetry):
         for op, item in list(self.intents.get(ident, {}).items()):
             if item.expires <= now:
                 self._finish(
-                    ident, op, item, "acknowledged" if item.notification_acknowledged else "expired"
+                    ident,
+                    op,
+                    item,
+                    "acknowledged"
+                    if item.notification_acknowledged or item.metadata_acknowledged
+                    else "expired",
                 )
 
     def command_status(self, ident):
@@ -485,7 +508,7 @@ class NativeControls(NativeTelemetry):
         self._expire(ident)
         result = dict(self.outcomes.get(ident, {}))
         for op, item in self.intents.get(ident, {}).items():
-            if item.notification_acknowledged:
+            if item.notification_acknowledged or item.metadata_acknowledged:
                 result[op] = "acknowledged"
         return result
 
@@ -547,13 +570,19 @@ class NativeControls(NativeTelemetry):
         record = self._records_for(ident).get(f"schedule.{ident}")
         if record is None or integer(body["expected_revision"]) != record.revision:
             raise Invalid("schedule changed; read and back up the current week again")
-        baseline = self.reported.get(ident, {}).get("schedule", {}).get("values", {})
-        native_features.schedule_record(baseline)
-        if any(kind == "schedule" for kind, _ in self.restored_fields.get(ident, set())):
+        baseline = self.schedules.view(ident)
+        if baseline["revision"] != record.revision or baseline["source"] not in (
+            "device",
+            "acknowledged",
+        ):
             raise Invalid("a fresh native weekly schedule report is required before replacement")
         if not schedule_backed_up:
             raise Invalid("use the HA schedule action to preserve the current week first")
-        if "manual_schedule" in baseline:
+        assignment = self.schedules.requested.get(ident) or self.schedules.committed.get(ident)
+        wire_value = (
+            assignment["value"] if assignment else self.reported[ident]["schedule"]["values"]
+        )
+        if "manual_schedule" in wire_value:
             return "schedule", "manual_schedule", normalized, {}
         return "schedule", "ver", 2, {k: v for k, v in normalized.items() if k != "ver"}
 
@@ -650,6 +679,8 @@ class NativeControls(NativeTelemetry):
             extra_values=extras,
         )
         intents[operation] = item
+        if operation == "schedule":
+            self.schedules.queued(ident, item, timestamp)
         self.receipts.get(ident, {}).pop(operation, None)
         self.outcomes.setdefault(ident, {})[operation] = "pending"
         self.notify(ident)
@@ -663,7 +694,7 @@ class NativeControls(NativeTelemetry):
         # it received a pending desired value. Until native values confirm it,
         # include that live intent even when the client claims matching metadata.
         for item in self.intents.get(ident, {}).values():
-            if item.notification_acknowledged:
+            if item.notification_acknowledged or item.metadata_acknowledged:
                 continue
             record = records.get(item.key)
             if record is not None and record.revision == item.revision:
@@ -675,6 +706,7 @@ class NativeControls(NativeTelemetry):
                 if i.key == row["object_key"]
                 and i.revision == row["object_revision"]
                 and not i.notification_acknowledged
+                and not i.metadata_acknowledged
                 for name, data in i.desired().items()
             }
             if values:
@@ -725,6 +757,8 @@ class NativeControls(NativeTelemetry):
         }
         previous_home = self.home_key(ident)
         response = super().apply(ident, body, subscription=subscription)
+        if subscription:
+            self.schedules.observe_metadata(ident, objects)
         for key, kind, value, _, _, _ in objects:
             if key not in accepted or kind != "device" or not value or "structure_id" not in value:
                 continue
@@ -785,7 +819,30 @@ class NativeControls(NativeTelemetry):
                 projection["fan"] = "on" if timeout > self.clock() else "auto"
             if projection:
                 self.core.report(ident, projection)
+            had_schedule_assignment = (
+                self.schedules.native_report(ident) if kind == "schedule" else False
+            )
             reported_state.capture(self, ident, key, kind, value)
+            if kind == "schedule":
+                self.schedules.capture_complete(ident, value)
+            if had_schedule_assignment and not self.reported.get(ident, {}).get("schedule"):
+                pending = self.intents.get(ident, {}).get("schedule")
+                if pending:
+                    self._finish(ident, "schedule", pending, "superseded_by_device")
+            eco = self.intents.get(ident, {}).get("eco")
+            mode = (
+                value.get("eco", {}).get("mode")
+                if kind == "device" and isinstance(value.get("eco"), dict)
+                else None
+            )
+            if eco and mode in ("manual-eco", "schedule", "auto-eco"):
+                matches = (eco.value is True) == (mode == "manual-eco")
+                if matches or eco.stream_write_completed:
+                    eco.confirmation_source = "device_eco_mode"
+                    eco.observed_fields = {"device.eco.mode"} if matches else set()
+                    self._finish(
+                        ident, "eco", eco, "confirmed" if matches else "superseded_by_device"
+                    )
             for op, item in list(self.intents.get(ident, {}).items()):
                 expected = item.desired()
                 touched = expected.keys() & value.keys()
