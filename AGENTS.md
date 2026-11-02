@@ -2279,3 +2279,14 @@ Need NEW owner Core restart approval for0.6.1 activation (one brief automation
 pause). Activation alone sends no home. Then health before owner admin HA Action
 Hearth Associate local home, chooseclimate/confirm; explain persistent setupwrites
 and unpair limits BEFORE action. KeepEMPTYbase. NoHVACauthorization.
+
+Owner said send it for0.6.1 activation/Core restart. Activation-v1 rechecked33
+staged/active sourcefiles, preserved previous0.6.0 and installedexactfinal-v2.
+Health-v1 4entities/cacheprivate/zeroerrors; onlycustomintegrationwarnings.
+Read-only reconnect-watch-v1/session27650: availabletrue/fresh reports,
+local_pairingconfigured/offered/ack alltrue after reconnect; local_home allfalse.
+No home announcement/controls or thermostat files rewritten. Actual home/eco/week
+still absent. Need owner ADMIN UI Actions Hearth Associate local home, select
+climate and confirm; explain can persist native setupwrites, no verifiednative
+unpair/restore, keepEMPTYbase. Never automaticallysend this afteractivation.
+Private receipts underprivate/native-ha-v061-20261101; Core CLI session17195 exitedzero.

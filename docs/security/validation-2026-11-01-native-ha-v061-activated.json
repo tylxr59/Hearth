@@ -1,0 +1,16 @@
+{
+  "status": "native-ha-v061-active-fresh-reports-observed",
+  "integration_version": "0.6.1",
+  "owner_authorized_one_core_restart": true,
+  "exact_source_files": 33,
+  "registered_entities": 4,
+  "scoped_errors": 0,
+  "fresh_authenticated_reports_observed": true,
+  "local_user_metadata_acknowledged": true,
+  "local_home_configured": false,
+  "home_announced": false,
+  "home_eco_schedule_baselines_present": false,
+  "control_commands_sent": false,
+  "thermostat_files_rewritten": false,
+  "core_restart_exit": 0
+}
