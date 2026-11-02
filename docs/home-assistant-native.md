@@ -296,3 +296,11 @@ The first pre-association HA configuration is retained privately as
 backup or a verified native unpair/restore procedure. `local_home` diagnostics
 separate configuration, offer, metadata acknowledgement, device-reported reference
 and conflict. Eco/schedule controls still require their actual native baselines.
+
+In 0.6.2 a direct, authorized structure report can establish the home identity;
+stock Gen2 need not also upload `device.structure_id`. Diagnostics distinguish
+`structure_identity_observed` from `device_reference_observed`, and report a
+finite `home_reference_source`. This does not create eco or schedule baselines.
+The private reported cache preserves the actual structure key, including when no
+allowed structure value has arrived yet. Cached identity does not imply a fresh
+connection, and pending controls still cannot survive an integration restart.

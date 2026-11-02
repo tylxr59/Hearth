@@ -128,7 +128,12 @@ def validate(data):
             raise Invalid("reported cache bucket scope")
         clean = {}
         for kind, record in records.items():
-            if not isinstance(record, dict) or set(record) != {"revision", "timestamp", "values"}:
+            allowed_identity = {"key"} if kind == "structure" else set()
+            if not isinstance(record, dict) or set(record) - allowed_identity != {
+                "revision",
+                "timestamp",
+                "values",
+            }:
                 raise Invalid("reported cache record shape")
             integer(record["revision"])
             integer(record["timestamp"])
@@ -140,12 +145,26 @@ def validate(data):
                 "timestamp": record["timestamp"],
                 "values": {name: reported_value(name, value) for name, value in values.items()},
             }
+            if "key" in record:
+                key = native_features.structure_key(record["key"])
+                if key != record["key"]:
+                    raise Invalid("canonical cached structure identity required")
+                clean[kind]["key"] = key
         if "schedule" in clean:
             clean["schedule"]["values"] = native_features.schedule_record(
                 clean["schedule"]["values"]
             )
-        if "structure" in clean and "structure_id" not in clean.get("device", {}).get("values", {}):
-            raise Invalid("cached home state requires device reference")
+        if "structure" in clean:
+            reference = clean.get("device", {}).get("values", {}).get("structure_id")
+            key = clean["structure"].get("key")
+            if reference is None and key is None:
+                raise Invalid("cached home state requires an observed identity")
+            if (
+                reference is not None
+                and key is not None
+                and native_features.structure_key(reference) != key
+            ):
+                raise Invalid("conflicting cached home identity")
         result[ident] = {"generation": entry["generation"], "records": clean}
     return {"format": FORMAT, "saved_at": data["saved_at"], "devices": result}
 

@@ -2290,3 +2290,31 @@ still absent. Need owner ADMIN UI Actions Hearth Associate local home, select
 climate and confirm; explain can persist native setupwrites, no verifiednative
 unpair/restore, keepEMPTYbase. Never automaticallysend this afteractivation.
 Private receipts underprivate/native-ha-v061-20261101; Core CLI session17195 exitedzero.
+
+Owner performed associate_local_home withconfirm: configuredtrue/offeredfalse
+immediate. private/native-ha-v061-20261101/home-association-watch-v1 later sees
+offeredtrue/STRUCTUREbucketreceived, initialmetadataackfalse/deviceReffalse.
+Noeco/week yet; actualhomepersistencereadbackunverified. Onecachewarning andlast
+savedcacheonlydevice/shared. Weatherinvalidqueriesincrementother rejection,
+notbucketshaperejection; no reason to counttheseasstructureparsefailures.
+
+FOUND receiver assumption: pinnedNLE utils/structure_assignment.py ADDS device
+structure_id server-side. Downloadedexactpinnedhelperhash inupstreams.json.
+0.6.2 correction prepared: reportedstructure key captured fromacceptedAUTH/
+scopednativePUT; home_key can useactualstructureidentity withoutfabricateddevice
+field. Cacheoptionalcanonicalstructure.key allowed, validatesdevice/keyagreement,
+legacycache stillreadable; identity-onlyemptyallowedvaluesrecordsave/reloadworks.
+Unknownvalues/user_id notsaved. Actualeco/week stillrequired,nocontrolreplay,
+cacheisnotfresh. homeviewdevice_reference_observedstillactualdevicefieldonly;
+NEWstructure_identity_observed; finitehome_reference_source device/structure/None.
+Homeack canmatchCURRENTactualnonemptystructurebucketmetadata AFTERoffer; not
+justinitialconfigmetadata overwrittenbyordinaryPUT revisionadvance.
+1241 host/fiveoptionalskips +makecheck+realHA2026.10.4sandbox17roundtripspassed,
+including2structurePUTs,currentrevack,cacheidentityreloadwithoutdevicefield.
+Packagebuild/native-ha-home-report-20261101-v062-final +repro33sourcefilesexact.
+Stageprivate/native-ha-v062-20261101/stage-v1 remote.hearth-native-stage-
+20261101-v062; backsold0.6.1source/currentuser+homeconfig/oldreportedcache.
+NOTACTIVATED. NeedNEWowner0.6.2Core restartreadiness. Existingapprovedhomeconfig
+WILLreannounceafteractivation; SAMEidentity, no newhomeaction required. Noextra
+Nest restart neededunlesswatchjustifies. NoHVACauthorization/allterminalsEMPTY.
+Old0.6.1mayrefuseextendedreportedcache oncoderollback; preupdatecachepreserved.

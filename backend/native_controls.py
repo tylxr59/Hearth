@@ -83,7 +83,9 @@ class NativeControls(NativeTelemetry):
 
     def home_key(self, ident):
         value = self.reported.get(ident, {}).get("device", {}).get("values", {}).get("structure_id")
-        return native_features.structure_key(value) if value is not None else None
+        if value is not None:
+            return native_features.structure_key(value)
+        return self.reported.get(ident, {}).get("structure", {}).get("key")
 
     def normalize(self, ident, body, *, subscription=False):
         # A home bucket is scoped to this authenticated device's record namespace.
@@ -155,11 +157,18 @@ class NativeControls(NativeTelemetry):
         configured = record is not None and "home" in record
         key = native_pairing.home_metadata(record)["object_key"] if configured else None
         observed = self.home_key(ident)
+        device_reference = (
+            self.reported.get(ident, {}).get("device", {}).get("values", {}).get("structure_id")
+        )
         return {
             "configured": configured,
             "offered": ident in self._local_home_offered,
             "metadata_acknowledged": ident in self._local_home_acknowledged,
-            "device_reference_observed": configured and observed == key,
+            "device_reference_observed": configured
+            and device_reference is not None
+            and native_features.structure_key(device_reference) == key,
+            "structure_identity_observed": configured
+            and self.reported.get(ident, {}).get("structure", {}).get("key") == key,
             "conflict": configured and observed is not None and observed != key,
         }
 
@@ -198,6 +207,14 @@ class NativeControls(NativeTelemetry):
                 meta["object_revision"],
                 meta["object_timestamp"],
             )
+            if offered is self._local_home_offered and ident in offered:
+                current = self._records_for(ident).get(meta["object_key"])
+                matches |= (
+                    own is not None
+                    and current is not None
+                    and bool(current.fingerprints)
+                    and own[4:] == (current.revision, current.timestamp)
+                )
             if matches:
                 acknowledged.add(ident)
             if ident not in offered or (
@@ -309,8 +326,19 @@ class NativeControls(NativeTelemetry):
             if ident in self.last_request
             else None,
             "feature_baselines": {
-                "home_reference_observed": device is not None
-                and "structure_id" in device.fingerprints,
+                "home_reference_observed": (
+                    device is not None and "structure_id" in device.fingerprints
+                )
+                or bool(self.reported.get(ident, {}).get("structure", {}).get("key")),
+                "home_reference_source": "device"
+                if self.reported.get(ident, {})
+                .get("device", {})
+                .get("values", {})
+                .get("structure_id")
+                is not None
+                else "structure"
+                if self.reported.get(ident, {}).get("structure", {}).get("key")
+                else None,
                 "home_reference_validated": self.home_key(ident) is not None,
                 "native_eco_field_observed": device is not None and "eco" in device.fingerprints,
                 "schedule_bucket_observed": f"schedule.{ident}" in records,

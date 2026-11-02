@@ -114,3 +114,41 @@ atomicity, distinct configuration/reporting, identity ordering, no default contr
 values, private backup/reload, administrator/confirmation checks, conflicting-home
 refusal and unsafe-backup refusal. Actual home acceptance and subsequent native
 eco/schedule reports remain unmeasured until the owner performs the action.
+
+## Direct structure report correction (0.6.2 preparation)
+
+After the owner confirmed the home action, the read-only observer saw the home
+announcement offered and a structure bucket received, alongside continuing
+telemetry. The 0.6.1 diagnostics still showed no exact initial-metadata
+acknowledgement or device-bucket home reference. A scoped log check also found a
+cache warning, while the last durable cache still contained only device/shared.
+These observations do not establish complete pairing or persistent setup readback.
+
+The pinned NLE `utils/structure_assignment.py`, now included in the provenance
+inventory, explicitly injects a missing device `structure_id` on the server. It
+is not evidence that stock Gen2 uploads that field. Requiring it as the only
+reported home identity was a Hearth receiver/cache assumption. See the
+[pinned upstream helper](https://github.com/codykociemba/NoLongerEvil-SelfHosted/blob/bca8781012639c1cefc4a08c103fc892158fb630/src/nolongerevil/utils/structure_assignment.py).
+
+The correction records the canonical structure key actually uploaded within the
+already authorized device scope. That identity can establish the reported home
+without inventing a device field. Unknown structure values and user identifiers
+remain excluded from the cache; an identity-only record with empty allowed values
+is valid. A device reference, when present, must agree with the cached structure
+key. Original caches with only the device reference remain readable. Restoring
+this report does not restore connection freshness or pending commands. Old code
+may refuse the extended cache; retain its pre-update copy with rollback code.
+
+A home metadata acknowledgement can match the current accepted structure revision
+instead of only the initial configuration revision. An intervening native PUT
+advances the ordinary bucket revision/timestamp. Matching that response is tracked
+only after an offer and when an actual nonempty structure report exists. The
+separate `device_reference_observed` flag still means a real device field;
+`structure_identity_observed` reports the direct structure path. Both remain
+separate from home configuration, eco/schedule values and physical HVAC proof.
+
+Host and real-HA tests reproduce two structure PUTs, acknowledgement of their
+current revision, cache save/reload without `device.structure_id`, identity conflict
+refusal and absence of invented fields/control replay. Native acceptance under
+0.6.2 still requires observing the actual unit after the HA-only update. The
+already confirmed home identity is reused; no new association action is required.

@@ -14,7 +14,8 @@
       "src/nolongerevil/routes/nest/entry.py": "6cf376df0256b9c82ec4f4524196b254752799bc616322b7cd9b26abbe41275d",
       "src/nolongerevil/routes/nest/transport.py": "925cc4e8b92ab9b92a2f2727d076e96492db6cae2e438022751a31d2c3b5d076",
       "src/nolongerevil/services/device_state_service.py": "4bf391268a7be9dacdf882fdb5286bfac07d907932d466447c2b72c6a15c4a34",
-      "src/nolongerevil/services/weather_service.py": "bf48bbb01056b14ddd76b68ae6658e4ae7d204b31fb036aaefe52af775e6c58b"
+      "src/nolongerevil/services/weather_service.py": "bf48bbb01056b14ddd76b68ae6658e4ae7d204b31fb036aaefe52af775e6c58b",
+      "src/nolongerevil/utils/structure_assignment.py": "c60fd1e6d5c0a7abe965acdac349d2483e04338cfb39b56ddd8b3eb7ea79eaaa"
     },
     "repository": "https://github.com/codykociemba/NoLongerEvil-SelfHosted",
     "revision": "bca8781012639c1cefc4a08c103fc892158fb630"

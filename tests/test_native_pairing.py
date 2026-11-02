@@ -254,3 +254,38 @@ def test_malformed_owned_home_metadata_cannot_mutate_device_state(paired):
             subscription=True,
         )
     assert n.core.states == before
+
+
+def test_direct_structure_identity_survives_cache_and_current_revision_ack(paired):
+    from backend.core import Core
+
+    n, _, record = home_config(paired)
+    body = {"objects": [pairing.metadata(record)]}
+    n.apply(SERIAL, body, subscription=True)
+    key = pairing.home_metadata(record)["object_key"]
+    for values in ({"user_id": record["user_id"]}, {"country_code": "US"}):
+        result = n.apply(SERIAL, {"objects": [{"object_key": key, "value": values}]})
+    current = result["objects"][0]
+    assert current["object_revision"] == 2
+    n.apply(SERIAL, {"objects": [current]}, subscription=True)
+    assert n.local_home_view(SERIAL)["metadata_acknowledged"]
+    assert n.local_home_view(SERIAL)["structure_identity_observed"]
+    assert not n.local_home_view(SERIAL)["device_reference_observed"]
+    saved = n.snapshot_reported()
+    assert saved["devices"][SERIAL]["records"]["structure"] == {
+        "key": key,
+        "revision": 2,
+        "timestamp": current["object_timestamp"],
+        "values": {},
+    }
+    assert "structure_id" not in saved["devices"][SERIAL]["records"]["device"]["values"]
+    assert record["user_id"] not in json.dumps(saved)
+    fresh = NativeControls(Core(n.core.registry))
+    fresh.restore_reported(saved)
+    assert fresh.home_key(SERIAL) == key
+    assert not fresh.core.available(SERIAL) and not fresh.intents
+    # Clearing the reported identity clears its associated structure, not configuration.
+    n.apply(
+        SERIAL, {"objects": [{"object_key": f"device.{SERIAL}", "value": {"structure_id": None}}]}
+    )
+    assert n.home_key(SERIAL) is None and "structure" not in n.reported[SERIAL]

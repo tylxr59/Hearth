@@ -18,6 +18,10 @@ def capture(native, ident, key, kind, value):
     saved = native.reported.setdefault(ident, {})
     item = saved.setdefault(kind, {"revision": 0, "timestamp": 0, "values": {}})
     updated_fields = set(value)
+    if kind == "structure":
+        # This key was selected by a reported reference or explicit enrollment-bound config.
+        # Keep the identity actually uploaded by the Nest; never synthesize a device field.
+        item["key"] = key
     if kind == "schedule":
         # Never persist partial/unknown schedule content. Retain the last full
         # validated week; refuse schedule commands until that baseline exists.
@@ -104,7 +108,9 @@ def restore(native, data):
             if kind == "structure":
                 from backend.native_features import structure_key
 
-                key = structure_key(entry["records"]["device"]["values"]["structure_id"])
+                key = item.get("key") or structure_key(
+                    entry["records"]["device"]["values"]["structure_id"]
+                )
             else:
                 key = f"{kind}.{ident}"
             records[key] = Bucket(item["revision"], item["timestamp"], fingerprints, telemetry)

@@ -188,3 +188,27 @@ def test_invalid_observed_capability_cannot_restore_old_positive_permission(rig)
     fresh = NativeControls(Core(rig[0].registry))
     fresh.restore_reported(n.snapshot_reported())
     assert "heat" not in fresh.capabilities(SERIAL)["modes"]
+
+
+def test_direct_structure_cache_identity_is_canonical_scoped_and_not_an_intent():
+    data = fixture()
+    records = data["devices"][SERIAL]["records"]
+    records["structure"] = {
+        "key": "structure.LABHOME",
+        "revision": 1,
+        "timestamp": 1000,
+        "values": {"manual_eco_all": False},
+    }
+    assert cache.decode(cache.encode(data)) == data
+    for key in ("LABHOME", "device.LABHOME", "../escape", True):
+        records["structure"]["key"] = key
+        with pytest.raises(Invalid):
+            cache.encode(data)
+    records["structure"]["key"] = "structure.LABHOME"
+    records["device"]["values"]["structure_id"] = "structure.OTHER"
+    with pytest.raises(Invalid):
+        cache.encode(data)
+    records["device"]["values"].pop("structure_id")
+    records["shared"]["key"] = "structure.LABHOME"
+    with pytest.raises(Invalid):
+        cache.encode(data)

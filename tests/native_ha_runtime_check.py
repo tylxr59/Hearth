@@ -845,6 +845,34 @@ async def check(root, profile):
                 context=owner_context,
             )
             assert json.loads((profile / "local-pairing.json").read_bytes()) == saved_pair
+            # Gen2 can report the structure identity directly without device.structure_id.
+            for values in ({"user_id": user_id}, {"country_code": "US"}):
+                async with client.post(
+                    base + "/nest/transport/put",
+                    headers=headers,
+                    json={"objects": [{"object_key": home_row["object_key"], "value": values}]},
+                    ssl=context,
+                ) as response:
+                    assert response.status == 200
+                    current_home = (await response.json())["objects"][0]
+            assert current_home["object_revision"] >= 2
+            async with client.post(
+                base + "/nest/transport/v7/subscribe",
+                headers=headers,
+                json={"objects": [current_home], "chunked": False},
+                ssl=context,
+            ) as response:
+                assert response.status == 200
+                await response.read()
+            view = native.local_home_view(IDENT)
+            assert view["metadata_acknowledged"] and view["structure_identity_observed"]
+            assert not view["device_reference_observed"]
+            assert (
+                native.control_view(IDENT)["feature_baselines"]["home_reference_source"]
+                == "structure"
+            )
+            cached_home = native.snapshot_reported()["devices"][IDENT]["records"]["structure"]
+            assert cached_home["key"] == home_row["object_key"] and not cached_home["values"]
             duplicate = await hass.config_entries.flow.async_init(
                 "hearth", context={"source": "user"}
             )
@@ -874,6 +902,8 @@ async def check(root, profile):
             assert native.core.states[IDENT]["target_temperature"] == 25
             assert not native.core.available(IDENT) and not native.intents
             assert native.state_source(IDENT, "target_temperature") == "cache"
+            assert native.home_key(IDENT) == home_row["object_key"]
+            assert native.local_home_view(IDENT)["structure_identity_observed"]
             before = native.listing(IDENT)["objects"]
             async with ClientSession() as resumed:
                 async with resumed.post(
@@ -975,6 +1005,7 @@ async def check(root, profile):
                     "explicit_local_user_announcement": True,
                     "local_pairing_private_configuration_reload": True,
                     "explicit_home_identity_private_backup_reload": True,
+                    "direct_structure_report_without_invented_device_field": True,
                     "gen2_manual_schedule_wire_shape_preserved": True,
                     "existing_home_not_silently_migrated": True,
                     "mode_selector_tracks_reported_capabilities": True,

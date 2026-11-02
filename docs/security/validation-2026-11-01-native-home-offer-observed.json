@@ -1,0 +1,14 @@
+{
+  "status": "home-offered-structure-returned-receiver-correction-needed",
+  "integration_version": "0.6.1",
+  "owner_performed_confirmed_home_action": true,
+  "home_configured": true,
+  "home_offered": true,
+  "structure_bucket_observed": true,
+  "exact_initial_metadata_acknowledged": false,
+  "device_structure_reference_observed": false,
+  "cache_warning_observed": true,
+  "home_persistent_readback_verified": false,
+  "eco_or_schedule_baseline_observed": false,
+  "physical_hvac_exercised": false
+}
