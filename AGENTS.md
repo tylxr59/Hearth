@@ -105,14 +105,36 @@ path, not explicit-value feedback or an intentional furnace heat call.
 Private068/setpoint-{lower,restore}-v1 and watch results remain immutable. Do not
 rerun either control step of build/native-ha-v068-setpoint-check-20261102.py.
 
-Next: Eco on/off and native week acquisition, with no more controls until reviewed.
-Read-only eco-readiness-v1 found manualEco=false, heat mode, native device eco mode
-absent, Eco high24.44444 C, Eco low missing. Owner was asked to read physical
-Settings/Eco/Heat to (or Off) without changing it. WAIT for that information before
-proposing Eco-on: it could otherwise request heat. A potential read-codec gap is
-away_temperature_low minimum5 C, while Google's documented Eco range includes40 F
-(about4.4 C). Missing low might be this validation gap or an Off/unreported setting;
-it is not proof of either. No code correction or Eco command has been sent yet.
+Eco cycle under0.6.8 is physically restored and complete. Owner read Eco Heat to:
+Off, then approved one on/off cycle. ONE true and ONE false request were sent by
+build/native-ha-v068-eco-cycle-20261102.py; limits were not changed. Owner confirmed
+Stop Eco after on, then Start Eco, HA None, Heat63 F and no furnace activity after
+off. A fresh private cache reports device.eco.mode=schedule. The structure scalar/
+timestamp echo never confirmed the intents; both expired even though actual Eco
+state changed and reported device mode. No more Eco controls should be sent.
+Original false baseline and private068/eco-{on,off}-v1, watches, post-eco-state-v1
+are immutable. Missing low is consistent with the owner's Off setting; no proof
+that the separate5 C read-bound gap caused this unit's missing low.
+
+Native week acquisition now PASSES the actual codec. Owner confirmed an empty
+Schedule, added only a temporary62 F point tomorrow noon, then removed it and
+confirmed empty UI, Heat63 F and no furnace activity. The point upload was7days,
+1setpoint plus7continuations, with native provenance; after removal it is7native
+continuations and0setpoints. Both complete weeks are preserved privately in
+schedule-{point,empty}-capture-v1. An original-week archive was synced/read back
+with0600 permissions. Source is fresh native PUT, bare version2 HEAT, revision2.
+
+A HA service test is now prepared, NOT yet observed executed. Private068/
+schedule-ha-bench-v1/{original-week.json,proposed-week.json,apply.yaml,plan.json}
+preserve original and proposed full weeks. apply.yaml uses hearth.set_schedule,
+actual entity, expected_revision2 and explicit Celsius. It adds only tomorrow's
+noon62 F setpoint while preserving existing continuations; service backs up before
+write and enforces CAS/generation/fresh-baseline gates. Owner was asked to paste
+apply.yaml into HA Developer tools/Actions/YAML and perform ONCE. WAIT for result,
+then physical point verification. Read-only schedule-ha-apply-watch-v1 is running.
+Do not restore by reusing old revision: fetch the post-apply native week/revision,
+then prepare a separate restore action using preserved original. No backend weekly
+write has been sent by the agent. No Core restart approved beyond consumed0.6.8.
 
 ## Purpose and current status
 

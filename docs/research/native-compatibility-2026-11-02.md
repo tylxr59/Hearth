@@ -175,3 +175,29 @@ report validator starts that field at5 C; [Google's documented Eco range](https:
 includes40 F (about4.4 C), so this is a possible receiver gap. It is not proof of
 why this unit's low limit is missing. The owner was asked to read the configured
 Eco Heat to setting without changing it; no Eco-on command was sent.
+
+## Eco and native week observations under0.6.8
+
+The owner read Eco Heat to as Off and separately authorized a cycle without
+changing those limits. One on request produced a physical Stop Eco menu; one off
+restore returned Start Eco, HA None, Heat63 F and no furnace activity. The fresh
+reported device Eco mode was schedule after restoration. Structure scalar/time
+confirmation remained absent, so the expiry status still did not describe the
+physical outcome. No more Eco command was sent after restoration.
+
+The owner confirmed an empty physical schedule. Opening it alone did not upload
+a week. One temporary62 F point was added for tomorrow noon through the native UI;
+the subsequent complete week passed the existing strict codec: seven days, one
+setpoint and seven continuation records, with provenance preserved. After the
+owner removed only that point, the UI was empty again and the fresh native week
+contained zero setpoints and seven continuations. The dial was63 F and furnace
+idle. Both weeks and a synced/read-back private original archive are preserved.
+An empty UI must not be represented as seven empty arrays that discard the
+native continuation data.
+
+A prepared HA set_schedule action uses the actual original plus the same single
+future point, explicit units and the current revision. The integration's backup,
+CAS, generation and fresh-baseline checks remain in place. The owner has been
+asked to perform it once in HA; backend replacement/restore verification remains
+pending. A separate restore will use the preserved original and a newly read
+post-apply revision.

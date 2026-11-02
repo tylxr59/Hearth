@@ -1,0 +1,19 @@
+{
+  "status": "native-week-acquired-and-original-empty-ui-restored",
+  "version": "0.6.8",
+  "owner_initial_ui_week_empty": true,
+  "temporary_future_point_added_and_removed_by_owner": true,
+  "captured_week_days": 7,
+  "temporary_week_setpoints": 1,
+  "temporary_week_continuations": 7,
+  "restored_week_setpoints": 0,
+  "restored_week_continuations": 7,
+  "native_point_provenance_preserved": true,
+  "original_archive_private_readback_verified": true,
+  "owner_confirmed_empty_ui_restore": true,
+  "owner_confirmed_heat_target_f": 63,
+  "owner_reported_furnace_activity": false,
+  "ha_schedule_apply_action_prepared": true,
+  "agent_sent_schedule_commands": 0,
+  "ha_weekly_replacement_verified": false
+}
