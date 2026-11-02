@@ -120,7 +120,7 @@ def test_installer_uncertain_result_never_tells_user_to_restart(tmp_path, monkey
 
 
 def test_kit_checks_actual_config_not_url_hidden_in_comment(tmp_path, monkeypatch):
-    import installer.cli as cli
+    from installer import cli
 
     origin = "https://127.0.0.1:18443"
     token = "a" * 64
