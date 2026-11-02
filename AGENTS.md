@@ -2139,3 +2139,40 @@ neededforclocknow. Nextremainingfeatureissue: home/eco/weekbaselinesabsent;
 unwiredbasereportscapabilitiesoffonly. Investigatebootstrap/pairingandinitial
 bucket_shape rejectionusingboundedshapeevidencebeforeanyeco/schedulecommand;
 no fabricatedbaselines/relaxedownershiporschema. PhysicalHVACnotauthorized.
+
+Activeworkownerrequestsresolvehome/eco/weekbaselines; addedrequestHeat/Cool
+selectorwhenavailable. Explainedalreadydynamic/emptybasereportsoff; realHA
+regressionnowwithdraws+restorescan_heat/can_coolandverifiesselectoroffvs4modes.
+OwneraskedwhetherconnectphysicalHVAC: advisedNOTYET/keepoldthermostatcontrolling;
+noHVACauthorizationgiven. Canfixprotocolwithoutrealwires. OfficialGoogleinstall
+helpchecked(poweroffbeforeexposingwires), noinstallationstepssent.
+
+NativebuilderreadonlyGhidrafoundFILTERSarraypropertyalongsidevalue/metadata.
+Hearthrejecteditasunknownmember; concretepossiblemismatch, NOTyetprovedactual
+ownerrejectedrequest. NativeNLEpairingadditionallyinjectsuser.nameTHENstructure
+name/devicesandassignsstructure_id. HearthNOTimplementedthatbootstrap; doNOT
+blindlycopy/synthesizehome/ecoweek. Needreviewlocalenrollmentbinding/native
+sideeffectsbeforeanyfuturebootstrapdelivery.
+
+0.5.2candidateacceptsONLYEMPTYsubscriptionfilters; nonemptyinvalidfiltersremain
+rejected. BucketShapeError/diagnosticsrecordonlyfixedknownmetadatamembertypes,
+unknownmemberCOUNT,filtercount/itemTYPES/finitereason; NOunknownnames/IDs/values.
+Testsprivacymarker/copy/ownership/PUTconstraints. NativeControlsstillnoPUTvalue
+echo,authunchanged. Full1216host/fiveoptionalskips+makecheckPASS; realHA17control
+roundtrips+emptyfilter+mode-selectorcapabilitywithdrawal/returnPASS. Weather
+clockfix/brandingallpass. Finalbuild/native-ha-subscribe-filters-20261101-v052-1
+and-v052-repro32filesexact; stageprivate/native-ha-v052-20261101/stage-v1/
+remote.hearth-native-stage-20261101-v052readback/oldactive0.5.1backup. NOTACTIVATED.
+NeednewownerCore restartreadinessafterconcretestage,thenreadonlynativeStartup
+profilecheck+oneownerordinaryrestartifneeded. Noflash/RAM/eco/schedulecommands.
+TemporaryGhidraJava scriptsremovedfromtrackedtools; recipesremainbuild/.
+
+LATEST0.5.2FINALpackagebuild/native-ha-subscribe-baselines-20261101-v052-final
++v052-repro32filesexact. ALSOaddsvalue-freecontrol_view.feature_baselines:
+observedbucketKINDS,homefieldseenvsvalid,deviceecofieldseen,schedulebucketseen
+vsvalidatedvsfresh. Distinguishesmissingpayloadfromstrictschemarefusalwithout
+loggingcontent. BucketShapeErroralsofixedknownbucketKIND,noowneridentifier.
+Updatedtests1216/fiveoptional+makecheck+realHA17allPASS. FinalremoteSTAGE-v2
+private/native-ha-v052-20261101/stage-v2; .hearth-native-stage-20261101-v052-v2.
+OLD-v1stageandfiltersonlybuildSUPERSEDED. Mustactivatev2ONLYafterownernewCore
+restartapproval. Noapprovalyet. No generationofuser/home/bootstrap/control.

@@ -265,7 +265,11 @@ def test_manager_control_diagnostics_are_bounded_and_value_free(native):
         "requests",
         "last_request_age",
         "baseline_fields",
+        "feature_baselines",
     }
+    assert row["feature_baselines"]["observed_bucket_kinds"] == ["device", "shared"]
+    assert row["feature_baselines"]["home_reference_observed"] is False
+    assert row["feature_baselines"]["schedule_schema_validated"] is False
     assert SERIAL not in json.dumps(row)
 
 

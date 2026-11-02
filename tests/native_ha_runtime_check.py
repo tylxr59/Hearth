@@ -269,6 +269,20 @@ async def check(root, profile):
             from custom_components.hearth._backend.api import NATIVE
 
             native = entry.runtime_data.app[NATIVE]
+            # Reproduce the statically reviewed native subscription filters.
+            filter_rows = [
+                {**row, "filters": []}
+                for row in entry.runtime_data.app[NATIVE].listing(IDENT)["objects"]
+            ]
+            async with client.post(
+                base + "/nest/transport/v7/subscribe",
+                headers=headers,
+                json={"objects": filter_rows, "chunked": False},
+                ssl=context,
+            ) as response:
+                assert response.status == 200
+                assert all("value" not in row for row in (await response.json())["objects"])
+            assert entry.runtime_data.controls.diagnostics()["empty_subscription_filters_accepted"]
 
             async def command_roundtrip(service, fields, expected, domain="climate"):
                 before = native.listing(IDENT)["objects"]
@@ -569,6 +583,43 @@ async def check(root, profile):
                 assert response.status == 400
             options = await hass.config_entries.options.async_init(entry.entry_id)
             assert options["type"] == "form" and options["step_id"] == "init"
+            async with client.post(
+                base + "/nest/transport/put",
+                headers=headers,
+                json={
+                    "objects": [
+                        {
+                            "object_key": "shared." + IDENT,
+                            "value": {"can_heat": False, "can_cool": False},
+                        }
+                    ]
+                },
+                ssl=context,
+            ) as response:
+                assert response.status == 200
+            await hass.async_block_till_done()
+            assert hass.states.get(climate_id).attributes["hvac_modes"] == ["off"]
+            async with client.post(
+                base + "/nest/transport/put",
+                headers=headers,
+                json={
+                    "objects": [
+                        {
+                            "object_key": "shared." + IDENT,
+                            "value": {"can_heat": True, "can_cool": True},
+                        }
+                    ]
+                },
+                ssl=context,
+            ) as response:
+                assert response.status == 200
+            await hass.async_block_till_done()
+            assert set(hass.states.get(climate_id).attributes["hvac_modes"]) == {
+                "off",
+                "heat",
+                "cool",
+                "heat_cool",
+            }
             duplicate = await hass.config_entries.flow.async_init(
                 "hearth", context={"source": "user"}
             )
@@ -682,6 +733,8 @@ async def check(root, profile):
                     "ha_weather_local_response": True,
                     "local_brand_icon_and_logo_fallbacks": True,
                     "native_report_confirmation": True,
+                    "native_empty_subscription_filters": True,
+                    "mode_selector_tracks_reported_capabilities": True,
                     "fahrenheit_to_celsius": True,
                     "heat_cool_range_targets": True,
                     "emergency_heat_capability_gated": True,

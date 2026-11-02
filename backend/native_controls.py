@@ -13,7 +13,7 @@ import uuid
 from dataclasses import dataclass, field
 
 from backend import native_features, reported_state
-from backend.native import NativeTelemetry, canonical, envelope, integer
+from backend.native import NativeTelemetry, canonical, envelope, has_empty_filters, integer
 from backend.validation import Invalid, command, number
 
 FEATURES = {"can_heat", "can_cool", "has_fan", "has_emer_heat"}
@@ -91,7 +91,9 @@ class NativeControls(NativeTelemetry):
                 home = native_features.structure_key(value["structure_id"])
             except Invalid:
                 home = None
-        return envelope(ident, body, subscription=subscription, structure_key=home)
+        result = envelope(ident, body, subscription=subscription, structure_key=home)
+        self._empty_filters_accepted |= subscription and has_empty_filters(body)
+        return result
 
     def snapshot_reported(self):
         return reported_state.snapshot(self, integer(int(self.clock() * 1000)))
@@ -146,6 +148,19 @@ class NativeControls(NativeTelemetry):
             "last_request_age": max(0, round(self.core.clock() - self.last_request[ident], 1))
             if ident in self.last_request
             else None,
+            "feature_baselines": {
+                "home_reference_observed": device is not None
+                and "structure_id" in device.fingerprints,
+                "home_reference_validated": self.home_key(ident) is not None,
+                "native_eco_field_observed": device is not None and "eco" in device.fingerprints,
+                "schedule_bucket_observed": f"schedule.{ident}" in records,
+                "schedule_schema_validated": bool(self.reported.get(ident, {}).get("schedule")),
+                "schedule_fresh": bool(self.reported.get(ident, {}).get("schedule"))
+                and not any(
+                    kind == "schedule" for kind, _ in self.restored_fields.get(ident, set())
+                ),
+                "observed_bucket_kinds": sorted({key.partition(".")[0] for key in records}),
+            },
             "baseline_fields": {
                 "temperature": shared is not None and "target_temperature" in shared.fingerprints,
                 "mode": shared is not None and MODE_FIELD in shared.fingerprints,

@@ -78,6 +78,56 @@ MAPPINGS = {
 }
 
 
+class BucketShapeError(Invalid):
+    """Fixed-field/type evidence only; never retains a bucket or its values."""
+
+    def __init__(self, obj, subscription, detail):
+        super().__init__("invalid native bucket")
+        known = META | {"value", "filters"}
+        fields = obj if isinstance(obj, dict) else {}
+        filters = fields.get("filters")
+        key = fields.get("object_key")
+        kind = key.partition(".")[0] if isinstance(key, str) else None
+        self.observation = {
+            "known_bucket_kind": kind if kind in BUCKETS | UNBOUND_BUCKETS else "unknown",
+            "detail": detail,
+            "subscription": subscription,
+            "bucket_type": json_type(obj),
+            "known_member_types": {
+                key: json_type(fields[key]) for key in sorted(known & fields.keys())
+            },
+            "unknown_member_count": min(len(fields.keys() - known), 257),
+            "filter_count": min(len(filters), 257) if isinstance(filters, list) else None,
+            "filter_item_types": sorted({json_type(item) for item in filters})
+            if isinstance(filters, list)
+            else [],
+        }
+
+
+def json_type(value):
+    if value is None:
+        return "null"
+    return {
+        bool: "boolean",
+        int: "integer",
+        float: "number",
+        str: "string",
+        list: "array",
+        dict: "object",
+    }.get(type(value), "other")
+
+
+def has_empty_filters(body):
+    if not isinstance(body, dict):
+        return False
+    objects = body.get("objects")
+    if objects is None:
+        objects = [value for key, value in body.items() if key not in ("session", "chunked")]
+    return isinstance(objects, list) and any(
+        isinstance(obj, dict) and obj.get("filters") == [] for obj in objects
+    )
+
+
 def integer(value):
     if type(value) is not int or not 0 <= value <= MAX_INTEGER:
         raise Invalid("invalid native revision or timestamp")
@@ -145,8 +195,15 @@ def envelope(ident, body, *, subscription=False, structure_key=None):
         raise Invalid("invalid native object count")
     normalized, seen = [], set()
     for obj in objects:
-        if not isinstance(obj, dict) or set(obj) - (META | {"value"}) or "object_key" not in obj:
-            raise Invalid("invalid native bucket")
+        allowed = META | {"value"} | ({"filters"} if subscription else set())
+        if not isinstance(obj, dict):
+            raise BucketShapeError(obj, subscription, "not_object")
+        if "object_key" not in obj:
+            raise BucketShapeError(obj, subscription, "missing_object_key")
+        if set(obj) - allowed:
+            raise BucketShapeError(obj, subscription, "unexpected_members")
+        if "filters" in obj and obj["filters"] != []:
+            raise BucketShapeError(obj, subscription, "nonempty_or_invalid_filters")
         key = obj["object_key"]
         kind = object_key(key, ident)
         if key in seen:
@@ -213,6 +270,8 @@ class NativeTelemetry:
         self._key = secrets.token_bytes(32)
         self._records, self._generation = {}, {}
         self._rejections, self._last_rejection = {}, None
+        self._last_bucket_shape = None
+        self._empty_filters_accepted = False
 
     def reject(self, error):
         # Finite vocabulary only: never retain exception text, payload fields,
@@ -220,9 +279,16 @@ class NativeTelemetry:
         reason = REJECTION_REASONS.get(str(error), "other")
         self._rejections[reason] = min(self._rejections.get(reason, 0) + 1, 2147483647)
         self._last_rejection = reason
+        if isinstance(error, BucketShapeError):
+            self._last_bucket_shape = error.observation
 
     def diagnostics(self):
-        return {"rejections": dict(self._rejections), "last_rejection": self._last_rejection}
+        result = {"rejections": dict(self._rejections), "last_rejection": self._last_rejection}
+        if self._last_bucket_shape is not None:
+            result["last_bucket_shape"] = json.loads(json.dumps(self._last_bucket_shape))
+        if self._empty_filters_accepted:
+            result["empty_subscription_filters_accepted"] = True
+        return result
 
     def _records_for(self, ident):
         generation = self.core.registry.data["devices"][ident]["hash"]
@@ -232,7 +298,9 @@ class NativeTelemetry:
         return self._records.get(ident, {})
 
     def normalize(self, ident, body, *, subscription=False):
-        return envelope(ident, body, subscription=subscription)
+        result = envelope(ident, body, subscription=subscription)
+        self._empty_filters_accepted |= subscription and has_empty_filters(body)
+        return result
 
     def apply(self, ident, body, *, subscription=False):
         objects = self.normalize(ident, body, subscription=subscription)

@@ -1,0 +1,20 @@
+{
+  "status": "native-subscription-empty-filter-correction-staged-not-activated",
+  "integration_version": "0.5.2",
+  "host_tests_passed": 1216,
+  "optional_integration_skips": 5,
+  "make_check": "passed",
+  "real_ha_core": "2026.10.4",
+  "real_ha_synthetic_control_roundtrips": 17,
+  "empty_subscription_filter_shape_verified": true,
+  "mode_selector_tracks_capability_withdrawal_and_return": true,
+  "rejected_shape_diagnostics_exclude_unknown_names_and_all_values": true,
+  "source_reproduces": true,
+  "staged_exact_files": 32,
+  "previous_source_backed_up": true,
+  "actual_owner_startup_rejection_cause_confirmed": false,
+  "owner_native_eco_schedule_baselines_resolved": false,
+  "native_bootstrap_or_control_values_sent": false,
+  "physical_hvac_verified": false,
+  "feature_baseline_presence_diagnostics": true
+}
