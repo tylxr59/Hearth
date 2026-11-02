@@ -27,5 +27,14 @@
   "thermostat_commands_sent": false,
   "thermostat_files_modified": false,
   "physical_heat_requested": false,
-  "live_validation": "fresh native reconnect pending"
+  "live_validation": "native reconnect observed; owner read-only schedule action pending",
+  "reconnect": {
+    "available": true,
+    "active_subscriptions": 1,
+    "user_and_home_metadata_acknowledged": true,
+    "native_rejections": {},
+    "pending_commands": 0,
+    "schedule_source": "cache",
+    "schedule_fresh": false
+  }
 }

@@ -186,7 +186,13 @@ startup errors. Initial manager watch sees cached values, no intents/receipts,
 no live subscription, schedule_source=cache, schedule_fresh=false. Pairing/home
 configuration survived. No known-schedules file yet; do not synthesize proof.
 Wake requested once (ring quick press, no reboot/change). Three-minute read-only
-wake-watch-v1 is running. Approval consumed; no further restart/control approved.
+wake-watch-v1 completed with available=true, one active subscription, user/home
+metadata acknowledged, zero rejected uploads and no pending commands. Owner
+confirmed the display awake. Read-only reconnect-check-v1 independently confirms
+Heat mode/live carrier. Schedule remains source cache/fresh=false as intended;
+no known full-week proof was invented during migration. Fresh read.yaml under
+private069/schedule-readback-v1 is prepared for the owner to verify getter revision
+and source without writes. Approval consumed; no further restart/control approved.
 Private receipts:private/native-ha-v069-20261102/{activation-v1,health-v1,
 startup-check-v1,reconnect-watch-v1,wake-watch-v1}. No thermostat controls/NAND writes.
 Owner described equipment as oil furnace with baseboard heat; exact boiler versus
