@@ -177,6 +177,21 @@ week. Do not fabricate its revision or bypass freshness gates. No repeat of prio
 apply/restore scripts, no new physical HVAC test authorized. Owner's latest physical
 confirmation is empty schedule, Heat63 F, furnace idle.
 
+Owner explicitly authorized0.6.9 activation and ONE Core restart. Activation-v1
+rechecked staged/old code, switched/read back all34 active source files and
+preserved old0.6.8. Restart CLI returned zero. Health/startup checks found four
+registered entities, no Hearth scoped errors, private single-link0600 reported
+cache and a responding endpoint. Two recent Core error lines are not Hearth
+startup errors. Initial manager watch sees cached values, no intents/receipts,
+no live subscription, schedule_source=cache, schedule_fresh=false. Pairing/home
+configuration survived. No known-schedules file yet; do not synthesize proof.
+Wake requested once (ring quick press, no reboot/change). Three-minute read-only
+wake-watch-v1 is running. Approval consumed; no further restart/control approved.
+Private receipts:private/native-ha-v069-20261102/{activation-v1,health-v1,
+startup-check-v1,reconnect-watch-v1,wake-watch-v1}. No thermostat controls/NAND writes.
+Owner described equipment as oil furnace with baseboard heat; exact boiler versus
+furnace and equipment arrangement are still unverified. No deliberate heat call.
+
 ## Purpose and current status
 
 Build a local-first Nest Learning Thermostat modification that preserves native hardware/HVAC control. Gen 2 is the primary target; Gen 1 is secondary. Prefer a verified local on-device interface if feasible; otherwise retain the native transport behind a minimal local backend. Do not rewrite HVAC control loops.

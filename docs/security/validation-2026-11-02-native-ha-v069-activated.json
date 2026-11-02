@@ -1,0 +1,31 @@
+{
+  "date": "2026-11-02",
+  "version": "0.6.9",
+  "owner_approved_one_core_restart": true,
+  "activation": {
+    "source_files_read_back_exactly": 34,
+    "old_0_6_8_source_preserved": true,
+    "restart_cli_exit": 0
+  },
+  "health": {
+    "core_version": "2026.10.4",
+    "registered_hearth_entities": 4,
+    "disabled_entities": 0,
+    "hearth_error_lines": 0,
+    "reported_cache_private_single_link": true,
+    "endpoint_responding": true,
+    "cached_readings_present": true,
+    "pending_intents_replayed": false
+  },
+  "initial_reconnect": {
+    "available": false,
+    "active_subscriptions": 0,
+    "schedule_source": "cache",
+    "known_schedule_file_present": false,
+    "wake_requested": true
+  },
+  "thermostat_commands_sent": false,
+  "thermostat_files_modified": false,
+  "physical_heat_requested": false,
+  "live_validation": "fresh native reconnect pending"
+}
