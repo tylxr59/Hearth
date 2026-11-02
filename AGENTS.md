@@ -2318,3 +2318,31 @@ NOTACTIVATED. NeedNEWowner0.6.2Core restartreadiness. Existingapprovedhomeconfig
 WILLreannounceafteractivation; SAMEidentity, no newhomeaction required. Noextra
 Nest restart neededunlesswatchjustifies. NoHVACauthorization/allterminalsEMPTY.
 Old0.6.1mayrefuseextendedreportedcache oncoderollback; preupdatecachepreserved.
+
+Owner approved0.6.2/Core restart; activation-v1 exact33, previous0.6.1 preserved,
+CLI session19974 exit0. Health-v1/post-report-health-v1/v2: source0.6.2/cacheprivate,
+no traceback/type/keyerrors; cachewarninginoldloghistory NOTcurrentfailure.
+Owner ringwake dial: wake-watch-v1/session23304 NOWuser+homeack TRUE,
+structure_identity_observedtrue/deviceReffalse (correct)/homevalidatedsource
+structure. actualdevice.ecofieldseen, structuremanualecoall+timestamp BOTH in
+privatevalidcache; priorcachekey problem fixed onunit. Weekstillabsent.
+WeatherCURRENT0.6.2 served0/invalid4; don'tclaimhealthyweather. Need classify
+queryshape/location afterassociation, no rawlocationlogs/defaults.
+
+Prepared private eco-baseline-v1/reported-baseline.json BEFOREfirstEco: original
+preset NONE; this originalmustpreserve. Owner asked selectEco inHA emptybase,
+reportedcannotselect. Eco-watch-v1/session86763 sawcommandpending offeredTRUE,
+thenEXPIRED(no confirmation) withno freshnativePUTafteroffer (lastcounts get1/
+put9/subscribe7). Latestcacheeco-check-v1 stillNONEbutNOTfreshpostcommandphysical
+state; do NOTclaimrestored/unapplied. Owner askedASYNC ringwakeonce andphysical
+Eco/dial/wiringreport, awaitingreply. Needthenfreshnativecache/status; noautomatic
+retry ornewcommand. Ifappliedlate arrangeoriginalNone restoration/verification.
+
+Staticprivatefeature-direction reviews:57b4c gates9e7f4schedulegetter onchanged-
+temperature-schedule-to-cloud flag;57a48cancel logexplicitnamesPENDING. Noinitial
+weeklyuploadguarantee; mayneedcontrolledownerlocalUIchange afterhomefix.5561c
+manualecosettermarksmanualecoall+timestampdirtyfornativeupload. NativeEcofield
+reviewv1scriptfailedOSGibuildpath; correctedv2tools/ghidra temphelperworked,exports
+3functions;helperREMOVED. Alllogmodes600. NoARMexecution/newflash/HVAC.
+PinnedNLEheldpush waits3s batchbeforeEOF vsHearthimmediateEOF: concretecomparison,
+NOTprovencauseyet. No transportpatchmade. Preserveexistingprofiles/reports.

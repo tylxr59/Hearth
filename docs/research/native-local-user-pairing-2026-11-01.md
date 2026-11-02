@@ -152,3 +152,36 @@ current revision, cache save/reload without `device.structure_id`, identity conf
 refusal and absence of invented fields/control replay. Native acceptance under
 0.6.2 still requires observing the actual unit after the HA-only update. The
 already confirmed home identity is reused; no new association action is required.
+
+## 0.6.2 owner-unit result
+
+The owner approved activation and one HA Core restart. Exact active source
+readback passed; Core restart returned zero. After the owner woke the unwired
+Nest, both local-user and home metadata acknowledgements became true. A direct
+structure identity and native eco field were observed. A subsequent private cache
+readback validated the structure key and both `manual_eco_all` and
+`manual_eco_timestamp` fields. No device home-reference field was invented.
+The week remains absent. Current weather queries are rejected; this is still an
+open issue rather than a successful current weather measurement.
+
+The owner attempted Eco through HA; the backend queued and offered that request
+to a held subscription, but it expired without confirmation. The latest saved
+preset remained None, with no fresh post-command physical state verified yet.
+Do not call this a confirmed Eco/restore cycle or retry it automatically. The
+original baseline is private; the owner was asked to wake the display once and
+report its physical state so a delayed application can be detected.
+
+Further static review identifies a local changed-schedule flag around the native
+weekly getter, not an unconditional initial-week upload. The corresponding
+cancellation path explicitly names the changed-temperature-schedule-to-cloud state.
+The native manual-eco setter marks both eco fields for reporting. These findings
+help plan a physical-UI/schedule measurement; they do not authorize supplying a
+fabricated week, equipment flags or default eco values. Private exports are under
+`private/native-feature-direction-review-20261101` and
+`private/native-eco-field-review-20261101/v2`.
+
+Pinned NLE keeps a held subscription open for a short batch interval after a push;
+Hearth currently closes it immediately after the first held update. This is a
+concrete timing difference to investigate, not a proven cause of the failed Eco
+attempt. A quiet battery-powered unit and an offered command without fresh native
+feedback are insufficient to establish whether it rejected or delayed the change.

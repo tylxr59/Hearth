@@ -1,0 +1,13 @@
+{
+  "status": "owner-eco-request-offered-expired-without-confirmation",
+  "integration_version": "0.6.2",
+  "owner_performed_ha_preset_action": true,
+  "original_preset_preserved_privately": true,
+  "command_offered_to_subscription": true,
+  "command_confirmation": "expired",
+  "latest_saved_preset": "none",
+  "fresh_post_command_physical_state_verified": false,
+  "restore_cycle_verified": false,
+  "automatic_retry": false,
+  "base_completely_unwired": true
+}
