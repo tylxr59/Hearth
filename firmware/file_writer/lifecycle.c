@@ -4,8 +4,8 @@
 #ifndef HEARTH_FILE_MASK
 #define HEARTH_FILE_MASK 511U
 #endif
-#if HEARTH_FILE_MASK != 511U && HEARTH_FILE_MASK != 15U
-#error "Only the reviewed nine-file and four-file scopes are supported"
+#if HEARTH_FILE_MASK != 511U && HEARTH_FILE_MASK != 15U && HEARTH_FILE_MASK != 7U
+#error "Only the nine-file, legacy network4 and cleanup3 masks are supported"
 #endif
 static int valid(const struct hfa_ops *ops,void *context)
 {

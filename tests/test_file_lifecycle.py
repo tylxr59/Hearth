@@ -7,8 +7,8 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 
 
-@pytest.fixture(scope="module")
-def lifecycle_lab(tmp_path_factory):
+@pytest.fixture(scope="module", params=(7, 15, 511))
+def lifecycle_lab(tmp_path_factory, request):
     if not shutil.which("clang"):
         pytest.skip("Clang required")
     output = tmp_path_factory.mktemp("lifecycle-build") / "lab"
@@ -21,6 +21,7 @@ def lifecycle_lab(tmp_path_factory):
             "-g",
             "-fsanitize=address,undefined",
             "-fno-omit-frame-pointer",
+            f"-DHEARTH_FILE_MASK={request.param}U",
             str(ROOT / "tests/file_lifecycle_harness.c"),
             str(ROOT / "firmware/file_writer/lifecycle.c"),
             "-o",

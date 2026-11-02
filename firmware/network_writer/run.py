@@ -32,6 +32,8 @@ def checked_pair(root, recovery):
         for k in ("kernel", "libraries", "plan_path", "backup", "pin", "plan", "receipt", "recipes")
     ):
         raise ValueError("matching fully checked four-file restore profile required")
+    if record.get("targets", 4) != restore.get("targets", 4):
+        raise ValueError("matching install/restore target scope required")
     return record, protocol.Binding(
         bytes.fromhex(record["plan"]), bytes.fromhex(record["receipt"]), record["action"]
     )
@@ -72,7 +74,7 @@ def boot(root, recovery, output=None, *, execute=False, recover_from=None):
             "status": "network-install-restore-pair-checked",
             "action": binding.action,
             "device_executed": False,
-            "targets": 4,
+            "targets": record.get("targets", 4),
         }
     if output is None:
         raise ValueError("fresh private execution output required")
@@ -99,7 +101,7 @@ def boot(root, recovery, output=None, *, execute=False, recover_from=None):
     shared.save(root, "execution-started.json", shared.encode(execution))
     shared.save(output, "execution.json", shared.encode(execution))
     print(
-        "EXPERIMENTAL FOUR-FILE NETWORK UPDATE: root0-only write-capable kernel, initially protected.61 RAM checks then real-file/space/memory preflight; separate scoped commit required. Keep USB connected and base detached. Whole-firmware recovery remains unverified.",
+        f"EXPERIMENTAL {record.get('targets', 4)}-FILE NETWORK UPDATE: root0-only write-capable kernel, initially protected.61 RAM checks then real-file/space/memory preflight; separate scoped commit required. Keep USB connected and base detached. Whole-firmware recovery remains unverified.",
         flush=True,
     )
     print("Waiting up to90 seconds for the reviewed manual ROM restart.", flush=True)
@@ -132,8 +134,10 @@ def boot(root, recovery, output=None, *, execute=False, recover_from=None):
                 binding,
                 execution,
                 lambda: checked_pair(root, recovery),
-                session_factory=NetworkSession,
-                ready_message="All61 RAM checks and four real-file/resource preflights passed. Paused before writes; waiting for separate local commit/abort.",
+                session_factory=lambda binding, save: NetworkSession(
+                    binding, save, target_count=record.get("targets", 4)
+                ),
+                ready_message=f"All61 RAM checks and {record.get('targets', 4)} real-file/resource preflights passed. Paused before writes; waiting for separate local commit/abort.",
             )
 
         row = observe("1-1", 120, receive_fn=collect)

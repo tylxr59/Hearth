@@ -22,10 +22,10 @@ extern long flistxattr(int,char *,size_t);
 #define H_NOFOLLOW O_NOFOLLOW
 #define H_CLOEXEC O_CLOEXEC
 #endif
-struct hearth_file_change hn_changes[4];
+struct hearth_file_change hn_changes[HEARTH_TARGET_COUNT];
 unsigned int hn_memory_free,hn_space_available,hn_space_required,hn_data_diagnostic;
-static void *originals[4],*candidates[4];
-static unsigned int lengths[4];
+static void *originals[HEARTH_TARGET_COUNT],*candidates[HEARTH_TARGET_COUNT];
+static unsigned int lengths[HEARTH_TARGET_COUNT];
 static int loaded;
 #ifndef HEARTH_HOST_LAB
 static unsigned int word(const unsigned char *p)
@@ -78,7 +78,7 @@ static long read_input(void *p,unsigned char *out,unsigned int n)
 int hn_data_release(void)
 {
  unsigned int i;int result=0;
- for(i=0;i<4;i++) {
+ for(i=0;i<HEARTH_TARGET_COUNT;i++) {
   if(originals[i]&&munmap(originals[i],lengths[i])) result=-1;
   if(candidates[i]&&munmap(candidates[i],lengths[i])) result=-1;
   originals[i]=0;candidates[i]=0;lengths[i]=0;
@@ -92,7 +92,7 @@ int hn_data_load(int directory)
  unsigned int i,j;struct input in;int fd=-1;
  if(loaded||directory<0||metadata(directory,1,0)) return -1;
  hn_data_diagnostic=100;if(hn_memory_guard()) return -1;
- for(i=0;i<4;i++) {
+ for(i=0;i<HEARTH_TARGET_COUNT;i++) {
   char name[2]={(char)('0'+i),0};unsigned char *candidate;void *source;
   hn_data_diagnostic=101+i;
   if(hn_plans[i].target!=i||hn_plan_valid(&hn_plans[i])||!hn_modes[i]||hn_modes[i]&~0777U||hn_modes[i]&0022U) goto fail;
@@ -123,7 +123,7 @@ int hn_space_guard(int fd,int restoring)
 {
  unsigned int i,total=0,largest=0,block,available;
  if(!loaded||(restoring!=0&&restoring!=1)) return -1;
- for(i=0;i<4;i++) { total+=hn_plans[i].size;if(hn_plans[i].size>largest) largest=hn_plans[i].size; }
+ for(i=0;i<HEARTH_TARGET_COUNT;i++) { total+=hn_plans[i].size;if(hn_plans[i].size>largest) largest=hn_plans[i].size; }
 #ifdef HEARTH_HOST_LAB
  { struct statfs s;if(fstatfs(fd,&s)) return -1;block=(unsigned int)s.f_bsize;available=(unsigned int)s.f_bavail; }
 #else

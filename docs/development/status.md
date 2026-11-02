@@ -33,7 +33,14 @@ replacement construction and write-kit assembly remain an explicit release gap.
 Do not confuse an implemented frontend with a turnkey stock-device installer.
 
 The display is now detached from its HVAC base and charging by USB. No loader
-is armed. Latest complete host suite:1,467 passed, five optional skips.
+is armed. Latest complete host suite:1,503 passed, five optional skips; expanded lifecycle
+mask checks also pass for cleanup3, legacy4 and commissioning9.
+
+Further offline kit work adds the disjoint three-file network cleanup format,
+keeping client configuration exclusively in the nine-file commissioning phase.
+Both legacy4 and cleanup3 pass host fault/restore checks; cleanup3 has not run
+on hardware. Packaging resolves its libc/interpreter directly from verified
+acquisition. The public GNU shim build exactly matches the installed owner copy.
 
 Canonical sources: `backend/`, `custom_components/hearth/`, `installer/`,
 `provisioning/`, `firmware/`. Generated HA transport is checked for exact equality.

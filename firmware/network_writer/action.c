@@ -10,7 +10,7 @@
 #include "plan.h"
 #define hearth_capsule_plan_id hn_plan_id
 #define hearth_capsule_changes hn_changes
-#define hearth_capsule_count 4
+#define hearth_capsule_count HEARTH_TARGET_COUNT
 #include "binding.h"
 #ifndef HEARTH_CAPSULE_ARCHIVE_LAYOUT
 #define HEARTH_CAPSULE_ARCHIVE_LAYOUT 1
@@ -113,7 +113,7 @@ static int preflight(void *opaque)
         if(c->files.recovery>=0) { if(close(c->files.recovery)) result=-1;c->files.recovery=-1; }
         return result;
     }
-    for(i=0;i<4;i++) {
+    for(i=0;i<HEARTH_TARGET_COUNT;i++) {
         c->preflight_target=(int)i;
         if(hearth_posix_file_ops.preflight(&c->files,i)) return -1;
     }
@@ -138,7 +138,7 @@ static void transact(void *opaque,struct hearth_install_result *result)
 {
     struct action_context *c=opaque;
     if(HEARTH_FILE_ACTION==2) *result=hearth_posix_restore_files(&c->files);
-    else *result=hearth_install_files(&hearth_posix_file_ops ,&c->files,4,1);
+    else *result=hearth_install_files(&hearth_posix_file_ops ,&c->files,HEARTH_TARGET_COUNT,1);
 }
 static int verify_readonly(void *opaque,int replacement)
 {
@@ -178,8 +178,8 @@ static int await_commit(void)
     binding_frame(ready,"HFW_RDY1");binding_frame(commit,"HFW_RUN1");binding_frame(abort,"HFW_STOP");
     {
         int length=snprintf((char *)info+84,sizeof(info)-92,
-            "{\"targets\":4,\"originals_verified\":4,\"memory_free\":%u,\"space_available\":%u,\"space_required\":%u}\n",
-            hn_memory_free,hn_space_available,hn_space_required);
+            "{\"targets\":%u,\"originals_verified\":%u,\"memory_free\":%u,\"space_available\":%u,\"space_required\":%u}\n",
+            HEARTH_TARGET_COUNT,HEARTH_TARGET_COUNT,hn_memory_free,hn_space_available,hn_space_required);
         if(length<=0||(unsigned int)length>=sizeof(info)-92) return 0;
         binding_frame(info,"HFW_INF1");put(info+76,(unsigned int)length);put(info+80,crc(info+84,(unsigned int)length));
         info_size=84+(unsigned int)length;for(i=0;i<8;i++) info[info_size++]=(unsigned char)"HFW_END1"[i];
@@ -213,10 +213,10 @@ int main(void)
     struct action_context c;struct hfa_result result;int initial=0,committed=0,n;
     unsigned int i,length;struct hearth_cached_transmit sending={0};
     memset(&c,0,sizeof(c));c.files.roots[0]=c.files.roots[1]=c.files.recovery=-1;c.preflight_target=-1;
-    c.files.owner=0;c.files.group=0;c.files.count=4;c.files.changes=hearth_capsule_changes;c.snapshot_target=-1;c.settings_state=5;
+    c.files.owner=0;c.files.group=0;c.files.count=HEARTH_TARGET_COUNT;c.files.changes=hearth_capsule_changes;c.snapshot_target=-1;c.settings_state=5;
     c.files.archive_layout=HEARTH_CAPSULE_ARCHIVE_LAYOUT;
     for(i=0;i<32;i++) { c.files.plan_id[i]=hearth_capsule_plan_id[i];if(hearth_capsule_plan_id[i]!=hearth_expected_plan[i]) initial=1; }
-    if(getuid()!=0||getgid()!=0||hearth_capsule_count!=4) initial=1;
+    if(getuid()!=0||getgid()!=0||hearth_capsule_count!=HEARTH_TARGET_COUNT) initial=1;
     umask(077);
     for(;;) { tty=open("/dev/ttyGS0",O_RDWR|256|O_NONBLOCK|O_CLOEXEC);if(tty>=0) break;pause_short(); }
     c.diagnostic=1;

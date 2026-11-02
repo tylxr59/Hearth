@@ -7,7 +7,7 @@ import stat
 from pathlib import Path
 
 from firmware.file_writer.compile import IMPORTS
-from firmware.file_writer.profile import elf_metadata, native_libraries
+from firmware.file_writer.profile import EXECUTION_LIBRARY_RECIPES, elf_metadata, native_libraries
 from firmware.network_snapshot.profile import base_check, read_build, sha
 from firmware.probe.configure import initramfs
 from firmware.settings_probe.artifact import parse_cpio
@@ -35,19 +35,23 @@ STATUS = "protected-network-ram-preflight-unexecuted"
 def recipes():
     from firmware.network_snapshot.profile import recipes as reader_recipes
 
-    paths = set(reader_recipes()) | {
-        "provisioning/network_plan.py",
-        "tests/network_memory.h",
-        "tests/network_transaction_harness.c",
-        "firmware/file_install/posix.c",
-        "firmware/file_install/transaction.c",
-        "firmware/file_install/transaction.h",
-        "firmware/file_install_probe/lab_abi.h",
-        "firmware/tls_probe/abi.h",
-        "firmware/tls_probe/start.S",
-        "firmware/file_writer/profile.py",
-        "firmware/file_writer/compile.py",
-    }
+    paths = (
+        set(reader_recipes())
+        | EXECUTION_LIBRARY_RECIPES
+        | {
+            "provisioning/network_plan.py",
+            "tests/network_memory.h",
+            "tests/network_transaction_harness.c",
+            "firmware/file_install/posix.c",
+            "firmware/file_install/transaction.c",
+            "firmware/file_install/transaction.h",
+            "firmware/file_install_probe/lab_abi.h",
+            "firmware/tls_probe/abi.h",
+            "firmware/tls_probe/start.S",
+            "firmware/file_writer/profile.py",
+            "firmware/file_writer/compile.py",
+        }
+    )
     for folder in ("network_update", "network_probe"):
         paths |= {
             p.relative_to(ROOT).as_posix()
@@ -96,6 +100,8 @@ def package(base, libraries, plan, backup, pin, build, output, *, session=None):
     if output.parent.stat().st_mode & 0o077:
         raise ValueError("owner-only private profile parent required")
     bound = pinned_plan(plan, backup, pin)
+    if bound["target_count"] != 4:
+        raise ValueError("standalone legacy network probe requires four targets")
     blobs, kernel, digest = base_check(base)
     native = native_libraries(libraries)
     build = Path(build).absolute()
@@ -231,7 +237,8 @@ def check(output):
         or len(bytes.fromhex(record["session"])) != 32
     ):
         raise ValueError("network RAM preflight source/scope differs")
-    pinned_plan(record["plan"], record["backup"], record["pin"])
+    if pinned_plan(record["plan"], record["backup"], record["pin"])["target_count"] != 4:
+        raise ValueError("standalone legacy network probe requires four targets")
     blobs, kernel, digest = base_check(record["base"])
     if digest != record["base_manifest_sha256"]:
         raise ValueError("protected kernel identity differs")

@@ -224,10 +224,10 @@ FLAGS = {
 def validate_result(payload, action, *, target_count=9):
     if (
         type(target_count) is not int
-        or target_count not in (4, 9)
-        or (target_count == 4 and action not in (1, 2))
+        or target_count not in (3, 4, 9)
+        or (target_count in (3, 4) and action not in (1, 2))
     ):
-        raise ValueError("reviewed four/nine-target result scope required")
+        raise ValueError("reviewed three/four/nine-target result scope required")
     mask = (1 << target_count) - 1
     if len(payload) > MAX_PAYLOAD:
         raise ValueError("file-action result exceeds bound")

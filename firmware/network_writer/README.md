@@ -1,8 +1,26 @@
-# Four-file network update
+# Fixed network cleanup and legacy update
 
 This is a separate, fixed-plan root0 installer and matching restoration path.
 It does not add HVAC commands, alter control loops or expose arbitrary paths.
 The legacy nine-file writer retains its original limits and default behavior.
+
+The public kit path adds a separate **three-file cleanup** format. It changes
+only `nestlabs/sbin/nlclient`, `usr/sbin/connmand` and `etc/connman/main.conf`.
+The nine-file commissioning phase owns the client configuration in full, so
+these two phases have no overlapping target. No projected or synthetic original
+snapshot is substituted for acquired custody. The four-file backup can retain
+its original client config, but the cleanup plan/action/archive selects only
+the first three files. The compiled action has no client-config path.
+
+The legacy four-file transition remains available for the earlier measured
+address migration. It is not a requirement that new users choose addresses of
+matching string length. New plans bind their target count/format and produce a
+matching install/restore pair, resource evidence and exact completion mask.
+Unknown counts or mismatched receipts/scopes refuse before a commit.
+
+Both scopes pass the host transaction/fault/restore suite and original ARM helper
+compilation. The new three-file action has not run on hardware; source/host tests
+do not authorize a persistent use or establish physical restoration.
 
 The reviewed changes replace the two observed Google connectivity-probe slots
 with the HA local204 URL, change ConnMan's preferred fallback time server to the
@@ -29,7 +47,7 @@ The supervised flow is:
 2. Run41 memory/hash/stream cases and20 isolated RAM filesystem cases. The host
    acknowledges only their complete, zero-status report. ACK launches a root
    read-only preflight, never a persistent commit.
-3. Check four complete originals, modes, plan/backup identity and resource bounds.
+3. Check all three/four selected complete originals, modes, plan/backup identity and resource bounds.
    Require at least24MiB free RAM. Install space reserve is three times total
    file bytes plus2MiB; restore reserve is largest file plus4MiB. JFFS2 available
    space includes reclaimable dirty bytes, so the check is not an allocation

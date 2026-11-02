@@ -1,0 +1,51 @@
+{
+  "date": "2026-11-02",
+  "scope": "offline public per-device kit preparation; not deployed",
+  "network_cleanup": {
+    "format": "hearth-network-cleanup-plan-v1",
+    "targets": [
+      "nestlabs/sbin/nlclient",
+      "usr/sbin/connmand",
+      "etc/connman/main.conf"
+    ],
+    "disjoint_from_nine_file_commissioning": true,
+    "legacy_four_file_format_preserved": true,
+    "client_config_path_absent_from_compiled_cleanup_action": true,
+    "host_fault_restore_tests": "passed for both fixed scopes",
+    "arm_original_helpers": "compiled; not executed on host",
+    "hardware_run": false
+  },
+  "source_libraries": {
+    "source": "fresh protected acquisition",
+    "independent_frames_index_corpus_and_backups_verified": true,
+    "native_execution_pair": "verified libc/interpreter closure",
+    "historical_tls_profile_required": false,
+    "host_native_execution": false
+  },
+  "settings_shim": {
+    "build": "original public source plus public ABI stubs, historical GNU linker in new rootless builder",
+    "identical_to_current_owner_installed_copy": true,
+    "owner_native_bytes_mounted_in_builder": false,
+    "new_device_execution": false
+  },
+  "tests": {
+    "full_host_passed": 1503,
+    "optional_skipped": 5,
+    "network_targeted_passed": 188,
+    "additional_final_targeted_passed": 64,
+    "lifecycle_masks_checked": [
+      7,
+      15,
+      511
+    ],
+    "make_check": "passed"
+  },
+  "persistent_device_action": false,
+  "ha_restart": false,
+  "remaining": [
+    "guarded stock replacement construction",
+    "end-to-end install/restore phase orchestration",
+    "new cleanup3 RAM/hardware measurement before persistent use",
+    "stable v1 checklist"
+  ]
+}

@@ -26,8 +26,8 @@ def selftest(payload):
     return row
 
 
-def result(payload, action):
-    row = p.validate_result(payload, action, target_count=4)
+def result(payload, action, *, target_count=4):
+    row = p.validate_result(payload, action, target_count=target_count)
     if (
         row["snapshot_available"]
         or row.get("snapshot_target", -1) != -1
@@ -39,15 +39,17 @@ def result(payload, action):
     return row
 
 
-def resources(payload):
+def resources(payload, *, target_count=4):
+    if type(target_count) is not int or target_count not in (3, 4):
+        raise ValueError("fixed network target count required")
     row = loads(payload)
     if (
         not isinstance(row, dict)
         or set(row)
         != {"targets", "originals_verified", "memory_free", "space_available", "space_required"}
         or any(type(v) is not int for v in row.values())
-        or row["targets"] != 4
-        or row["originals_verified"] != 4
+        or row["targets"] != target_count
+        or row["originals_verified"] != target_count
         or not 24 * 1048576 <= row["memory_free"] <= 1073741824
         or not 0 < row["space_required"] <= row["space_available"] <= 46 * 1048576
     ):
@@ -56,10 +58,20 @@ def resources(payload):
 
 
 class NetworkSession(Session):
-    def __init__(self, binding, save):
+    def __init__(self, binding, save, *, target_count=4):
+        if type(target_count) is not int or target_count not in (3, 4):
+            raise ValueError("fixed network scope required")
         if binding.action not in (1, 2):
             raise ValueError("network install/restore only")
-        super().__init__(binding, save, selftest_validator=selftest, result_validator=result)
+        self.target_count = target_count
+        super().__init__(
+            binding,
+            save,
+            selftest_validator=selftest,
+            result_validator=lambda payload, action: result(
+                payload, action, target_count=target_count
+            ),
+        )
 
     def event(self, kind, payload):
         if kind not in (p.SELFTEST, p.PREFLIGHT_INFO, p.READY, p.RESULT):
@@ -73,7 +85,7 @@ class NetworkSession(Session):
             if not self.selftest or self.ready or self.result is not None:
                 raise ValueError("resource evidence outside preflight")
             self.save("preflight-info.json", payload)
-            self.info = resources(payload)
+            self.info = resources(payload, target_count=self.target_count)
             self.seen[kind] = digest
             return None
         if kind == p.READY and self.info is None:

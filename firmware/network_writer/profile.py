@@ -77,7 +77,9 @@ def execution_policy(data):
         raise ValueError("explicit non-executable helper stack required")
 
 
-def archive(program, action, harness, libraries, backup):
+def archive(program, action, harness, libraries, backup, *, target_count=4):
+    if type(target_count) is not int or target_count not in (3, 4):
+        raise ValueError("fixed three- or four-target archive required")
     initramfs(program)
     needed, imports, _ = elf_metadata(action)
     if (
@@ -100,12 +102,12 @@ def archive(program, action, harness, libraries, backup):
     snapshot = load(backup)
     entries += [
         (f"originals/{i}", stat.S_IFREG | 0o400, 0, r.data, 0, 0)
-        for i, r in enumerate(snapshot.records)
+        for i, r in enumerate(snapshot.records[:target_count])
     ]
     entries += [("TRAILER!!!", 0, 0, b"", 0, 0)]
     raw = cpio(entries)
-    if len(entries) != 40 or len(raw) > MAX_ROOT:
-        raise ValueError("fixed40-entry bounded network action archive required")
+    if len(entries) != 36 + target_count or len(raw) > MAX_ROOT:
+        raise ValueError("fixed bounded network action archive required")
     return raw
 
 
@@ -140,6 +142,7 @@ def package(kernel_build, libraries, plan, backup, pin, build, output, *, action
         files["network-transaction"],
         native_libraries(libraries),
         backup,
+        target_count=bound["target_count"],
     )
     payload = unpack_image(read_build(Path(kernel_build) / "artifacts/uImage", MAX_IMAGE), 2)
     files |= {"rootfs.cpio": raw, "uImage": multi_image(payload, gzip.compress(raw, mtime=0))}
@@ -156,6 +159,7 @@ def package(kernel_build, libraries, plan, backup, pin, build, output, *, action
         "status": STATUS,
         "device_executed": False,
         "action": action,
+        "targets": bound["target_count"],
         "kernel": str(Path(kernel_build).absolute()),
         "libraries": str(Path(libraries).absolute()),
         "plan_path": str(Path(plan).absolute()),
@@ -215,6 +219,8 @@ def check(output):
     bound = pinned_plan(record["plan_path"], record["backup"], record["pin"])
     if bound["plan"].hex() != record["plan"] or bound["receipt"].hex() != record["receipt"]:
         raise ValueError("exact plan/receipt changed")
+    if record.get("targets", 4) != bound["target_count"]:
+        raise ValueError("profile target scope differs from checked plan")
     files = {
         n: private_read(output / "artifacts" / n, MAX_ROOT if n == "rootfs.cpio" else MAX_IMAGE)
         for n in FILES
@@ -234,6 +240,7 @@ def check(output):
         files["network-transaction"],
         native_libraries(record["libraries"]),
         record["backup"],
+        target_count=bound["target_count"],
     )
     if (
         payload != expected_kernel
@@ -247,7 +254,7 @@ def check(output):
         "status": "network-action-offline-checked",
         "action": record["action"],
         "device_executed": False,
-        "targets": 4,
+        "targets": bound["target_count"],
         "ram_cases": 61,
         "image_bytes": len(files["uImage"]),
         "root0_only": True,

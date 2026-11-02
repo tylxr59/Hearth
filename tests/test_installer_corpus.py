@@ -129,3 +129,12 @@ def test_soname_resolver_needs_no_symlinks_or_native_execution(tmp_path, monkeyp
     assert result["native_libraries"] == 5
     assert result["native_code_executed"] is False and not result["install_kit_built"]
     assert not any(path.is_symlink() for path in (root / "corpus").rglob("*"))
+    from firmware.file_writer.profile import native_libraries
+
+    pair = native_libraries(root)
+    assert {row[0] for row in pair} == {"lib/libc.so.6", "lib/ld-linux-armhf.so.3"}
+    assert {row[0]: row[1] & 0o777 for row in pair} == {
+        "lib/libc.so.6": 0o444,
+        "lib/ld-linux-armhf.so.3": 0o555,
+    }
+    assert all(row[2] == 0 and row[4:] == (0, 0) for row in pair)

@@ -66,8 +66,10 @@ def _array(data):
 
 
 def header(plans, modes, plan_id, receipt_id):
+    if len(plans) not in (3, 4) or len(modes) != len(plans):
+        raise ValueError("fixed three- or four-file network scope required")
     lines = ["/* PRIVATE generated fixed DATA, not an executable or authorization. */"]
-    lines += ["static const struct hn_plan hn_plans[4]={"]
+    lines += [f"static const struct hn_plan hn_plans[{len(plans)}]={{"]
     for item in plans:
         lines.append(
             "{"
@@ -85,28 +87,34 @@ def header(plans, modes, plan_id, receipt_id):
             )
             + "},"
         )
-    lines += ["};", "static const unsigned int hn_modes[4]=" + _array(modes) + ";"]
+    lines += ["};", f"static const unsigned int hn_modes[{len(plans)}]=" + _array(modes) + ";"]
     lines += ["static const unsigned char hn_plan_id[32]=" + _array(plan_id) + ";"]
     lines += ["static const unsigned char hn_receipt_id[32]=" + _array(receipt_id) + ";"]
     return ("\n".join(lines) + "\n").encode("ascii")
 
 
-def _files(snapshot, backup, old_origin, new_origin, probe_port):
+def _files(snapshot, backup, old_origin, new_origin, probe_port, *, target_count=4):
+    if type(target_count) is not int or target_count not in (3, 4):
+        raise ValueError("fixed network target count required")
+    if target_count == 3 and old_origin is not None:
+        raise ValueError("cleanup scope cannot change registration configuration")
     receipt = network_backup.verify(backup, snapshot)
     original = [row.data for row in snapshot.records]
     # Registration validation also validates both literal private HTTPS origins.
-    registration = registration_candidate(original[3], old_origin, new_origin)
     address = urlsplit(new_origin).hostname
     spans = (
         probe_candidate(original[0], address, probe_port),
         probe_candidate(original[1], address, probe_port),
         connman_time_candidate(original[2]),
-        registration,
     )
+    if target_count == 4:
+        spans += (registration_candidate(original[3], old_origin, new_origin),)
     plans = tuple(make_plan(i, data, span) for i, (data, span) in enumerate(zip(original, spans)))
     receipt_id = hashlib.sha256(receipt).digest()
     record = {
-        "format": "hearth-network-offline-plan-v1",
+        "format": "hearth-network-offline-plan-v1"
+        if target_count == 4
+        else "hearth-network-cleanup-plan-v1",
         "session": snapshot.session.hex(),
         "receipt_sha256": receipt_id.hex(),
         "installed": False,
@@ -129,10 +137,12 @@ def _files(snapshot, backup, old_origin, new_origin, probe_port):
         ],
     }
     canonical = custody._canonical(record)
-    plan_id = hashlib.sha256(b"hearth-network-offline-plan-v1\n" + canonical).digest()
+    plan_id = hashlib.sha256(record["format"].encode() + b"\n" + canonical).digest()
     files = {
         "plan.json": canonical,
-        "plan.h": header(plans, [r.mode for r in snapshot.records], plan_id, receipt_id),
+        "plan.h": header(
+            plans, [r.mode for r in snapshot.records[:target_count]], plan_id, receipt_id
+        ),
     }
     files |= {
         f"{i}.replacement": span.apply(data) for i, (data, span) in enumerate(zip(original, spans))
@@ -140,9 +150,11 @@ def _files(snapshot, backup, old_origin, new_origin, probe_port):
     return files, plan_id, receipt_id
 
 
-def prepare(output, snapshot, backup, old_origin, new_origin, *, probe_port=8123):
+def prepare(output, snapshot, backup, old_origin, new_origin, *, probe_port=8123, target_count=4):
     """Produce fresh private candidate DATA only after complete backup verification."""
-    files, _, _ = _files(snapshot, backup, old_origin, new_origin, probe_port)
+    files, _, _ = _files(
+        snapshot, backup, old_origin, new_origin, probe_port, target_count=target_count
+    )
     output = Path(output)
     parent = custody._open_directory(output.parent)
     directory = -1
@@ -165,7 +177,7 @@ def prepare(output, snapshot, backup, old_origin, new_origin, *, probe_port=8123
         if directory >= 0:
             os.close(directory)
         os.close(parent)
-    return {"status": "offline-network-plan-prepared", "targets": 4, "installed": False}
+    return {"status": "offline-network-plan-prepared", "targets": target_count, "installed": False}
 
 
 def check(root, backup, expected_plan):
@@ -186,8 +198,16 @@ def check(root, backup, expected_plan):
         }:
             raise ValueError("fixed network plan fields required")
         snapshot = network_backup.load(backup)
+        formats = {"hearth-network-offline-plan-v1": 4, "hearth-network-cleanup-plan-v1": 3}
+        if record["format"] not in formats:
+            raise ValueError("reviewed network plan format required")
         files, plan_id, receipt_id = _files(
-            snapshot, backup, record["previous_origin"], record["origin"], record["probe_port"]
+            snapshot,
+            backup,
+            record["previous_origin"],
+            record["origin"],
+            record["probe_port"],
+            target_count=formats[record["format"]],
         )
         if plan_id != expected_plan or set(os.listdir(directory)) != set(files):
             raise ValueError("network plan pin/inventory mismatch")
@@ -200,6 +220,7 @@ def check(root, backup, expected_plan):
             "receipt": receipt_id,
             "header": files["plan.h"],
             "snapshot": snapshot,
+            "target_count": formats[record["format"]],
         }
     finally:
         os.close(directory)

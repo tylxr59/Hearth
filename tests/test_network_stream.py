@@ -161,8 +161,8 @@ def test_offline_plan_is_deterministic_and_requires_full_backup_custody(tmp_path
     assert not (tmp_path / "refused").exists()
 
 
-@pytest.fixture(scope="module")
-def transaction_harness(tmp_path_factory):
+@pytest.fixture(scope="module", params=(3, 4))
+def transaction_harness(tmp_path_factory, request):
     if shutil.which("clang") is None:
         pytest.skip("Clang needed for scoped transaction sanitizer checks")
     path = tmp_path_factory.mktemp("network-transaction") / "transaction"
@@ -174,6 +174,7 @@ def transaction_harness(tmp_path_factory):
             "-Werror",
             "-DHEARTH_HOST_LAB",
             "-DHEARTH_NETWORK_ADAPTER",
+            f"-DHEARTH_NETWORK_TARGET_COUNT={request.param}",
             "-DHEARTH_CLEAN_FIXTURE",
             "-fsanitize=address,undefined",
             "-Wl,--wrap=write,--wrap=read,--wrap=fsync,--wrap=renameat,--wrap=fchmod,--wrap=fchown",

@@ -16,6 +16,7 @@ def compile_helpers(output, plan, backup, pin):
     if output.resolve() != output or not output.is_relative_to(ROOT / "build"):
         raise ValueError("fresh literal build path required")
     bound = pinned_plan(plan, backup, pin)
+    target_count = bound["target_count"]
     output.mkdir(mode=0o700, exist_ok=False)
     (output / "plan.h").write_bytes(bound["header"])
     (output / "binding.h").write_bytes(binding(plan, backup, pin))
@@ -39,6 +40,7 @@ def compile_helpers(output, plan, backup, pin):
         "-nostdlib",
         "-Wl,--build-id=none,-z,noexecstack",
         "-I" + str(output),
+        f"-DHEARTH_NETWORK_TARGET_COUNT={target_count}",
     ]
     stub = output / "libc.stub.c"
     stub.write_text("\n".join(f"long {name}(void) {{ return 0; }}" for name in sorted(IMPORT_SET)))
@@ -77,7 +79,7 @@ def compile_helpers(output, plan, backup, pin):
             + entry
             + [
                 "-DHEARTH_NETWORK_ADAPTER",
-                "-DHEARTH_FILE_MASK=15U",
+                f"-DHEARTH_FILE_MASK={(1 << target_count) - 1}U",
                 f"-DHEARTH_FILE_ACTION={action}",
                 *[
                     str(ROOT / n)

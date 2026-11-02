@@ -19,6 +19,9 @@ extern char *strstr(const char *,const char *);
 #include <unistd.h>
 #endif
 #include "../firmware/network_update/posix.h"
+#if HEARTH_TARGET_COUNT == 3
+static const unsigned char old_unused_scope[]="outside cleanup scope";
+#endif
 static int scenario,armed,injected,renamed,writes;
 extern ssize_t __real_write(int,const void *,size_t),__real_read(int,void *,size_t);
 extern int __real_fsync(int),__real_renameat(int,const char *,int,const char *),__real_fchmod(int,mode_t),__real_fchown(int,uid_t,gid_t);
@@ -81,29 +84,32 @@ static void clean_fixture(int root,const char *const *dirs)
  for(i=0;i<32;i++) { archive[n++]='2';archive[n++]='a'; }archive[n]=0;
  fd=openat(root,archive,O_RDONLY|O_DIRECTORY|O_NOFOLLOW);
  if(fd>=0) {
-  for(i=0;i<4;i++) { snprintf(name,sizeof(name),"%u.original",i);remove_known(fd,name,0); }
+  for(i=0;i<HEARTH_TARGET_COUNT;i++) { snprintf(name,sizeof(name),"%u.original",i);remove_known(fd,name,0); }
   remove_known(fd,"journal",0);remove_known(fd,"journal.new",0);assert(close(fd)==0);
   remove_known(root,archive,AT_REMOVEDIR);
  } else assert(errno==ENOENT);
- for(i=0;i<4;i++) {
+ for(i=0;i<HEARTH_TARGET_COUNT;i++) {
   remove_known(root,hearth_target_paths[i],0);
   snprintf(name,sizeof(name),"%s.hearth-new",hearth_target_paths[i]);remove_known(root,name,0);
   snprintf(name,sizeof(name),"%s.hearth-restore",hearth_target_paths[i]);remove_known(root,name,0);
  }
+#if HEARTH_TARGET_COUNT == 3
+ remove_known(root,"etc/nestlabs/client.config",0);
+#endif
  for(i=7;i;i--) remove_known(root,dirs[i-1],AT_REMOVEDIR);
 }
 #endif
 int main(int argc,char **argv)
 {
  const char *dirs[]={"nestlabs","nestlabs/sbin","usr","usr/sbin","etc","etc/connman","etc/nestlabs"};
- struct hearth_posix_context c;struct hearth_file_change changes[4];struct hearth_install_result result;
+ struct hearth_posix_context c;struct hearth_file_change changes[HEARTH_TARGET_COUNT];struct hearth_install_result result;
  unsigned char *original,*replacement;unsigned int i,length=2U*1048576U+17U;int fd,root,status;
  assert(argc==3);scenario=atoi(argv[1]);root=open(argv[2],O_RDONLY|O_DIRECTORY);assert(root>=0);
  original=malloc(length);replacement=malloc(length);assert(original&&replacement);
  for(i=0;i<length;i++) original[i]=(unsigned char)i;
  memcpy(replacement,original,length);for(i=4090;i<4130;i++) replacement[i]^=0x5a;
  for(i=0;i<7;i++) assert(mkdirat(root,dirs[i],0755)==0);
- for(i=0;i<4;i++) {
+ for(i=0;i<HEARTH_TARGET_COUNT;i++) {
   unsigned int size=i?31:length,mode=i==3?0600:0755;
   changes[i]=(struct hearth_file_change){i,1,{original,size},{replacement,size},mode,mode};
   /* Ensure every small file changes too. */
@@ -111,8 +117,12 @@ int main(int argc,char **argv)
   fd=openat(root,hearth_target_paths[i],O_WRONLY|O_CREAT|O_EXCL,0600);assert(fd>=0);
   assert(write(fd,original,size)==(ssize_t)size);assert(fchmod(fd,mode)==0);assert(close(fd)==0);
  }
+#if HEARTH_TARGET_COUNT == 3
+ fd=openat(root,"etc/nestlabs/client.config",O_WRONLY|O_CREAT|O_EXCL,0600);assert(fd>=0);
+ assert(write(fd,old_unused_scope, sizeof(old_unused_scope)-1)==(ssize_t)(sizeof(old_unused_scope)-1));assert(close(fd)==0);
+#endif
  memset(&c,0,sizeof(c));c.roots[0]=root;c.roots[1]=openat(root,".",O_RDONLY|O_DIRECTORY);assert(c.roots[1]>=0);
- c.recovery=-1;c.owner=getuid();c.group=getgid();c.count=4;c.changes=changes;c.archive_layout=1;
+ c.recovery=-1;c.owner=getuid();c.group=getgid();c.count=HEARTH_TARGET_COUNT;c.changes=changes;c.archive_layout=1;
  memset(c.plan_id,42,sizeof(c.plan_id));
  if(scenario==10) changes[1].original.size=changes[1].replacement.size=1048577;
  if(scenario==11) changes[1].target=0;
@@ -121,14 +131,14 @@ int main(int argc,char **argv)
  if(scenario==18) c.count=5;
  if(scenario==19) c.archive_layout=0;
  armed=scenario<14||scenario>=18;
- result=hearth_install_files(&hearth_posix_file_ops,&c,4,1);armed=0;
+ result=hearth_install_files(&hearth_posix_file_ops,&c,HEARTH_TARGET_COUNT,1);armed=0;
  if((scenario>=3&&scenario<=13)||scenario>=18) {
   assert(result.error!=0);
   if(scenario>=10) assert(writes==0);
-  if(scenario!=13) for(i=0;i<4;i++) check_file(root,hearth_target_paths[i],original,i?31:length);
+  if(scenario!=13) for(i=0;i<HEARTH_TARGET_COUNT;i++) check_file(root,hearth_target_paths[i],original,i?31:length);
  } else {
   assert(result.committed&&result.error==0);
-  for(i=0;i<4;i++) check_file(root,hearth_target_paths[i],changes[i].replacement.data,i?31:length);
+  for(i=0;i<HEARTH_TARGET_COUNT;i++) check_file(root,hearth_target_paths[i],changes[i].replacement.data,i?31:length);
   reset(&c);
   if(scenario==15) {
    fd=openat(root,hearth_target_paths[0],O_WRONLY);assert(fd>=0);assert(write(fd,"?",1)==1);assert(close(fd)==0);
@@ -142,10 +152,13 @@ int main(int argc,char **argv)
   injected=0;renamed=0;armed=scenario==17;
   result=hearth_posix_restore_files(&c);armed=0;
   if(scenario==17) { assert(result.error!=0);reset(&c);result=hearth_posix_restore_files(&c); }
-  assert(!result.error&&result.restored==15);
-  for(i=0;i<4;i++) check_file(root,hearth_target_paths[i],original,i?31:length);
+  assert(!result.error&&result.restored==((1U<<HEARTH_TARGET_COUNT)-1U));
+  for(i=0;i<HEARTH_TARGET_COUNT;i++) check_file(root,hearth_target_paths[i],original,i?31:length);
  }
 done:
+#if HEARTH_TARGET_COUNT == 3
+ check_file(root,"etc/nestlabs/client.config",old_unused_scope,sizeof(old_unused_scope)-1);
+#endif
  reset(&c);assert(close(c.roots[1])==0);
 #if defined(HEARTH_RAM_LAB) || defined(HEARTH_CLEAN_FIXTURE)
  clean_fixture(root,dirs);

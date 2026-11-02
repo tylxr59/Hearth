@@ -7,6 +7,13 @@ Keep the legacy thermostat on an isolated local network; do not expose its servi
 or Hearth's listener directly to the internet. Native OS/security review and
 whole-firmware recovery remain incomplete.
 
+The native connectivity check needs a reachable plain-HTTP `/api/h/204` on HA's
+frontend port (normally8123), even though thermostat telemetry/control use the
+separate authenticated HTTPS listener. A directly TLS-only HA frontend needs an
+explicit compatible local HTTP route; that topology is not yet covered by the
+guided kit. Reverse-proxy HTTPS for normal HA access does not prevent using HA's
+internal HTTP frontend when that route is available on the thermostat network.
+
 ## Home Assistant
 
 Add `https://github.com/tylxr59/Hearth` as a HACS custom repository of type

@@ -32,6 +32,9 @@ from firmware.tls_probe.package import (
     sha,
     unpack_image,
 )
+from firmware.tls_probe.package import (
+    libraries as acquired_libraries,
+)
 from provisioning.file_capsule import check as check_capsule
 from tools.elf_review import ArmElf, private_path
 
@@ -47,10 +50,20 @@ FILES = {
     "fallback-init",
 }
 LIBRARIES = {"lib/libc.so.6", "lib/ld-linux-armhf.so.3"}
+EXECUTION_LIBRARY_RECIPES = {
+    "firmware/acquisition/custody.py",
+    "firmware/acquisition/codec.py",
+    "firmware/acquisition/run.py",
+}
 
 
 def recipes():
-    paths = set(compile.SOURCES) | set(prepare.RECIPES) | set(snapshot.RECIPES)
+    paths = (
+        set(compile.SOURCES)
+        | set(prepare.RECIPES)
+        | set(snapshot.RECIPES)
+        | EXECUTION_LIBRARY_RECIPES
+    )
     for folder in ("file_writer", "file_install", "file_reencode"):
         paths |= {
             p.relative_to(ROOT).as_posix()
@@ -213,9 +226,30 @@ def elf_metadata(data):
 
 
 def native_libraries(base):
-    check_base(base)
-    entries = parse_cpio(private_read(Path(base) / "artifacts/rootfs.cpio", MAX_ROOT))
-    selected = [row for row in entries if row[0] in LIBRARIES]
+    if (Path(base) / "extraction.json").is_file():
+        from firmware.acquisition.custody import verify
+
+        _, record = verify(base)
+        data = acquired_libraries(private_path(Path(base) / "corpus"), record)
+        if not {"libc.so.6", "ld-linux-armhf.so.3"} <= data.keys():
+            raise ValueError("acquired native libc/interpreter pair required")
+        selected = [
+            (
+                "lib/" + name,
+                stat.S_IFREG | (0o555 if name == "ld-linux-armhf.so.3" else 0o444),
+                0,
+                data[name],
+                0,
+                0,
+            )
+            for name in ("libc.so.6", "ld-linux-armhf.so.3")
+        ]
+    else:
+        # Preserve historical checked research profiles without making them a
+        # prerequisite for a new user's source-built kit.
+        check_base(base)
+        entries = parse_cpio(private_read(Path(base) / "artifacts/rootfs.cpio", MAX_ROOT))
+        selected = [row for row in entries if row[0] in LIBRARIES]
     if len(selected) != 2:
         raise ValueError("exact native libc/interpreter pair required")
     for name, mode, uid, data, major, minor in selected:

@@ -9,19 +9,23 @@ from provisioning.native_network import FixedSpan
 from provisioning.network_plan import header, make_plan
 
 
-@pytest.fixture(scope="module")
-def mapped(tmp_path_factory):
+@pytest.fixture(scope="module", params=(3, 4))
+def mapped(tmp_path_factory, request):
     root = tmp_path_factory.mktemp("network-mapped")
-    data = [bytes(range(256)) * n for n in (17000, 1800, 17, 48)]
+    count = request.param
+    data = [bytes(range(256)) * n for n in (17000, 1800, 17, 48)[:count]]
     plans = [
         make_plan(i, d, FixedSpan(4090, b"\xfa\xfb\xfc\xfd\xfe\xff\x00\x01", b"changed!"))
         for i, d in enumerate(data)
     ]
-    (root / "plan.h").write_bytes(header(plans, [0o755, 0o755, 0o644, 0o644], b"p" * 32, b"r" * 32))
+    (root / "plan.h").write_bytes(
+        header(plans, [0o755, 0o755, 0o644, 0o644][:count], b"p" * 32, b"r" * 32)
+    )
     command = [
         "clang",
         "-DHEARTH_HOST_LAB",
         "-DHEARTH_NETWORK_ADAPTER",
+        f"-DHEARTH_NETWORK_TARGET_COUNT={count}",
         "-Wall",
         "-Wextra",
         "-Werror",
@@ -111,8 +115,14 @@ def test_large_mapped_files_install_and_restore_exact_originals(mapped, tmp_path
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(d)
         target.chmod(0o755 if i < 2 else 0o644)
+    if len(data) == 3:
+        sentinel = root / TARGETS[3]
+        sentinel.parent.mkdir(parents=True, exist_ok=True)
+        sentinel.write_bytes(b"outside cleanup scope")
     run = subprocess.run([str(exe), str(originals), str(root)], capture_output=True, check=True)
     assert run.stdout == b"mapped-and-verified\n" and not run.stderr
+    if len(data) == 3:
+        assert sentinel.read_bytes() == b"outside cleanup scope"
     for i, (path, d) in enumerate(zip(TARGETS, data)):
         assert (root / path).read_bytes() == d
         assert (originals / str(i)).read_bytes() == d

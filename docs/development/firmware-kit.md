@@ -50,8 +50,18 @@ The remaining preparation stages are:
 
 The separate network-file update has its own source/backup/profile boundaries;
 it is not silently included by pretending the nine-file plan covers other paths.
-The public stock-device pipeline must eventually orchestrate both scopes and
-fresh acquisition without changing their protections.
+New kit preparation uses the disjoint three-file cleanup format: native client
+probe, ConnMan probe and ConnMan NTP settings. The nine-file phase owns client
+configuration. This avoids changing the expected original between phases. The
+old four-file equal-width address migration remains a separately bound legacy
+format, not a user address-length restriction. Both scopes pass host fault and
+restore fixtures; the new three-file scope still needs target measurement.
+
+Writer packaging can now obtain the verified libc/interpreter pair directly
+from acquisition custody rather than requiring an old TLS research profile.
+The public GNU storage-shim build using the new builder image produced exactly
+the bytes currently installed on the owner's measured unit. Acquired code was
+not executed on the host or linked as a host input.
 
 A changed settings serialization can invalidate a snapshot even when values look
 identical. Preserve the failed zero-write attempt and use the reviewed bounded
@@ -59,8 +69,8 @@ RAM handoff path when appropriate. Never weaken exact original-byte comparison.
 
 ## Remaining public-installer work
 
-Per-device replacement construction, coordination of the overlapping client
-configuration across the two write scopes, and reproducible install/restore kit
+Per-device replacement construction, end-to-end disjoint phase coordination,
+and reproducible install/restore kit
 orchestration remain blockers for a turnkey stock-unit release. A new user's kit
 cannot be synthesized from the development owner's ignored directories. This
 restriction is explicit in the installer documentation and release metadata.

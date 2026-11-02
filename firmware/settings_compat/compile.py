@@ -17,7 +17,13 @@ def source_hashes():
     return {n: sha((ASSETS / n).read_bytes()) for n in SOURCES}
 
 
-def compile_library(output, *, trace=False, legacy_linker=False):
+def compile_library(
+    output,
+    *,
+    trace=False,
+    legacy_linker=False,
+    builder_image="localhost/hearth-probe-builder:20261030",
+):
     output = Path(output).resolve()
     output.mkdir(mode=0o700, parents=True, exist_ok=False)
     common = [
@@ -80,7 +86,7 @@ def compile_library(output, *, trace=False, legacy_linker=False):
                 "inspect",
                 "--format",
                 "{{.Id}}",
-                "localhost/hearth-probe-builder:20261030",
+                builder_image,
             ],
             check=True,
             capture_output=True,

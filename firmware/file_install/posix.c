@@ -233,7 +233,7 @@ static int valid_change(struct hearth_posix_context *c,unsigned int index)
 #ifdef HEARTH_NETWORK_ADAPTER
     {
         static const unsigned int limits[4]={6U*1048576U,1048576U,65536U,65536U};
-        if(c->count!=4||c->archive_layout!=1||!f->existed||!f->original.size||
+        if(c->count!=HEARTH_TARGET_COUNT||c->archive_layout!=1||!f->existed||!f->original.size||
            f->original.size!=f->replacement.size||f->original.size>limits[f->target]||
            f->original_mode!=f->replacement_mode||(f->original_mode&0022U)) return -1;
     }
