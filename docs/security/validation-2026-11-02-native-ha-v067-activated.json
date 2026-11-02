@@ -1,0 +1,27 @@
+{
+  "status": "activated-native-reconnected-feedback-test-pending",
+  "integration_version": "0.6.7",
+  "owner_approved_activation": true,
+  "core_restart_exit": 0,
+  "active_source_files_verified": 33,
+  "previous_source_preserved": true,
+  "registered_entities": 4,
+  "scoped_errors": 0,
+  "reported_cache_private_single_link": true,
+  "local_endpoint_responding": true,
+  "native_reconnect_verified": true,
+  "thermostat_commands_sent": 0,
+  "thermostat_flash_performed": false,
+  "feedback_fix_verified_on_owner_unit": false,
+  "native_get_requests": 1,
+  "native_put_requests": 2,
+  "native_subscriptions": 1,
+  "native_active_carrier": true,
+  "native_rejections": 0,
+  "local_user_and_home_metadata_acknowledged": true,
+  "pending_commands": 0,
+  "effective_modes": [
+    "off",
+    "heat"
+  ]
+}

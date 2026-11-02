@@ -118,3 +118,19 @@ final package reproduces exactly, and all 33 remotely staged source files read
 back exactly. Active code, cache and pairing are backed up. The source remains
 staged pending owner activation/Core restart approval; no further thermostat
 command has been sent. This is not yet evidence that owner-unit feedback is fixed.
+
+## 0.6.7 activation and fresh reports
+
+The owner explicitly approved activation and one Core restart. All 33 active source
+files matched the staged package and old code remains preserved. Core restart
+returned zero; health checks found four registered entities, no scoped errors and
+a private single-link reported cache. The endpoint was briefly unavailable during
+startup, then returned normally.
+
+The Nest reconnected with a fresh GET, two PUTs and an active subscription. User
+and home metadata were acknowledged; there were no rejected native requests or
+pending commands. The owner confirmed the display was awake. The fresh report
+remained Heat at 63 F with the room more than 3 C above target, and effective
+capabilities remained off/heat only. No thermostat commands were sent during
+activation. The feedback change is not yet verified on the unit; a separate
+supervised bounded cycle has been proposed to the owner.

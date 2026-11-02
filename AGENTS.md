@@ -3,7 +3,7 @@
 
 ## Current handoff: 2026-11-02
 
-Live HA is **0.6.6**. The owner has now installed the Nest on actual HVAC wiring.
+Live HA is **0.6.7**. The owner has now installed the Nest on actual HVAC wiring.
 E22 is gone; the physical dial is restored to Heat at 63 F and the owner reports
 no furnace activity during the bounded 63/62/63 F test. A read-only manager check found no
 pending commands. Do not assume this installation proves HVAC switching, cooling,
@@ -48,7 +48,7 @@ backend receipts expired with successful stream writes and zero matching native
 reported fields; do not call native feedback verified. No additional controls
 were sent. Keep both private request/restore records and original baseline.
 
-0.6.7 is fully checked and staged, NOT active. Pinned NLE sends
+0.6.7 is active after explicit owner approval and ONE Core restart. Pinned NLE sends
 transient target_change_pending=true with single/range target updates. The candidate
 adds that delivery-only notification without including it in desired-field
 confirmation, private cache, mode-only messages or expired intents. Native clearing
@@ -59,8 +59,19 @@ This is a protocol comparison, not yet a measured fix for the owner's feedback.
 sandbox passes 18 synthetic round trips with the notification cleared in reports.
 Final/repro packages match. All 33 staged files read back exactly; active0.6.6,
 reported cache and pairing are backed up in private/native-ha-v067-20261102/stage-v1.
-Activation and health scripts are prepared but NOT RUN. Obtain fresh approval for
-one Core restart before activation; do not send more controls during activation.
+Activation-v1 rechecked stage/old source, switched and read back all33 files, and
+preserved old0.6.6. Core restart returned zero. Health-v1/startup-check-v1 report
+four entities, no scoped errors and a private single-link0600 cache. The endpoint
+returned after initial startup connection refusals. The Nest reconnected with fresh
+GET, two PUTs and a subscription; user/home metadata ACK, active carrier and no
+rejections/pending commands. Owner also confirmed display awake. Fresh report:
+Heat63 F, room more than3 C above target, effective off/heat only. Read-only
+reconnect-check-v1 preserves the manager response. No thermostat commands sent.
+Prepared new helper build/native-ha-v067-setpoint-check-20261102.py uses fresh
+private067 paths but has NOT executed either control step. Before a new test,
+native reconnect is verified; owner readiness for a new63/62/63 feedback test has
+been requested and remains pending. The0.6.7 restart approval is
+consumed; do not restart again automatically.
 Current helper: build/native-ha-v066-setpoint-check-v2-20261102.py. Neither step may
 be rerun; original v1 also uses the obsolete 59/58 baseline. No further HVAC
 operation or Core restart has been approved after the completed bounded test.
