@@ -118,16 +118,33 @@ class HearthClimate(ClimateEntity):
 
     @property
     def preset_modes(self):
-        return (
-            ["none", "emergency_heat"]
-            if "emergency" in self.runtime.controls.capabilities(self.ident)["modes"]
-            else None
-        )
+        presets = ["none"]
+        native = self.runtime.controls
+        home = native.home_key(self.ident)
+        record = native._records_for(self.ident).get(home)
+        eco = native.reported.get(self.ident, {}).get("structure", {}).get("values", {})
+        if (
+            record is not None
+            and type(eco.get("manual_eco_all")) is bool
+            and type(eco.get("manual_eco_timestamp")) is int
+        ):
+            presets.append("eco")
+        if "emergency" in native.capabilities(self.ident)["modes"]:
+            presets.append("emergency_heat")
+        return presets if len(presets) > 1 else None
 
     @property
     def preset_mode(self):
         if not self.preset_modes:
             return None
+        eco = (
+            self.runtime.controls.reported.get(self.ident, {})
+            .get("structure", {})
+            .get("values", {})
+            .get("manual_eco_all")
+        )
+        if eco is True:
+            return "eco"
         mode = (
             self.runtime.controls.reported.get(self.ident, {})
             .get("shared", {})
@@ -187,7 +204,17 @@ class HearthClimate(ClimateEntity):
     async def async_set_preset_mode(self, preset_mode):
         if not self.preset_modes or preset_mode not in self.preset_modes:
             raise HomeAssistantError("Unsupported preset")
-        if preset_mode == "emergency_heat":
+        if preset_mode == "eco":
+            self._enqueue("eco", True)
+        elif self.preset_mode == "eco":
+            if preset_mode != "none":
+                raise HomeAssistantError("Clear eco before requesting emergency heat")
+            if ("structure", "manual_eco_all") in self.runtime.controls.restored_fields.get(
+                self.ident, set()
+            ):
+                raise HomeAssistantError("A fresh eco report is required to clear eco")
+            self._enqueue("eco", False)
+        elif preset_mode == "emergency_heat":
             self._enqueue("mode", "emergency")
         elif self.runtime.controls.state_source(self.ident, "mode") != "device":
             raise HomeAssistantError(

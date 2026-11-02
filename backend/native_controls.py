@@ -12,7 +12,7 @@ import time
 import uuid
 from dataclasses import dataclass, field
 
-from backend import reported_state
+from backend import native_features, reported_state
 from backend.native import NativeTelemetry, canonical, envelope, integer
 from backend.validation import Invalid, command, number
 
@@ -69,6 +69,29 @@ class NativeControls(NativeTelemetry):
             self.requests.pop(ident, None)
             self.last_request.pop(ident, None)
         return super()._records_for(ident)
+
+    def home_key(self, ident):
+        value = self.reported.get(ident, {}).get("device", {}).get("values", {}).get("structure_id")
+        return native_features.structure_key(value) if value is not None else None
+
+    def normalize(self, ident, body, *, subscription=False):
+        # A home bucket is scoped to this authenticated device's record namespace.
+        # Only its accepted device-bucket reference can select it; never expose
+        # account buckets globally or infer ownership from a structure upload.
+        self._records_for(ident)
+        home = self.home_key(ident)
+        rows = envelope(ident, body, subscription=subscription)
+        records = self._records_for(ident)
+        for key, kind, value, conditional, _, _ in rows:
+            if kind != "device" or not value or "structure_id" not in value:
+                continue
+            if conditional is not None and conditional != getattr(records.get(key), "revision", 0):
+                continue
+            try:
+                home = native_features.structure_key(value["structure_id"])
+            except Invalid:
+                home = None
+        return envelope(ident, body, subscription=subscription, structure_key=home)
 
     def snapshot_reported(self):
         return reported_state.snapshot(self, integer(int(self.clock() * 1000)))
@@ -182,11 +205,80 @@ class NativeControls(NativeTelemetry):
         self._expire(ident)
         return dict(self.outcomes.get(ident, {}))
 
-    def enqueue(self, ident, body):
+    def advanced_plan(self, ident, body, schedule_backed_up):
+        if not isinstance(body, dict) or body.get("operation") not in (
+            "eco",
+            "eco_temperatures",
+            "schedule",
+            "schedule_mode",
+        ):
+            return None
+        op = body["operation"]
+        if set(body) != (
+            {"operation", "value", "expected_revision"}
+            if op == "schedule"
+            else {"operation", "value"}
+        ):
+            raise Invalid("invalid native feature command")
+        value = body["value"]
+        if op == "eco":
+            if type(value) is not bool or self.home_key(ident) is None:
+                raise Invalid("eco requires a reported home reference and boolean")
+            original = self.reported.get(ident, {}).get("structure", {}).get("values", {})
+            if (
+                type(original.get("manual_eco_all")) is not bool
+                or type(original.get("manual_eco_timestamp")) is not int
+            ):
+                raise Invalid("validated native eco baseline required")
+            return (
+                "structure",
+                "manual_eco_all",
+                value,
+                {"manual_eco_timestamp": integer(int(self.clock()))},
+            )
+        if op == "eco_temperatures":
+            bounds = native_features.eco_temperatures(value)
+            if not {"heat", "cool"} <= set(self.capabilities(ident)["modes"]):
+                raise Invalid(
+                    "both heating and cooling capabilities required for paired eco bounds"
+                )
+            return (
+                "device",
+                "away_temperature_low",
+                bounds["away_temperature_low"],
+                {"away_temperature_high": bounds["away_temperature_high"]},
+            )
+        if op == "schedule_mode":
+            if not isinstance(value, str) or value not in native_features.MODES:
+                raise Invalid("supported schedule mode required")
+            if native_features.MODES[value] not in self.capabilities(ident)["modes"]:
+                raise Invalid("schedule mode unsupported by reported equipment")
+            return "shared", "schedule_mode", value, {}
+        normalized = native_features.schedule(value)
+        if (
+            native_features.MODES[normalized["schedule_mode"]]
+            not in self.capabilities(ident)["modes"]
+        ):
+            raise Invalid("schedule mode unsupported by reported equipment")
+        record = self._records_for(ident).get(f"schedule.{ident}")
+        if record is None or integer(body["expected_revision"]) != record.revision:
+            raise Invalid("schedule changed; read and back up the current week again")
+        baseline = self.reported.get(ident, {}).get("schedule", {}).get("values", {})
+        native_features.schedule(baseline)
+        if any(kind == "schedule" for kind, _ in self.restored_fields.get(ident, set())):
+            raise Invalid("a fresh native weekly schedule report is required before replacement")
+        if not schedule_backed_up:
+            raise Invalid("use the HA schedule action to preserve the current week first")
+        return "schedule", "ver", 2, {k: v for k, v in normalized.items() if k != "ver"}
+
+    def enqueue(self, ident, body, *, schedule_backed_up=False):
         self._records_for(ident)
         self._expire(ident)
         caps = self.capabilities(ident)
-        if isinstance(body, dict) and body.get("operation") == "temperature_range":
+        advanced = self.advanced_plan(ident, body, schedule_backed_up)
+        if advanced is not None:
+            validated = {"operation": body["operation"], "value": body["value"]}
+        elif isinstance(body, dict) and body.get("operation") == "temperature_range":
             if (
                 set(body) != {"operation", "value"}
                 or not isinstance(body["value"], dict)
@@ -215,7 +307,9 @@ class NativeControls(NativeTelemetry):
         operation, value = validated["operation"], validated["value"]
         kind, wire_field = "shared", "target_temperature"
         extras = {}
-        if operation == "mode":
+        if advanced is not None:
+            kind, wire_field, value, extras = advanced
+        elif operation == "mode":
             wire_field = MODE_FIELD
             if value == "heat_cool":
                 value = "range"
@@ -226,7 +320,7 @@ class NativeControls(NativeTelemetry):
         elif operation == "fan":
             kind, wire_field = "device", "fan_timer_timeout"
             value = 0 if value == "auto" else integer(int(self.clock()) + 600)
-        key = f"{kind}.{ident}"
+        key = self.home_key(ident) if kind == "structure" else f"{kind}.{ident}"
         records = self._records_for(ident)
         previous = records.get(key)
         desired = {wire_field: value, **extras}
@@ -292,7 +386,7 @@ class NativeControls(NativeTelemetry):
         return response
 
     def updates(self, ident, body):
-        objects = envelope(ident, body, subscription=True)
+        objects = self.normalize(ident, body, subscription=True)
         records = self._records_for(ident)
         replies = []
         for key, _, _, _, revision, timestamp in objects:
@@ -304,7 +398,7 @@ class NativeControls(NativeTelemetry):
         return self._values(ident, {"objects": replies})
 
     def apply(self, ident, body, *, subscription=False):
-        objects = envelope(ident, body, subscription=subscription)
+        objects = self.normalize(ident, body, subscription=subscription)
         records = self._records_for(ident)
         accepted = {
             key
@@ -312,7 +406,21 @@ class NativeControls(NativeTelemetry):
             if value is not None
             and (conditional is None or conditional == getattr(records.get(key), "revision", 0))
         }
+        previous_home = self.home_key(ident)
         response = super().apply(ident, body, subscription=subscription)
+        for key, kind, value, _, _, _ in objects:
+            if key not in accepted or kind != "device" or not value or "structure_id" not in value:
+                continue
+            try:
+                next_home = native_features.structure_key(value["structure_id"])
+            except Invalid:
+                next_home = None
+            if previous_home != next_home:
+                self.reported.get(ident, {}).pop("structure", None)
+                self._records_for(ident).pop(previous_home, None)
+                if self.intents.get(ident, {}).get("eco") is not None:
+                    self.intents[ident].pop("eco")
+                    self.outcomes.setdefault(ident, {})["eco"] = "superseded_by_device"
         for key, kind, value, _, _, _ in objects:
             if key not in accepted or value is None:
                 continue

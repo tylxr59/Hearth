@@ -16,6 +16,7 @@ from backend.core import Core
 from backend.native import MAX_BODY as NATIVE_MAX_BODY
 from backend.native import NativeTelemetry
 from backend.native_controls import NativeControls
+from backend.native_weather import query_location
 from backend.nest import reports
 from backend.registry import Registry
 from backend.validation import Invalid, endpoint, loads, serial
@@ -27,6 +28,8 @@ NATIVE = web.AppKey("native_telemetry", NativeTelemetry)
 NATIVE_HOLD = web.AppKey("native_hold_seconds", float)
 NATIVE_ACTIVE = web.AppKey("native_active", dict)
 NATIVE_STOP = web.AppKey("native_stop", asyncio.Event)
+WEATHER = web.AppKey("native_weather_provider", object)
+WEATHER_ENABLED = web.AppKey("native_weather_enabled", object)
 AUTH_GENERATION = web.RequestKey("credential_generation", str)
 
 
@@ -171,7 +174,10 @@ async def nest_entry(request):
     origin = request.app[ORIGIN]
     # Empty URLs hit an unsafe native trim path; tier/update fields can mutate
     # settings/buckets. Omit services whose native disable behavior is unverified.
-    return web.json_response({"transport_url": origin + "/nest/transport"})
+    result = {"transport_url": origin + "/nest/transport"}
+    if WEATHER in request.app and request.app[WEATHER_ENABLED]():
+        result["weather_url"] = origin + "/nest/weather/v1?query="
+    return web.json_response(result)
 
 
 async def native_entry(request):
@@ -180,6 +186,22 @@ async def native_entry(request):
     if len(raw) > 16384:
         raise web.HTTPRequestEntityTooLarge(max_size=16384, actual_size=len(raw))
     return await nest_entry(request)
+
+
+async def native_weather(request):
+    if request.can_read_body or len(request.query_string) > 256 or set(request.query) - {"query"}:
+        raise web.HTTPBadRequest()
+    require_current(request)
+    if WEATHER not in request.app or not request.app[WEATHER_ENABLED]():
+        raise web.HTTPServiceUnavailable()
+    location = query_location(request.query.get("query", ""))
+    try:
+        result = await request.app[WEATHER]()
+        result["location"].update(location)
+    except Invalid:
+        raise web.HTTPServiceUnavailable() from None
+    require_current(request)
+    return web.json_response(result)
 
 
 def native_touch(app, ident):
@@ -322,6 +344,7 @@ def create_app(
         app.router.add_post("/nest/transport/v7/put", nest_put)
         app.router.add_post("/nest/entry", nest_entry)
     elif native_telemetry:
+        app.router.add_get("/nest/weather/v1", native_weather)
         app.router.add_get("/nest/entry", native_entry)
         app.router.add_post("/nest/entry", native_entry)
         # Same authenticated handshake, with a fixed-width migration alias.

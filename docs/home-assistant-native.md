@@ -160,3 +160,70 @@ On an existing installation, open the Target temperature sensor settings and
 set Display precision to0 for whole-degree Fahrenheit immediately; this does
 not require restarting HA. The climate entity already uses whole-degree
 Fahrenheit display through HA's standard climate conversion.
+
+
+## Eco, weekly schedules and HA weather (0.5)
+
+The climate entity exposes an `eco` preset only after the native device reports
+its home reference and a validated eco baseline. Home buckets stay inside that
+authenticated device's record namespace; this is a local association, not proof
+of ownership of a Google account or permission to share data across devices.
+A changed/unset reference discards the old home state and pending eco intent.
+Manual eco uses `manual_eco_all` and a current UTC timestamp, matching the pinned
+native reference; device clock synchronization and actual acceptance still need
+a unit measurement. Clearing a cached eco preset requires a fresh eco report.
+
+The Hearth actions in HA are:
+
+- `hearth.get_schedule`: return the last validated complete week, source
+  (`cache` or `device`), Celsius unit and revision.
+- `hearth.set_schedule`: require all seven days, explicit units and the expected
+  revision. It checks a fresh native baseline, saves/fsyncs/reads back an original
+  private archive, and rechecks the revision before queuing a replacement.
+- `hearth.set_schedule_mode`: request supported `HEAT`, `COOL` or `RANGE`.
+- `hearth.set_eco_temperatures`: set both ordered eco bounds using explicit units
+  and reported heating/cooling support.
+
+Each action targets a Hearth climate entity. The native weekly format is
+`ver: 2`, a printable name, `schedule_mode`, and `days` with keys `0` through `6`
+(Monday through Sunday). Each day is a list or a contiguous numeric-key object
+of at most24 ordered points. A point has integer `time` seconds after local
+midnight and a matching `type`. HEAT/COOL points need `temp`; RANGE needs ordered
+`temp-min` and `temp-max`. Temperatures are bounded to10..30C after explicit unit
+conversion. All days, including intentionally empty days, must be present.
+Unknown point fields and unsupported/partial native weeks refuse replacement.
+No HA timer executes the schedule: native scheduling continues on the thermostat.
+Learning behavior remains native and may subsequently edit the week.
+
+Pre-change archives are owner-only0600 files named `schedule-backup-*.json` in
+`.storage/hearth`. They contain private device identity, credential-generation
+binding and the validated original week; preserve them privately. They are not
+replayed at startup. After64 archives, further schedule writes refuse until the
+owner preserves/clears old archives. Restoring a prior week uses the same explicit
+set-schedule action with a fresh current revision, producing another backup.
+This is not a verified whole-firmware restoration mechanism.
+
+In Hearth's Configure menu, select an existing HA `weather.*` entity, select the
+single-entity automatic choice, or disable weather. Multiple sources require an
+explicit selection; an unavailable source produces an unavailable response.
+Hearth makes no direct Open-Meteo, Google, geocoding or other weather-provider
+requests. The selected HA integration retains responsibility for its provider
+configuration, attribution and availability.
+
+The authenticated native entry handshake advertises the local weather URL when
+a source is selected. The local endpoint maps HA current temperature/humidity,
+conditions, up to48 hourly points and six daily points into the fields statically
+reviewed in this Gen2 client. It supplies HA's configured timezone and preserves
+the bounded postal/country fields from the thermostat's own weather query.
+The native location consumer can otherwise clear its country when given an
+empty location, which can also affect display units; malformed or absent native
+postal/country queries therefore refuse instead of returning empty defaults. Unsupported
+forecast rows are omitted, unavailable current data refuses the response, and no
+missing humidity/forecast is invented. Forecast caching is15 minutes and keyed
+by source, forecast type and units; current reports older than two hours refuse.
+Query text never selects a URL, provider or external destination.
+
+A new weather URL may require a fresh native entry handshake. No automatic eco,
+schedule, mode or target change accompanies activation. All these features are
+measured in a synthetic real-HA sandbox; actual native weather fetch and control
+acceptance remain separate supervised bench checks on the completely unwired base.

@@ -55,10 +55,10 @@ are not proof of on-device command acceptance or equipment operation.
 | Off/heat/cool and fan timer | Host and real HA sandbox pass | Actual native capability/report mapping and bench acceptance |
 | Reported HVAC operating action | Boolean mapping implemented | Compare against real equipment states |
 | Heat/cool range and emergency mode | Implemented in0.4; host and real HA sandbox pass | Actual native range/preset acceptance on suitable bench |
-| Eco/away and eco temperatures | Not implemented | Structure ownership binding and native manual-eco timestamp semantics |
-| Weekly schedules and schedule mode | Not implemented | Strict weekly schema, conflict handling and complete replacement tests |
+| Eco preset and eco bounds | Implemented in0.5; host and real HA sandbox pass | Fresh device/home baselines and unwired-unit acceptance |
+| Weekly schedules and schedule mode | Implemented in0.5; full-week schema, backups and revision checks | Native week acquisition and supervised same-week/restore measurement |
 | Learning/preconditioning and other NLE device settings | Not implemented | Per-field native writability/types/bounds; no generic arbitrary setter |
-| Weather/outdoor data and useful diagnostics | Payload-free integration diagnostics in0.4; weather absent | Local HA weather mapping and fault entities |
+| Weather/outdoor data and useful diagnostics | HA weather bridge and local native JSON in0.5; payload-free diagnostics | Native weather-fetch acceptance; advanced fault entities |
 | Native local operation when HA/network is unavailable | Native logic preserved | Supervised outage/return tests, no stale replay |
 | Actual heating/cooling/fan and equipment protections | Unverified | Separate equipment inspection/authorization and supervised test |
 

@@ -11,6 +11,7 @@ from .const import DOMAIN
 from .probe import HearthConnectivityView
 from .profile import load_profile
 from .runtime import HearthRuntime
+from .services import register as register_services
 
 PLATFORMS = [Platform.SENSOR, Platform.CLIMATE]
 
@@ -20,7 +21,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         profile = await hass.async_add_executor_job(
             load_profile, Path(hass.config.path(".storage", DOMAIN))
         )
-        runtime = HearthRuntime(hass, profile)
+        runtime = HearthRuntime(hass, profile, entry)
         await runtime.start()
     except Exception as exc:
         raise ConfigEntryNotReady("Hearth profile or TLS listener is not ready") from exc
@@ -28,6 +29,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
         hass.data[DOMAIN] = runtime
+        register_services(hass, entry)
         if not hass.data.get(DOMAIN + "_probe_registered"):
             hass.http.register_view(HearthConnectivityView(hass))
             hass.data[DOMAIN + "_probe_registered"] = True
@@ -40,6 +42,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data.pop(DOMAIN, None)
         await runtime.stop()
 
+    async def options_updated(hass, entry):
+        await hass.config_entries.async_reload(entry.entry_id)
+
+    entry.async_on_unload(entry.add_update_listener(options_updated))
     entry.async_on_unload(hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop))
     return True
 

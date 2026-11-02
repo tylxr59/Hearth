@@ -18,6 +18,9 @@ BACKEND_FILES = (
     "core.py",
     "native.py",
     "native_controls.py",
+    "native_features.py",
+    "native_weather.py",
+    "schedule_backup.py",
     "reported_cache.py",
     "reported_state.py",
     "reported_store.py",
@@ -36,6 +39,9 @@ INTEGRATION_FILES = (
     "climate.py",
     "probe.py",
     "diagnostics.py",
+    "services.py",
+    "services.yaml",
+    "weather_source.py",
     "strings.json",
 )
 

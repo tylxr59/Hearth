@@ -258,7 +258,7 @@ async def check(root, profile):
 
             native = entry.runtime_data.app[NATIVE]
 
-            async def command_roundtrip(service, fields, expected):
+            async def command_roundtrip(service, fields, expected, domain="climate"):
                 before = native.listing(IDENT)["objects"]
                 async with client.post(
                     base + "/nest/transport/v7/subscribe",
@@ -267,7 +267,7 @@ async def check(root, profile):
                     ssl=context,
                 ) as pending:
                     await hass.services.async_call(
-                        "climate", service, {"entity_id": climate_id, **fields}, blocking=True
+                        domain, service, {"entity_id": climate_id, **fields}, blocking=True
                     )
                     data = await pending.json(content_type=None)
                 rows = [r for r in data["objects"] if "value" in r]
@@ -383,13 +383,187 @@ async def check(root, profile):
                 "set_hvac_mode", {"hvac_mode": "off"}, {"target_temperature_type": "off"}
             )
             assert hass.states.get(climate_id).state == "off"
+            # Original synthetic feature baselines, never owner schedules/account data.
+            week = {
+                "ver": 2,
+                "name": "Lab week",
+                "schedule_mode": "HEAT",
+                "days": {
+                    str(i): {"0": {"time": 21600, "type": "HEAT", "temp": 20}} for i in range(7)
+                },
+            }
+            feature_body = {
+                "objects": [
+                    {
+                        "object_key": "device." + IDENT,
+                        "value": {
+                            "structure_id": "structure.LABHOME",
+                            "away_temperature_low": 16,
+                            "away_temperature_high": 27,
+                        },
+                    },
+                    {
+                        "object_key": "structure.LABHOME",
+                        "value": {
+                            "manual_eco_all": False,
+                            "manual_eco_timestamp": int(__import__("time").time()),
+                        },
+                    },
+                    {"object_key": "shared." + IDENT, "value": {"schedule_mode": "HEAT"}},
+                    {"object_key": "schedule." + IDENT, "value": week},
+                ]
+            }
+            async with client.post(
+                base + "/nest/transport/put", headers=headers, json=feature_body, ssl=context
+            ) as response:
+                assert response.status == 200
+            await hass.async_block_till_done()
+            assert "eco" in hass.states.get(climate_id).attributes["preset_modes"]
+            eco = await command_roundtrip("set_preset_mode", {"preset_mode": "eco"}, None)
+            assert eco["manual_eco_all"] is True
+            assert abs(eco["manual_eco_timestamp"] - int(__import__("time").time())) < 10
+            assert hass.states.get(climate_id).attributes["preset_mode"] == "eco"
+            await command_roundtrip("set_preset_mode", {"preset_mode": "none"}, None)
+            await command_roundtrip(
+                "set_eco_temperatures",
+                {"low": 68, "high": 77, "temperature_unit": "°F"},
+                {"away_temperature_low": 20, "away_temperature_high": 25},
+                domain="hearth",
+            )
+            saved_week = await hass.services.async_call(
+                "hearth",
+                "get_schedule",
+                {"entity_id": climate_id},
+                blocking=True,
+                return_response=True,
+            )
+            assert saved_week["schedule"] == week and saved_week["temperature_unit"] == "°C"
+            new_week = json.loads(json.dumps(week))
+            new_week["days"]["0"] = {}
+            from custom_components.hearth._backend import schedule_backup
+            from homeassistant.exceptions import HomeAssistantError
+
+            archive_function = schedule_backup.archive
+
+            def fail_archive(*_args):
+                raise OSError("synthetic archive failure")
+
+            schedule_backup.archive = fail_archive
+            try:
+                try:
+                    await hass.services.async_call(
+                        "hearth",
+                        "set_schedule",
+                        {
+                            "entity_id": climate_id,
+                            "schedule": new_week,
+                            "expected_revision": saved_week["revision"],
+                            "temperature_unit": "°C",
+                        },
+                        blocking=True,
+                    )
+                except HomeAssistantError:
+                    pass
+                else:
+                    raise AssertionError("schedule queued after archive failure")
+            finally:
+                schedule_backup.archive = archive_function
+            assert not native.intents.get(IDENT) and not list(
+                profile.glob("schedule-backup-*.json")
+            )
+            await command_roundtrip(
+                "set_schedule",
+                {
+                    "schedule": new_week,
+                    "expected_revision": saved_week["revision"],
+                    "temperature_unit": "°C",
+                },
+                new_week,
+                domain="hearth",
+            )
+            backups = list(profile.glob("schedule-backup-*.json"))
+            assert len(backups) == 1 and json.loads(backups[0].read_bytes())["schedule"] == week
+            assert backups[0].stat().st_mode & 0o777 == 0o600
+            await command_roundtrip(
+                "set_schedule_mode", {"mode": "COOL"}, {"schedule_mode": "COOL"}, domain="hearth"
+            )
+            assert native.command_status(IDENT)["schedule"] == "confirmed"
+            # HA-owned source and real HA weather service, no external requests.
+            from homeassistant.components.weather import (
+                DATA_COMPONENT as WEATHER_COMPONENT,
+            )
+            from homeassistant.components.weather import (
+                WeatherEntity,
+                WeatherEntityFeature,
+            )
+
+            assert await async_setup_component(hass, "weather", {})
+
+            class LabWeather(WeatherEntity):
+                _attr_name = "Synthetic Weather"
+                _attr_unique_id = "hearth_weather_fixture"
+                _attr_condition = "partlycloudy"
+                _attr_native_temperature = 20
+                _attr_native_temperature_unit = "°C"
+                _attr_humidity = 50
+                _attr_should_poll = False
+                _attr_supported_features = (
+                    WeatherEntityFeature.FORECAST_DAILY | WeatherEntityFeature.FORECAST_HOURLY
+                )
+
+                async def async_forecast_daily(self):
+                    return [
+                        {
+                            "datetime": datetime.now(UTC).isoformat(),
+                            "temperature": 24,
+                            "templow": 12,
+                            "humidity": 45,
+                        }
+                    ]
+
+                async def async_forecast_hourly(self):
+                    return [
+                        {
+                            "datetime": (datetime.now(UTC) + timedelta(hours=1)).isoformat(),
+                            "temperature": 21,
+                            "humidity": 48,
+                        }
+                    ]
+
+            await hass.data[WEATHER_COMPONENT].async_add_entities([LabWeather()])
+            await hass.async_block_till_done()
+            async with client.get(base + "/nest/entry", headers=headers, ssl=context) as response:
+                entry_data = await response.json()
+                assert (
+                    entry_data["weather_url"] == "https://192.168.50.2:8443/nest/weather/v1?query="
+                )
+            async with client.get(
+                base + "/nest/weather/v1?query=00000,US", headers=headers, ssl=context
+            ) as response:
+                assert response.status == 200
+                weather = await response.json()
+            assert weather["location"]["zip"] == "00000" and weather["location"]["country"] == "US"
+            assert weather["current"] == {"temp_c": 20, "humidity": 50, "icon": "partlycloudy"}
+            assert weather["forecast"]["hourly"][0]["temp_c"] == 21
+            assert weather["forecast"]["daily"][0]["temp_low_c"] == 12
+            async with client.get(base + "/nest/weather/v1", ssl=context) as response:
+                assert response.status == 401
+            async with client.get(
+                base + "/nest/weather/v1?url=https://invalid.example", headers=headers, ssl=context
+            ) as response:
+                assert response.status == 400
+            options = await hass.config_entries.options.async_init(entry.entry_id)
+            assert options["type"] == "form" and options["step_id"] == "init"
             duplicate = await hass.config_entries.flow.async_init(
                 "hearth", context={"source": "user"}
             )
             assert duplicate["type"] == "abort" and duplicate["reason"] == "already_configured"
             entry.runtime_data.enqueue(IDENT, {"operation": "temperature", "value": 24})
             assert entry.runtime_data.core.states[IDENT]["target_temperature"] == 25
-            assert await hass.config_entries.async_unload(entry.entry_id)
+            assert await hass.config_entries.async_unload(entry.entry_id), (
+                entry.state,
+                entry.reason,
+            )
             await hass.async_block_till_done()
             async with client.get(probe_url) as response:
                 assert response.status == 503 and await response.read() == b""
@@ -446,7 +620,10 @@ async def check(root, profile):
 
             diagnostic = json.dumps(await async_get_config_entry_diagnostics(hass, entry))
             assert IDENT not in diagnostic and TOKEN not in diagnostic and ADMIN not in diagnostic
-            assert await hass.config_entries.async_unload(entry.entry_id)
+            assert await hass.config_entries.async_unload(entry.entry_id), (
+                entry.state,
+                entry.reason,
+            )
             await hass.async_block_till_done()
             # Refusing a public cache must not disable fresh native operation.
             cache_file = profile / "reported-state.json"
@@ -469,7 +646,10 @@ async def check(root, profile):
             cache_file.chmod(0o600)
             await runtime.flush_reported()
             assert not runtime.cache_errors["save_failed"] and not runtime.controls.intents
-            assert await hass.config_entries.async_unload(entry.entry_id)
+            assert await hass.config_entries.async_unload(entry.entry_id), (
+                entry.state,
+                entry.reason,
+            )
             await hass.async_block_till_done()
         print(
             json.dumps(
@@ -481,7 +661,10 @@ async def check(root, profile):
                     "zero_preserved": True,
                     "availability_expiry": True,
                     "canonical_command_poll_disabled": True,
-                    "native_climate_roundtrips": 12,
+                    "native_climate_roundtrips": 17,
+                    "native_eco_roundtrips": True,
+                    "schedule_backup_and_replace": True,
+                    "ha_weather_local_response": True,
                     "native_report_confirmation": True,
                     "fahrenheit_to_celsius": True,
                     "heat_cool_range_targets": True,

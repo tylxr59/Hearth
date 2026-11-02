@@ -13,5 +13,19 @@
     "abort": {
       "already_configured": "Hearth is already configured."
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Weather source",
+        "description": "Use an existing Home Assistant weather entity for the Nest. Hearth does not contact a weather provider directly.",
+        "data": {
+          "weather_entity": "Weather entity"
+        }
+      }
+    },
+    "error": {
+      "weather_not_found": "Choose an available Home Assistant weather entity."
+    }
   }
 }

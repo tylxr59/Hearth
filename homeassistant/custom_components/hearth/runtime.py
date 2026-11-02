@@ -11,11 +11,12 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.event import async_track_time_interval
 
 from ._backend import reported_store
-from ._backend.api import NATIVE, create_app
+from ._backend.api import NATIVE, WEATHER, WEATHER_ENABLED, create_app
 from ._backend.core import Core
 from ._backend.validation import Invalid
 from .const import DOMAIN
 from .profile import PreparedProfile
+from .weather_source import HAWeatherSource
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,7 +41,7 @@ class ReportingCore(Core):
 
 
 class HearthRuntime:
-    def __init__(self, hass: HomeAssistant, profile: PreparedProfile):
+    def __init__(self, hass: HomeAssistant, profile: PreparedProfile, entry):
         self.hass = hass
         self.profile = profile
         self.listeners: dict[str, set[Callable[[], None]]] = {}
@@ -52,6 +53,9 @@ class HearthRuntime:
             native_controls=True,
             native_hold_seconds=290,
         )
+        self.weather = HAWeatherSource(hass, entry)
+        self.app[WEATHER] = self.weather.payload
+        self.app[WEATHER_ENABLED] = self.weather.enabled
         self.app[NATIVE].notify = self.changed
         self.app[NATIVE].reported_changed = self.reported_changed
         self.cache_directory = hass.config.path(".storage", DOMAIN)
@@ -160,4 +164,7 @@ class HearthRuntime:
         return self.controls.enqueue(ident, body)
 
     def diagnostics(self):
-        return self.app[NATIVE].diagnostics() | {"reported_cache": dict(self.cache_errors)}
+        return self.app[NATIVE].diagnostics() | {
+            "reported_cache": dict(self.cache_errors),
+            "weather": self.weather.diagnostics(),
+        }

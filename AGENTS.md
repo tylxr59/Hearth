@@ -1972,3 +1972,51 @@ onlytestundefinedregistryname,corrected; doNOTdeployoldprofile. Fullmakecheck+11
 pass/fiveoptionalskips. LiveHAremains0.4.0; noactivation/restartfor0.4.1authorizedorperformed. Told
 ownerimmediateHAUI TargettemperaturesensorgearDisplayprecision0 needsnorestart.
 Package/releasecorrectioncanbundlewithnextfeatures; noneedinterruptHAforthisalone.
+
+
+0.5.0 eco/schedules/weather BUILD (notlive): ownerrequestedallthree, thenchose
+EXISTING HAweather instead ofdirectOpenMeteo. LiveHA remains0.4.0;0.4.1displayfix
+isincludedin0.5.0. Sourceadds native_features.py strictcompleteweeklyschema/eco
+validators, schedule_backup.py ownerprivate/fsynced/readbackprechangearchives,
+native_weather.py originalGen2JSONcodec. HAservices.py+services.yaml provide
+get_schedule/set_schedule/set_schedule_mode/set_eco_temperatures; climateecopreset
+usesdevice-referencedhome onlywithvalidatedbaseline. Native home records stay
+PERAUTHENTICATEDDEVICE, neverglobalaccountobjects. Null/changedreferencesdrop
+oldhomerecord+ecointent; staleconditionalreferencescannotbind. Noaccountownership
+claim. Device.structure_id string/staticnativefields confirmedpresent.
+
+Schedulesfullweekver2/name/mode/days0..6,24points/daymax,integerseconds,10..30C
+bounds,matchingHEAT/COOL/RANGEtype; unknown/incompleteoriginalsrefuse. HAaction
+requiresfreshnativeweek+expectedrevision, archivesprivateoriginalandthenrechecks
+revision/generationbeforeenqueue. Privatearchive64limit; noreplay. Partialdelta
+mustNOTfreshenothercachedweekfields: finalcustodyregressioncoversit. Eco bounds
+currentlyrequirebothreportedheat/coolcapsandbothbounds. Baselinesmaybemissingon
+owneremptybase; doNOTseed fabricatedvaluesorclaimcontrolsverified.
+
+weather_source.py usesHAweatherentity/current+weather.get_forecasts, nooutside
+HTTPclient/geocoding. Configureoptionsselectsource/disable; defaultautoonlyifone
+HAweatherentity. Ownerregistryhasexactlyoneenabledweatherentity. Source/time/type/
+unitcache15min, currentlast_reportedmax2h. NativeweatherHTTPisDEVICEAUTHENTICATED,
+GET/boundedqueryonly; responsecurrent+48hour/6dailymaxandHAtimezone. WeatherURL
+onlyadvertisedwhenasourceisconfigured. Nativefetchauth/actualparseracceptance
+UNVERIFIED. Weatherquerymustpostal,country; preservesunit'sownzip/country. Static
+GhidrareviewfoundlocationconsumerwouldCLEARcountrywithblankdefaults, potentially
+changingunits; donotremovequeryguard. City/statelabelsnotinvented. Weatherhandshake
+mayupdateunitlocation/timezoneviaoriginalnativecode; noeco/schedulesentbyactivation.
+Privateexports/logsunderprivate/native-weather-review-20261101; nofirmwareexecuted.
+TemporaryGhidraJava copiedbacktobuildonly/removedfromtrackedtree.
+
+FINALCHECKED31filespackage build/native-ha-features-20261101-v050-custody and
+-custody-repro EXACTMATCH. 1205hosttests/fiveoptionalskips+makecheckPASS; real
+HA2026.10.4sandbox17syntheticroundtripsPASS incl ecoon/off,boundsF,schedule
+backup/CAS/fullreplacement, archivefailurepreventingqueue, localHAweathercurrent/
+hourly/daily+options/unload/reload/cache/nointent replay. Draftbuildsv0501..6,
+-final,-reviewedandremotestage-v1/v2ARESUPERSEDED. Finalsourcecustody/stage-v3
+underprivate/native-ha-v050-20261101;remote/homeassistant/.hearth-native-stage-
+20261101-v050-v3. Oldactive0.4.0backupreadsback. NEVERactivateoldstages.
+
+Askedownerviaasyncinput: readyactivate0.5.0+oneCore restart,briefautomationspause,
+localweatherendpoint; FIRSTread-onlychecks/noecoorschedulechanges. Awaitreply.
+UserhasNOTauthorizedthisnewrestartuntilreadyreply. Needcommit/publicscan/push,
+thenfreshactivationbasedstage-v3andprior0.4.0. Unwiredbaseonly. NoROMloader/NAND
+write/controlcommandwasrun. DoNOTclaimphysicalHVAC/fullNLEparitycomplete.

@@ -17,12 +17,26 @@ def capture(native, ident, key, kind, value):
         return
     saved = native.reported.setdefault(ident, {})
     item = saved.setdefault(kind, {"revision": 0, "timestamp": 0, "values": {}})
+    updated_fields = set(value)
+    if kind == "schedule":
+        # Never persist partial/unknown schedule content. Retain the last full
+        # validated week; refuse schedule commands until that baseline exists.
+        from backend.native_features import schedule
+
+        try:
+            complete = schedule(item["values"] | value)
+        except Invalid:
+            saved.pop(kind, None)
+            native.reported_changed(ident)
+            return
+        value = complete
     for name, data in value.items():
         if name not in FIELDS[kind]:
             continue
         try:
             item["values"][name] = reported_value(name, data)
-            native.restored_fields.get(ident, set()).discard((kind, name))
+            if name in updated_fields:
+                native.restored_fields.get(ident, set()).discard((kind, name))
         except Invalid:
             item["values"].pop(name, None)
     item["revision"] = records[key].revision
@@ -53,7 +67,7 @@ def restore(native, data):
         records = {}
         projection = {}
         features = {}
-        for kind in ("device", "shared"):
+        for kind in ("device", "shared", "schedule", "structure"):
             if kind not in entry["records"]:
                 continue
             item = entry["records"][kind]
@@ -87,9 +101,13 @@ def restore(native, data):
                 projection["mode"] = mode
             if kind == "device" and caps["fan"] and "fan_timer_timeout" in values:
                 projection["fan"] = "on" if values["fan_timer_timeout"] > native.clock() else "auto"
-            records[f"{kind}.{ident}"] = Bucket(
-                item["revision"], item["timestamp"], fingerprints, telemetry
-            )
+            if kind == "structure":
+                from backend.native_features import structure_key
+
+                key = structure_key(entry["records"]["device"]["values"]["structure_id"])
+            else:
+                key = f"{kind}.{ident}"
+            records[key] = Bucket(item["revision"], item["timestamp"], fingerprints, telemetry)
         if projection:
             native.core.states[ident] = state(projection, caps)
         native._records[ident] = records

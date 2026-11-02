@@ -1,0 +1,90 @@
+get_schedule:
+  name: Read weekly schedule
+  description: Read the last validated native week and its revision. Temperatures are Celsius; days 0–6 are Monday–Sunday.
+  fields:
+    entity_id:
+      required: true
+      selector:
+        entity:
+          integration: hearth
+          domain: climate
+set_schedule:
+  name: Replace weekly schedule
+  description: Save a private backup, then replace all seven native days after a revision check. Requires explicit temperature units.
+  fields:
+    entity_id:
+      required: true
+      selector:
+        entity:
+          integration: hearth
+          domain: climate
+    schedule:
+      required: true
+      selector:
+        object:
+    expected_revision:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 9007199254740991
+          step: 1
+          mode: box
+    temperature_unit:
+      required: true
+      selector:
+        select:
+          options:
+            - "°C"
+            - "°F"
+set_schedule_mode:
+  name: Set schedule mode
+  description: Select the supported native HEAT, COOL or RANGE schedule mode. Does not replace the weekly schedule.
+  fields:
+    entity_id:
+      required: true
+      selector:
+        entity:
+          integration: hearth
+          domain: climate
+    mode:
+      required: true
+      selector:
+        select:
+          options:
+            - HEAT
+            - COOL
+            - RANGE
+set_eco_temperatures:
+  name: Set eco temperature bounds
+  description: Set both ordered eco temperature bounds, using explicit Celsius or Fahrenheit units.
+  fields:
+    entity_id:
+      required: true
+      selector:
+        entity:
+          integration: hearth
+          domain: climate
+    low:
+      required: true
+      selector:
+        number:
+          min: 10
+          max: 86
+          step: 0.1
+          mode: box
+    high:
+      required: true
+      selector:
+        number:
+          min: 10
+          max: 86
+          step: 0.1
+          mode: box
+    temperature_unit:
+      required: true
+      selector:
+        select:
+          options:
+            - "°C"
+            - "°F"

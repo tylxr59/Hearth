@@ -7,6 +7,7 @@ unknown native values, credentials and runtime fingerprints are excluded.
 import json
 import re
 
+from backend import native_features
 from backend.native import integer
 from backend.validation import Invalid, loads, number, serial
 
@@ -37,6 +38,9 @@ FIELDS = {
         "can_cool",
         "has_fan",
         "has_emer_heat",
+        "structure_id",
+        "away_temperature_low",
+        "away_temperature_high",
     },
     "shared": {
         "current_temperature",
@@ -44,13 +48,34 @@ FIELDS = {
         "target_temperature_low",
         "target_temperature_high",
         "target_temperature_type",
+        "schedule_mode",
     }
     | FLAGS,
+    "structure": {"manual_eco_all", "manual_eco_timestamp"},
+    "schedule": {"ver", "name", "schedule_mode", "days"},
 }
 
 
 def reported_value(name, value):
-    if name in FLAGS:
+    if name == "structure_id":
+        native_features.structure_key(value)
+    elif name == "manual_eco_all":
+        if type(value) is not bool:
+            raise Invalid("eco state must be boolean")
+    elif name in ("manual_eco_timestamp", "ver"):
+        integer(value)
+    elif name == "schedule_mode":
+        if not isinstance(value, str) or value not in native_features.MODES:
+            raise Invalid("unsupported schedule mode")
+    elif name == "name":
+        if not isinstance(value, str) or re.fullmatch(r"[\x20-\x7e]{0,64}", value) is None:
+            raise Invalid("bounded schedule name required")
+    elif name == "days":
+        # Validate day shape/temperatures later with the complete schedule mode.
+        if not isinstance(value, dict) or len(value) > 7 or len(json.dumps(value)) > 32768:
+            raise Invalid("bounded schedule days required")
+        return loads(json.dumps(value))
+    elif name in FLAGS:
         if type(value) is not bool:
             raise Invalid("reported flag must be boolean")
     elif name == "fan_timer_timeout":
@@ -68,6 +93,8 @@ def reported_value(name, value):
             "target_temperature": (5, 35),
             "target_temperature_low": (5, 35),
             "target_temperature_high": (5, 35),
+            "away_temperature_low": (5, 35),
+            "away_temperature_high": (5, 35),
         }[name]
         number(value, low, high)
     return value
@@ -111,6 +138,10 @@ def validate(data):
                 "timestamp": record["timestamp"],
                 "values": {name: reported_value(name, value) for name, value in values.items()},
             }
+        if "schedule" in clean:
+            clean["schedule"]["values"] = native_features.schedule(clean["schedule"]["values"])
+        if "structure" in clean and "structure_id" not in clean.get("device", {}).get("values", {}):
+            raise Invalid("cached home state requires device reference")
         result[ident] = {"generation": entry["generation"], "records": clean}
     return {"format": FORMAT, "saved_at": data["saved_at"], "devices": result}
 

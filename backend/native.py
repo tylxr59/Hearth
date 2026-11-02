@@ -109,7 +109,7 @@ def object_key(value, ident):
     return kind
 
 
-def envelope(ident, body, *, subscription=False):
+def envelope(ident, body, *, subscription=False, structure_key=None):
     """Normalize only the two pinned NLE shapes; never infer device identity."""
     if not isinstance(body, dict):
         raise Invalid("native object envelope required")
@@ -156,7 +156,7 @@ def envelope(ident, body, *, subscription=False):
             if name in obj and obj[name] is not None:
                 integer(obj[name])
         value = obj.get("value")
-        if kind in UNBOUND_BUCKETS:
+        if kind in UNBOUND_BUCKETS and key != structure_key:
             # Account ownership cannot be learned from this request. Leave its
             # bucket unacknowledged; do not retain or reflect an account value.
             if value is not None:
@@ -231,8 +231,11 @@ class NativeTelemetry:
             self._generation[ident] = generation
         return self._records.get(ident, {})
 
+    def normalize(self, ident, body, *, subscription=False):
+        return envelope(ident, body, subscription=subscription)
+
     def apply(self, ident, body, *, subscription=False):
-        objects = envelope(ident, body, subscription=subscription)
+        objects = self.normalize(ident, body, subscription=subscription)
         caps = self.core.caps(ident)
         prepared = []
         # Validate every projection and fingerprint before any state mutation.
