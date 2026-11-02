@@ -438,7 +438,11 @@ class NativeControls(NativeTelemetry):
                 if (
                     item.key == row["object_key"]
                     and item.revision == row["object_revision"]
-                    and row.get("value") == item.desired()
+                    and isinstance(row.get("value"), dict)
+                    and all(
+                        name in row["value"] and canonical(row["value"][name]) == canonical(value)
+                        for name, value in item.desired().items()
+                    )
                 ):
                     item.stream_write_completed = True
 
@@ -638,6 +642,14 @@ class NativeControls(NativeTelemetry):
                 for name, data in i.desired().items()
             }
             if values:
+                if row["object_key"] == f"shared.{ident}" and values.keys() & {
+                    "target_temperature",
+                    "target_temperature_low",
+                    "target_temperature_high",
+                }:
+                    # Pinned NLE's transient display/report notification. It is
+                    # delivery metadata, not a desired value to confirm or cache.
+                    values["target_change_pending"] = True
                 row["value"] = values
                 for item in self.intents[ident].values():
                     if item.key == row["object_key"] and item.revision == row["object_revision"]:

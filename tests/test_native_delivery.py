@@ -40,7 +40,9 @@ def test_matching_client_metadata_does_not_acknowledge_a_pending_value(rig):
     baseline(n)
     n.enqueue(SERIAL, {"operation": "temperature", "value": 23})
     response = n.updates(SERIAL, sub(n))
-    assert [row["value"] for row in response["objects"]] == [{"target_temperature": 23}]
+    assert [row["value"] for row in response["objects"]] == [
+        {"target_temperature": 23, "target_change_pending": True}
+    ]
     assert n.command_status(SERIAL)["temperature"] == "pending"
     assert n.core.states[SERIAL]["target_temperature"] == 22
 
@@ -82,6 +84,56 @@ def test_replacing_intent_resets_partial_confirmation(eco_native):
     assert n.command_status(SERIAL)["eco"] == "confirmed"
 
 
+def test_target_notification_clear_does_not_confirm_or_supersede_temperature(rig):
+    n = NativeControls(rig[0], clock=lambda: 1000)
+    baseline(n)
+    n.enqueue(SERIAL, {"operation": "temperature", "value": 23})
+    result = n.updates(SERIAL, sub(n))
+    row = next(row for row in result["objects"] if "value" in row)
+    assert row["value"]["target_change_pending"] is True
+    n.note_stream_write(SERIAL, result)
+    n.apply(
+        SERIAL,
+        {"objects": [{"object_key": row["object_key"], "value": {"target_change_pending": False}}]},
+    )
+    assert n.command_status(SERIAL)["temperature"] == "pending"
+    assert n.intents[SERIAL]["temperature"].observed_fields == set()
+    assert n.intents[SERIAL]["temperature"].stream_write_completed
+    assert "target_change_pending" not in json.dumps(n.snapshot_reported())
+    n.apply(
+        SERIAL,
+        {"objects": [{"object_key": row["object_key"], "value": {"target_temperature": 23}}]},
+    )
+    receipt = n.control_view(SERIAL)["delivery_receipts"]["temperature"]
+    assert receipt["outcome"] == "confirmed" and receipt["required_field_count"] == 1
+
+
+def test_merged_stream_receipts_credit_only_matching_desired_fields(rig):
+    n = NativeControls(rig[0], clock=lambda: 1000)
+    baseline(n)
+    n.enqueue(SERIAL, {"operation": "temperature", "value": 23})
+    n.enqueue(SERIAL, {"operation": "mode", "value": "cool"})
+    result = n.updates(SERIAL, sub(n))
+    changed = copy.deepcopy(result)
+    changed["objects"][0]["value"]["target_temperature"] = 24
+    n.note_stream_write(SERIAL, changed)
+    assert not n.intents[SERIAL]["temperature"].stream_write_completed
+    assert n.intents[SERIAL]["mode"].stream_write_completed
+    n.note_stream_write(SERIAL, result)
+    assert n.intents[SERIAL]["temperature"].stream_write_completed
+
+
+def test_target_notification_never_added_to_mode_or_expired_intent(rig):
+    n = NativeControls(rig[0], clock=lambda: 1000)
+    baseline(n)
+    n.enqueue(SERIAL, {"operation": "mode", "value": "cool"})
+    result = n.updates(SERIAL, sub(n))
+    assert result["objects"][0]["value"] == {"target_temperature_type": "cool"}
+    n.enqueue(SERIAL, {"operation": "temperature", "value": 23})
+    rig[3][0] += 31
+    assert n.updates(SERIAL, sub(n)) == {"objects": []}
+
+
 async def test_stale_metadata_keeps_stream_open_for_control_then_shutdown_interrupts_settle(rig):
     core, token, admin, _ = rig
     app = create_app(core, native_telemetry=True, native_controls=True, native_hold_seconds=290)
@@ -110,7 +162,9 @@ async def test_stale_metadata_keeps_stream_open_for_control_then_shutdown_interr
         ) as reply:
             assert reply.status == 202
         first = json.loads(await asyncio.wait_for(read, 1))
-        assert [row["value"] for row in first["objects"]] == [{"target_temperature": 23}]
+        assert [row["value"] for row in first["objects"]] == [
+            {"target_temperature": 23, "target_change_pending": True}
+        ]
         assert core.states[SERIAL] == before
         async with client.get("/v1/manage/devices", headers=manager_headers) as reply:
             controls = (await reply.json())["devices"][0]["native_controls"]

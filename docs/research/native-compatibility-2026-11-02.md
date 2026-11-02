@@ -72,3 +72,49 @@ modes were off/heat, with no pending commands. The successful native weather req
 is not evidence of which query form it used. No thermostat command, flash or
 physical HVAC switching was performed during this activation. Actual schedule
 replacement and remote control confirmation remain outstanding.
+
+## Supervised physical setpoint cycle
+
+The initial preflight sent no command. Its short request-age check was unsuitable
+for a healthy held subscription, and the target had moved from the earlier
+baseline. The owner confirmed the current dial was Heat at 63 F. The revised
+preflight checked an active subscription, bounded hold age, native report presence,
+heat-only capability/mode, no pending commands, finite temperatures and room at
+least 3 C above both targets. Eight independent host acceptance/refusal fixtures
+passed before executing it.
+
+One 62 F request was sent, with the native original privately preserved. The owner
+confirmed the physical dial reached 62 F. One restoration request then used the
+saved native original, with the same preflight. The owner confirmed return to
+63 F and no furnace activity throughout. This verifies a bounded setpoint delivery
+and restore on the unit, without deliberately calling for heat. It does not test
+furnace switching, cooling, fan or emergency heat.
+
+Both backend intents expired with successful server stream writes and no matching
+native reported values during their windows. Physical execution is therefore
+verified independently, while native feedback remains unresolved. No command was
+retried. The NLE reference additionally sends target_change_pending=true for target
+updates, a transient notification Hearth had omitted. A candidate follows that
+behavior without treating the device's clearing of the flag as temperature
+confirmation or persisting it for replay. It also corrects stream receipts for
+multiple intents written together in one bucket. These changes need independent
+validation and deployment before another device measurement.
+
+## Prepared target notification and receipt update (0.6.7)
+
+Only live target-temperature subscription values receive the transient notification;
+mode-only, ordinary PUT acknowledgements and expired commands do not. Clearing the
+notification cannot satisfy or supersede an outstanding target value. The hint is
+excluded from desired-field counts and reported-state persistence. Native reports
+still must supply the desired target; queueing and stream writes remain distinct
+from execution. Stream receipts now credit each matching intent in a merged bucket
+instead of requiring the entire bucket to equal each individual intent.
+
+1306 host tests pass with five optional skips; make check passes. The pinned real
+HA sandbox completes 18 synthetic control round trips with the transient hint
+cleared by simulated native reports. Separate checks cover clearing without a
+reported target, merged-frame partial matches, expiry and cache exclusion. The
+final package reproduces exactly, and all 33 remotely staged source files read
+back exactly. Active code, cache and pairing are backed up. The source remains
+staged pending owner activation/Core restart approval; no further thermostat
+command has been sent. This is not yet evidence that owner-unit feedback is fixed.

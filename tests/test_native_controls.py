@@ -39,7 +39,7 @@ def test_delivery_does_not_optimistically_update_state_and_only_put_confirms(nat
     reply = native.updates(SERIAL, request)
     shared = next(r for r in reply["objects"] if r["object_key"].startswith("shared."))
     assert list(shared) == ["object_revision", "object_timestamp", "object_key", "value"]
-    assert shared["value"] == {"target_temperature": 23}
+    assert shared["value"] == {"target_temperature": 23, "target_change_pending": True}
     assert rig[0].states[SERIAL] == before
     ack = {
         "objects": [
@@ -113,7 +113,7 @@ def test_unrelated_telemetry_rebases_without_extending_deadline(native, rig):
         {"objects": [{"object_key": f"shared.{SERIAL}", "value": {"current_temperature": 21}}]},
     )
     values = [r.get("value") for r in native.updates(SERIAL, request)["objects"]]
-    assert {"target_temperature": 23} in values
+    assert {"target_temperature": 23, "target_change_pending": True} in values
     assert native.intents[SERIAL]["temperature"].expires == original
 
 
@@ -124,7 +124,11 @@ def test_disjoint_commands_share_revision_and_supersession_is_bounded(native):
     native.enqueue(SERIAL, {"operation": "temperature", "value": 24})
     assert len(native.intents[SERIAL]) == 2
     rows = native.updates(SERIAL, request)["objects"]
-    assert rows[0]["value"] == {"target_temperature": 24, "target_temperature_type": "cool"}
+    assert rows[0]["value"] == {
+        "target_temperature": 24,
+        "target_temperature_type": "cool",
+        "target_change_pending": True,
+    }
 
 
 def test_stale_conditional_put_does_not_confirm(native):
@@ -183,7 +187,10 @@ async def test_http_manager_command_and_native_subscription_delivery(rig):
         )
         assert command_response.status == 202
         data = json.loads(await response.read())
-        assert data["objects"][0]["value"] == {"target_temperature": 23}
+        assert data["objects"][0]["value"] == {
+            "target_temperature": 23,
+            "target_change_pending": True,
+        }
         assert core.states[SERIAL]["target_temperature"] == 22
         assert (await client.get("/v1/device/commands", headers=auth(token))).status == 409
 
@@ -246,7 +253,7 @@ def test_put_ack_never_piggybacks_pending_controls_even_on_cas_conflict(native):
         response = native.apply(SERIAL, {"objects": [obj]})
         assert all("value" not in r for r in response["objects"])
     assert any(
-        r.get("value") == {"target_temperature": 23}
+        r.get("value") == {"target_temperature": 23, "target_change_pending": True}
         for r in native.updates(SERIAL, request)["objects"]
     )
 
@@ -328,7 +335,8 @@ async def test_subscription_push_sets_native_confirmation_timing_headers(rig):
         assert response.headers["X-nl-suspend-time-max"] == "300"
         assert response.headers["X-nl-disable-defer-window"] == "60"
         assert (await response.json(content_type=None))["objects"][0]["value"] == {
-            "target_temperature": 23
+            "target_temperature": 23,
+            "target_change_pending": True,
         }
         response = await client.get(
             "/v1/manage/devices", headers={"Authorization": "Bearer " + admin}

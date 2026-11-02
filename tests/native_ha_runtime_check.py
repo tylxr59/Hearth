@@ -303,13 +303,27 @@ async def check(root, profile):
                 assert len(rows) == 1
                 row = rows[0]
                 if expected is not None:
-                    assert row["value"] == expected
+                    assert row["value"] == (
+                        expected | {"target_change_pending": True}
+                        if expected.keys()
+                        & {
+                            "target_temperature",
+                            "target_temperature_low",
+                            "target_temperature_high",
+                        }
+                        else expected
+                    )
                 ack = {
                     "objects": [
                         {
                             "object_key": row["object_key"],
                             "if_object_revision": row["object_revision"],
-                            "value": row["value"],
+                            "value": row["value"]
+                            | (
+                                {"target_change_pending": False}
+                                if "target_change_pending" in row["value"]
+                                else {}
+                            ),
                         }
                     ]
                 }

@@ -4,8 +4,8 @@
 ## Current handoff: 2026-11-02
 
 Live HA is **0.6.6**. The owner has now installed the Nest on actual HVAC wiring.
-E22 is gone; the physical dial shows Heat at 59 F and the owner reports no furnace
-activity with room temperature above target. A read-only manager check found no
+E22 is gone; the physical dial is restored to Heat at 63 F and the owner reports
+no furnace activity during the bounded 63/62/63 F test. A read-only manager check found no
 pending commands. Do not assume this installation proves HVAC switching, cooling,
 fan or emergency heat. The owner requests continued completion; keep remote
 commands paused while investigating and obtain a concrete supervised test before
@@ -35,10 +35,35 @@ tests/five optional skips, make check and 18 real-HA synthetic control round tri
 The final/repro packages match. An actual full native week has not yet been
 received/validated this runtime; no owner schedule replacement is verified.
 Physical Eco is off (owner Start Eco menu), but prior remote Eco execution remains
-unverified. Next prepare a supervised bounded setpoint decrease/restore, with fresh
-heat-mode/room-above-both-targets preflight and original target preserved. Do not
-activate HVAC outputs or modes automatically. The 0.6.6 Core restart approval is
-consumed; any later restart needs a new applicable approval.
+unverified. The owner approved a supervised bounded setpoint test. The first
+preflight sent nothing; its ten-second request-age condition was unsuitable for
+290-second held subscriptions, and the target had changed. The owner then confirmed
+Heat at 63 F. A corrected bounded live-carrier check passed eight host refusal/
+acceptance fixtures. One 62 F request was queued, with original native target
+preserved privately in setpoint-lower-v2. The owner has been asked to check the dial.
+The owner confirmed the physical dial reached 62 F, then confirmed return to
+63 F after ONE restore request, with no furnace activity throughout. The bounded
+setpoint decrease and original-target restoration are physically verified. Both
+backend receipts expired with successful stream writes and zero matching native
+reported fields; do not call native feedback verified. No additional controls
+were sent. Keep both private request/restore records and original baseline.
+
+0.6.7 is fully checked and staged, NOT active. Pinned NLE sends
+transient target_change_pending=true with single/range target updates. The candidate
+adds that delivery-only notification without including it in desired-field
+confirmation, private cache, mode-only messages or expired intents. Native clearing
+of the flag cannot confirm/supersede the temperature itself. A separate stream
+receipt fix handles multiple desired intents sharing a single merged bucket frame.
+This is a protocol comparison, not yet a measured fix for the owner's feedback.
+1306 host tests pass/five optional skips, make check passes; the real HA2026.10.4
+sandbox passes 18 synthetic round trips with the notification cleared in reports.
+Final/repro packages match. All 33 staged files read back exactly; active0.6.6,
+reported cache and pairing are backed up in private/native-ha-v067-20261102/stage-v1.
+Activation and health scripts are prepared but NOT RUN. Obtain fresh approval for
+one Core restart before activation; do not send more controls during activation.
+Current helper: build/native-ha-v066-setpoint-check-v2-20261102.py. Neither step may
+be rerun; original v1 also uses the obsolete 59/58 baseline. No further HVAC
+operation or Core restart has been approved after the completed bounded test.
 
 ## Purpose and current status
 

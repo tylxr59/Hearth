@@ -39,6 +39,7 @@ def test_range_is_one_intent_and_only_confirmed_when_both_reported(ranged):
     assert reply["objects"][0]["value"] == {
         "target_temperature_low": 21,
         "target_temperature_high": 25,
+        "target_change_pending": True,
     }
     ranged.apply(
         SERIAL,
