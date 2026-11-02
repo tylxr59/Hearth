@@ -2248,3 +2248,34 @@ via settings and calls694f4; structure end-update9e0b0 also writes settings.
 Do not call future server pairing RAM-only. NLE sends name/devices but Gen2 Init
 9b2e4 does not register them. Need minimal reviewed identity/user linkage with
 explicit future owner confirmation and no away/eco/safety/schedule defaults.
+
+0.6.1 HOME ASSOCIATION PREPARED, NOT LIVE. Separate admin+confirm HA
+associate_local_home action requires live/current acknowledged user configuration.
+Optional home {id,timestamp} inside local-pairing.json; unique device-scoped random
+ID. First local-pairing-before-home.json preserved with owner-only custody;
+never overwrite earliest backup. Existing different home refuses; generation/user
+identity rechecked. Native structure key callback9e418 saves structure_id;
+751a4 parses identity, 9cc48 user_id creates user.<id>, 9e0b0 writes settings.
+Followup private/native-home-association-review-20261101; no ARM execution.
+Offer only structure identity + user_id, NOT name/devices/unregisteredfields,
+away/eco/safety/schedule/capability defaults. No fake observed home/week.
+Configuredhome grants only this device transport scope, not actualbaseline.
+local_home booleans separate configured/offered/ack/reference/conflict. Foreign
+reportedhome suppresses old configuration; mutable structure revisions remain
+native-owned after one offer (no reofferloop on each newer mutable revision).
+User/home reannounce on authenticated GET/reload; no control intent replay.
+Native unpair/restore still unverified; this action can persist setup on NAND.
+Code rollback0.6.0 refuses extended home record; preserve original userconfig
+backup with old code and review before recovery. No action yet on owner unit.
+
+1239 host passed/five optional skips, makecheck passed, realHA2026.10.4 sandbox
+passed17syntheticcontrolroundtrips + admin/confirm/conflictinghome/unsafebackup/
+configurationreload/metadataack checks. Final-v2/repro-v2 package33files exact
+(comment-only doc corrections after sandbox final; no behavior difference).
+Prepared build/native-ha-home-association-20261101-v061-final-v2; remote stage-v2
+private/native-ha-v061-20261101/stage-v2, .hearth-native-stage-20261101-v061-v2.
+Old0.6.0 code + current user-only config preserved; no home config present.
+Need NEW owner Core restart approval for0.6.1 activation (one brief automation
+pause). Activation alone sends no home. Then health before owner admin HA Action
+Hearth Associate local home, chooseclimate/confirm; explain persistent setupwrites
+and unpair limits BEFORE action. KeepEMPTYbase. NoHVACauthorization.

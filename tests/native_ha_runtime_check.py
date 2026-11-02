@@ -724,6 +724,127 @@ async def check(root, profile):
                 context=owner_context,
             )
             assert json.loads((profile / "local-pairing.json").read_bytes()) == saved_pair
+            # A separate admin/confirmation action establishes only identity and user linkage.
+            assert not native.local_home_view(IDENT)["configured"]
+            for action_context, confirmation in ((None, True), (owner_context, False)):
+                try:
+                    await hass.services.async_call(
+                        "hearth",
+                        "associate_local_home",
+                        {"entity_id": climate_id, "confirm": confirmation},
+                        blocking=True,
+                        context=action_context,
+                    )
+                except (HomeAssistantError, vol.Invalid):
+                    pass
+                else:
+                    raise AssertionError("home association lacked administrator confirmation")
+            # Refuse changed home ownership and unsafe custody before persisting association.
+            async with client.post(
+                base + "/nest/transport/put",
+                headers=headers,
+                json={
+                    "objects": [
+                        {
+                            "object_key": "device." + IDENT,
+                            "value": {"structure_id": "structure.other-home"},
+                        }
+                    ]
+                },
+                ssl=context,
+            ) as response:
+                assert response.status == 200
+            try:
+                await hass.services.async_call(
+                    "hearth",
+                    "associate_local_home",
+                    {"entity_id": climate_id, "confirm": True},
+                    blocking=True,
+                    context=owner_context,
+                )
+            except HomeAssistantError:
+                pass
+            else:
+                raise AssertionError("existing native home was overwritten")
+            async with client.post(
+                base + "/nest/transport/put",
+                headers=headers,
+                json={
+                    "objects": [{"object_key": "device." + IDENT, "value": {"structure_id": None}}]
+                },
+                ssl=context,
+            ) as response:
+                assert response.status == 200
+            refused_backup = profile / "local-pairing-before-home.json"
+            refused_backup.write_text(json.dumps(saved_pair))
+            refused_backup.chmod(0o644)
+            try:
+                await hass.services.async_call(
+                    "hearth",
+                    "associate_local_home",
+                    {"entity_id": climate_id, "confirm": True},
+                    blocking=True,
+                    context=owner_context,
+                )
+            except HomeAssistantError:
+                pass
+            else:
+                raise AssertionError("unsafe original configuration backup accepted")
+            assert json.loads((profile / "local-pairing.json").read_bytes()) == saved_pair
+            assert not native.local_home_view(IDENT)["configured"]
+            refused_backup.unlink()
+            before_home = json.loads(json.dumps(native.core.states[IDENT]))
+            before = native.listing(IDENT)["objects"]
+            async with client.post(
+                base + "/nest/transport/v7/subscribe",
+                headers=headers,
+                json={"objects": before, "chunked": True},
+                ssl=context,
+            ) as pending:
+                home_result = await hass.services.async_call(
+                    "hearth",
+                    "associate_local_home",
+                    {"entity_id": climate_id, "confirm": True},
+                    blocking=True,
+                    context=owner_context,
+                    return_response=True,
+                )
+                assert home_result["configured"]
+                home_reply = await pending.json(content_type=None)
+            home_row = next(
+                row for row in home_reply["objects"] if row["object_key"].startswith("structure.")
+            )
+            user_id = user["object_key"].partition(".")[2]
+            assert home_row["value"] == {"user_id": user_id}
+            assert native.core.states[IDENT] == before_home
+            assert not native.home_key(IDENT) and not native.intents[IDENT]
+            assert (
+                json.loads((profile / "local-pairing-before-home.json").read_bytes()) == saved_pair
+            )
+            assert (profile / "local-pairing-before-home.json").stat().st_mode & 0o777 == 0o600
+            saved_pair = json.loads((profile / "local-pairing.json").read_bytes())
+            async with client.post(
+                base + "/nest/transport/v7/subscribe",
+                headers=headers,
+                json={
+                    "objects": [{k: v for k, v in home_row.items() if k != "value"}],
+                    "chunked": False,
+                },
+                ssl=context,
+            ) as response:
+                assert response.status == 200
+                await response.read()
+            assert native.local_home_view(IDENT)["metadata_acknowledged"]
+            assert not native.local_home_view(IDENT)["device_reference_observed"]
+            # Explicit repeated confirmation preserves both identities and original backup.
+            await hass.services.async_call(
+                "hearth",
+                "associate_local_home",
+                {"entity_id": climate_id, "confirm": True},
+                blocking=True,
+                context=owner_context,
+            )
+            assert json.loads((profile / "local-pairing.json").read_bytes()) == saved_pair
             duplicate = await hass.config_entries.flow.async_init(
                 "hearth", context={"source": "user"}
             )
@@ -768,6 +889,10 @@ async def check(root, profile):
                         or (
                             r["object_key"] == user["object_key"]
                             and r["value"] == {"name": "Hearth"}
+                        )
+                        or (
+                            r["object_key"] == home_row["object_key"]
+                            and r["value"] == {"user_id": user_id}
                         )
                         for r in objects
                     )
@@ -849,6 +974,7 @@ async def check(root, profile):
                     "native_empty_subscription_filters": True,
                     "explicit_local_user_announcement": True,
                     "local_pairing_private_configuration_reload": True,
+                    "explicit_home_identity_private_backup_reload": True,
                     "gen2_manual_schedule_wire_shape_preserved": True,
                     "existing_home_not_silently_migrated": True,
                     "mode_selector_tracks_reported_capabilities": True,

@@ -1,7 +1,7 @@
 """Explicit local user announcement; configuration, never reported device state.
 
-This first pairing step supplies only the reviewed user.name field. It creates
-no home, schedule, equipment capability or eco baseline.
+The first step supplies user.name. A separate confirmed action adds a private
+home identity and user link. Neither creates schedule, equipment or eco baselines.
 """
 
 import json
@@ -21,10 +21,10 @@ def validate(data):
         raise Invalid("local pairing configuration required")
     if not isinstance(data["devices"], dict) or len(data["devices"]) > 64:
         raise Invalid("bounded local pairing devices required")
-    result, users = {}, set()
+    result, users, homes = {}, set(), set()
     for ident, record in data["devices"].items():
         serial(ident)
-        if not isinstance(record, dict) or set(record) != {
+        if not isinstance(record, dict) or set(record) - {"home"} != {
             "generation",
             "user_id",
             "revision",
@@ -41,8 +41,22 @@ def validate(data):
             raise Invalid("unique enrollment-bound local user required")
         if integer(record["revision"]) != 1 or integer(record["timestamp"]) == 0:
             raise Invalid("local user metadata required")
+        if "home" in record:
+            home = record["home"]
+            if (
+                not isinstance(home, dict)
+                or set(home) != {"id", "timestamp"}
+                or not isinstance(home["id"], str)
+                or not re.fullmatch(r"[0-9a-f]{32}", home["id"])
+                or integer(home["timestamp"]) == 0
+                or home["id"] in homes
+            ):
+                raise Invalid("explicit unique local home identity required")
+            homes.add(home["id"])
         users.add(user)
         result[ident] = dict(record)
+        if "home" in record:
+            result[ident]["home"] = dict(record["home"])
     return {"format": FORMAT, "devices": result}
 
 
@@ -75,3 +89,20 @@ def metadata(record):
 
 def announcement(record):
     return metadata(record) | {"value": {"name": "Hearth"}}
+
+
+def home_metadata(record):
+    return {
+        "object_revision": 1,
+        "object_timestamp": record["home"]["timestamp"],
+        "object_key": "structure." + record["home"]["id"],
+    }
+
+
+def home_announcement(record):
+    # Identity and the reviewed user link only. No away/eco/safety defaults.
+    return home_metadata(record) | {"value": {"user_id": record["user_id"]}}
+
+
+def create_home(timestamp):
+    return {"id": uuid.uuid4().hex, "timestamp": integer(timestamp)}

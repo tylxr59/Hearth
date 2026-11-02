@@ -3,7 +3,7 @@
 Only allowlisted control scalars are retained. Responses carry partial values,
 never raw bucket echoes. Delivery is not confirmation; only accepted native PUT
 values update reported state. Control intents are never persisted or replayed.
-Reported-state caching and explicit local-user configuration are separate.
+Reported-state caching and explicit local user/home configuration are separate.
 """
 
 import hashlib
@@ -60,6 +60,8 @@ class NativeControls(NativeTelemetry):
         self._local_users = {}
         self._local_user_offered = set()
         self._local_user_acknowledged = set()
+        self._local_home_offered = set()
+        self._local_home_acknowledged = set()
 
     def _records_for(self, ident):
         self.core.caps(ident)
@@ -75,6 +77,8 @@ class NativeControls(NativeTelemetry):
             self._local_users.pop(ident, None)
             self._local_user_offered.discard(ident)
             self._local_user_acknowledged.discard(ident)
+            self._local_home_offered.discard(ident)
+            self._local_home_acknowledged.discard(ident)
         return super()._records_for(ident)
 
     def home_key(self, ident):
@@ -83,10 +87,10 @@ class NativeControls(NativeTelemetry):
 
     def normalize(self, ident, body, *, subscription=False):
         # A home bucket is scoped to this authenticated device's record namespace.
-        # Only its accepted device-bucket reference can select it; never expose
-        # account buckets globally or infer ownership from a structure upload.
+        # Use its accepted device reference or its explicit enrollment-bound
+        # configuration; never infer ownership from an arbitrary structure upload.
         self._records_for(ident)
-        home = self.home_key(ident)
+        home = self.transport_home_key(ident)
         rows = envelope(ident, body, subscription=subscription)
         records = self._records_for(ident)
         for key, kind, value, conditional, _, _ in rows:
@@ -115,9 +119,16 @@ class NativeControls(NativeTelemetry):
             if enrolled is None or enrolled["hash"] != record["generation"]:
                 continue
             self._records_for(ident)
+            previous = self._local_users.get(ident)
             self._local_users[ident] = dict(record)
-            self._local_user_offered.discard(ident)
-            self._local_user_acknowledged.discard(ident)
+            if previous is None or native_pairing.metadata(previous) != native_pairing.metadata(
+                record
+            ):
+                self._local_user_offered.discard(ident)
+                self._local_user_acknowledged.discard(ident)
+            if previous is None or previous.get("home") != record.get("home"):
+                self._local_home_offered.discard(ident)
+                self._local_home_acknowledged.discard(ident)
             self.notify(ident)
 
     def local_user_view(self, ident):
@@ -128,44 +139,120 @@ class NativeControls(NativeTelemetry):
             "metadata_acknowledged": ident in self._local_user_acknowledged,
         }
 
+    def transport_home_key(self, ident):
+        # Configured routing scope is not a device-reported home baseline.
+        observed = self.home_key(ident)
+        record = self._local_users.get(ident)
+        return observed or (
+            native_pairing.home_metadata(record)["object_key"]
+            if record is not None and "home" in record
+            else None
+        )
+
+    def local_home_view(self, ident):
+        self._records_for(ident)
+        record = self._local_users.get(ident)
+        configured = record is not None and "home" in record
+        key = native_pairing.home_metadata(record)["object_key"] if configured else None
+        observed = self.home_key(ident)
+        return {
+            "configured": configured,
+            "offered": ident in self._local_home_offered,
+            "metadata_acknowledged": ident in self._local_home_acknowledged,
+            "device_reference_observed": configured and observed == key,
+            "conflict": configured and observed is not None and observed != key,
+        }
+
     def _local_user_response(self, ident, body, response):
         record = self._local_users.get(ident)
         if record is None:
             return response
-        meta = native_pairing.metadata(record)
         rows = envelope(
             ident,
             body,
             subscription=True,
-            structure_key=self.home_key(ident),
-            user_key=meta["object_key"],
+            structure_key=self.transport_home_key(ident),
+            user_key=native_pairing.metadata(record)["object_key"],
         )
-        own = next((row for row in rows if row[0] == meta["object_key"]), None)
-        matches = own is not None and own[4:] == (meta["object_revision"], meta["object_timestamp"])
-        if matches:
-            self._local_user_acknowledged.add(ident)
-        # One offer after configuration/server reload. Thereafter resend only
-        # on an explicit request for our user key with different metadata.
-        # Missing acknowledgement does not create an unbounded push loop.
-        if ident in self._local_user_offered and (own is None or matches):
-            return response
-        self._local_user_offered.add(ident)
-        return {"objects": [native_pairing.announcement(record), *response["objects"]]}
+        announcements = []
+        configurations = [
+            (
+                native_pairing.metadata(record),
+                native_pairing.announcement(record),
+                self._local_user_offered,
+                self._local_user_acknowledged,
+            )
+        ]
+        if "home" in record and not self.local_home_view(ident)["conflict"]:
+            configurations.append(
+                (
+                    native_pairing.home_metadata(record),
+                    native_pairing.home_announcement(record),
+                    self._local_home_offered,
+                    self._local_home_acknowledged,
+                )
+            )
+        for meta, announcement, offered, acknowledged in configurations:
+            own = next((row for row in rows if row[0] == meta["object_key"]), None)
+            matches = own is not None and own[4:] == (
+                meta["object_revision"],
+                meta["object_timestamp"],
+            )
+            if matches:
+                acknowledged.add(ident)
+            if ident not in offered or (
+                offered is self._local_user_offered and own is not None and not matches
+            ):
+                offered.add(ident)
+                announcements.append(announcement)
+        # User precedes home; never claim configuration as observed telemetry.
+        keys = {row["object_key"] for row in announcements}
+        return {
+            "objects": announcements
+            + [row for row in response["objects"] if row["object_key"] not in keys]
+        }
 
     def bootstrap_listing(self, ident):
         response = self.listing(ident)
         record = self._local_users.get(ident)
         if record is not None:
-            response["objects"][0] = native_pairing.announcement(record)
-            self._local_user_offered.add(ident)
-            self._local_user_acknowledged.discard(ident)
+            configurations = [
+                (
+                    native_pairing.announcement(record),
+                    self._local_user_offered,
+                    self._local_user_acknowledged,
+                )
+            ]
+            if "home" in record and not self.local_home_view(ident)["conflict"]:
+                configurations.append(
+                    (
+                        native_pairing.home_announcement(record),
+                        self._local_home_offered,
+                        self._local_home_acknowledged,
+                    )
+                )
+            keys = {row["object_key"] for row, _, _ in configurations}
+            response["objects"] = [row for row, _, _ in configurations] + [
+                row for row in response["objects"] if row["object_key"] not in keys
+            ]
+            for _, offered, acknowledged in configurations:
+                offered.add(ident)
+                acknowledged.discard(ident)
         return response
 
     def listing(self, ident):
         response = super().listing(ident)
         record = self._local_users.get(ident)
         if record is not None:
-            response["objects"].insert(0, native_pairing.metadata(record))
+            metadata = [native_pairing.metadata(record)]
+            if "home" in record and not self.local_home_view(ident)["conflict"]:
+                home = native_pairing.home_metadata(record)
+                if not any(row["object_key"] == home["object_key"] for row in response["objects"]):
+                    metadata.append(home)
+            keys = {row["object_key"] for row in metadata}
+            response["objects"] = metadata + [
+                row for row in response["objects"] if row["object_key"] not in keys
+            ]
         return response
 
     def snapshot_reported(self):
@@ -235,6 +322,7 @@ class NativeControls(NativeTelemetry):
                 "observed_bucket_kinds": sorted({key.partition(".")[0] for key in records}),
             },
             "local_pairing": self.local_user_view(ident),
+            "local_home": self.local_home_view(ident),
             "baseline_fields": {
                 "temperature": shared is not None and "target_temperature" in shared.fingerprints,
                 "mode": shared is not None and MODE_FIELD in shared.fingerprints,

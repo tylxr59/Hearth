@@ -103,3 +103,18 @@ begin_local_pairing:
       required: true
       selector:
         boolean:
+
+associate_local_home:
+  name: Associate local home
+  description: Explicitly associate this Nest with its private local home identity. Changes native saved setup state. Requires an acknowledged local user. No away, eco, schedule, safety or equipment defaults are supplied.
+  fields:
+    entity_id:
+      required: true
+      selector:
+        entity:
+          integration: hearth
+          domain: climate
+    confirm:
+      required: true
+      selector:
+        boolean:

@@ -73,3 +73,44 @@ RAM-only merely because the server supplies it. NLE supplies a structure after
 the user, but the Gen2 initializer does not register its name/devices fields.
 Review the identity callback and user-link processing before a minimal explicit
 home-association action; omit away, eco, safety, equipment and schedule defaults.
+
+## Explicit home association (0.6.1 preparation)
+
+The next separate administrator action, `associate_local_home`, requires explicit
+confirmation, a live authenticated connection and the current local-user metadata
+acknowledgement. It refuses a conflicting reported home and a changed enrollment
+or stored user identity. It preserves the first pre-association configuration in
+private `local-pairing-before-home.json`, then atomically saves/reads back an
+optional home record in `local-pairing.json`. Both use the same owner-only,
+no-symlink, single-link custody checks. The original backup is not overwritten.
+
+The outgoing structure contains only `user_id`, referencing the already configured
+local user, plus a random per-device structure identity in its object key. Native
+review finds that structure key assignment saves `structure_id`; the registered
+`user_id` field constructs the user-bucket reference. Structure end-update calls
+the native settings writer. The follow-up read-only exports are private under
+`private/native-home-association-review-20261101`. No target binary was executed.
+NLE's home name/device list is omitted: those fields were not found in this Gen2
+initializer. No away, eco, safety, equipment or schedule default is supplied.
+
+Configuration is sent before device updates, only on authenticated GET/subscription,
+never piggybacked on PUT. An unanswered offer does not create an endless push loop.
+Later mutable structure revisions remain authoritative; the initial configuration
+revision does not replace them on every subscription. A reported foreign home
+suppresses the configured home announcement. Home configuration, metadata
+acknowledgement, actual device-reference observation and conflict are separate
+value-free diagnostics. Configuration never manufactures reported baselines.
+
+Activation alone does not add a home to an existing user-only configuration. The
+explicit action can cause persistent native setup writes and is not a firmware
+flash or a RAM-only change. A native unpair/restore sequence remains unverified;
+the saved HA configuration is not a whole-device recovery image. Initial testing
+requires the completely unwired base and owner confirmation before the action.
+A code rollback to 0.6.0 cannot read the extended home record; preserve the original
+configuration backup with the old code, and review restoration before using it.
+
+Host and real-HA sandbox coverage includes enrollment isolation, malformed metadata
+atomicity, distinct configuration/reporting, identity ordering, no default control
+values, private backup/reload, administrator/confirmation checks, conflicting-home
+refusal and unsafe-backup refusal. Actual home acceptance and subsequent native
+eco/schedule reports remain unmeasured until the owner performs the action.

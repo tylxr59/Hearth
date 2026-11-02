@@ -281,3 +281,18 @@ until the explicit action is performed.
 
 Gen2 `manual_schedule` wrappers are now preserved when observed; the HA schedule
 actions still use the same canonical weekly format and backup/revision safeguards.
+
+### Explicit home association (0.6.1)
+
+After the local-user metadata is acknowledged, an administrator can separately
+perform **Hearth: Associate local home** with the Hearth climate entity and
+**Confirm** enabled. Use the completely unwired base for the initial test.
+This supplies only a private home identity and user link. The native client can
+save this setup state persistently; no away, eco, schedule or HVAC capability
+default is supplied. The action refuses an existing different home.
+
+The first pre-association HA configuration is retained privately as
+`.storage/hearth/local-pairing-before-home.json`. This is not a complete device
+backup or a verified native unpair/restore procedure. `local_home` diagnostics
+separate configuration, offer, metadata acknowledgement, device-reported reference
+and conflict. Eco/schedule controls still require their actual native baselines.

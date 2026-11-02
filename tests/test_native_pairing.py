@@ -119,6 +119,95 @@ def test_local_pairing_store_is_private_and_not_the_reported_cache(tmp_path, pai
         reported_store.load(tmp_path, "../escape.json", pairing.decode)
 
 
+def home_config(paired):
+    n, data = paired
+    record = data["devices"][SERIAL]
+    n.apply(SERIAL, {"objects": [pairing.metadata(record)]}, subscription=True)
+    record["home"] = pairing.create_home(1000001)
+    n.configure_local_users(data)
+    return n, data, record
+
+
+def test_home_offer_is_user_link_only_and_does_not_invent_baselines(paired):
+    n, data, record = home_config(paired)
+    assert n.local_user_view(SERIAL)["metadata_acknowledged"]
+    body = {"objects": [pairing.metadata(record)]}
+    reply = n.apply(SERIAL, body, subscription=True)
+    assert reply["objects"] == [pairing.home_announcement(record)]
+    assert reply["objects"][0]["value"] == {"user_id": record["user_id"]}
+    assert not n.home_key(SERIAL)
+    assert not n.control_view(SERIAL)["feature_baselines"]["native_eco_field_observed"]
+    assert not n.control_view(SERIAL)["feature_baselines"]["schedule_bucket_observed"]
+    assert n.apply(SERIAL, body, subscription=True) == {"objects": []}
+    ack = {"objects": [pairing.metadata(record), pairing.home_metadata(record)]}
+    n.apply(SERIAL, ack, subscription=True)
+    assert n.local_home_view(SERIAL)["metadata_acknowledged"]
+    assert not n.local_home_view(SERIAL)["device_reference_observed"]
+    assert "structure" not in n.snapshot_reported()["devices"][SERIAL]["records"]
+    assert pairing.decode(pairing.encode(data)) == data
+
+
+def test_home_reference_and_mutable_bucket_versions_remain_device_reported(paired):
+    n, _, record = home_config(paired)
+    n.updates(SERIAL, {"objects": [pairing.metadata(record)]})
+    key = pairing.home_metadata(record)["object_key"]
+    n.apply(
+        SERIAL, {"objects": [{"object_key": f"device.{SERIAL}", "value": {"structure_id": key}}]}
+    )
+    n.apply(SERIAL, {"objects": [{"object_key": key, "value": {"manual_eco_all": False}}]})
+    assert n.local_home_view(SERIAL)["device_reference_observed"]
+    meta = next(row for row in n.listing(SERIAL)["objects"] if row["object_key"] == key)
+    assert meta == n._records_for(SERIAL)[key].metadata(key)
+    reply = n.updates(SERIAL, {"objects": [meta]})
+    assert all("value" not in row for row in reply["objects"])
+    assert not n.intents.get(SERIAL)
+
+
+def test_foreign_reported_home_stops_configured_home_announcements(paired):
+    n, _, record = home_config(paired)
+    n.apply(
+        SERIAL,
+        {
+            "objects": [
+                {
+                    "object_key": f"device.{SERIAL}",
+                    "value": {"structure_id": "structure.other-home"},
+                }
+            ]
+        },
+    )
+    assert n.local_home_view(SERIAL)["conflict"]
+    assert not n.local_home_view(SERIAL)["offered"]
+    reply = n.bootstrap_listing(SERIAL)
+    assert pairing.home_metadata(record)["object_key"] not in json.dumps(reply)
+
+
+def test_home_scope_is_enrollment_bound_and_get_orders_user_before_home(paired):
+    n, _, record = home_config(paired)
+    reply = n.bootstrap_listing(SERIAL)
+    assert reply["objects"][:2] == [pairing.announcement(record), pairing.home_announcement(record)]
+    n.core.registry.data["devices"][SERIAL]["hash"] = digest("d" * 64)
+    assert not n.local_home_view(SERIAL)["configured"]
+    assert not n.local_home_view(SERIAL)["offered"]
+
+
+@pytest.mark.parametrize("fault", ["id", "extra", "timestamp", "duplicate"])
+def test_home_config_refuses_invalid_or_shared_identity(paired, fault):
+    _, data, record = home_config(paired)
+    if fault == "id":
+        record["home"]["id"] = "../escape"
+    elif fault == "extra":
+        record["home"]["away"] = False
+    elif fault == "timestamp":
+        record["home"]["timestamp"] = True
+    else:
+        other = copy.deepcopy(record)
+        other["user_id"] = "a" * 32
+        data["devices"][OTHER] = other
+    with pytest.raises(Invalid):
+        pairing.validate(data)
+
+
 @pytest.mark.parametrize(
     "fault",
     ["extra", "duplicate_user", "bad_generation", "bad_id", "bool_revision", "zero_timestamp"],
@@ -141,3 +230,27 @@ def test_pairing_configuration_refuses_ambiguous_or_unsafe_records(paired, fault
         record["timestamp"] = 0
     with pytest.raises(Invalid):
         pairing.encode(data)
+
+
+def test_home_configuration_does_not_alias_mutable_caller_input(paired):
+    n, _, record = home_config(paired)
+    key = n.transport_home_key(SERIAL)
+    record["home"]["id"] = "b" * 32
+    assert n.transport_home_key(SERIAL) == key
+
+
+def test_malformed_owned_home_metadata_cannot_mutate_device_state(paired):
+    n, _, record = home_config(paired)
+    before = copy.deepcopy(n.core.states)
+    with pytest.raises(Invalid):
+        n.apply(
+            SERIAL,
+            {
+                "objects": [
+                    {"object_key": f"device.{SERIAL}", "value": {"current_humidity": 77}},
+                    {**pairing.home_metadata(record), "object_timestamp": True},
+                ]
+            },
+            subscription=True,
+        )
+    assert n.core.states == before

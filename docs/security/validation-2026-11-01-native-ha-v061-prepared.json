@@ -1,0 +1,22 @@
+{
+  "status": "native-home-association-prepared-not-activated",
+  "integration_version": "0.6.1",
+  "host_tests_passed": 1239,
+  "optional_tests_skipped": 5,
+  "make_check": "passed",
+  "real_ha_core": "2026.10.4",
+  "real_ha_sandbox": "passed",
+  "synthetic_control_round_trips": 17,
+  "home_action_admin_and_confirmation_required": true,
+  "acknowledged_current_local_user_required": true,
+  "conflicting_home_refused": true,
+  "unsafe_backup_refused": true,
+  "pre_association_config_preserved": true,
+  "configuration_not_reported_telemetry": true,
+  "equipment_away_eco_schedule_defaults_supplied": false,
+  "actual_home_association_verified": false,
+  "native_unpair_restore_verified": false,
+  "physical_hvac_exercised": false,
+  "integration_files_reproduced": 33,
+  "activated": false
+}

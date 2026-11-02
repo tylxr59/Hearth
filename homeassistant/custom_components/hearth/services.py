@@ -47,6 +47,21 @@ def register(hass, entry):
         except OSError as exc:
             raise HomeAssistantError("Local pairing configuration could not be preserved") from exc
 
+    async def associate_local_home(call):
+        user = (
+            await hass.auth.async_get_user(call.context.user_id) if call.context.user_id else None
+        )
+        if user is None or not user.is_admin:
+            raise HomeAssistantError(
+                "Local home association requires a Home Assistant administrator session"
+            )
+        try:
+            return await runtime.associate_local_home(identity(call.data["entity_id"]))
+        except Invalid as exc:
+            raise HomeAssistantError(str(exc)) from exc
+        except OSError as exc:
+            raise HomeAssistantError("Local home configuration could not be preserved") from exc
+
     async def get_schedule(call):
         ident = identity(call.data["entity_id"])
         try:
@@ -142,6 +157,11 @@ def register(hass, entry):
 
     target = {vol.Required("entity_id"): cv.entity_id}
     handlers = {
+        "associate_local_home": (
+            associate_local_home,
+            vol.Schema(target | {vol.Required("confirm"): vol.All(bool, vol.In([True]))}),
+            SupportsResponse.OPTIONAL,
+        ),
         "begin_local_pairing": (
             begin_local_pairing,
             vol.Schema(target | {vol.Required("confirm"): vol.All(bool, vol.In([True]))}),

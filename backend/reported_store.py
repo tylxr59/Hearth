@@ -1,4 +1,4 @@
-"""Atomic owner-only reported-state custody. Never stores command intent."""
+"""Atomic owner-only custody for fixed state/configuration documents. No command intent."""
 
 import os
 import secrets
@@ -27,7 +27,7 @@ def directory(path):
 
 
 def checked_name(name):
-    if name not in (NAME, "local-pairing.json"):
+    if name not in (NAME, "local-pairing.json", "local-pairing-before-home.json"):
         raise Invalid("fixed private document name required")
     return name
 
