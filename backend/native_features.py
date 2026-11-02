@@ -96,13 +96,73 @@ def schedule_shape(value):
     known = {"ver", "name", "schedule_mode", "days"}
     mode = fields.get("schedule_mode")
     days = fields.get("days")
+    point_types, point_fields, point_modes = set(), {}, set()
+    unknown_points, max_points = 0, 0
+    indices_ok, times_ok, ordered, bounds_ok, point_modes_match = True, True, True, True, True
+    if isinstance(days, dict):
+        for container in list(days.values())[:7]:
+            point_types.add(json_type(container))
+            if isinstance(container, dict):
+                contiguous = set(container) == {str(i) for i in range(len(container))}
+                indices_ok &= contiguous
+                points = (
+                    [container[str(i)] for i in range(len(container))]
+                    if contiguous
+                    else list(container.values())
+                )
+            elif isinstance(container, list):
+                points = container
+            else:
+                indices_ok = False
+                continue
+            max_points = max(max_points, min(len(points), 25))
+            previous = -1
+            for point in points[:25]:
+                if not isinstance(point, dict):
+                    point_types.add(json_type(point))
+                    continue
+                known_point = {"time", "type", "temp", "temp-min", "temp-max"}
+                unknown_points = max(unknown_points, min(len(point.keys() - known_point), 257))
+                for key in known_point & point.keys():
+                    point_fields.setdefault(key, set()).add(json_type(point[key]))
+                point_mode = point.get("type")
+                point_modes.add(
+                    point_mode
+                    if isinstance(point_mode, str) and point_mode in {*MODES, "OFF"}
+                    else "other"
+                )
+                point_modes_match &= point_mode == mode
+                when = point.get("time")
+                times_ok &= type(when) is int
+                if type(when) is int:
+                    ordered &= previous < when < 86400
+                    previous = when
+                for key in {"temp", "temp-min", "temp-max"} & point.keys():
+                    target = point[key]
+                    bounds_ok &= type(target) in (int, float) and 10 <= target <= 30
     return {
         "format": "wrapped" if wrapped else "bare",
-        "value_type": json_type(inner),
+        "value_type": json_type(dict(inner)) if isinstance(inner, dict) else json_type(inner),
         "known_member_types": {
             key: json_type(fields[key]) for key in sorted(known & fields.keys())
         },
         "unknown_member_count": min(len(fields.keys() - known), 257),
         "mode_class": mode if isinstance(mode, str) and mode in {*MODES, "OFF"} else "other",
         "day_count": min(len(days), 8) if isinstance(days, dict) else None,
+        "version_is_two": type(fields.get("ver")) is int and fields["ver"] == 2,
+        "day_keys_complete": isinstance(days, dict) and set(days) == {str(i) for i in range(7)},
+        "name_ascii_bounded": isinstance(fields.get("name"), str)
+        and re.fullmatch(r"[\x20-\x7e]{0,64}", fields["name"]) is not None,
+        "point_container_types": sorted(point_types),
+        "point_known_member_types": {
+            key: sorted(types) for key, types in sorted(point_fields.items())
+        },
+        "point_unknown_member_count_max": unknown_points,
+        "point_indices_contiguous": indices_ok,
+        "max_points_per_day": max_points,
+        "point_mode_classes": sorted(point_modes),
+        "point_modes_match": point_modes_match,
+        "point_times_integer": times_ok,
+        "point_times_ordered_in_day": ordered,
+        "point_temperatures_in_supported_bounds": bounds_ok,
     }

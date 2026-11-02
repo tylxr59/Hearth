@@ -8,5 +8,7 @@
   "native_revision_errors_observed": true,
   "wiring_or_hvac_checks_disabled": false,
   "restore_confirmed": false,
-  "physical_hvac_exercised": false
+  "physical_hvac_exercised": false,
+  "manual_versus_auto_eco_at_that_time": "unverified",
+  "late_manual_command_application_proven": false
 }

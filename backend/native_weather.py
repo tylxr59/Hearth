@@ -40,6 +40,23 @@ def query_location(value):
     return {"zip": postal, "country": country.upper()}
 
 
+def query_shape(value):
+    """Bounded type/shape evidence; never stores a postal code or coordinates."""
+    text = value[:256] if isinstance(value, str) else ""
+    parts = text.split(",", 2)
+    return {
+        "value_type": "string" if isinstance(value, str) else "missing_or_other",
+        "length": min(len(value), 257) if isinstance(value, str) else 0,
+        "comma_count": min(text.count(","), 4),
+        "part_lengths": [min(len(part), 32) for part in parts],
+        "country_empty": len(parts) == 2 and not parts[1],
+        "country_two_letters": len(parts) == 2
+        and re.fullmatch(r"[A-Za-z]{2}", parts[1]) is not None,
+        "coordinate_pair_shape": len(parts) == 2
+        and all(re.fullmatch(r"[+-]?[0-9]+(?:\.[0-9]+)?", part) is not None for part in parts),
+    }
+
+
 def timestamp(value):
     if type(value) is not int or not 0 < value <= 2147483647:
         raise Invalid("weather time outside native signed-32-bit range")

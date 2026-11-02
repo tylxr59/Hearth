@@ -24,7 +24,7 @@ directory. The source template alone is incomplete: the packager includes the
 single canonical transport implementation with isolated relative imports. It
 excludes the MQTT module, broker credentials, firmware and all private data.
 
-The independent runtime check uses the pinned HA Core2026.10.4 image, a temporary
+The independent runtime check uses the pinned HA Core 2026.10.4 image, a temporary
 HA instance and synthetic certificates/credentials, with physical networking
 disabled:
 
@@ -304,3 +304,29 @@ finite `home_reference_source`. This does not create eco or schedule baselines.
 The private reported cache preserves the actual structure key, including when no
 allowed structure value has arrived yet. Cached identity does not imply a fresh
 connection, and pending controls still cannot survive an integration restart.
+
+### Subscription delivery candidate (0.6.5)
+
+The candidate keeps quiet subscriptions open until an actionable value arrives.
+Pending control values do not disappear merely because the client knows a bucket
+revision. Explicit None continues to send Eco-off even when the displayed preset
+is stale. Confirmation now needs fresh matching reports for every desired field;
+old cached values cannot complete a partial acknowledgement.
+
+Administrator diagnostics include active subscription counts and value-free
+terminal delivery receipts. A stream write does not prove that the thermostat
+executed a command, and expiry does not cancel data already offered to the peer.
+Physical testing is still on a completely unwired base; native HVAC loops and
+wiring checks remain intact.
+
+
+The 0.6.5 candidate prefers a recognized device-reported Eco mode over the home
+request flag. Its `eco_mode` attribute distinguishes manual, automatic, normal
+and unknown. Automatic Eco remains native behavior; it is not silently disabled
+by the integration. Unsupported observed values are unknown. Only the recognized
+mode is cached, with no other nested metadata, and its cache/device source is
+shown under `reported_state_source.preset`.
+
+Invalid weather request diagnostics record shape flags and bounded lengths only,
+not location values or arbitrary query parameter names. Weather response/authentication
+rules are unchanged by this diagnostic addition.

@@ -100,3 +100,38 @@ def test_weather_query_preserves_native_country_and_postal():
 
     assert query_location("00000,US") == {"zip": "00000", "country": "US"}
     assert query_location("SW1A 1AA,GB") == {"zip": "SW1A 1AA", "country": "GB"}
+
+
+@pytest.mark.parametrize("query", ["PRIVATE-POSTAL,", "12.3456,-45.6789", "PRIVATE-LOCATION"])
+def test_weather_shape_never_retains_location_values(query):
+    import json
+
+    from backend.native_weather import query_shape
+
+    shape = query_shape(query)
+    text = json.dumps(shape)
+    assert query not in text and "PRIVATE" not in text and "12.3456" not in text
+    assert shape["length"] <= 257 and len(shape["part_lengths"]) <= 3
+
+
+async def test_invalid_weather_envelope_diagnostics_do_not_expose_query_or_unknown_names(rig):
+    import json
+
+    from aiohttp.test_utils import TestClient, TestServer
+
+    from backend.api import create_app
+
+    app = create_app(rig[0], native_telemetry=True)
+    async with TestClient(TestServer(app)) as client:
+        response = await client.get(
+            "/nest/weather/v1",
+            params={"query": "PRIVATE-PLACE,US", "PRIVATE-PARAMETER": "PRIVATE-VALUE"},
+        )
+        assert response.status == 400
+        response = await client.get(
+            "/v1/manage/devices", headers={"Authorization": "Bearer " + rig[2]}
+        )
+        assert response.status == 200
+        diagnostics = (await response.json())["weather_diagnostics"]
+    assert diagnostics["last_invalid_query"]["unknown_member_count"] == 1
+    assert "PRIVATE" not in json.dumps(diagnostics)

@@ -176,7 +176,8 @@ def test_signed_subscription_version_only_requests_current_metadata(rig, revisio
         {"objects": [{"object_key": key, "object_revision": revision, "object_timestamp": 0}]},
         subscription=True,
     )
-    assert result == {"objects": [previous]}
+    assert result == {"objects": []}
+    assert n._records_for(SERIAL)[key].metadata(key) == previous
     assert n._records_for(SERIAL)[key].revision >= 0
     assert n.core.states == before and not n.intents.get(SERIAL)
     with pytest.raises(RevisionError):

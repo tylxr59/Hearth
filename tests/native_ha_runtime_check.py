@@ -286,12 +286,15 @@ async def check(root, profile):
 
             async def command_roundtrip(service, fields, expected, domain="climate"):
                 before = native.listing(IDENT)["objects"]
+                for metadata in before:
+                    metadata["object_revision"] = -(1 << 31)
                 async with client.post(
                     base + "/nest/transport/v7/subscribe",
                     headers=headers,
                     json={"objects": before, "chunked": True},
                     ssl=context,
                 ) as pending:
+                    assert not pending.content.at_eof()
                     await hass.services.async_call(
                         domain, service, {"entity_id": climate_id, **fields}, blocking=True
                     )
@@ -310,6 +313,37 @@ async def check(root, profile):
                         }
                     ]
                 }
+                if row["value"].get("manual_eco_all") is False:
+                    partial = {
+                        "objects": [
+                            {
+                                "object_key": row["object_key"],
+                                "value": {
+                                    "manual_eco_timestamp": row["value"]["manual_eco_timestamp"]
+                                },
+                            }
+                        ]
+                    }
+                    async with client.post(
+                        base + "/nest/transport/put", headers=headers, json=partial, ssl=context
+                    ) as response:
+                        assert response.status == 200
+                    assert native.command_status(IDENT)["eco"] == "pending"
+                    ack["objects"][0]["value"] = {"manual_eco_all": False}
+                if "manual_eco_all" in row["value"]:
+                    ack["objects"].append(
+                        {
+                            "object_key": "device." + IDENT,
+                            "value": {
+                                "eco": {
+                                    "mode": "manual-eco"
+                                    if row["value"]["manual_eco_all"]
+                                    else "schedule",
+                                    "unretained_native_metadata": "private-marker",
+                                }
+                            },
+                        }
+                    )
                 async with client.post(
                     base + "/nest/transport/put", headers=headers, json=ack, ssl=context
                 ) as response:
@@ -461,9 +495,27 @@ async def check(root, profile):
             ) as response:
                 assert response.status == 200
                 rows = (await response.json())["objects"]
-                assert rows and all(
-                    row["object_revision"] >= 0 and "value" not in row for row in rows
-                )
+                assert not rows
+            original_humidity = native.core.states[IDENT]["humidity"]
+            async with client.post(
+                base + "/nest/transport/v7/subscribe",
+                headers=headers,
+                json={
+                    "objects": [
+                        {
+                            "object_key": "device." + IDENT,
+                            "if_object_revision": 99999,
+                            "value": {"current_humidity": 77},
+                        }
+                    ],
+                    "chunked": False,
+                },
+                ssl=context,
+            ) as response:
+                assert response.status == 200
+                rows = (await response.json())["objects"]
+                assert rows and all("value" not in row for row in rows)
+            assert native.core.states[IDENT]["humidity"] == original_humidity
             assert "eco" in hass.states.get(climate_id).attributes["preset_modes"]
             explicit_clear = await command_roundtrip(
                 "set_preset_mode", {"preset_mode": "none"}, None
@@ -473,7 +525,38 @@ async def check(root, profile):
             assert eco["manual_eco_all"] is True
             assert abs(eco["manual_eco_timestamp"] - int(__import__("time").time())) < 10
             assert hass.states.get(climate_id).attributes["preset_mode"] == "eco"
+            async with client.post(
+                base + "/nest/transport/put",
+                headers=headers,
+                json={
+                    "objects": [
+                        {"object_key": "structure.LABHOME", "value": {"manual_eco_all": False}}
+                    ]
+                },
+                ssl=context,
+            ) as response:
+                assert response.status == 200
+            await hass.async_block_till_done()
+            assert hass.states.get(climate_id).attributes["preset_mode"] == "eco"
             await command_roundtrip("set_preset_mode", {"preset_mode": "none"}, None)
+            # Automatic Eco is observed separately from the manual preset.
+            async with client.post(
+                base + "/nest/transport/put",
+                headers=headers,
+                json={
+                    "objects": [
+                        {"object_key": "device." + IDENT, "value": {"eco": {"mode": "auto-eco"}}}
+                    ]
+                },
+                ssl=context,
+            ) as response:
+                assert response.status == 200
+            await hass.async_block_till_done()
+            assert hass.states.get(climate_id).attributes["preset_mode"] == "none"
+            assert hass.states.get(climate_id).attributes["eco_mode"] == "automatic"
+            assert native.snapshot_reported()["devices"][IDENT]["records"]["device"]["values"][
+                "eco"
+            ] == {"mode": "auto-eco"}
             await command_roundtrip(
                 "set_eco_temperatures",
                 {"low": 68, "high": 77, "temperature_unit": "°F"},
@@ -1025,6 +1108,10 @@ async def check(root, profile):
                     "native_signed32_base_revision_put": True,
                     "native_signed32_metadata_subscription": True,
                     "native_eco_roundtrips": True,
+                    "actual_manual_and_automatic_eco_distinguished": True,
+                    "stale_metadata_preserves_held_control_carrier": True,
+                    "eco_confirmation_requires_fresh_bool_and_timestamp": True,
+                    "delivery_receipts_payload_free": True,
                     "schedule_backup_and_replace": True,
                     "ha_weather_local_response": True,
                     "local_brand_icon_and_logo_fallbacks": True,

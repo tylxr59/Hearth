@@ -189,8 +189,10 @@ feedback are insufficient to establish whether it rejected or delayed the change
 ## Late Eco application and 0.6.3 correction
 
 The owner subsequently restarted the native display and saw Eco on the physical
-unit. The earlier expired request therefore applied late; expiry was not device
-cancellation or proof that the old preset remained in effect. Restoration is
+unit. That observation raised a delayed-application risk, but the label alone did not
+establish whether the unit was in manual or automatic Eco. The earlier attribution
+to a proven late manual command was too strong. Expiry is not device cancellation
+or proof that the old preset remains in effect. Restoration is
 still pending. A requested HA `none` action sent no command because the handler
 looked only at its stale None report. The physical Stop Eco path was inaccessible
 behind the wiring screen. The base remains completely unwired; no popup or native

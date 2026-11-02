@@ -39,7 +39,9 @@ class Intent:
     revision: int
     expires: float
     sent: bool = False
+    stream_write_completed: bool = False
     extra_values: dict = field(default_factory=dict)
+    observed_fields: set = field(default_factory=set)
 
     def desired(self):
         return {self.field: self.value, **self.extra_values}
@@ -51,6 +53,7 @@ class NativeControls(NativeTelemetry):
         self.intents = {}
         self.features = {}
         self.outcomes = {}
+        self.receipts = {}
         self.reported = {}
         self.restored_fields = {}
         self.reported_changed = lambda _ident: None
@@ -71,6 +74,7 @@ class NativeControls(NativeTelemetry):
             self.intents.pop(ident, None)
             self.features.pop(ident, None)
             self.outcomes.pop(ident, None)
+            self.receipts.pop(ident, None)
             self.reported.pop(ident, None)
             self.restored_fields.pop(ident, None)
             self.requests.pop(ident, None)
@@ -280,6 +284,14 @@ class NativeControls(NativeTelemetry):
     def restore_reported(self, data):
         return reported_state.restore(self, data)
 
+    def eco_mode(self, ident):
+        records = self._records_for(ident)
+        observed = self.reported.get(ident, {}).get("device", {}).get("values", {}).get("eco")
+        if isinstance(observed, dict):
+            return observed["mode"]
+        bucket = records.get(f"device.{ident}")
+        return "unknown" if bucket is not None and "eco" in bucket.fingerprints else None
+
     def state_source(self, ident, field):
         self._records_for(ident)
         records = self.reported.get(ident, {})
@@ -295,6 +307,9 @@ class NativeControls(NativeTelemetry):
             "target_temperature_high": ("shared", "target_temperature_high"),
             "mode": ("shared", MODE_FIELD),
             "fan": ("device", "fan_timer_timeout"),
+            "preset": ("device", "eco")
+            if self.eco_mode(ident) is not None
+            else ("structure", "manual_eco_all"),
         }.get(field)
         if source is None or source[1] not in records.get(source[0], {}).get("values", {}):
             return "unknown"
@@ -316,9 +331,13 @@ class NativeControls(NativeTelemetry):
         return {
             "capabilities": self.capabilities(ident),
             "command_status": self.command_status(ident),
+            "delivery_receipts": {
+                op: dict(receipt) for op, receipt in self.receipts.get(ident, {}).items()
+            },
             "pending": {
                 op: {
                     "offered": i.sent,
+                    "stream_write_completed": i.stream_write_completed,
                     "seconds_remaining": max(0, round(i.expires - self.core.clock(), 1)),
                 }
                 for op, i in self.intents.get(ident, {}).items()
@@ -401,12 +420,33 @@ class NativeControls(NativeTelemetry):
             return "idle"
         return None
 
+    def _finish(self, ident, op, item, outcome):
+        self.receipts.setdefault(ident, {})[op] = {
+            "outcome": outcome,
+            "offered": item.sent,
+            "stream_write_completed": item.stream_write_completed,
+            "matching_reported_field_count": len(item.observed_fields),
+            "required_field_count": len(item.desired()),
+        }
+        self.outcomes.setdefault(ident, {})[op] = outcome
+        self.intents.get(ident, {}).pop(op, None)
+
+    def note_stream_write(self, ident, response):
+        self._records_for(ident)
+        for row in response["objects"]:
+            for item in self.intents.get(ident, {}).values():
+                if (
+                    item.key == row["object_key"]
+                    and item.revision == row["object_revision"]
+                    and row.get("value") == item.desired()
+                ):
+                    item.stream_write_completed = True
+
     def _expire(self, ident):
         now = self.core.clock()
         for op, item in list(self.intents.get(ident, {}).items()):
             if item.expires <= now:
-                del self.intents[ident][op]
-                self.outcomes.setdefault(ident, {})[op] = "expired"
+                self._finish(ident, op, item, "expired")
 
     def command_status(self, ident):
         self._records_for(ident)
@@ -560,8 +600,7 @@ class NativeControls(NativeTelemetry):
             if incompatible or (
                 pending.key == key and pending.desired().keys() & desired.keys() and op != operation
             ):
-                del intents[op]
-                self.outcomes.setdefault(ident, {})[op] = "superseded"
+                self._finish(ident, op, pending, "superseded")
         for pending in intents.values():
             if pending.key == key:
                 pending.revision = revision
@@ -575,13 +614,23 @@ class NativeControls(NativeTelemetry):
             extra_values=extras,
         )
         intents[operation] = item
+        self.receipts.get(ident, {}).pop(operation, None)
         self.outcomes.setdefault(ident, {})[operation] = "pending"
         self.notify(ident)
         return {**validated, "id": item.ident, "status": "pending"}
 
-    def _values(self, ident, response):
+    def _values(self, ident, response, acknowledge_keys=()):
         self._expire(ident)
-        for row in response["objects"]:
+        rows = {row["object_key"]: dict(row) for row in response["objects"]}
+        records = self._records_for(ident)
+        # A PUT acknowledgement may advance the client's metadata without proving
+        # it received a pending desired value. Until native values confirm it,
+        # include that live intent even when the client claims matching metadata.
+        for item in self.intents.get(ident, {}).values():
+            record = records.get(item.key)
+            if record is not None and record.revision == item.revision:
+                rows.setdefault(item.key, record.metadata(item.key))
+        for row in rows.values():
             values = {
                 name: data
                 for i in self.intents.get(ident, {}).values()
@@ -593,7 +642,15 @@ class NativeControls(NativeTelemetry):
                 for item in self.intents[ident].values():
                     if item.key == row["object_key"] and item.revision == row["object_revision"]:
                         item.sent = True
-        return response
+        # Unactionable stale metadata must not close a quiet long poll. Real
+        # inline bootstrap values still receive their metadata acknowledgements.
+        return {
+            "objects": [
+                row
+                for row in rows.values()
+                if "value" in row or row["object_key"] in acknowledge_keys
+            ]
+        }
 
     def updates(self, ident, body):
         objects = self.normalize(ident, body, subscription=True)
@@ -629,8 +686,7 @@ class NativeControls(NativeTelemetry):
                 self.reported.get(ident, {}).pop("structure", None)
                 self._records_for(ident).pop(previous_home, None)
                 if self.intents.get(ident, {}).get("eco") is not None:
-                    self.intents[ident].pop("eco")
-                    self.outcomes.setdefault(ident, {})["eco"] = "superseded_by_device"
+                    self._finish(ident, "eco", self.intents[ident]["eco"], "superseded_by_device")
         for key, kind, value, _, _, _ in objects:
             if key not in accepted or value is None:
                 continue
@@ -668,15 +724,15 @@ class NativeControls(NativeTelemetry):
                 if any(canonical(value[name]) != canonical(expected[name]) for name in touched):
                     outcome = "superseded_by_device"
                 else:
+                    item.observed_fields.update(touched)
                     observed = self.reported.get(ident, {}).get(kind, {}).get("values", {})
-                    if not all(
+                    if not expected.keys() <= item.observed_fields or not all(
                         name in observed and canonical(observed[name]) == canonical(want)
                         for name, want in expected.items()
                     ):
                         continue
                     outcome = "confirmed"
-                self.outcomes.setdefault(ident, {})[op] = outcome
-                del self.intents[ident][op]
+                self._finish(ident, op, item, outcome)
             # A native telemetry delta may advance this bucket while an unrelated
             # intent waits. Keep its value attached to the current revision,
             # without extending the original deadline or changing reported state.
@@ -689,7 +745,11 @@ class NativeControls(NativeTelemetry):
         # control values here can overwrite local changes and clear dirty flags.
         # Desired values travel only through the subscription response.
         return (
-            self._local_user_response(ident, body, self._values(ident, response))
+            self._local_user_response(
+                ident,
+                body,
+                self._values(ident, response, {row[0] for row in objects if row[2] is not None}),
+            )
             if subscription
             else response
         )

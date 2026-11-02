@@ -255,12 +255,17 @@ def test_manager_control_diagnostics_are_bounded_and_value_free(native):
     native.enqueue(SERIAL, {"operation": "temperature", "value": 23})
     row = native.control_view(SERIAL)
     assert row["command_status"] == {"temperature": "pending"}
-    assert row["pending"]["temperature"] == {"offered": False, "seconds_remaining": 30}
+    assert row["pending"]["temperature"] == {
+        "offered": False,
+        "stream_write_completed": False,
+        "seconds_remaining": 30,
+    }
     assert row["baseline_fields"] == {"temperature": True, "mode": True, "fan": True}
     assert row["requests"] == {"put": 1}
     assert set(row) == {
         "capabilities",
         "command_status",
+        "delivery_receipts",
         "pending",
         "requests",
         "last_request_age",

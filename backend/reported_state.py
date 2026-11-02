@@ -45,6 +45,8 @@ def capture(native, ident, key, kind, value):
         if name not in FIELDS[kind]:
             continue
         try:
+            if kind == "device" and name == "eco" and isinstance(data, dict):
+                data = {"mode": data.get("mode")}
             item["values"][name] = reported_value(name, data)
             if name in updated_fields:
                 native.restored_fields.get(ident, set()).discard((kind, name))

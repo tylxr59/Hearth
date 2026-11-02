@@ -39,6 +39,7 @@ FIELDS = {
         "has_fan",
         "has_emer_heat",
         "structure_id",
+        "eco",
         "away_temperature_low",
         "away_temperature_high",
     },
@@ -59,6 +60,14 @@ FIELDS = {
 def reported_value(name, value):
     if name == "manual_schedule":
         return native_features.schedule(value)
+    elif name == "eco":
+        if (
+            not isinstance(value, dict)
+            or set(value) != {"mode"}
+            or value["mode"] not in ("schedule", "manual-eco", "auto-eco")
+        ):
+            raise Invalid("bounded reported eco mode required")
+        return {"mode": value["mode"]}
     elif name == "structure_id":
         native_features.structure_key(value)
     elif name == "manual_eco_all":

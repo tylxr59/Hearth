@@ -143,7 +143,10 @@ class HearthClimate(ClimateEntity):
             .get("values", {})
             .get("manual_eco_all")
         )
-        if eco is True:
+        native_eco = self.runtime.controls.eco_mode(self.ident)
+        if native_eco == "unknown":
+            return None
+        if native_eco == "manual-eco" or (native_eco is None and eco is True):
             return "eco"
         mode = (
             self.runtime.controls.reported.get(self.ident, {})
@@ -167,6 +170,9 @@ class HearthClimate(ClimateEntity):
     def extra_state_attributes(self):
         return {
             "command_status": self.runtime.controls.command_status(self.ident),
+            "eco_mode": {"manual-eco": "manual", "auto-eco": "automatic", "schedule": "normal"}.get(
+                self.runtime.controls.eco_mode(self.ident), "unknown"
+            ),
             "reported_state_source": {
                 field: self.runtime.controls.state_source(self.ident, field)
                 for field in (
@@ -176,6 +182,7 @@ class HearthClimate(ClimateEntity):
                     "target_temperature_high",
                     "mode",
                     "fan",
+                    "preset",
                 )
             },
         }

@@ -1,5 +1,25 @@
 # Hearth: agent handoff and repository instructions
 
+
+## Current handoff: 2026-11-02
+
+Live HA is **0.6.4**. The owner is present again and currently charging the display
+by USB, detached from the completely unwired base. **Eco-off restoration is still
+unconfirmed**: two scoped False requests expired; the old cached None value is not
+proof. No new Eco-on test or physical HVAC switching is authorized. Preserve the
+original private baseline and all attempt receipts. No loader or NAND writer runs.
+
+**0.6.5 is prepared/staged, NOT activated.** It keeps quiet control subscriptions
+open, preserves inline/CAS acknowledgements, sends pending values even against
+matching metadata, adds a 3 second held-push wait that shutdown can interrupt, tracks stream
+write receipts and requires every desired field to be freshly reported.1279 host
+checks/five optional skips, makecheck and realHA2026.10.4/18 synthetic roundtrips
+pass. Next obtain ONE new owner Core restart approval for staged0.6.5; after health,
+use actual active-subscription readiness before the authorized original Eco-off
+restore. This is no assurance of physical restoration or native command latency.
+The current final package is v065-final-v3, remote stage-v3. Device Eco mode is now projected read-only (manual/auto/normal/unknown) and preferred over the house request flag; unknown nested fields are discarded. Weather query diagnostics retain shape only. Native week still unvalidated; serializer point entry_type is a confirmed schema
+gap, so schedule writes remain gated. Keep native wiring/HVAC checks intact.
+
 ## Purpose and current status
 
 Build a local-first Nest Learning Thermostat modification that preserves native hardware/HVAC control. Gen 2 is the primary target; Gen 1 is secondary. Prefer a verified local on-device interface if feasible; otherwise retain the native transport behind a minimal local backend. Do not rewrite HVAC control loops.
@@ -2416,3 +2436,70 @@ Preparedactivate/check/watchv064 andrestore-native-eco-v064-20261101.py, identic
 one-shotauthorizedFalseoriginalbaseline guard. Defaultofflinepreflight notnetwork.
 AfterfreshacceptedSUB+ecobaseline sendFalseONCE; confirmnative/physicalbefore
 claimrestored. Do notqueuebeforedecoderfreshcarrierpasses/noEcoONretry. BaseEMPTY.
+
+LATEST0.6.4 activation actuallydone (previouspreparednotes superseded): CLI81265
+exit0/exact33/healthprivatev064. Signednativeframesaccepted andschedule received
+butnotvalidated. OriginalFalse attemptprivatev064/eco-restore-v1 expired; observed
+not-offered whiletimernearexpiry. Deliberatefresh-subscriptionattemptV2 under
+owner'songoingrestoreauthorization: privatev064/eco-restore-fresh-v2, POSTONCE,
+waitednewSUBevent, queuedFalsethenexpired. No repeatPOSTinsideattempt. Postrestore
+cachetimestampdidNOTmatchrestorewindow/cachepredatedit; don'tclaimrestored.
+Runtimepreflight rawdevice.ecofieldflagfalsewasnotactualecobaseline; correctedlocal
+helperusesprivatevalidatedstructuremanualflags/gen+homeidentitymatchingoriginal,
+currentauthavailability+acceptedSUB+noConflict/noPending. No nativevalidatorbypass.
+
+Ownerwentawayovernight; nofurtherHArestarts/NANDwrites/newEcoON tests. Authorised
+singlefreshFalseattemptaboveexpired; noactive commandsremain. Nextmorningowner
+present/displayUSBcharging. Live0.6.4morninghealthhealthy4entities/cacheprivate,
+manageroffline (charging/baseabsent). No deviceactionneededuntilpreparedhostupdate.
+
+0.6.5 FINALbuild/native-ha-delivery-20261102-v065-final +repro33filesexact.
+1268host/fiveoptionals+makecheck+realHA18stale-metadata syntheticroundtripspass.
+Privatev065-20261102 stage-v1 remote.hearth-native-stage-20261102-v065 exact,
+old0.6.4source/currentconfig/cachebackedup. NOTACTIVATED. NeednewoneCoreapproval.
+Changes: NativeControls suppressionmetadata-onlyNOOPs keepsSUBcarrieropen;
+inlinevalueACK/NACKmetadata preserved (CASstillchecked); liveintentsdelivered
+regardlessclientmetadataequalrevision (metadataisnotvalueconfirmation). Heldpush
+wait3s beforeEOF, shutdowninterrupts. FreshmatchingALLfields requiredperIntent;
+replacementresetsobservedset. Finiteoutcomereceipts offered/stream_write_completed/
+matching_reported_field_count/required_field_count. WritescountONLYafterawaitwrite
+andstillcurrentgeneration/revision/value; notphysicaldeliveryproof. ManagerAPI
+adds transport.active_subscriptions actualhandlers0..2; useforrestore readiness,
+notjustoldSUBcount or90secondpresence. No command/receiptpersist/replay.
+
+SourceprivateGhidraschedulefactory25dddc andpointwriter227a0c confirms entry_type
+setpoint/continuation, plusoptionalmoremetadata; strictcurrentpointcodec rejects
+thoseextras. DO NOT silentlystripmetadataorclaimcompleteoriginalbackup. Expanded
+value-free weekshape (bounded types/counts/schema booleans) in0.6.5helpsreview;
+rawpoints/names/times/targetsnotlogged. NativeOverwrite marker nowobjectdtype.
+Exportsprivate/native-schedule-schema-review-20261102 +native-schedule-fields-
+review-20261102; allprivate logfile600; temporaryJavahelperREMOVEDfromtools.
+No targetbinaryexecuted. Schedulecontrolsremaingated/unwiredcapsoffonly.
+
+0.6.5 MORNING FINAL SUPERSEDES earlier v065-final/stage-v1: FINAL-v3
+build/native-ha-delivery-20261102-v065-final-v3 +repro-v3 exact33files.
+1279host/fiveoptionalskips +makecheck +realHA2026.10.4/18roundtripsPASS.
+Exactstage private/native-ha-v065-20261102/stage-v3, remote.hearth-native-stage-
+20261102-v065-v3; previous0.6.4source/config/cachepreserved. Notactivated.
+Newread-onlydevice.eco projection storesONLY{mode} forrecognizedschedule/manual-eco/
+auto-eco; othernestedmetadata discarded, invalidobservedmodeunknownnotsilentguess.
+HAmanualpresetusesactualmodeoverstructure-requestflag (fallbackonlyifneverreported),
+extraeco_mode manual/automatic/normal/unknown andpresetcache/device source. No
+actualmodevaluesinvalue-freemanagementdiagnostics. Unknownnestedcachefieldsrefused.
+Weatherstatslast_invalid_query nowboundedtypes/lengths/flags/countsonly—no postal,
+coordinates, URLstring, querynames. Response/auth/locationsemanticsUNCHANGED.
+
+CORRECTION: EarlierphysicalEco labeldidnotprovemanualcommandappliedlate; couldbe
+nativeautomaticEco. Qualifiedpublicresult/docs; don'tassumemanualvsauto untilnew
+modeobservation. BothscopedFalse restoreattemptsexpired, restoredstillUNVERIFIED.
+OwnerdisplayUSBchargingcurrently; no physicaltest/anotherHArestart since0.6.4.
+Preparedactivation-v065 helperupdatedto stage-v3 ONLY. NeedownernewCoreapproval.
+Afterhealth collectcurrentprivatecachewith check-native-ha-v065-restore-baseline-
+20261102.py, thenone-shotrestore-native-eco-v065-20261102.py --execute-authorized-
+eco-off (defaultoffline). Scriptrequiresactualtransport.active_subscriptions>0,
+live/noConflict/noPending +privatevalidatedstructurebaseline/samegen/homeasoriginal;
+originalFalseauthstillapplies. DoNOTusehistoricalsubscribecountasreadiness.
+No newEcoONtest. MustverifyfreshrequestedfieldsANDactualdeviceMode/physicalif
+available; a streamwritealoneisnotexecution. Ifnewfreshmodealreadyprovesoriginal
+manualOffstate, reviewneedforadditionalcommand beforequeuing. Modeauto preserves
+nativeautobehavior, doesn'tmeanalatchedmanualEco. AllHVACterminalsEMPTY.

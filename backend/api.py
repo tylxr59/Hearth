@@ -16,7 +16,7 @@ from backend.core import Core
 from backend.native import MAX_BODY as NATIVE_MAX_BODY
 from backend.native import NativeTelemetry
 from backend.native_controls import NativeControls
-from backend.native_weather import query_location
+from backend.native_weather import query_location, query_shape
 from backend.nest import reports
 from backend.registry import Registry
 from backend.validation import Invalid, endpoint, loads, serial
@@ -128,6 +128,9 @@ async def status(request):
         if isinstance(request.app[NATIVE], NativeControls):
             for device in result["devices"]:
                 device["native_controls"] = request.app[NATIVE].control_view(device["serial"])
+                device["native_controls"]["transport"] = {
+                    "active_subscriptions": request.app[NATIVE_ACTIVE].get(device["serial"], 0)
+                }
     return web.json_response(result)
 
 
@@ -210,6 +213,10 @@ async def native_weather(request):
     )
     if request.can_read_body or len(request.query_string) > 256 or set(request.query) - {"query"}:
         count("invalid_query")
+        counters["last_invalid_query"] = query_shape(request.query.get("query")) | {
+            "reason": "envelope",
+            "unknown_member_count": min(len(set(request.query) - {"query"}), 8),
+        }
         raise web.HTTPBadRequest()
     if WEATHER not in request.app or not request.app[WEATHER_ENABLED]():
         count("unavailable")
@@ -218,6 +225,10 @@ async def native_weather(request):
         location = query_location(request.query.get("query", ""))
     except Invalid:
         count("invalid_query")
+        counters["last_invalid_query"] = query_shape(request.query.get("query")) | {
+            "reason": "location",
+            "unknown_member_count": 0,
+        }
         raise
     try:
         result = await request.app[WEATHER]()
@@ -296,6 +307,11 @@ async def native_subscribe(request):
         await response.prepare(request)
         if result["objects"]:
             await response.write(json.dumps(result).encode())
+            if (
+                isinstance(app[NATIVE], NativeControls)
+                and app[CORE].registry.data["devices"].get(ident, {}).get("hash") == generation
+            ):
+                app[NATIVE].note_stream_write(ident, result)
         else:
             end = time.monotonic() + app[NATIVE_HOLD]
             while time.monotonic() < end and not app[NATIVE_STOP].is_set():
@@ -309,6 +325,17 @@ async def native_subscribe(request):
                     changed = app[NATIVE].updates(ident, incoming)
                     if changed["objects"]:
                         await response.write(json.dumps(changed).encode())
+                        if (
+                            app[CORE].registry.data["devices"].get(ident, {}).get("hash")
+                            == generation
+                        ):
+                            app[NATIVE].note_stream_write(ident, changed)
+                        # Match the reviewed native/NLE held-push settle window.
+                        # Shutdown interrupts it immediately; no unbounded batch.
+                        try:
+                            await asyncio.wait_for(app[NATIVE_STOP].wait(), 3.0)
+                        except TimeoutError:
+                            pass
                         break
                 try:
                     await asyncio.wait_for(
