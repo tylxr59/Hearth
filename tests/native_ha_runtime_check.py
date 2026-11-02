@@ -187,6 +187,18 @@ async def check(root, profile):
         async with ClientSession() as client:
             base = "https://127.0.0.1:8443"
             probe_url = "http://127.0.0.1:8123/api/h/204"
+            # Custom integration artwork must resolve locally, including the
+            # logo/dark/high-density fallbacks, without a CDN request.
+            assert await async_setup_component(hass, "brands", {})
+            brand_token = hass.data["brands"][-1]
+            original_icon = (root / "custom_components/hearth/brand/icon.png").read_bytes()
+            for image in ("icon.png", "logo.png", "dark_icon.png", "icon@2x.png"):
+                async with client.get(
+                    "http://127.0.0.1:8123/api/brands/integration/hearth/" + image,
+                    params={"token": brand_token, "placeholder": "no"},
+                ) as response:
+                    assert response.status == 200 and response.content_type == "image/png"
+                    assert await response.read() == original_icon
             async with client.get(probe_url) as response:
                 assert response.status == 204 and await response.read() == b""
             async with client.get(probe_url + "?unexpected=value") as response:
@@ -665,6 +677,7 @@ async def check(root, profile):
                     "native_eco_roundtrips": True,
                     "schedule_backup_and_replace": True,
                     "ha_weather_local_response": True,
+                    "local_brand_icon_and_logo_fallbacks": True,
                     "native_report_confirmation": True,
                     "fahrenheit_to_celsius": True,
                     "heat_cool_range_targets": True,

@@ -1,5 +1,7 @@
 # Hearth
 
+<img src="homeassistant/custom_components/hearth/brand/icon.png" alt="Hearth flame logo" width="128" height="128">
+
 A local-first laboratory for Nest Learning Thermostat Gen 2, with Gen 1 as a secondary research target. Preserve Nest's hardware control; replace remote services only where behavior is understood.
 
 **Current target: native Home Assistant integration, without MQTT.** The owner
@@ -14,9 +16,11 @@ passes byte/mode and native-compatible flash-encoding checks, and the owner
 confirmed the working primary UI on5.9.4-5. Do not use the old LZO-writing images.
 
 **Status: experimental same-unit development, not a supported thermostat release.**
-Residual Google connectivity/time dependencies are under investigation. Native
-commands, full protocol reconciliation, power-loss/whole-firmware recovery and
-physical HVAC remain unverified; command delivery is disabled. Keep this prototype
+The targeted local-connectivity/NIST update and native HA telemetry have been
+observed on the owner unit. Experimental native climate controls are live; the
+eco/schedule/HA-weather0.5 build is staged for supervised acceptance. Full protocol
+reconciliation, power-loss/whole-firmware recovery and physical HVAC remain
+unverified. Keep this prototype
 on its unwired bench base. The [first physical HTTPS/telemetry result](docs/research/native-wifi-result-2026-10-31.md)
 records the earlier broker-backed measurement separately from the HA-native migration.
 

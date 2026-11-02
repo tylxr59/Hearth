@@ -2020,3 +2020,19 @@ localweatherendpoint; FIRSTread-onlychecks/noecoorschedulechanges. Awaitreply.
 UserhasNOTauthorizedthisnewrestartuntilreadyreply. Needcommit/publicscan/push,
 thenfreshactivationbasedstage-v3andprior0.4.0. Unwiredbaseonly. NoROMloader/NAND
 write/controlcommandwasrun. DoNOTclaimphysicalHVAC/fullNLEparitycomplete.
+
+OwnerprovidedHearthorangeflamePNGforproject/HAuse. Addedcanonical
+homeassistant/custom_components/hearth/brand/icon.png; original1254squarepixels
+PRESERVED, image-onlyPNGchunks/nometa/EXIF/text. NoAIredraw/transparentvariant.
+READMEusesasset; packagerbundlesfixedbrandfile. RealHA2026.10.4actualbrandAPI
+returnsEXACTfileforicon/logo/darkicon/@2xfallbacks, offline/noCDN; all17synthetic
+roundtripchecksremainpass;makecheckand2packagertestspass. HA2026.3+ supports
+localbrandfolder; docs/artwork.mdlinksprimarydocs. Sharedbrandrepofutureresolution
+guidelinesnotclaimedmetbyoriginalcanvas. Noexternalbrand/HACSsubmissionmade.
+
+LATESTFINAL0.5package now build/native-ha-features-brand-20261101-v050-1 +
+-v050-repro:32EXACTmatchingfilesincllogo. Remotestage-v4underprivate/native-ha-
+v050-20261101 readback/old0.4sourcebackupchecked. REMOTESTAGE-v3ANDOLDERsuperseded.
+Activationbuild/activate-native-ha-v050-20261101.py updatedtostage-v4,stillNOTRUN.
+Prior0.5Core restartreadinessquestionSTILLPENDING; logomessagewasNOTapproval.
+KeepactiveHA0.4.0/Nestunchangeduntilownerreadyreply. Brandingwillloadwith0.5.

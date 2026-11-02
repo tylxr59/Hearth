@@ -89,6 +89,13 @@ def package(output):
         data = path.read_bytes()
         (destination / path.name).write_bytes(data)
         inventory["custom_components/hearth/" + path.name] = hashlib.sha256(data).hexdigest()
+    brand = source / "brand/icon.png"
+    if not brand.is_file() or brand.is_symlink():
+        raise ValueError("public Hearth brand image required")
+    data = brand.read_bytes()
+    (destination / "brand").mkdir()
+    (destination / "brand/icon.png").write_bytes(data)
+    inventory["custom_components/hearth/brand/icon.png"] = hashlib.sha256(data).hexdigest()
     translations = destination / "translations"
     translations.mkdir()
     data = (source / "strings.json").read_bytes()
