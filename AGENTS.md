@@ -2129,3 +2129,13 @@ client-weather-served-observed.json. Toldownerfetchsucceededandaskedclocknow
 Eastern; awaitACTUALclockconfirmation. DoNOTclaimclockfixedwithoutreply. One
 initialunsupportedweatherqueryfollowedbyvalidclientfetch; noqueryvalueslogged,
 no needrelaxqueryguards. CurrentactiveHA0.5.1,emptybase,no controlcommands.
+
+OWNERCONFIRMED after0.5.1normalNestrestart: CLOCKCORRECTNOW. Weather/timezone
+handoffobservedonphysicalunit, pairedwithseparateclientservedcounterevidence.
+Preserveprivate/native-ha-v051-20261101/owner-clock-confirmed.json. Publicv051
+activationrecordupdated. DoNOTsayweatherforecastvisualdisplayorwholeproject
+verified: ownercouldnotfindweatherUI; onlyclockconfirmed. Noextrauserrestart
+neededforclocknow. Nextremainingfeatureissue: home/eco/weekbaselinesabsent;
+unwiredbasereportscapabilitiesoffonly. Investigatebootstrap/pairingandinitial
+bucket_shape rejectionusingboundedshapeevidencebeforeanyeco/schedulecommand;
+no fabricatedbaselines/relaxedownershiporschema. PhysicalHVACnotauthorized.

@@ -251,3 +251,11 @@ counts, with a separate fixed-tag host-check counter. These contain no addresses
 query values, locations or weather readings. They distinguish a working host
 probe from other client requests; the marker is diagnostic, not authentication.
 Physical native fetch/timezone application still needs supervised observation.
+
+
+The owner activated0.5.1 with one approved Core restart. The observer recorded
+a successful untagged client weather response separately from the tagged host
+probe. After a normal Nest restart on the completely unwired base, the owner
+confirmed the physical clock changed to the correct local time. This verifies
+the weather/timezone handoff on this unit. The outdoor forecast display, eco
+commands, weekly replacement/restore and physical HVAC are still unverified.
