@@ -2238,3 +2238,13 @@ No local user announcement/control/thermostat write. Next owner HA administrator
 Developer Tools Actions: Hearth Begin local pairing, climate entity, confirm=true.
 Watch session81304; activation CLI session69760 exited zero. Receipts
 private/native-ha-v060-20261101. No further Core restart authorization implied.
+
+Owner performed HA begin_local_pairing confirm action: immediate configured=true,
+offered/ack=false. Independent private local-user-watch-v1 then observed ALL TRUE,
+available=true, no rejections. Only device/shared; home/eco/week still absent.
+No owner restart needed/currently requested. No physical HVAC or controls sent.
+Next structure association review: native 9e418 identity callback writes structure_id
+via settings and calls694f4; structure end-update9e0b0 also writes settings.
+Do not call future server pairing RAM-only. NLE sends name/devices but Gen2 Init
+9b2e4 does not register them. Need minimal reviewed identity/user linkage with
+explicit future owner confirmation and no away/eco/safety/schedule defaults.

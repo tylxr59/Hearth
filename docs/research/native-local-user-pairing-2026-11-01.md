@@ -56,3 +56,20 @@ metadata atomicity, private custody, administrator/confirmation refusal, existin
 home refusal, reannouncement after reload, no control-intent replay, and wrapped
 schedule service/readback/backup behavior. These are preparation results, not
 a claim of full pairing, physical HVAC or whole-firmware recovery.
+
+## Owner-unit observation
+
+After 0.6 activation, the owner performed the confirmed administrator action.
+The immediate action response showed configuration saved but not yet offered.
+The subsequent read-only manager observation independently showed configured,
+offered and metadata-acknowledged all true, continued availability and no receiver
+rejections. Only device/shared observed buckets remained: no home reference, eco
+field or schedule baseline. This is metadata acceptance, not complete pairing.
+No control command or physical HVAC operation was performed.
+
+The next home association is a separate state change. Native structure identity
+assignment reaches the native settings writer; it must not be described as
+RAM-only merely because the server supplies it. NLE supplies a structure after
+the user, but the Gen2 initializer does not register its name/devices fields.
+Review the identity callback and user-link processing before a minimal explicit
+home-association action; omit away, eco, safety, equipment and schedule defaults.
