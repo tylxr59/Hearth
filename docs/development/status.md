@@ -22,7 +22,11 @@ Early-On restoration, new profile generation and private-key export exclusion.
 Hassfest validates the self-contained integration with zero errors. Optional native
 diagnostics include voltage, RSSI, filter, outdoor and native activity fields.
 The guided writer consumes separately prepared device-bound install/restore
-profiles; automatic acquisition and per-unit build remain an explicit release gap.
+profiles. Pinned source fetching, isolated reader compilation and consolidated
+read-only acquisition now have public CLI commands. The fresh source-to-reader
+build passes offline and eight reader artifacts reproduce; the rebuilt boot
+chain/consolidated reader have not yet been measured on hardware. Per-unit
+replacement construction and write-kit assembly remain an explicit release gap.
 Do not confuse an implemented frontend with a turnkey stock-device installer.
 
 Canonical sources: `backend/`, `custom_components/hearth/`, `installer/`,

@@ -127,6 +127,12 @@ def main(argv=None):
     parser = argparse.ArgumentParser(prog="hearth", description="Hearth guided Linux USB installer")
     commands = parser.add_subparsers(dest="command", required=True)
     commands.add_parser("doctor")
+    fetch_sources = commands.add_parser("sources")
+    fetch_sources.add_argument("--output", type=Path, required=True)
+    build_reader = commands.add_parser("build-reader")
+    build_reader.add_argument("--sources", type=Path, required=True)
+    build_reader.add_argument("--output", type=Path, required=True)
+    build_reader.add_argument("--profile", type=Path, required=True)
     fetch = commands.add_parser("download")
     fetch.add_argument("--ha-url", required=True)
     fetch.add_argument("--output", type=Path, required=True)
@@ -143,6 +149,10 @@ def main(argv=None):
     install.add_argument("--profile", type=Path, required=True)
     install.add_argument("--restore-profile", type=Path, required=True)
     install.add_argument("--disk", required=True)
+    acquire = commands.add_parser("acquire")
+    acquire.add_argument("--session", type=Path, required=True)
+    acquire.add_argument("--profile", type=Path, required=True)
+    acquire.add_argument("--disk", required=True)
     restore = commands.add_parser("restore")
     restore.add_argument("--profile", type=Path, required=True)
     restore.add_argument("--output", type=Path, required=True)
@@ -155,7 +165,16 @@ def main(argv=None):
                         "platform": sys.platform,
                         "commands": {
                             name: shutil.which(name) is not None
-                            for name in ("mtype", "podman", "openssl", "cc")
+                            for name in (
+                                "mtype",
+                                "podman",
+                                "openssl",
+                                "cc",
+                                "clang",
+                                "git",
+                                "patch",
+                                "pkg-config",
+                            )
                         },
                         "usb": usb_inventory(),
                         "supported_host": sys.platform.startswith("linux"),
@@ -163,6 +182,14 @@ def main(argv=None):
                     indent=2,
                 )
             )
+        elif args.command == "sources":
+            from installer.sources import fetch
+
+            print(json.dumps(fetch(args.output), indent=2))
+        elif args.command == "build-reader":
+            from installer.build import build
+
+            print(json.dumps(build(args.sources, args.output, args.profile), indent=2))
         elif args.command == "download":
             from installer.download import download
 
@@ -188,13 +215,33 @@ def main(argv=None):
             print(
                 "Device and commissioning bundle match. Session prepared; no USB opened or firmware written."
             )
-        elif args.command == "install":
+        elif args.command in ("install", "acquire"):
             session = private_path(args.session)
             bundle, ca, crl = read_bundle(private_read(session / "commissioning.zip", 65536))
             info = json.loads(private_read(session / "identity.json", MAX_INFO_BYTES))
             if info["serial"] != bundle["serial"]:
                 raise Invalid("session identity differs from commissioning bundle")
             device_info(inspect_disk(args.disk), bundle)
+            if args.command == "acquire":
+                from firmware.acquisition import profile as acquisition_profile
+                from firmware.acquisition.run import run as acquire_inputs
+
+                acquisition_profile.check(args.profile)
+                print(
+                    "Detach the display from its base; keep USB connected. This RAM reader cannot write flash."
+                )
+                if input("Type READY to arm one read-only acquisition: ").strip() != "READY":
+                    print("Cancelled; no loader started.")
+                    return 0
+                print(
+                    "When the loader says scanning: hold the ring for 10 seconds, release, then press/release once."
+                )
+                result = acquire_inputs(args.profile, session / "acquisition", execute=True)
+                print(json.dumps(result, indent=2))
+                print(
+                    "Acquisition exited. Hold 10 seconds, release, then press/release once to return to native startup."
+                )
+                return 0
             supported_kit(args.profile, args.restore_profile, bundle | {"_ca": ca, "_crl": crl})
             outcome = execute(args.profile, args.restore_profile, session / "install-attempt")
             if not outcome.get("complete"):

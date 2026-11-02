@@ -61,10 +61,16 @@ def release(output):
                         ".config",
                         ".lds",
                     }
-                    or p.name in {"Dockerfile", "LICENSE", "Makefile"}
+                    or p.name in {"Dockerfile", "LICENSE", "Makefile", "COPYING.GPL-2.0"}
                 )
             ):
                 public[p.relative_to(ROOT).as_posix()] = p.read_bytes()
+    # Original host/RAM fault fixtures are compiler inputs for the guarded
+    # writers, not optional developer-only tests. Ship their source, never
+    # generated helper executables or per-device fixture data.
+    for p in (ROOT / "tests").rglob("*"):
+        if p.is_file() and not p.is_symlink() and p.suffix in {".c", ".h"}:
+            public[p.relative_to(ROOT).as_posix()] = p.read_bytes()
     for name in (
         "LICENSE",
         "THIRD_PARTY.md",

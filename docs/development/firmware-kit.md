@@ -13,10 +13,20 @@ read-only preflight, explicit commit, encoding audit or matching restore image.
 
 ## Source preparation stages
 
-These are real public modules, but not yet a one-command acquisition pipeline:
+The public reader pipeline is now automated by `hearth sources`, `build-reader`
+and `acquire`. A fresh end-to-end source build passed offline, including the host
+loader's USB simulation. Eight acquisition artifacts reproduce against its
+protected base. The rebuilt bootstrap files differ from the historical measured
+build and the consolidated reader has not run on hardware. This is not a new
+hardware validation or completed per-device installer.
 
-1. `firmware.probe`/`firmware.file_snapshot` stage the pinned public RAM reader
-   and perform a notified, owner-timed read-only boot.
+The remaining preparation stages are:
+
+1. `installer.sources` fetches pinned public Git commits and hash-checks the
+   historical compiler. `installer.build` builds the bootstrap/protected kernel
+   in a rootless, isolated container, then `firmware.acquisition` packages the
+   original bounded reader. `hearth acquire` requires a separately confirmed,
+   owner-timed read-only boot and preserves all captured native files privately.
 2. `provisioning.file_backup` verifies and preserves snapshot custody.
 3. `provisioning.native_settings`, `native_startup`, `native_network` and the
    reviewed native TLS/logging edits prepare bounded replacements from originals.
@@ -42,7 +52,8 @@ RAM handoff path when appropriate. Never weaken exact original-byte comparison.
 
 ## Remaining public-installer work
 
-Automatic source acquisition, per-device replacement construction and reproducible
-kit orchestration remain blockers for a turnkey stock-unit release. A new user's
-kit cannot be synthesized from the development owner's ignored directories. This
+Per-device replacement construction, coordination of the overlapping client
+configuration across the two write scopes, and reproducible install/restore kit
+orchestration remain blockers for a turnkey stock-unit release. A new user's kit
+cannot be synthesized from the development owner's ignored directories. This
 restriction is explicit in the installer documentation and release metadata.

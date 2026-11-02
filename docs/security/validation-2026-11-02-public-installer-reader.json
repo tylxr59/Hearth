@@ -1,0 +1,51 @@
+{
+  "scope": "public-source protected installer reader; no device execution",
+  "date": "2026-11-02",
+  "host_tests": {
+    "passed": 1448,
+    "optional_skipped": 5,
+    "log": "build/public-installer-host-tests.log"
+  },
+  "targeted_installer_tests": {
+    "passed": 53,
+    "log": "build/public-installer-focused-tests-v2.log"
+  },
+  "public_inputs": {
+    "pinned_git_fetch": "passed",
+    "compiler_length_and_digest": "passed",
+    "source": "firmware/probe/inputs.json"
+  },
+  "source_build": {
+    "status": "passed",
+    "rootless": true,
+    "kernel_compile_network": "disabled",
+    "private_mounts": false,
+    "usb_mounts": false,
+    "host_loader_simulation": "passed",
+    "log": "build/public-installer-reader-v1/build.log"
+  },
+  "artifact_reproduction": {
+    "identical_files": 8,
+    "scope": "reader profiles using one fresh public-source protected base and shared offline session",
+    "bootstrap_equal_to_historical_measurement": false
+  },
+  "data_custody": {
+    "files_mode": "0600",
+    "directories_mode": "0700",
+    "acquired_executables_run_on_host": false,
+    "corrupt_and_partial_transfer": "refused with bounded private evidence"
+  },
+  "release": {
+    "loader_gpl_license_in_source_archive": true,
+    "per_device_native_files_distributed": false
+  },
+  "hardware_executed": false,
+  "ha_deployed": false,
+  "flash_writes": false,
+  "remaining": [
+    "supervised consolidated RAM reader and rebuilt bootstrap measurement",
+    "per-device replacements and matching write/restore kit orchestration",
+    "overlapping client configuration across commissioning/network update scopes",
+    "stable v1 hardware and release gates in docs/development/roadmap.md"
+  ]
+}

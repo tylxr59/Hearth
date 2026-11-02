@@ -16,6 +16,9 @@ static long h_entries(int fd,unsigned char *p,unsigned int n) { return syscall(S
 static long h_read(int fd,unsigned char *p,unsigned int n) { return read(fd,p,n); }
 static long h_seek(int fd,unsigned int n) { return lseek(fd,n,SEEK_SET); }
 static const struct hfd_ops ops={h_open,h_close,h_meta,h_dir,h_entries,h_read,h_seek};
-static unsigned char output[HFD_LIMIT];
+#ifndef HEARTH_CAPTURE_CAPACITY
+#define HEARTH_CAPTURE_CAPACITY HFD_LIMIT
+#endif
+static unsigned char output[HEARTH_CAPTURE_CAPACITY];
 int main(int argc,char **argv)
 { unsigned int n;int fd;if(argc!=2) return 1;fd=open(argv[1],O_RDONLY|O_DIRECTORY|O_NOFOLLOW);if(fd<0) return 2;n=hfd_capture(&ops,fd,output,sizeof(output));if(close(fd)||n<16||fwrite(output,1,n,stdout)!=n) return 3;return 0; }

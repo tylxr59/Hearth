@@ -32,7 +32,15 @@ def test_hacs_and_installer_archives_reproduce_without_private_material(tmp_path
         names = set(z.namelist())
         assert "installer/cli.py" in names and "firmware/file_writer/run.py" in names
         assert "firmware/probe/omap-loader.patch" in names
+        assert "firmware/probe/COPYING.GPL-2.0" in names
         assert "firmware/probe/Dockerfile" in names
+        assert {
+            "tests/file_install_harness.c",
+            "tests/file_recovery_harness.c",
+            "tests/file_reencode_harness.c",
+            "tests/network_memory.h",
+            "tests/network_transaction_harness.c",
+        } <= names
         assert not any(
             name.startswith(("private/", "build/"))
             or name.endswith((".key", ".pem", ".crl", ".bin", ".so"))

@@ -70,11 +70,45 @@ needed for HA setup; do not publish it.
 This checks exact supported model/version/partition and bundle/device identity,
 then preserves a private session. It does not open USB or write the thermostat.
 
+## Build and acquire the original inputs
+
+The experimental reader now builds from pinned public sources, without a
+developer's existing build tree. This needs Linux, rootless Podman, Clang/LLD,
+a native C compiler, Git, patch, pkg-config and libusb development files. The
+doctor reports available commands; install missing dependencies using your
+host distribution's package manager. Allow at least5GB of working disk and4GB
+of container memory. The pinned legacy compiler is downloaded and hash-checked;
+its independent signature and complete compiler reconstruction are not verified.
+
+```sh
+.venv/bin/python -m installer.cli sources --output build/installer-sources
+.venv/bin/python -m installer.cli build-reader \
+  --sources build/installer-sources --output build/installer-reader \
+  --profile private/my-reader
+.venv/bin/python -m installer.cli acquire \
+  --session private/my-install --profile private/my-reader --disk /dev/sdX
+```
+
+Only source fetching and container image assembly need internet access. Kernel
+compilation runs without networking, capabilities, USB or private-directory
+mounts. The native USB loader is compiled on the host and its simulated USB
+regressions run without a physical device. Build output is under the specified
+directory; a failed build preserves `build.log` and is not automatically retried.
+
+Acquisition requires a terminal, matching fresh identity and an explicit READY
+confirmation before the owner-timed restart. It reads two fixed snapshots plus
+four library directories into private custody, without a flash writer or native
+application execution. Nothing acquired is made executable on the host. Return
+to native startup after the command exits. The consolidated reader and rebuilt
+boot chain still require a supervised hardware measurement; earlier individual
+snapshot results are not that measurement.
+
 ## Current firmware-kit requirement
 
-The guided frontend does **not yet acquire and build a stock unit's entire kit**.
-A compatible kit must first be prepared from that owner's fresh originals using
-the public snapshot, custody, capsule, source-build and packaging modules. The
+The guided frontend does **not yet assemble a stock unit's entire install kit**.
+After acquisition, compatible install/restore profiles must still be prepared
+from that owner's fresh originals using the public capsule, source-build and
+packaging modules. The
 [builder guide](development/firmware-kit.md) explains those boundaries. A kit from
 another unit, an old executed profile, a missing restore image or a changed source
 recipe is refused. Never distribute proprietary native libraries with a release.
