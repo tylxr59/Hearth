@@ -124,17 +124,35 @@ continuations and0setpoints. Both complete weeks are preserved privately in
 schedule-{point,empty}-capture-v1. An original-week archive was synced/read back
 with0600 permissions. Source is fresh native PUT, bare version2 HEAT, revision2.
 
-A HA service test is now prepared, NOT yet observed executed. Private068/
-schedule-ha-bench-v1/{original-week.json,proposed-week.json,apply.yaml,plan.json}
-preserve original and proposed full weeks. apply.yaml uses hearth.set_schedule,
-actual entity, expected_revision2 and explicit Celsius. It adds only tomorrow's
-noon62 F setpoint while preserving existing continuations; service backs up before
-write and enforces CAS/generation/fresh-baseline gates. Owner was asked to paste
-apply.yaml into HA Developer tools/Actions/YAML and perform ONCE. WAIT for result,
-then physical point verification. Read-only schedule-ha-apply-watch-v1 is running.
-Do not restore by reusing old revision: fetch the post-apply native week/revision,
-then prepare a separate restore action using preserved original. No backend weekly
-write has been sent by the agent. No Core restart approved beyond consumed0.6.8.
+HA weekly replacement and original restore now PHYSICALLY PASS under0.6.8.
+Owner ran prepared apply.yaml. A displayed stale-revision refusal was reported,
+but observer also proved a request queued/written; owner confirmed tomorrow noon
+62 F point was installed. Do not assume the displayed refusal meant nothing applied
+or blame a duplicate click without evidence. A read-only get_schedule action
+returned revision3 but OLD original week without the visible point: confirmed
+values/revision consistency bug. restore.yaml used preserved original with current
+revision3. Owner reported action success, then explicitly empty physical week,
+Heat63 F and furnace idle. No more schedule actions should run.
+
+SSH backup review verified TWO0600 HA schedule archives matching the original
+week; all are preserved in private068/ha-schedule-backup-review-v1. Agent only
+prepared files/observed; owner executed HA actions. Private068/schedule-ha-bench-v1
+contains original/proposed/apply/read/restore/actions evidence; do not repeat them.
+Both apply and restore receipts expired without full native-week value echoes;
+physical outcomes and owner restoration are independently verified.
+
+Next offline work: batch0.6.9 feedback fixes BEFORE asking for another Core restart.
+Eco should use a fresh accepted device.eco.mode report (manual-eco for on;
+schedule/auto-eco for manual-off), not require the structure scalar/time echo.
+Schedules need consistent data/revision/source: retain last requested canonical
+week separately from native report; acknowledge only an actually written version
+when a subsequent metadata subscription matches it; stop re-sending acknowledged
+week. HA get_schedule/backup must use the corresponding week+revision, never old
+reported week with current transport revision. Preserve private backup/generation/
+CAS gates and label pending/acknowledged/cache explicitly. Persist only known
+acknowledged configuration, never pending intents or auto replay. Actual native
+week reports always win. Current live0.6.8 remains unchanged. No further control,
+Core restart, firmware write or physical HVAC heat call is authorized right now.
 
 ## Purpose and current status
 

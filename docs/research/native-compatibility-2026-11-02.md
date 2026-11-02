@@ -201,3 +201,24 @@ CAS, generation and fresh-baseline checks remain in place. The owner has been
 asked to perform it once in HA; backend replacement/restore verification remains
 pending. A separate restore will use the preserved original and a newly read
 post-apply revision.
+
+## HA weekly apply/restore and readback defect
+
+The owner executed the prepared HA action. A stale-revision refusal was displayed,
+but an actual request was also queued/written, and the owner confirmed the future
+62 F point on the physical Nest. The refusal is not evidence that nothing changed;
+there is insufficient evidence to attribute it to a particular click sequence.
+
+The owner then ran the read-only schedule action: it returned revision3 with the
+OLD original week, despite the installed visible point. The getter was combining
+reported values with the newer transport version. A separate restore action used
+the preserved original and the newly read revision3. The owner confirmed successful
+action processing, empty physical schedule, Heat63 F and furnace idle. SSH review
+verified two private0600 HA backup archives matching the original week.
+
+Full native-week echoes did not confirm these writes within their intent windows.
+The physical replacement/restore path is measured, but current readback consistency
+and command feedback remain bugs. The next correction must associate each week
+with its own revision/source, keep requested/acknowledged configuration separate
+from reported native values, and retain backup, generation, CAS and no-intent-replay
+gates. No further thermostat operation is needed during this offline correction.
