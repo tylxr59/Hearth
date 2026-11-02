@@ -2099,3 +2099,25 @@ counterresetusefixedUAalways.
 Stageprivate/native-ha-v051-20261101/stage-v1/remote.hearth-native-stage-20261101-
 v051readbackwitholdACTIVE0.5.0sourcebackup. NOTACTIVATED; owner0.5approvalconsumed,
 neednewCore restartreadinessafterconcretereadyfix. NoROM/NAND/commands.
+
+OwnerEXPLICITLYapproved0.5.1+oneCore restart. Executedprepared
+build/activate-native-ha-v051-20261101.py session48397; exactstage/oldsourcechecks
+and32newactivefilesreadbackpassedbeforeCore restart. Preserveprivate/native-ha-
+v051-20261101/activation-v1 andremote.previous-20261101-051(old0.5.0).
+Watcher91687 build/watch-native-ha-v051-20261101.py runs5min, privatefresh
+reconnect-watch-v1 includesweather_diagnostics counts; no commands. CheckCore
+exitthenbuild/check-native-ha-v051-20261101.py health-v1 andhostweatherprobe
+build/check-native-ha-v051-weather-20261101.py taggedUAHearthReadOnlyCheck/1
+(noBasicneeded). Thatprobecreatesweather-host-check-v1onlyONCE. AfterCorehealth
+watchclient_requests/servedvsfixedhost_checks; noadditionalringrestartunless
+needed. OwnerunitremainsEMPTYbase/WiFi,ZIPunchanged. Nativeclockmustbeverified
+ownerafteractualclientserved; noautocontrol/noeco/schedule.
+
+0.5.1activation48397 exited0(approvedCore restartcomplete). Health-v1live0.5.1,
+4entities/0disabled/0HearthERROR/cache600/1device. NewUNTAGGED? hostweather
+probeactuallyTAGGEDUAHearthReadOnlyCheck/1; weather-host-check-v1returns200
+48hourly/6daily/expectedtimezone, countersmustshowhost_checks1. No unitcommands.
+Watchinitialclient_requests0. AskedownerONEnormalNest10sec/release/singlepress
+ONEMPTYbase/USBdisconnectedthenclockcorrectvs3hbehind. Reasonstockweather
+poll3900s, waitfornormalpollcould65min. Awaitreply; noRAMloader. Firstreconnected
+0.5sawonlyoffequipmentcapability/homeandscheduleabsent, remainsguarded.

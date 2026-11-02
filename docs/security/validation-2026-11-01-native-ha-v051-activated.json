@@ -1,0 +1,17 @@
+{
+  "status": "native-ha-v051-activated-awaiting-native-weather-fetch",
+  "integration_version": "0.5.1",
+  "source_commit": "e12974b",
+  "owner_authorized_activation_and_one_core_restart": true,
+  "core_restart_cli_exit": 0,
+  "active_source_files_exact_readback": 32,
+  "previous_source_preserved": true,
+  "registered_entities": 4,
+  "disabled_entities": 0,
+  "scoped_hearth_error_lines": 0,
+  "native_weather_basic_auth_compatibility_corrected": true,
+  "native_weather_request_observed": false,
+  "native_clock_correction_verified": false,
+  "control_commands_sent": false,
+  "physical_hvac_verified": false
+}
