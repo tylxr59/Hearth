@@ -85,3 +85,23 @@ comma/parameter counts, empty/two-letter-country flags and a coordinate-shape
 hint. No postal code, coordinate value, parameter name or query string is retained.
 This is intended to locate the intermittent rejection before changing location
 semantics or the thermostat's stored country/units.
+
+## Owner-unit activation and observation
+
+The owner approved activation of 0.6.5 and one Core restart. All 33 active files
+read back exactly. Core health checks found four registered entities and no scoped
+errors. This is a deployment result, separate from the synthetic validations above.
+
+One original-Eco-off request was queued with an actual active subscription. Its
+server stream write completed, but neither requested field was freshly reported;
+the intent expired. Restoration remains unverified. The old cached false value
+and a physical Eco label cannot resolve manual versus automatic Eco. No automatic
+retry or new Eco-on command was sent. The owner subsequently returned the charged
+display to its completely unwired base; physical state confirmation is pending.
+Whether base absence affected the previous command is only a hypothesis.
+
+The current runtime served one native weather request without rejection. This is
+one successful observation, not proof that historical query failures are resolved.
+Further read-only schedule review found optional point provenance in addition to
+entry classification. These fields must be preserved or explicitly accounted for
+before a native week can become a replacement/restore baseline.

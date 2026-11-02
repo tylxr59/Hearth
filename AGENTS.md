@@ -3,22 +3,31 @@
 
 ## Current handoff: 2026-11-02
 
-Live HA is **0.6.4**. The owner is present again and currently charging the display
-by USB, detached from the completely unwired base. **Eco-off restoration is still
-unconfirmed**: two scoped False requests expired; the old cached None value is not
-proof. No new Eco-on test or physical HVAC switching is authorized. Preserve the
-original private baseline and all attempt receipts. No loader or NAND writer runs.
+Live HA is **0.6.5**, activated with owner approval and one successful Core restart.
+The 33 active files read back exactly; Core health and four registered entities
+passed with no scoped errors. The owner has now returned the charged display to
+its completely unwired base. No loader or NAND writer runs.
 
-**0.6.5 is prepared/staged, NOT activated.** It keeps quiet control subscriptions
-open, preserves inline/CAS acknowledgements, sends pending values even against
-matching metadata, adds a 3 second held-push wait that shutdown can interrupt, tracks stream
-write receipts and requires every desired field to be freshly reported.1279 host
-checks/five optional skips, makecheck and realHA2026.10.4/18 synthetic roundtrips
-pass. Next obtain ONE new owner Core restart approval for staged0.6.5; after health,
-use actual active-subscription readiness before the authorized original Eco-off
-restore. This is no assurance of physical restoration or native command latency.
-The current final package is v065-final-v3, remote stage-v3. Device Eco mode is now projected read-only (manual/auto/normal/unknown) and preferred over the house request flag; unknown nested fields are discarded. Weather query diagnostics retain shape only. Native week still unvalidated; serializer point entry_type is a confirmed schema
-gap, so schedule writes remain gated. Keep native wiring/HVAC checks intact.
+**Eco-off restoration remains unconfirmed.** Two scoped requests under 0.6.4 and
+one under 0.6.5 expired. The latest had an active subscription and a successful
+server stream write, but zero of two requested fields were freshly reported.
+That write does not prove device receipt/execution; stale cached None is not proof.
+Do not resend blindly or start another Eco-on test. Await the owner's physical
+screen observation and fresh native evidence. Device Eco mode has not been reported
+this runtime. One current weather request was served without rejection; this does
+not close the historical intermittent weather failure.
+
+0.6.5 keeps quiet subscriptions open, preserves inline/CAS acknowledgements,
+tracks bounded delivery receipts and requires all desired fields freshly reported.
+Preparation passed 1279 host tests/five optional skips, make check and 18 real-HA
+sandbox synthetic control round trips. Package final-v3 / remote stage-v3 was used;
+activation and attempt records remain private and immutable. No further Core restart
+is authorized by the consumed activation approval.
+
+Native schedule writes remain gated: serializer points include entry_type and
+optional provenance fields, which require preservation before replacement can be
+called complete. Keep native wiring/HVAC checks intact. No physical HVAC switching
+or wiring is authorized. Preserve the original Eco-off baseline and all attempts.
 
 ## Purpose and current status
 

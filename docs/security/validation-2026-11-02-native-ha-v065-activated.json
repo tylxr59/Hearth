@@ -1,0 +1,21 @@
+{
+  "status": "activated-control-restoration-unverified",
+  "integration_version": "0.6.5",
+  "owner_approved_activation": true,
+  "core_restart": "returned-successfully",
+  "active_files_verified": 33,
+  "registered_entities": 4,
+  "scoped_errors": 0,
+  "eco_off_attempts_this_version": 1,
+  "eco_off_outcome": "expired",
+  "active_subscription_at_enqueue": true,
+  "server_stream_write_completed": true,
+  "matching_reported_fields": 0,
+  "required_reported_fields": 2,
+  "device_execution_verified": false,
+  "restoration_verified": false,
+  "automatic_retry": false,
+  "physical_hvac_exercised": false,
+  "current_weather_requests_served": 1,
+  "owner_returned_display_to_unwired_base": true
+}
