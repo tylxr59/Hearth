@@ -28,6 +28,10 @@ def tls_context(config):
     context.minimum_version = ssl.TLSVersion.TLSv1_2
     if legacy:
         context.verify_flags &= ~ssl.VERIFY_X509_STRICT
+    else:
+        # Python 3.12 does not enable this flag by default; keep the same
+        # verification policy on every supported interpreter.
+        context.verify_flags |= ssl.VERIFY_X509_STRICT
     return context
 
 
