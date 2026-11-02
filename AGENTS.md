@@ -2121,3 +2121,11 @@ Watchinitialclient_requests0. AskedownerONEnormalNest10sec/release/singlepress
 ONEMPTYbase/USBdisconnectedthenclockcorrectvs3hbehind. Reasonstockweather
 poll3900s, waitfornormalpollcould65min. Awaitreply; noRAMloader. Firstreconnected
 0.5sawonlyoffequipmentcapability/homeandscheduleabsent, remainsguarded.
+
+LATEST0.5.1watch91687observedweatherrequests3: host_checks1,client_requests2,
+served2,invalid_query1,unavailable0. ThusONEsuccessfulclientweatherresponse
+SEPARATEfromtaggedhostcheck. NativeGET1/availabletrue. Preserveprivate
+client-weather-served-observed.json. Toldownerfetchsucceededandaskedclocknow
+Eastern; awaitACTUALclockconfirmation. DoNOTclaimclockfixedwithoutreply. One
+initialunsupportedweatherqueryfollowedbyvalidclientfetch; noqueryvalueslogged,
+no needrelaxqueryguards. CurrentactiveHA0.5.1,emptybase,no controlcommands.

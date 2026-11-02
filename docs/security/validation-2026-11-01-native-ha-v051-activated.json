@@ -1,5 +1,5 @@
 {
-  "status": "native-ha-v051-activated-awaiting-native-weather-fetch",
+  "status": "native-ha-v051-live-client-weather-response-served-clock-confirmation-pending",
   "integration_version": "0.5.1",
   "source_commit": "e12974b",
   "owner_authorized_activation_and_one_core_restart": true,
@@ -13,5 +13,14 @@
   "native_weather_request_observed": false,
   "native_clock_correction_verified": false,
   "control_commands_sent": false,
-  "physical_hvac_verified": false
+  "physical_hvac_verified": false,
+  "weather_diagnostics_at_observation": {
+    "client_requests": 2,
+    "host_checks": 1,
+    "invalid_query": 1,
+    "requests": 3,
+    "served": 2,
+    "unavailable": 0
+  },
+  "separate_client_weather_response_served": true
 }
