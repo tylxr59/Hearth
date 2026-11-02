@@ -3,7 +3,7 @@
 
 ## Current handoff: 2026-11-02
 
-Live HA is **0.6.7**. The owner has now installed the Nest on actual HVAC wiring.
+Live HA is **0.6.8**. The owner has now installed the Nest on actual HVAC wiring.
 E22 is gone; the physical dial is restored to Heat at 63 F and the owner reports
 no furnace activity during the bounded 63/62/63 F test. A read-only manager check found no
 pending commands. Do not assume this installation proves HVAC switching, cooling,
@@ -15,7 +15,8 @@ The owner opened the physical Eco menu and observed **Start Eco**, confirming Ec
 is currently off. The leaf alone was an efficiency indicator. Earlier Eco-off
 commands expired without fresh field confirmation; this physical observation
 resolves current state but does not prove those commands caused it. Preserve the
-original baseline/attempts; no further Eco-off or Eco-on command is needed now.
+original baseline/attempts; do not repeat the old Eco restore attempts. A new Eco cycle requires reviewed
+limits and fresh owner readiness.
 
 The owner explicitly approved 0.6.6 activation and ONE Core restart. Activation-v1
 rechecked staged/old code, switched 33 files, verified exact active bytes and
@@ -75,7 +76,7 @@ subscription traffic; no proof yet that these PUTs cleared the flag successfully
 Keep private067/setpoint-lower-v1, setpoint-restore-v1 and lower-watch-v1 immutable.
 Neither helper step may be repeated. No additional controls or restart approved.
 
-0.6.8 is checked and staged, NOT active. It recognizes an accepted client
+0.6.8 is active after explicit owner approval and ONE Core restart. It recognizes an accepted client
 clear of a notification that was actually written. That stops repeated target
 values, gives acknowledged status, and supplies a volatile HA assumed target with
 source acknowledged. It never changes measured temperature/HVAC outputs or
@@ -86,9 +87,32 @@ make check passes, realHA2026.10.4/18 synthetic round trips pass including assum
 state then explicit native-report replacement. Final/repro packages match. Remote
 stage-v1 verifies all33 source files exactly; live0.6.7 code, reported cache and
 pairing are backed up in private/native-ha-v068-20261102/stage-v1. Activation script
-is prepared but NOT RUN. Obtain new owner approval for one Core restart; activation
-must send no thermostat commands. Owner-unit acknowledgement behavior remains
-unverified, despite the successful physical cycles under0.6.6/0.6.7.
+executed ONCE. All33 active files matched stage bytes; old0.6.7 is preserved.
+Core restart returned zero. Health-v1 found four registered entities, no scoped
+errors, four standard custom-integration warnings and a private single-link0600
+reported cache. The Nest reconnected with fresh GET/PUT/subscription, user/home ACK and no native
+rejections. Reconnect-check-v1 preserves Heat63 F, effective off/heat and room3.6 C
+above target. The0.6.8 restart approval is consumed; do not restart again.
+
+The owner separately approved the0.6.8 acknowledgement test. ONE62 F request and
+ONE saved-original restore were sent. Owner confirmed62 F, then explicitly both
+physical Nest and HA climate card at63 F with furnace idle throughout. Both
+backend receipts ended acknowledged, notification_acknowledged=true, stream write
+true, zero explicit matching target reports. The subscription stayed active rather
+than repeatedly receiving the acknowledged target. One native weather request was
+served with no rejection. This closes the notification-acknowledgement/HA target
+path, not explicit-value feedback or an intentional furnace heat call.
+Private068/setpoint-{lower,restore}-v1 and watch results remain immutable. Do not
+rerun either control step of build/native-ha-v068-setpoint-check-20261102.py.
+
+Next: Eco on/off and native week acquisition, with no more controls until reviewed.
+Read-only eco-readiness-v1 found manualEco=false, heat mode, native device eco mode
+absent, Eco high24.44444 C, Eco low missing. Owner was asked to read physical
+Settings/Eco/Heat to (or Off) without changing it. WAIT for that information before
+proposing Eco-on: it could otherwise request heat. A potential read-codec gap is
+away_temperature_low minimum5 C, while Google's documented Eco range includes40 F
+(about4.4 C). Missing low might be this validation gap or an Off/unreported setting;
+it is not proof of either. No code correction or Eco command has been sent yet.
 
 ## Purpose and current status
 

@@ -152,3 +152,26 @@ protocol inference with an assumed-state UI label, not a claim that server write
 metadata or clearing a flag prove equipment execution. See the control architecture
 note for limits and invalidation rules. No additional thermostat command was sent
 while preparing this correction.
+
+## 0.6.8 owner-unit acknowledgement result
+
+The owner approved activation and one Core restart. Active source readback matched
+all33 files, old source was preserved, and the restart returned zero. Health checks
+found four registered entities, no scoped errors and a private single-link reported
+cache. Native GET/PUT/subscription traffic returned without another reboot, with
+user/home acknowledgements and no rejected native requests.
+
+After separate owner readiness, one guarded62 F request and one saved-original
+restore were sent. The owner confirmed62 F, then explicitly both physical Nest
+and HA climate card at63 F, with no furnace activity throughout. Both terminal
+receipts were acknowledged with a completed stream write and a client notification
+clear, while matching explicit target-report count remained zero. This validates
+the acknowledgement path and HA original-target display on the unit, not an
+explicit target-value report or a deliberate furnace heat call. The acknowledged
+subscription remained open. No command was retried by the host helper.
+
+A subsequent read-only Eco preflight found no saved low Eco limit. The current
+report validator starts that field at5 C; [Google's documented Eco range](https://support.google.com/googlehome/answer/9245535?hl=en)
+includes40 F (about4.4 C), so this is a possible receiver gap. It is not proof of
+why this unit's low limit is missing. The owner was asked to read the configured
+Eco Heat to setting without changing it; no Eco-on command was sent.
