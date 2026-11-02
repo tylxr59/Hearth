@@ -2228,3 +2228,13 @@ subset, no fabricatedbaselines. Ifneedsfuturehomeassociation, reviewstructure
 fields/ownership/nativeeffectsfirst. AllprivateGhidraexportsbelowprivate/;temp
 Java helperremovedfromtools. Source0.6genfields/profilecodecanremainuncommitted
 untilfinalpublicscan/push; live0.5.2immutable. NoHVACauthorizationgiven.
+
+Owner explicitly authorized 0.6 activation/Core restart. Active 33 source files
+exactly match final package; previous 0.5.2 preserved remotely. Health-v1:
+4 registered entities, zero scoped errors; warnings are standard custom integration
+notices. Read-only reconnect-watch-v1 observes fresh authenticated device/shared
+reports and available=true; local_pairing configured/offered/ack all false.
+No local user announcement/control/thermostat write. Next owner HA administrator
+Developer Tools Actions: Hearth Begin local pairing, climate entity, confirm=true.
+Watch session81304; activation CLI session69760 exited zero. Receipts
+private/native-ha-v060-20261101. No further Core restart authorization implied.
