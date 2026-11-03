@@ -12,9 +12,9 @@ oil/baseboard heat; the display is detached on USB. The latest commissioning9
 stock-return transaction reported all nine targets restored with no transaction,
 rollback, journal, cleanup, unmount or protection errors. Its final readback failed
 (diagnostic21, verified0, safe_to_restart0). The command exited; the display remains
-in sealed/protected RAM. Do not restart until independent read-only evidence
-resolves that failure. No loader is armed. Cleanup3 never committed or mounted
-writable.
+in protected read-only audit RAM. Independent evidence now clears a manual
+native restart; owner home-icon/normal-USB return is pending. No loader is armed.
+Cleanup3 never committed or mounted writable.
 
 The fresh preflight-only diagnostic exited0, sealed/protected, with no writes.
 It measured RAM free50,913,280 bytes and root0 available13,201,408 against the
@@ -24,12 +24,20 @@ A saved corrected NAND view contains one old restored network4 archive
 No archive has been deleted or reused on hardware.
 
 The commissioning-only stock return ran once under explicit owner authorization.
-Its failed final result remains unchanged. A fresh write-disabled audit is
-prepared and reproduces: it captures the nine active files, inventories their
-compression codecs and the exact plan-named archive, and fingerprints the saved
-originals/journal. Codec reporting does not loosen the NONE/ZERO acceptance gate.
-The audit admits only the checked, exited, sealed restore state. Obtain fresh
-owner readiness before arming its one ROM boot; no further write is authorized.
+Its failed final result remains unchanged. The subsequent write-disabled audit
+exited0: all active original bytes, existence/mode/ownership and NONE encoding
+match; exact archive inventory, seven backup fingerprints, two absences and the
+restored journal match. Only archived original0 has mixed NONE/ZLIB fragments
+(mask65), explaining the strict archive-encoding refusal. No additional flash
+write occurred. This independent review clears native restart, while the original
+writer remains incomplete. Native on-base stock UI remains unchecked.
+
+The first audit launch refused before any loader/output creation because the
+host compared the capsule's named archive layout to an integer. The corrected
+mapping is regression-tested; a fresh profile/reproduction/source archive was
+used for the single actual audit boot. Both preparations remain private.
+Codec reporting does not loosen the production NONE/ZERO acceptance gate;
+normal-flow handling of native-recompressed archive originals still needs work.
 
 ## Normal-flow storage work
 
@@ -63,7 +71,7 @@ Use HACS for delivery and obtain fresh approval for another agent Core restart.
 
 The combined development suite passes1,816 tests with seven optional skips;
 the separately enabled pinned BCH checks pass16 tests, covering the two optional
-BCH skips. All26 focused encoding-audit/startup checks and static checks pass. The network-isolated real HA2026.10.4 sandbox passes24 native control round
+BCH skips. All27 focused encoding-audit/startup checks and static checks pass. The network-isolated real HA2026.10.4 sandbox passes24 native control round
 trips and the separate-process admin onboarding/address/bundle exchange.
 
 Previously measured: local telemetry, targets63→62→63F, Eco on/off, future schedule

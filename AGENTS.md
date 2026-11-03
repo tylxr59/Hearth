@@ -88,10 +88,12 @@ The historical investigation is archived under `docs/development/history/` and
   It ran once: all511 targets restored with zero transaction/rollback/journal/
   cleanup/unmount/seal errors, but final verification failed diagnostic21,
   verified0/safe_to_restart0. The command exited; preserve that result unchanged.
-  The display is in sealed/protected RAM: keep USB connected, do not restart yet.
-  A fresh write-disabled snapshot/codec/backup-fingerprint audit is checked and
-  reproduced but not executed. Obtain fresh owner readiness before arming it.
-  No further persistent write is authorized.
+  The subsequent protected read-only audit exited0: active original bytes,
+  metadata and NONE encoding verified; archive inventory, originals and restored
+  journal fingerprints verified. Archived original0 alone contains NONE/ZLIB
+  fragments, explaining strict final-encoding refusal. No extra write occurred.
+  Independent review clears a manual native restart; home-icon/normal-USB return
+  remains pending. No loader is armed. No further persistent write is authorized.
   Offline NAND inventory finds one old rollback archive, with all four originals
   matching earlier host backups; no deletion/live deletion preflight is authorized.
 - The owner authorizes local implementation, docs, packaging, tests and commits/
