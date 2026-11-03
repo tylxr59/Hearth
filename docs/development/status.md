@@ -33,7 +33,11 @@ approval before another agent-executed Core restart. Do not manually reinstall
 or recreate the old profile. There has been no new HA deployment during backup
 work. Whole-chip restoration and hardware power-loss recovery remain unverified.
 
-## 0.10.0 release candidate
+## 0.10.1 release candidate
+
+The0.10.0 release was not published: CI caught a compiler test assuming a
+preexisting build directory. The0.10.1 candidate creates that fixture parent
+explicitly; no device code or write gate changed.
 
 The owner requests a full NAND backup before provisioning and a guided recovery
 path. The wizard now builds a fresh write-disabled full reader and saves

@@ -68,7 +68,7 @@ python3 provision.py
 
 The wizard explains how to install Hearth through HACS, reads the USB identity,
 offers HA addresses, saves originals and builds the checked install/restore kit.
-The **0.10.0 experimental preview** additionally saves full raw NAND/OOB and ECC
+The **0.10.1 experimental preview** additionally saves full raw NAND/OOB and ECC
 data views before installation and adds `python3 provision.py --restore` for a
 saved installation. The backup and read-only acquisition handoff are measured.
 Whole-chip restoration remains unverified.

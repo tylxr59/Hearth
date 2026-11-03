@@ -99,6 +99,7 @@ def test_original_static_arm_audit_has_no_linked_native_code(tmp_path, monkeypat
     monkeypatch.setattr(
         profile, "kernel_check", lambda _: (blobs, b"public kernel fixture", "d" * 64)
     )
+    (profile.ROOT / "build").mkdir(exist_ok=True)
     with tempfile.TemporaryDirectory(
         prefix="encoding-audit-test-", dir=profile.ROOT / "build"
     ) as directory:
