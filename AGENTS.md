@@ -15,6 +15,11 @@ The historical investigation is archived under `docs/development/history/` and
   installer-reader test. Last on-base state was Heat63F, Ecooff, empty schedule,
   owner-confirmed heating idle. No loader is armed. Do not assume an unwired
   base when it is reattached.
+- For the owner-authorized clean onboarding test, the owner removed the Hearth
+  entry through HA. Retained profile/state is privately archived with exact
+  readback; the live profile path is absent and the native listener is stopped.
+  HA0.7.0 source is staged and verified but not activated. Fresh approval is
+  still required before its Core restart. Do not recreate the old profile.
 - The owner authorizes local implementation, docs, packaging, tests and commits/
   pushes. The current public-product work does not authorize another HA Core
   restart, a new persistent device write or an intentional HVAC call.

@@ -1,7 +1,12 @@
 # Current development status
 
-The owner installation runs HA0.6.9 with a Gen2 Display-2.6 on primary5.9.4-5.
-It uses native HTTPS directly inside HA Core. The latest confirmed physical state
+The owner installation last ran HA0.6.9 with a Gen2 Display-2.6 on primary5.9.4-5.
+For the clean onboarding test, the owner removed the Hearth entry through HA;
+its retained profile/state was archived with exact readback and the live profile
+path is absent. The native listener stopped. HA0.7.0 source is staged and verified,
+awaiting separate activation/Core-restart approval. No thermostat reset or write
+occurred during this cleanup. The integration uses native HTTPS directly inside
+HA Core. The latest confirmed physical state
 is Heat63F, manual Ecooff, empty schedule, heating idle. The equipment is described
 as oil/baseboard; exact boiler/furnace arrangement remains unverified.
 
