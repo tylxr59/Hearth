@@ -4,6 +4,7 @@ from pathlib import Path
 
 import voluptuous as vol
 from homeassistant.core import callback
+from homeassistant.helpers import selector
 
 from homeassistant import config_entries
 
@@ -11,6 +12,7 @@ from ._backend.commissioning import create_profile
 from ._backend.native_weather import query_location
 from ._backend.validation import Invalid
 from .const import DOMAIN
+from .onboarding import async_origins
 from .profile import PROFILE_ERRORS, load_profile
 
 
@@ -39,12 +41,25 @@ class HearthConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "profile_not_ready"
             else:
                 return self.async_create_entry(title="Hearth", data={})
+        origins = [] if existing else await async_origins(self.hass)
+        origin_field = vol.Required("origin")
+        selected = (user_input or {}).get("origin") or (origins[0] if len(origins) == 1 else None)
+        if selected:
+            origin_field = vol.Required("origin", default=selected)
         schema = (
             vol.Schema({})
             if existing
             else vol.Schema(
                 {
-                    vol.Required("origin"): str,
+                    origin_field: selector.SelectSelector(
+                        selector.SelectSelectorConfig(
+                            options=origins,
+                            custom_value=True,
+                            mode=selector.SelectSelectorMode.DROPDOWN,
+                        )
+                    )
+                    if origins
+                    else str,
                     vol.Required("device_id"): str,
                 }
             )

@@ -9,6 +9,8 @@ import ipaddress
 import json
 import shutil
 import ssl
+import subprocess
+import sys
 import tempfile
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -1420,9 +1422,152 @@ async def check(root, profile):
         await hass.async_stop()
 
 
+async def check_automatic_onboarding(root):
+    """Exercise the shipped PC client through real HA's authenticated HTTP flow."""
+    import plistlib
+    import zipfile
+    from unittest.mock import patch
+
+    from homeassistant.auth.const import GROUP_ID_ADMIN
+    from homeassistant.core import HomeAssistant
+    from homeassistant.setup import async_setup_component
+
+    from homeassistant import bootstrap, loader
+
+    source = root / "public-installer"
+    with zipfile.ZipFile("/package/installer-artifacts/hearth-installer-source.zip") as archive:
+        archive.extractall(source)
+    config = root / "fresh-ha"
+    config.mkdir(mode=0o700)
+    shutil.copytree("/package/custom_components", config / "custom_components")
+    session_parent = root / "private-intake"
+    session_parent.mkdir(mode=0o700)
+    hass = HomeAssistant(str(config))
+    try:
+        loader.async_setup(hass)
+        assert (
+            await bootstrap.async_from_config_dict(
+                {
+                    "homeassistant": {"unit_system": "metric", "time_zone": "UTC"},
+                    "http": {"server_host": "127.0.0.1", "server_port": 18812},
+                    "api": {},
+                    "config": {},
+                },
+                hass,
+            )
+            is hass
+        )
+        assert await async_setup_component(hass, "hearth", {})
+        user = await hass.auth.async_create_system_user(
+            "Synthetic USB installer", group_ids=[GROUP_ID_ADMIN]
+        )
+        refresh = await hass.auth.async_create_refresh_token(user)
+        token = hass.auth.async_create_access_token(refresh)
+        await hass.async_start()
+        adapters = [
+            {
+                "name": "fixture",
+                "enabled": True,
+                "default": True,
+                "ipv4": [{"address": "10.0.0.12"}, {"address": "192.168.50.2"}],
+            }
+        ]
+        with patch(
+            "custom_components.hearth.onboarding.network.async_get_adapters", return_value=adapters
+        ):
+            form = await hass.config_entries.flow.async_init("hearth", context={"source": "user"})
+            assert form["type"] == "form"
+            origin_selector = next(
+                v for k, v in form["data_schema"].schema.items() if k.schema == "origin"
+            )
+            assert origin_selector.config["options"] == [
+                "https://10.0.0.12:8443",
+                "https://192.168.50.2:8443",
+            ]
+            hass.config_entries.flow.async_abort(form["flow_id"])
+            raw = plistlib.dumps(
+                {
+                    "Display": {
+                        "Model": "Display-2.6",
+                        "SoftwareVersion": "5.9.4-5",
+                        "ActivePartition": "primary",
+                        "SerialNumber": IDENT,
+                    }
+                }
+            )
+            session = session_parent / "session"
+            # The PC client is a separate interpreter, just as it is for users.
+            # Send the synthetic administrator token by stdin, never argv/env/file.
+            code = """
+import base64,json,sys
+from pathlib import Path
+from installer.onboard import onboard
+from tools import elf_review
+data=json.load(sys.stdin)
+elf_review.PRIVATE=Path(data['private_root'])
+result=onboard('http://127.0.0.1:18812',data['token'],data['session'],
+               base64.b64decode(data['info']),target='https://127.0.0.1:18444',
+               ask=lambda _: 'SETUP')
+print(json.dumps(result))
+"""
+            process = await asyncio.create_subprocess_exec(
+                sys.executable,
+                "-c",
+                code,
+                cwd=source,
+                stdin=asyncio.subprocess.PIPE,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            stdout, stderr = await process.communicate(
+                json.dumps(
+                    {
+                        "token": token,
+                        "session": str(session),
+                        "private_root": str(root),
+                        "info": base64.b64encode(raw).decode(),
+                    }
+                ).encode()
+            )
+            assert process.returncode == 0, stderr.decode()
+            result = json.loads(stdout.splitlines()[-1])
+        assert result["ha_configured"] and not result["firmware_written"]
+        await hass.async_block_till_done()
+        entries = hass.config_entries.async_entries("hearth")
+        assert len(entries) == 1 and entries[0].data == {}
+        assert (session / "commissioning.zip").is_file()
+        assert all(token.encode() not in p.read_bytes() for p in session.iterdir())
+        saved_form = json.loads((session / "onboarding-form.json").read_bytes())
+        assert saved_form["data_schema"][0]["selector"]["select"]["options"] == [
+            "https://10.0.0.12:8443",
+            "https://192.168.50.2:8443",
+        ]
+        print(
+            json.dumps(
+                {
+                    "real_ha_automatic_usb_identity_handoff": True,
+                    "local_interface_suggestions": True,
+                    "admin_rest_config_flow": True,
+                    "private_bundle_download_and_identity_match": True,
+                    "ha_admin_token_not_persisted": True,
+                    "firmware_written": False,
+                }
+            )
+        )
+    finally:
+        await hass.async_stop()
+
+
 if __name__ == "__main__":
-    with tempfile.TemporaryDirectory(prefix="hearth-real-ha-") as directory:
-        root = Path(directory)
-        shutil.copytree("/package/custom_components", root / "custom_components")
-        profile = fixture(root)
-        asyncio.run(check(root, profile))
+    if "--onboarding-only" in sys.argv:
+        with tempfile.TemporaryDirectory(prefix="hearth-onboarding-ha-") as directory:
+            asyncio.run(check_automatic_onboarding(Path(directory)))
+    else:
+        with tempfile.TemporaryDirectory(prefix="hearth-real-ha-") as directory:
+            root = Path(directory)
+            shutil.copytree("/package/custom_components", root / "custom_components")
+            profile = fixture(root)
+            asyncio.run(check(root, profile))
+        # HA's custom-component import cache belongs to one config directory.
+        # A second HA instance needs its own process, just as a fresh user does.
+        subprocess.run([sys.executable, __file__, "--onboarding-only"], check=True, timeout=90)

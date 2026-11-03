@@ -1,0 +1,45 @@
+{
+  "date": "2026-11-02",
+  "version": "0.8.0",
+  "scope": "Local address suggestions and PC-side USB identity handoff to authenticated HA setup",
+  "host_tests_passed": 1642,
+  "optional_tests_skipped": 5,
+  "make_check": "passed",
+  "real_ha": {
+    "version": "2026.10.4",
+    "network": "isolated container, loopback only",
+    "existing_native_control_roundtrips": 24,
+    "fresh_ha_instance_in_separate_process": true,
+    "pc_installer_in_separate_process": true,
+    "multiple_interface_suggestions": true,
+    "administrator_rest_config_flow": true,
+    "private_bundle_download_identity_and_endpoint_match": true,
+    "ha_administrator_token_not_persisted": true,
+    "config_entry_data_has_no_credentials": true
+  },
+  "host_refusal_checks": [
+    "Ambiguous or absent native USB identity",
+    "Unsupported model, version or active partition",
+    "Existing or non-private local session",
+    "Existing HA profile, in-progress flow or unexpected form",
+    "Wrong returned device identity or endpoint",
+    "Redirected, oversized or foreign-handler HA response",
+    "Cancellation before HA profile creation"
+  ],
+  "boundaries": {
+    "ha_addresses_from_local_metadata_only": true,
+    "network_scanning": false,
+    "vlan_reachability_inferred": false,
+    "only_bundle_get_retries_transient_startup": true,
+    "setup_post_automatically_retried": false,
+    "optional_sudo_wraps_only_fixed_readonly_mtype": true,
+    "block_device_write_permission_granted": false,
+    "rom_loader_started": false,
+    "thermostat_firmware_written": false,
+    "hvac_commands_sent": false,
+    "live_owner_ha_changed": false
+  },
+  "public_archives_reproduce": true,
+  "extracted_installer_cli_works_without_site_packages": true,
+  "owner_hacs_update_and_automatic_onboarding_verified": false
+}

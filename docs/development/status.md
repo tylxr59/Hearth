@@ -12,8 +12,14 @@ fix is published as an ordinary GitHub release, retaining experimental status.
 Actual installed HACS filtering/selection methods now select v0.7.1 without beta
 flags; both downloaded archives match the tested source and published checksums.
 The owner successfully downloaded0.7.1 through HACS, and all44 installed source
-files independently match the published ZIP. The entry/profile are still absent;
-a separate Core restart and fresh onboarding measurement are next. No thermostat reset or write
+files independently match the published ZIP. The owner restarted Core and reached
+the fresh setup form, then requested automatic endpoint/identity entry. Its entry
+has not been submitted. Local0.8.0 adds HA-interface suggestions plus a PC-side
+onboard command: read a single native USB identity, choose a thermostat-reachable
+HA address, create the entry through HA's admin API and save the matched private
+bundle. The full real-HA sandbox passes both the24 control round trips and the
+new separate-process REST onboarding/bundle exchange. The owner still needs to
+test0.8.0 through HACS and this public command. No thermostat reset or write
 occurred during this cleanup. The integration uses native HTTPS directly inside
 HA Core. The latest confirmed physical state
 is Heat63F, manual Ecooff, empty schedule, heating idle. The equipment is described
@@ -51,7 +57,7 @@ compiled kernels. The replay is explicitly marked review-only and cannot open US
 through the guided workflow. It is not a pristine-stock hardware installation.
 
 The display is now detached from its HVAC base and charging by USB. No loader
-is armed. Latest complete host suite:1,619 passed, five optional skips. Static,
+is armed. Latest complete host suite:1,642 passed, five optional skips. Static,
 formatting and security checks pass. Release archives reproduce; the extracted
 installer includes all recipe inputs and its CLI starts independently.
 

@@ -17,14 +17,12 @@ internal HTTP frontend when that route is available on the thermostat network.
 ## Home Assistant
 
 Add `https://github.com/tylxr59/Hearth` as a HACS custom repository of type
-Integration. Install a tagged preview with its `hearth.zip` asset, restart Core,
-then add Hearth through Settings → Devices & services. On a fresh installation,
-enter the HTTPS address the thermostat can reach (with an explicit unprivileged
-port, normally8443) and the device ID obtained locally with the USB identify tool.
-The wizard generates private keys, local trust and a unique device credential.
-It refuses to overwrite an existing profile.
+Integration. Install a tagged release with its `hearth.zip` asset and restart
+Core. For fresh setup, use [automatic USB onboarding](#automatic-usb-onboarding)
+below. It creates the HA entry, local trust and unique device credential without
+copying the device ID by hand. It refuses to replace an existing profile.
 
-The current release is the experimental **v0.7.1**. In HACS, open Hearth and select
+The current release is the experimental **v0.8.0**. In HACS, open Hearth and select
 that tagged version for download. It is an ordinary GitHub release so HACS's
 default selection works; the project remains experimental and is not stable v1.
 If an older repository cache shows a commit hash, use Hearth's **Update information**
@@ -33,13 +31,58 @@ of the integration does not establish a successful HACS installation. For a clea
 onboarding test, retain private backups and remove the previous integration/profile
 before starting; removing an HA entry alone does not erase its retained profile.
 
-A previously prepared profile is imported without creating new credentials.
-Normal HA upgrades do not reflash the thermostat or rotate its identity.
+A previously prepared profile can be imported through **Add integration → Hearth**
+without creating new credentials. Manual fresh setup is also available there:
+choose an offered local address or enter an explicit HTTPS IPv4 endpoint/port,
+then enter the USB-read device ID. Normal HA upgrades do not reflash the thermostat
+or rotate its identity.
 
 For source installation, run `python -m tools.package_native_ha build/ha-package`
 and copy `build/ha-package/custom_components/hearth` into HA's
 `config/custom_components/`. All required runtime files are included. Restart
 Core once, then add the integration. Do not copy the entire research repository.
+
+## Automatic USB onboarding
+
+Download `hearth-installer-source.zip` from the same release and extract it on the
+Linux computer connected to your Nest by USB. From that directory, with Python3.12+
+and `mtype` available:
+
+```sh
+mkdir -m 700 private
+python3 -m installer.cli onboard \
+  --ha-url http://YOUR_HA_LAN_IP:8123 --session private/my-install
+```
+
+Use the actual HA frontend address, including its port; this is the URL you use
+to open HA. HTTPS is supported and preferred when available. HTTP requires a
+literal private LAN address. Close any open Hearth setup dialog before running
+the command. The installer prompts privately for a temporary HA administrator
+access token, discovers a single normal-mode Nest disk, and reads only its
+diagnostic plist. Multiple disks require an explicit `--disk /dev/sdX` selection.
+
+HA offers its own private IPv4 interfaces as thermostat-facing HTTPS endpoints
+on port8443. Select the address on the thermostat's network; across VLANs,
+reachability still needs your confirmation. You can enter another explicit
+endpoint if needed. Type `SETUP` once to create the HA entry and save the matching
+bundle/identity in your private session. The HA administrator token is not saved;
+revoke the temporary token after onboarding. No ROM loader, flash write or
+thermostat control runs during this step.
+
+If your account cannot read the diagnostic disk, add `--sudo-read` to permit only
+the fixed `sudo mtype` diagnostic read; sudo prompts locally for your PC password.
+This flag never grants write access or runs the installer as root. Alternatively,
+save the plist through your normal read-only workflow and pass
+`--info /path/to/Technical-Info.plist`.
+The installer extracts the identity from that file without asking you to type it.
+Do not grant block-device write access. `--endpoint https://YOUR_IOT_HA_IP:8443`
+can supply an endpoint explicitly while still reading the identity automatically.
+
+The command creates `private/my-install/identity.json` and `commissioning.zip`;
+continue at [Build and acquire the original inputs](#build-and-acquire-the-original-inputs).
+An existing profile or refused setup stops without automatic resubmission. If HA
+created the entry but its listener is not ready, preserve the session and resolve
+the HA setup error before using the separate bundle-download command.
 
 ## Commissioning bundle
 

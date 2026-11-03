@@ -37,7 +37,7 @@ def test_hacs_and_installer_archives_reproduce_without_private_material(tmp_path
         )
         version = json.loads(z.read("manifest.json"))["version"]
         project = tomllib.loads(Path("pyproject.toml").read_text())
-        assert version == project["project"]["version"] == "0.7.1"
+        assert version == project["project"]["version"]
     with zipfile.ZipFile(a / "hearth-installer-source.zip") as z:
         names = set(z.namelist())
         assert {
@@ -70,7 +70,7 @@ def test_hacs_and_installer_archives_reproduce_without_private_material(tmp_path
         extracted = tmp_path / "source"
         z.extractall(extracted)
     result = subprocess.run(
-        [sys.executable, "-m", "installer.cli", "--help"],
+        [sys.executable, "-S", "-m", "installer.cli", "--help"],
         cwd=extracted,
         env={**os.environ, "PYTHONPATH": str(extracted)},
         capture_output=True,

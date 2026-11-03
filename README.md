@@ -60,11 +60,12 @@ mean every field or equipment configuration has been physically tested. See the
 
 For an already commissioned thermostat, add
 `https://github.com/tylxr59/Hearth` to **HACS → Custom repositories**, category
-**Integration**, install Hearth, then restart HA and add **Hearth** under
-**Settings → Devices & services**. Tagged previews provide the `hearth.zip`
-release asset. Select **v0.7.1**, the experimental0.x release offered through
-HACS's normal download flow. Follow the [installation guide](docs/installation.md)
-for fresh commissioning.
+**Integration**, install Hearth, then restart HA. Existing profiles can be added
+under **Settings → Devices & services**. For fresh setup, the
+[USB onboarding command](docs/installation.md#automatic-usb-onboarding) reads the
+device ID, offers HA's local addresses, creates the integration entry and saves
+the private commissioning bundle. Tagged releases provide `hearth.zip`; select
+the experimental **v0.8.0** through HACS's normal download flow.
 
 For a stock thermostat, start with the supported-device and firmware-kit
 requirements in that guide. The USB tools can inspect the device without writing:

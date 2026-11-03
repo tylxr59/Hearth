@@ -20,7 +20,7 @@ from provisioning.native_settings import assigned_credentials
 from tools.elf_review import PRIVATE, private_path
 
 
-def inspect_disk(disk):
+def inspect_disk(disk, *, sudo_read=False):
     path = Path(disk)
     if (
         path.parent != Path("/dev")
@@ -29,10 +29,16 @@ def inspect_disk(disk):
         or not path.is_block_device()
     ):
         raise Invalid("direct /dev block-device path required")
+    if type(sudo_read) is not bool:
+        raise Invalid("explicit read-only privilege choice required")
+    command = ["mtype", "-i", str(path), "::/Technical Info.plist"]
+    if sudo_read:
+        print("Reading the Nest diagnostic file with sudo mtype (read-only).")
+        command = ["sudo", "--", *command]
     result = subprocess.run(  # nosec B603 B607
-        ["mtype", "-i", str(path), "::/Technical Info.plist"],
+        command,
         capture_output=True,
-        timeout=10,
+        timeout=60 if sudo_read else 10,
         check=True,
     )
     if len(result.stdout) > MAX_INFO_BYTES:
@@ -174,6 +180,14 @@ def main(argv=None):
     fetch = commands.add_parser("download")
     fetch.add_argument("--ha-url", required=True)
     fetch.add_argument("--output", type=Path, required=True)
+    onboard = commands.add_parser("onboard")
+    onboard.add_argument("--ha-url", required=True)
+    onboard.add_argument("--session", type=Path, required=True)
+    onboard.add_argument("--endpoint")
+    onboard.add_argument("--sudo-read", action="store_true")
+    identity_source = onboard.add_mutually_exclusive_group()
+    identity_source.add_argument("--disk")
+    identity_source.add_argument("--info", type=Path)
     identify = commands.add_parser("identify")
     identify.add_argument("--disk")
     identify.add_argument("--info", type=Path)
@@ -230,6 +244,26 @@ def main(argv=None):
             from installer.build import build
 
             print(json.dumps(build(args.sources, args.output, args.profile), indent=2))
+        elif args.command == "onboard":
+            from installer.discovery import native_disk
+            from installer.onboard import onboard
+
+            if args.info:
+                with args.info.open("rb") as stream:
+                    info = stream.read(MAX_INFO_BYTES + 1)
+            else:
+                info = inspect_disk(
+                    args.disk if args.disk else native_disk(), sudo_read=args.sudo_read
+                )
+            device_info(info)
+            result = onboard(
+                args.ha_url,
+                getpass.getpass("Temporary HA administrator access token (hidden): "),
+                args.session,
+                info,
+                target=args.endpoint,
+            )
+            print(json.dumps(result, indent=2))
         elif args.command in ("install-kit", "restore-kit"):
             from installer.workflow import install, restore
 
