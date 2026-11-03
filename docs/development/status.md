@@ -8,10 +8,13 @@ for a reviewed failed write remain separate from fresh installation.
 ## Current unit and next hardware step
 
 The Gen2 Display-2.6 remains on primary5.9.4-5. Its HVAC base is wired to actual
-oil/baseboard heat; the display is detached on USB. The owner confirmed the home
-icon after the latest diagnostic, and normal USB was independently observed.
-No loader is armed. The first commissioning9 phase is installed and verified;
-cleanup3 never committed or mounted writable. Keep that partial state explicit.
+oil/baseboard heat; the display is detached on USB. The latest commissioning9
+stock-return transaction reported all nine targets restored with no transaction,
+rollback, journal, cleanup, unmount or protection errors. Its final readback failed
+(diagnostic21, verified0, safe_to_restart0). The command exited; the display remains
+in sealed/protected RAM. Do not restart until independent read-only evidence
+resolves that failure. No loader is armed. Cleanup3 never committed or mounted
+writable.
 
 The fresh preflight-only diagnostic exited0, sealed/protected, with no writes.
 It measured RAM free50,913,280 bytes and root0 available13,201,408 against the
@@ -20,12 +23,13 @@ A saved corrected NAND view contains one old restored network4 archive
 (5,822,879 file bytes); all four originals match the earlier preserved host backup.
 No archive has been deleted or reused on hardware.
 
-A fresh commissioning-only stock-return image is prepared and reproduces, with
-original capsule/backup custody, full-NAND archive and native ABI checked. It
-restores seven original files/settings and removes the added library/launcher.
-It does not repeat commissioning or touch the unmodified cleanup targets. The
-original source is privately archived; executed profiles/reports remain unchanged.
-Owner readiness/authorization is required before arming or committing that restore.
+The commissioning-only stock return ran once under explicit owner authorization.
+Its failed final result remains unchanged. A fresh write-disabled audit is
+prepared and reproduces: it captures the nine active files, inventories their
+compression codecs and the exact plan-named archive, and fingerprints the saved
+originals/journal. Codec reporting does not loosen the NONE/ZERO acceptance gate.
+The audit admits only the checked, exited, sealed restore state. Obtain fresh
+owner readiness before arming its one ROM boot; no further write is authorized.
 
 ## Normal-flow storage work
 
@@ -57,9 +61,9 @@ The owner's HA entry/bundle were created successfully during the fresh wizard.
 No agent HA Core restart or live HA deployment occurred during this storage work.
 Use HACS for delivery and obtain fresh approval for another agent Core restart.
 
-The combined development suite passes1,812 tests with five optional skips, plus
-the subsequently added focused public-interface removal check. Static checks
-pass. The network-isolated real HA2026.10.4 sandbox passes24 native control round
+The combined development suite passes1,816 tests with seven optional skips;
+the separately enabled pinned BCH checks pass16 tests, covering the two optional
+BCH skips. All26 focused encoding-audit/startup checks and static checks pass. The network-isolated real HA2026.10.4 sandbox passes24 native control round
 trips and the separate-process admin onboarding/address/bundle exchange.
 
 Previously measured: local telemetry, targets63→62→63F, Eco on/off, future schedule

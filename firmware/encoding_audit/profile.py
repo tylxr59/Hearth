@@ -12,6 +12,33 @@ from firmware.tls_probe.package import multi_image
 from tools.elf_review import private_path
 
 ROOT = base.ROOT
+
+
+def ioctl_source(original):
+    patched = patch_ioctl(original)
+    before = "return hearth_encoding_check(filp, cmd, arg);"
+    if patched.count(before) != 1:
+        raise ValueError("exact read-only encoding dispatch required")
+    return patched.replace(
+        before,
+        "return cmd==0x4872U ? hearth_encoding_types(filp,cmd,arg) : hearth_encoding_check(filp,cmd,arg);",
+    )
+
+
+def encoding_header():
+    return (ROOT / "firmware/file_writer/encoding.h").read_bytes() + (
+        ROOT / "firmware/encoding_audit/codecs.h"
+    ).read_bytes()
+
+
+def archive_name(plan):
+    if plan is None:
+        return ".hearth-rollback"
+    if type(plan) is not bytes or len(plan) != 32 or plan == bytes(32):
+        raise ValueError("exact nonzero archive plan required")
+    return ".hearth-rollback-" + plan.hex()
+
+
 SCRIPT = """#!/bin/sh
 set -eu
 export ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabi-
@@ -33,8 +60,8 @@ def stage(parent, output):
     fs = output / "src/Dev/linux/fs/jffs2"
     original = base.read_build(fs / "ioctl.c", 65536)
     (fs / "ioctl.encoding-audit-original").write_bytes(original)
-    (fs / "ioctl.c").write_text(patch_ioctl(original.decode()))
-    shutil.copyfile(ROOT / "firmware/file_writer/encoding.h", fs / "hearth-encoding.h")
+    (fs / "ioctl.c").write_text(ioctl_source(original.decode()))
+    (fs / "hearth-encoding.h").write_bytes(encoding_header())
     (output / "build-encoding.sh").write_text(SCRIPT)
     (output / "encoding-derivation.json").write_text(
         json.dumps({"parent": str(parent), "parent_manifest_sha256": digest})
@@ -63,9 +90,8 @@ def kernel_check(root):
     original = base.read_build(Path(derivation["parent"]) / "src/Dev/linux/fs/jffs2/ioctl.c", 65536)
     if (
         base.read_build(fs / "ioctl.encoding-audit-original", 65536) != original
-        or base.read_build(fs / "ioctl.c", 65536).decode() != patch_ioctl(original.decode())
-        or base.read_build(fs / "hearth-encoding.h", 65536)
-        != (ROOT / "firmware/file_writer/encoding.h").read_bytes()
+        or base.read_build(fs / "ioctl.c", 65536).decode() != ioctl_source(original.decode())
+        or base.read_build(fs / "hearth-encoding.h", 65536) != encoding_header()
         or base.read_build(root / "build-encoding.sh", 4096).decode() != SCRIPT
         or any(files[n] != parent_files[n] for n in files if n != "uImage")
     ):
@@ -78,22 +104,26 @@ def recipes():
         "firmware/file_writer/encoding.h",
         "firmware/file_writer/configure.py",
         "firmware/file_install/targets.h",
+        "firmware/network_update/hash.c",
+        "firmware/network_update/hash.h",
     }
     names |= {
         p.relative_to(ROOT).as_posix()
         for p in Path(__file__).parent.iterdir()
-        if p.suffix in (".py", ".c")
+        if p.suffix in (".py", ".c", ".h")
     }
     return {n: base.sha((ROOT / n).read_bytes()) for n in sorted(names)}
 
 
-def package(kernel_root, build, output, *, session=None):
+def package(kernel_root, build, output, *, session=None, archive_plan=None):
     output = private_path(output)
     files, kernel, digest = kernel_check(kernel_root)
     build = Path(build).absolute()
     if build.resolve() != build or not build.is_relative_to(ROOT / "build"):
         raise ValueError("fresh repository helper build required")
     build.mkdir(mode=0o700)
+    name = archive_name(archive_plan)
+    (build / "audit-archive.h").write_text('#define HEARTH_AUDIT_ARCHIVE "' + name + '"\n')
     session = os.urandom(32) if session is None else session
     if type(session) is not bytes or len(session) != 32:
         raise ValueError("fixed profile nonce required")
@@ -124,6 +154,7 @@ def package(kernel_root, build, output, *, session=None):
             "-I" + str(ROOT / "firmware/file_install"),
             str(ROOT / "firmware/encoding_audit/init.c"),
             str(ROOT / "firmware/file_install/snapshot.c"),
+            str(ROOT / "firmware/network_update/hash.c"),
             "-o",
             str(build / "init"),
         ],
@@ -153,6 +184,7 @@ def package(kernel_root, build, output, *, session=None):
     record = {
         "status": "protected-readonly-encoding-audit-unexecuted",
         "session": session.hex(),
+        **({"archive_plan": archive_plan.hex()} if archive_plan is not None else {}),
         "kernel": str(Path(kernel_root).absolute()),
         "kernel_manifest_sha256": digest,
         "recipes": recipes(),
@@ -174,6 +206,10 @@ def check(root):
         raise ValueError("fixed protected encoding audit required")
     files, kernel, digest = kernel_check(record["kernel"])
     actual = {n: base.private_read(root / "artifacts" / n, 4 * 1048576) for n in base.FILES}
+    plan = record.get("archive_plan")
+    name = archive_name(None if plan is None else bytes.fromhex(plan))
+    if name.encode() + b"\0" not in actual["init"]:
+        raise ValueError("compiled read-only archive path differs")
     if digest != record["kernel_manifest_sha256"] or any(
         base.sha(d) != record["files"][n] for n, d in actual.items()
     ):

@@ -84,8 +84,14 @@ The historical investigation is archived under `docs/development/history/` and
   That diagnostic has since exited0, sealed/protected with no writes. It measured
   space refusal42: available13,201,408 versus required19,534,505 bytes; RAM free
   50,913,280. Safe_to_restart1; owner home-icon return and normal USB are now
-  confirmed. A fresh commissioning-only stock-return profile is prepared and
-  reproduced, but not executed. Obtain fresh readiness/authorization for it.
+  confirmed. The owner then authorized the fresh commissioning-only stock return.
+  It ran once: all511 targets restored with zero transaction/rollback/journal/
+  cleanup/unmount/seal errors, but final verification failed diagnostic21,
+  verified0/safe_to_restart0. The command exited; preserve that result unchanged.
+  The display is in sealed/protected RAM: keep USB connected, do not restart yet.
+  A fresh write-disabled snapshot/codec/backup-fingerprint audit is checked and
+  reproduced but not executed. Obtain fresh owner readiness before arming it.
+  No further persistent write is authorized.
   Offline NAND inventory finds one old rollback archive, with all four originals
   matching earlier host backups; no deletion/live deletion preflight is authorized.
 - The owner authorizes local implementation, docs, packaging, tests and commits/
