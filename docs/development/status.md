@@ -88,3 +88,25 @@ Canonical sources: `backend/`, `custom_components/hearth/`, `installer/`,
 `provisioning/`, `firmware/`. Generated HA transport is checked for exact equality.
 Keep the final hardware and release checklist in [roadmap](roadmap.md).
 Historical evidence and old experiments are archived in [history](history/).
+
+The next source preview adds `python3 provision.py` as the single guided entry:
+HACS instructions, USB identity, HA entry/bundle, protected acquisition, private
+kit assembly, two separately confirmed writes and an owner-verified live-reading
+check. Long operations run in a PTY with private logs and bounded engine timeouts;
+Ctrl-C does not kill an active writer. A narrowly scoped current-UID USB rule is
+optional and explicitly confirmed. System dependencies are checked, not installed.
+The time-server prompt defaults to time.nist.gov; a new separately pinned cleanup3
+format permits a bounded variable-length fallback hostname/IPv4 alongside the
+primary NTP update. Legacy equal-width3/4 plans retain their original format.
+The custom-time adapter permits a length change only for target2, preserves full
+original/candidate hashes and retains original-file, resource and recovery gates.
+Neither the combined wizard nor the custom-time/cleanup3 path has run on hardware.
+The owner's requested stock return remains pending; this work performs no live
+write, reset, HA profile recreation or Core restart.
+
+Wizard validation: the complete host suite passes1,710 tests (five optional skips),
+with additional focused USB-rule and packaged-launch checks passing afterward.
+Static/format/security checks pass. The pinned network-isolated real HA2026.10.4
+sandbox passes24 native control round trips and the separate-process admin setup,
+address-suggestion and private-bundle exchange. Public integration and installer
+archives reproduce. Live owner HA is unchanged; this is source/release work only.

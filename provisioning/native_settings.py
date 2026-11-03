@@ -7,17 +7,24 @@ from xml.parsers import expat  # nosec B407
 
 from backend.registry import token_valid
 from backend.validation import Invalid, serial
+from provisioning.time_server import DEFAULT, time_server
 
 
-def nist_time_config(data):
+def nist_time_config(data, server=DEFAULT):
     """Redirect the single reviewed native NTP server, retaining all other bytes."""
+    server = time_server(server)
     if not isinstance(data, bytes) or len(data) > 65536 or b"\0" in data:
         raise Invalid("bounded native NTP configuration required")
     servers = list(re.finditer(rb"(?m)^[ \t]*(?:server|pool|peer)\b[^\r\n]*", data))
     if len(servers) != 1 or servers[0][0] != b"server time.nest.com":
         raise Invalid("single reviewed native NTP server required")
     item = servers[0]
-    return data[: item.start()] + b"server time.nist.gov minpoll 6 maxpoll 10" + data[item.end() :]
+    result = (
+        data[: item.start()] + f"server {server} minpoll 6 maxpoll 10".encode() + data[item.end() :]
+    )
+    if len(result) > 65536:
+        raise Invalid("bounded native NTP configuration required")
+    return result
 
 
 def assigned_credentials(data, ident, credential):

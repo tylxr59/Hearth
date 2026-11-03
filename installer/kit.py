@@ -14,6 +14,7 @@ from firmware.network_writer import profile as cleanup_profile
 from firmware.network_writer import run as cleanup_run
 from installer import build as reader_build
 from installer import replacements, sources
+from provisioning.time_server import DEFAULT, time_server
 from tools.elf_review import private_path
 
 FORMAT = "hearth-private-stock-kit-v1"
@@ -77,7 +78,10 @@ def check(output, *, for_restore=False):
     }
 
 
-def build(session, cache, reader, build, output, *, probe_port=8123, review_only=False):
+def build(
+    session, cache, reader, build, output, *, probe_port=8123, review_only=False, ntp_server=DEFAULT
+):
+    ntp_server = time_server(ntp_server)
     if type(review_only) is not bool:
         raise ValueError("explicit build purpose required")
     session, output = private_path(session), private_path(output)
@@ -98,7 +102,11 @@ def build(session, cache, reader, build, output, *, probe_port=8123, review_only
         encode({"device_executed": False, "persistent_actions": False}),
     )
     replacements.prepare(
-        session, build / "storage-shim", output / "replacements", probe_port=probe_port
+        session,
+        build / "storage-shim",
+        output / "replacements",
+        probe_port=probe_port,
+        ntp_server=ntp_server,
     )
     capsule, pin = (
         output / "replacements/commissioning",

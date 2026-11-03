@@ -27,6 +27,38 @@ unsigned int hn_memory_free,hn_space_available,hn_space_required,hn_data_diagnos
 static void *originals[HEARTH_TARGET_COUNT],*candidates[HEARTH_TARGET_COUNT];
 static unsigned int lengths[HEARTH_TARGET_COUNT];
 static int loaded;
+static int metadata(int fd,int directory,unsigned int length);
+#ifdef HN_CUSTOM_TIME
+#if HEARTH_TARGET_COUNT != 3 || !defined(HEARTH_NETWORK_VARIABLE_TIME)
+#error "Custom time text requires its explicit three-file adapter"
+#endif
+static int time_digest(const unsigned char *data,unsigned int size,const unsigned char *expected)
+{
+ struct hn_hash h;unsigned char out[32];unsigned int i;
+ hn_hash_init(&h);
+ if(hn_hash_update(&h,data,size)||hn_hash_final(&h,out)) return -1;
+ for(i=0;i<32;i++) if(out[i]!=expected[i]) return -1;
+ return 0;
+}
+static int time_data(int directory)
+{
+ int fd;void *source;
+ if(!hn_time_original_size||hn_time_original_size>65536U||!hn_time_config_size||
+    hn_time_config_size>65536U||sizeof(hn_time_config)!=hn_time_config_size||
+    !hn_modes[2]||hn_modes[2]&~0777U||hn_modes[2]&0022U) return -1;
+ fd=openat(directory,"2",2048|H_NOFOLLOW|H_CLOEXEC);
+ if(fd<0) return -1;
+ if(metadata(fd,0,hn_time_original_size)) { close(fd);return -1; }
+ source=mmap(0,hn_time_original_size,1,2,fd,0);
+ if(source==(void *)-1||!source) { close(fd);return -1; }
+ originals[2]=source;lengths[2]=hn_time_original_size;
+ if(close(fd)||time_digest(source,hn_time_original_size,hn_time_original_hash)||
+    time_digest(hn_time_config,hn_time_config_size,hn_time_config_hash)) return -1;
+ hn_changes[2]=(struct hearth_file_change){2,1,{source,hn_time_original_size},
+      {hn_time_config,hn_time_config_size},hn_modes[2],hn_modes[2]};
+ return 0;
+}
+#endif
 #ifndef HEARTH_HOST_LAB
 static unsigned int word(const unsigned char *p)
 { return p[0]|(unsigned int)p[1]<<8|(unsigned int)p[2]<<16|(unsigned int)p[3]<<24; }
@@ -95,6 +127,9 @@ int hn_data_load(int directory)
  for(i=0;i<HEARTH_TARGET_COUNT;i++) {
   char name[2]={(char)('0'+i),0};unsigned char *candidate;void *source;
   hn_data_diagnostic=101+i;
+#ifdef HN_CUSTOM_TIME
+  if(i==2) { if(time_data(directory)) goto fail;continue; }
+#endif
   if(hn_plans[i].target!=i||hn_plan_valid(&hn_plans[i])||!hn_modes[i]||hn_modes[i]&~0777U||hn_modes[i]&0022U) goto fail;
   fd=openat(directory,name,2048|H_NOFOLLOW|H_CLOEXEC);
   if(fd<0||metadata(fd,0,hn_plans[i].size)) goto fail;
@@ -123,7 +158,11 @@ int hn_space_guard(int fd,int restoring)
 {
  unsigned int i,total=0,largest=0,block,available;
  if(!loaded||(restoring!=0&&restoring!=1)) return -1;
- for(i=0;i<HEARTH_TARGET_COUNT;i++) { total+=hn_plans[i].size;if(hn_plans[i].size>largest) largest=hn_plans[i].size; }
+ for(i=0;i<HEARTH_TARGET_COUNT;i++) {
+  unsigned int size=hn_changes[i].original.size;
+  if(hn_changes[i].replacement.size>size) size=hn_changes[i].replacement.size;
+  total+=size;if(size>largest) largest=size;
+ }
 #ifdef HEARTH_HOST_LAB
  { struct statfs s;if(fstatfs(fd,&s)) return -1;block=(unsigned int)s.f_bsize;available=(unsigned int)s.f_bavail; }
 #else

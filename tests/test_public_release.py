@@ -41,6 +41,10 @@ def test_hacs_and_installer_archives_reproduce_without_private_material(tmp_path
     with zipfile.ZipFile(a / "hearth-installer-source.zip") as z:
         names = set(z.namelist())
         assert {
+            "provision.py",
+            "installer/wizard.py",
+            "installer/wizard_worker.py",
+            "provisioning/time_server.py",
             "installer/cli.py",
             "installer/kit.py",
             "installer/replacements.py",
@@ -69,6 +73,16 @@ def test_hacs_and_installer_archives_reproduce_without_private_material(tmp_path
         ) <= names
         extracted = tmp_path / "source"
         z.extractall(extracted)
+    launch = subprocess.run(
+        [sys.executable, "-S", "provision.py"],
+        input=b"QUIT\n",
+        check=False,
+        cwd=extracted,
+        capture_output=True,
+        timeout=15,
+        env={**os.environ, "PYTHONPATH": str(extracted)},
+    )
+    assert launch.returncode == 0 and b"Hearth setup" in launch.stdout
     result = subprocess.run(
         [sys.executable, "-S", "-m", "installer.cli", "--help"],
         cwd=extracted,

@@ -73,6 +73,7 @@ def release(output):
             public[p.relative_to(ROOT).as_posix()] = p.read_bytes()
     for name in (
         "LICENSE",
+        "provision.py",
         "THIRD_PARTY.md",
         "pyproject.toml",
         "requirements.lock",

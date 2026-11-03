@@ -16,6 +16,12 @@ int main(int argc,char **argv)
  if(result) { if(hn_data_release()) return 3;puts("refused");return 0; }
  for(i=0;i<HEARTH_TARGET_COUNT;i++) {
   const struct hearth_file_change *f=&hn_changes[i];unsigned int j;
+#ifdef HN_CUSTOM_TIME
+  if(i==2) {
+   if(f->original.size!=hn_time_original_size||f->replacement.size!=hn_time_config_size||memcmp(f->replacement.data,hn_time_config,hn_time_config_size)) return 9;
+   continue;
+  }
+#endif
   if(f->original.size!=hn_plans[i].size||f->replacement.size!=hn_plans[i].size) return 4;
   for(j=0;j<hn_plans[i].size;j++) {
    unsigned char want=f->original.data[j];

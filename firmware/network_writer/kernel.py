@@ -37,6 +37,7 @@ RECIPES = (
         "provisioning/network_plan.py",
         "provisioning/network_backup.py",
         "provisioning/native_network.py",
+        "provisioning/time_server.py",
     }
 )
 

@@ -234,8 +234,14 @@ static int valid_change(struct hearth_posix_context *c,unsigned int index)
     {
         static const unsigned int limits[4]={6U*1048576U,1048576U,65536U,65536U};
         if(c->count!=HEARTH_TARGET_COUNT||c->archive_layout!=1||!f->existed||!f->original.size||
-           f->original.size!=f->replacement.size||f->original.size>limits[f->target]||
+           f->original.size>limits[f->target]||f->replacement.size>limits[f->target]||
            f->original_mode!=f->replacement_mode||(f->original_mode&0022U)) return -1;
+#ifdef HEARTH_NETWORK_VARIABLE_TIME
+        if(c->count!=3) return -1;
+        if(f->target!=2&&f->original.size!=f->replacement.size) return -1;
+#else
+        if(f->original.size!=f->replacement.size) return -1;
+#endif
     }
 #else
     if(!f->existed&&(f->target!=HEARTH_STORAGE_LIBRARY&&f->target!=HEARTH_LAUNCHER)) return -1;

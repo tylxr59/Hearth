@@ -14,6 +14,7 @@ from urllib.parse import urlsplit
 
 from backend.validation import Invalid, endpoint
 from firmware.harden import client_config
+from provisioning.time_server import time_server
 from tools.elf_review import ArmElf
 
 GOOGLE_PROBE = b"http://clients3.google.com/generate_204\0"
@@ -130,6 +131,15 @@ def connman_time_candidate(data):
     if general_count != 1 or seen != {b"FallbackTimeservers", b"PreferFallbackTimeservers"}:
         raise Invalid("one General section and both time settings required")
     return selected
+
+
+def connman_time_config(data, server):
+    server = time_server(server).encode("ascii")
+    span = connman_time_candidate(data)
+    result = data[: span.offset] + server + data[span.offset + len(span.original) :]
+    if len(result) > 65536:
+        raise Invalid("bounded ConnMan configuration required")
+    return result
 
 
 def registration_candidate(data, old_origin, new_origin):

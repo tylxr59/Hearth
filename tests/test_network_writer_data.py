@@ -9,17 +9,29 @@ from provisioning.native_network import FixedSpan
 from provisioning.network_plan import header, make_plan
 
 
-@pytest.fixture(scope="module", params=(3, 4))
+@pytest.fixture(scope="module", params=(3, 4, "custom"))
 def mapped(tmp_path_factory, request):
     root = tmp_path_factory.mktemp("network-mapped")
-    count = request.param
+    custom = request.param == "custom"
+    count = 3 if custom else request.param
     data = [bytes(range(256)) * n for n in (17000, 1800, 17, 48)[:count]]
     plans = [
         make_plan(i, d, FixedSpan(4090, b"\xfa\xfb\xfc\xfd\xfe\xff\x00\x01", b"changed!"))
         for i, d in enumerate(data)
     ]
+    if custom:
+        data[2] = b"[global]\nFallbackTimeservers=time.google.com\n"
+        plans = plans[:2]
     (root / "plan.h").write_bytes(
-        header(plans, [0o755, 0o755, 0o644, 0o644][:count], b"p" * 32, b"r" * 32)
+        header(
+            plans,
+            [0o755, 0o755, 0o644, 0o644][:count],
+            b"p" * 32,
+            b"r" * 32,
+            custom_time=(data[2], b"[global]\nFallbackTimeservers=ntp.example.test\n")
+            if custom
+            else None,
+        )
     )
     command = [
         "clang",
@@ -40,6 +52,8 @@ def mapped(tmp_path_factory, request):
         "-o",
         str(root / "test"),
     ]
+    if custom:
+        command.insert(1, "-DHEARTH_NETWORK_VARIABLE_TIME")
     subprocess.run(command, check=True, capture_output=True)
     return root / "test", data
 

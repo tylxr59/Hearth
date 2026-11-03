@@ -146,7 +146,8 @@ def execute(
 
 def main(argv=None):
     parser = argparse.ArgumentParser(prog="hearth", description="Hearth guided Linux USB installer")
-    commands = parser.add_subparsers(dest="command", required=True)
+    commands = parser.add_subparsers(dest="command")
+    commands.add_parser("wizard")
     commands.add_parser("doctor")
     fetch_sources = commands.add_parser("sources")
     fetch_sources.add_argument("--output", type=Path, required=True)
@@ -159,6 +160,7 @@ def main(argv=None):
     replacements.add_argument("--build", type=Path, required=True)
     replacements.add_argument("--output", type=Path, required=True)
     replacements.add_argument("--probe-port", type=int, default=8123)
+    replacements.add_argument("--ntp-server", default="time.nist.gov")
     build_kit = commands.add_parser("build-kit")
     build_kit.add_argument("--session", type=Path, required=True)
     build_kit.add_argument("--sources", type=Path, required=True)
@@ -166,6 +168,7 @@ def main(argv=None):
     build_kit.add_argument("--build", type=Path, required=True)
     build_kit.add_argument("--output", type=Path, required=True)
     build_kit.add_argument("--probe-port", type=int, default=8123)
+    build_kit.add_argument("--ntp-server", default="time.nist.gov")
     check_kit = commands.add_parser("check-kit")
     check_kit.add_argument("--kit", type=Path, required=True)
     check_kit.add_argument("--for-restore", action="store_true")
@@ -211,6 +214,10 @@ def main(argv=None):
     restore.add_argument("--profile", type=Path, required=True)
     restore.add_argument("--output", type=Path, required=True)
     args = parser.parse_args(argv)
+    if args.command in (None, "wizard"):
+        from installer.wizard import run
+
+        return run()
     try:
         if args.command == "doctor":
             print(
@@ -286,6 +293,7 @@ def main(argv=None):
                         args.build,
                         args.output,
                         probe_port=args.probe_port,
+                        ntp_server=args.ntp_server,
                     ),
                     indent=2,
                 )
@@ -299,7 +307,13 @@ def main(argv=None):
 
             print(
                 json.dumps(
-                    prepare(args.session, args.build, args.output, probe_port=args.probe_port),
+                    prepare(
+                        args.session,
+                        args.build,
+                        args.output,
+                        probe_port=args.probe_port,
+                        ntp_server=args.ntp_server,
+                    ),
                     indent=2,
                 )
             )

@@ -124,6 +124,9 @@ int main(int argc,char **argv)
  memset(&c,0,sizeof(c));c.roots[0]=root;c.roots[1]=openat(root,".",O_RDONLY|O_DIRECTORY);assert(c.roots[1]>=0);
  c.recovery=-1;c.owner=getuid();c.group=getgid();c.count=HEARTH_TARGET_COUNT;c.changes=changes;c.archive_layout=1;
  memset(c.plan_id,42,sizeof(c.plan_id));
+ #ifdef HEARTH_NETWORK_VARIABLE_TIME
+ changes[2].replacement.size=47;
+#endif
  if(scenario==10) changes[1].original.size=changes[1].replacement.size=1048577;
  if(scenario==11) changes[1].target=0;
  if(scenario==12) changes[0].replacement_mode=0644;
@@ -138,7 +141,7 @@ int main(int argc,char **argv)
   if(scenario!=13) for(i=0;i<HEARTH_TARGET_COUNT;i++) check_file(root,hearth_target_paths[i],original,i?31:length);
  } else {
   assert(result.committed&&result.error==0);
-  for(i=0;i<HEARTH_TARGET_COUNT;i++) check_file(root,hearth_target_paths[i],changes[i].replacement.data,i?31:length);
+  for(i=0;i<HEARTH_TARGET_COUNT;i++) check_file(root,hearth_target_paths[i],changes[i].replacement.data,changes[i].replacement.size);
   reset(&c);
   if(scenario==15) {
    fd=openat(root,hearth_target_paths[0],O_WRONLY);assert(fd>=0);assert(write(fd,"?",1)==1);assert(close(fd)==0);

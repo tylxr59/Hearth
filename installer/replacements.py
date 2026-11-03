@@ -23,6 +23,7 @@ from provisioning.native_network import connectivity_url
 from provisioning.native_settings import assigned_credentials, nist_time_config
 from provisioning.native_startup import LAUNCHER, native_startup
 from provisioning.native_tls import strict_tls
+from provisioning.time_server import DEFAULT, time_server
 from tools.elf_review import private_path
 
 
@@ -63,6 +64,7 @@ def recipes():
         "firmware/harden.py",
         "provisioning/network_plan.py",
         "provisioning/native_network.py",
+        "provisioning/time_server.py",
     )
     return {name: hashlib.sha256((root / name).read_bytes()).hexdigest() for name in names}
 
@@ -85,7 +87,13 @@ def check(output, session, *, for_restore=False):
     ):
         raise ValueError("commissioning originals differ from this acquisition")
     manifest = json.loads(read(output / "commissioning/plan.json", 32768))
-    for row in candidates(decoder.snapshot, bundle, ca, crl, shim):
+    selection = json.loads(read(output / "time-server.json", 1024))
+    if set(selection) != {"server"} or selection["server"] != time_server(selection["server"]):
+        raise ValueError("canonical time server selection required")
+    network = json.loads(read(output / "cleanup/plan.json", 16384))
+    if network.get("ntp_server", DEFAULT) != selection["server"]:
+        raise ValueError("primary and fallback time servers must match")
+    for row in candidates(decoder.snapshot, bundle, ca, crl, shim, selection["server"]):
         if (
             manifest["files"][row.target]["replacement_mode"] != row.mode
             or read(output / f"commissioning/{row.target}.replacement", 1024 * 1024) != row.data
@@ -94,12 +102,12 @@ def check(output, session, *, for_restore=False):
     return True
 
 
-def candidates(records, bundle, ca, crl, shim):
+def candidates(records, bundle, ca, crl, shim, ntp_server=DEFAULT):
     data = (
         strict_tls(records[0].data, model="Display-2.6", software_version="5.9.4-5"),
         ca,
         crl,
-        nist_time_config(records[3].data),
+        nist_time_config(records[3].data, ntp_server),
         shim,
         LAUNCHER,
         native_startup(records[6].data),
@@ -113,7 +121,8 @@ def candidates(records, bundle, ca, crl, shim):
     )
 
 
-def prepare(session, build, output, *, probe_port=8123):
+def prepare(session, build, output, *, probe_port=8123, ntp_server=DEFAULT):
+    ntp_server = time_server(ntp_server)
     session = private_path(session)
     decoder, bundle, ca, crl = inputs(session)
     connectivity_url(urlsplit(bundle["origin"]).hostname, probe_port)
@@ -136,6 +145,7 @@ def prepare(session, build, output, *, probe_port=8123):
         ca,
         crl,
         read_build(build / "libhearth-settings-compat.so", 1024 * 1024),
+        ntp_server,
     )
     save(
         output,
@@ -170,9 +180,11 @@ def prepare(session, build, output, *, probe_port=8123):
         bundle["origin"],
         probe_port=probe_port,
         target_count=3,
+        ntp_server=ntp_server,
     )
     manifest = read(output / "cleanup/plan.json", 16384)
-    cleanup = hashlib.sha256(b"hearth-network-cleanup-plan-v1\n" + manifest).digest()
+    cleanup = hashlib.sha256((json.loads(manifest)["format"] + "\n").encode() + manifest).digest()
+    save(output, "time-server.json", encode({"server": ntp_server}))
     network_plan.check(output / "cleanup", session / "acquisition/network-backup", cleanup)
     save(
         output,

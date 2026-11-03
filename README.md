@@ -53,29 +53,31 @@ mean every field or equipment configuration has been physically tested. See the
 - Nest Learning Thermostat Gen2, reported `Display-2.6`, primary firmware `5.9.4-5`.
 - Home Assistant Core2026.10.4 (the tested version) and a network path from the Nest to HA.
 - A Linux computer and data-capable USB cable for thermostat installation.
-- A private commissioning bundle and separately checked per-device firmware kit.
-  See [installation and current limits](docs/installation.md).
+- Python3.12+, rootless Podman and the [listed build prerequisites](docs/installation.md#guided-setup).
+  The wizard prepares the private bundle and per-device kit.
 
 ## 🚀 Quick start
 
-For an already commissioned thermostat, add
-`https://github.com/tylxr59/Hearth` to **HACS → Custom repositories**, category
-**Integration**, install Hearth, then restart HA. Existing profiles can be added
-under **Settings → Devices & services**. For fresh setup, the
-[USB onboarding command](docs/installation.md#automatic-usb-onboarding) reads the
-device ID, offers HA's local addresses, creates the integration entry and saves
-the private commissioning bundle. Tagged releases provide `hearth.zip`; select
-the experimental **v0.8.1** through HACS's normal download flow.
-
-For a stock thermostat, start with the supported-device and firmware-kit
-requirements in that guide. The USB tools can inspect the device without writing:
+For a supported stock thermostat, download and extract
+`hearth-installer-source.zip` from the latest experimental release, connect the
+display by USB with its base detached, and run:
 
 ```sh
-python -m installer.cli doctor
-python -m installer.cli identify --info 'Technical Info.plist'
+python3 provision.py
 ```
 
-HACS installs the HA integration. Modifying the thermostat is a separate USB step.
+The wizard explains how to install Hearth through HACS, reads the USB identity,
+offers HA addresses, saves originals and builds the checked install/restore kit.
+It asks before each device write. Its optional time-server prompt defaults to
+`time.nist.gov` and updates both native time sources. See the
+[setup guide and current hardware limits](docs/installation.md#guided-setup).
+The combined stock-device flow is still experimental and needs hardware validation.
+
+For an already commissioned thermostat, add
+`https://github.com/tylxr59/Hearth` to **HACS → Custom repositories**, category
+**Integration**, download Hearth and restart HA. Existing profiles can be added
+under **Settings → Devices & services**. HACS manages the integration; the wizard
+handles the separate USB operation.
 
 ## 🧭 Usage
 

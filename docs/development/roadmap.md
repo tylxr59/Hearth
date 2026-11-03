@@ -11,8 +11,9 @@
 - Extend the measured consolidated reader to pristine supported units and measure
   the complete source-built, per-device two-phase installation and restore. The
   offline composed replay build and profile reproduction now pass.
-- Add portable, scoped USB access and preserve current native configuration during
-  uninstall; exact initial-settings recovery must continue refusing unknown edits.
+- Expand scoped USB access beyond measured port1-1 and preserve current native
+  configuration during uninstall; exact initial-settings recovery must continue
+  refusing unknown edits. The wizard now offers a current-UID rule for that port.
 - Exercise the public installer/restore workflow on supported hosts and supported
   stock units; retain exact originals and interrupted-write refusal/recovery.
 - Review legacy native endpoints, logging, trust/clock renewal, dependencies and

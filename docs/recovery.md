@@ -4,6 +4,12 @@ Keep the private originals, custody receipts, exact plan and matching restore
 profile for each installation. Preserve earlier recovery archives. A commissioning
 bundle is not a firmware backup, and a raw capture is not proof of restoration.
 
+The guided setup retains its evidence in `private/setup-…`, including a
+`READ-ME-FIRST.txt`, private worker logs and the `kit/` directory. An error does
+not authorize rerunning `provision.py` against the same modified device: it is a
+fresh-install wizard, not an automatic resume or repair tool. Preserve its source
+version and all session files.
+
 For a complete private stock kit and unused matching restore images:
 
 ```sh

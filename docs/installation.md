@@ -14,6 +14,54 @@ explicit compatible local HTTP route; that topology is not yet covered by the
 guided kit. Reverse-proxy HTTPS for normal HA access does not prevent using HA's
 internal HTTP frontend when that route is available on the thermostat network.
 
+## Guided setup
+
+Download `hearth-installer-source.zip` from the latest experimental release and
+extract it on the Linux computer connected to your Nest. Open a terminal in that
+folder and run:
+
+```sh
+python3 provision.py
+```
+
+The wizard walks through HACS installation, reads the device identity, offers HA's
+local addresses, saves the matching private bundle, builds the protected reader,
+acquires original files, and prepares both install and restore images. It then
+runs two checked installation phases, each requiring its own confirmation before
+writing. Finish by reconnecting normal Wi-Fi and checking fresh readings in HA.
+You do not need to assemble the individual commands below. `hearth` or
+`python3 -m installer.cli wizard` launches the same flow from an installed checkout.
+
+At **Time server [time.nist.gov]**, press Enter for NIST or enter one NTP hostname
+or IPv4 address, such as your local time server. The selection is validated and
+applied to both the primary NTP configuration and ConnMan's fallback. No port,
+URL, password or additional configuration text is accepted. This is an installation
+time setting; changing it later requires another reviewed device update.
+
+The computer needs Python3.12+, rootless Podman, Git, Clang/LLD, a C compiler,
+patch, pkg-config, mtools, acl and libusb development headers. The wizard checks
+these and reports missing requirements; it does not install system packages.
+It runs as your normal user. It may ask permission for a fixed read-only `sudo
+mtype` diagnostic read and for a narrowly scoped root-managed USB access rule.
+It never grants block-device write access or runs the whole wizard as root.
+The current measured loader is restricted to USB port **1-1**; arbitrary ports,
+other operating systems and other firmware are not supported by this preview.
+
+Keep the display detached from its base and USB connected through acquisition,
+build and installation. Follow the ring instructions only when the wizard says
+the loader is waiting. A private `private/setup-…` folder retains originals,
+custody, logs, plans and results; its `READ-ME-FIRST.txt` explains recovery limits.
+A temporary HA administrator token is entered hidden and never saved; revoke it
+after setup. The final live-reading check is confirmed by you, not inferred from
+a successful file write. No HVAC control test is sent by the wizard.
+
+This remains an experimental stock-device path, not a validated turnkey installer.
+The existing/partial-Hearth guard still refuses modified units. Failed steps are
+not automatically retried, and interrupted write sessions require report review
+before any restart or recovery attempt. The newly combined wizard, cleanup3 and
+custom-NTP writer have host/ARM build coverage; their complete stock-device
+hardware installation and restoration still need measurement.
+
 ## Home Assistant
 
 Add `https://github.com/tylxr59/Hearth` as a HACS custom repository of type
@@ -22,7 +70,7 @@ Core. For fresh setup, use [automatic USB onboarding](#automatic-usb-onboarding)
 below. It creates the HA entry, local trust and unique device credential without
 copying the device ID by hand. It refuses to replace an existing profile.
 
-The current release is the experimental **v0.8.1**. In HACS, open Hearth and select
+The current release is the experimental **v0.9.0**. In HACS, open Hearth and select
 that tagged version for download. It is an ordinary GitHub release so HACS's
 default selection works; the project remains experimental and is not stable v1.
 If an older repository cache shows a commit hash, use Hearth's **Update information**

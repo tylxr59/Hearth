@@ -41,6 +41,7 @@ def compile_helpers(output, plan, backup, pin):
         "-Wl,--build-id=none,-z,noexecstack",
         "-I" + str(output),
         f"-DHEARTH_NETWORK_TARGET_COUNT={target_count}",
+        *(["-DHEARTH_NETWORK_VARIABLE_TIME"] if bound.get("custom_time") else []),
     ]
     stub = output / "libc.stub.c"
     stub.write_text("\n".join(f"long {name}(void) {{ return 0; }}" for name in sorted(IMPORT_SET)))

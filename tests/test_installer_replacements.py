@@ -168,3 +168,19 @@ def test_stock_installer_refuses_existing_or_partial_hearth_before_compiling(sto
     with pytest.raises(ValueError, match="upgrade/recovery"):
         replacements.prepare(session, build, output)
     assert not compiled and not output.exists() and not build.exists()
+
+
+@pytest.mark.parametrize("server", ("ntp.example.test", "10.0.0.8"))
+def test_custom_time_is_bound_consistently_in_both_phases(stock, server):
+    session, build, output, _ = stock
+    replacements.prepare(session, build, output, ntp_server=server)
+    assert ("server " + server + " minpoll").encode() in (
+        output / "commissioning/3.replacement"
+    ).read_bytes()
+    assert ("FallbackTimeservers=" + server).encode() in (
+        output / "cleanup/2.replacement"
+    ).read_bytes().replace(b" ", b"")
+    assert replacements.check(output, session)
+    (output / "time-server.json").write_text(json.dumps({"server": "different.example"}))
+    with pytest.raises(ValueError):
+        replacements.check(output, session)
