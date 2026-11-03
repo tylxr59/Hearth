@@ -14,7 +14,7 @@ flags; both downloaded archives match the tested source and published checksums.
 The owner successfully downloaded0.7.1 through HACS, and all44 installed source
 files independently match the published ZIP. The owner restarted Core and reached
 the fresh setup form, then requested automatic endpoint/identity entry. Its entry
-has not been submitted. Local0.8.1 adds HA-interface suggestions plus a PC-side
+has not been submitted. Published0.8.1 adds HA-interface suggestions plus a PC-side
 onboard command: read a single native USB identity, choose a thermostat-reachable
 HA address, create the entry through HA's admin API and save the matched private
 bundle. The full real-HA sandbox passes both the24 control round trips and the
@@ -23,7 +23,10 @@ test0.8.1 through HACS and this public command. The first0.8.0 tag's release was
 cancelled before publication after hassfest rejected a literal URL in translated
 help text. The corrected description uses a placeholder; the pinned validator now
 reports zero invalid integrations. Publication now depends on hassfest as well
-as checked packaging. No thermostat reset or write
+as checked packaging. The0.8.1 release passed both gates; its46-file HACS ZIP and
+installer-source archive match the tested source and published checksums. Normal
+HACS release selection chooses v0.8.1 without beta flags. The owner has not yet
+installed or tested it. No thermostat reset or write
 occurred during this cleanup. The integration uses native HTTPS directly inside
 HA Core. The latest confirmed physical state
 is Heat63F, manual Ecooff, empty schedule, heating idle. The equipment is described

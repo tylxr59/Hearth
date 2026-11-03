@@ -1,6 +1,12 @@
 {
   "date": "2026-11-02",
   "version": "0.8.1",
+  "published_source_commit": "e629483",
+  "release_url": "https://github.com/tylxr59/Hearth/releases/tag/v0.8.1",
+  "release_workflow_package_and_hassfest_and_publish": "passed",
+  "published_archive_checksums_and_source_contents_verified": true,
+  "published_integration_files": 46,
+  "default_hacs_selection_without_beta": "v0.8.1",
   "scope": "Local address suggestions and PC-side USB identity handoff to authenticated HA setup",
   "host_tests_passed": 1642,
   "optional_tests_skipped": 5,

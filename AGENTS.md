@@ -28,8 +28,10 @@ The historical investigation is archived under `docs/development/history/` and
   downloaded0.7.1 through HACS; all44 installed source files independently match
   the published ZIP. The owner restarted Core and reached its fresh setup form,
   then requested automatic address/identity entry. No submitted Hearth entry or
-  retained profile is known yet. Local0.8.1 adds HA-interface suggestions and
-  the PC-side USB-to-HA onboarding command; use HACS for its delivery. Obtain
+  retained profile is known yet. Published0.8.1 adds HA-interface suggestions and
+  the PC-side USB-to-HA onboarding command. Its46-file published ZIP and source
+  archive match the tested inputs, and normal HACS selection chooses v0.8.1.
+  The live HA instance has not been updated to it; use HACS for delivery. Obtain
   fresh approval before executing another Core restart. Do not recreate the old
   profile or manually deploy over the HACS test.
 - The owner authorizes local implementation, docs, packaging, tests and commits/
