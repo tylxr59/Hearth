@@ -65,6 +65,26 @@ def check(output, *, for_restore=False):
         or cleanup.get("targets", 4) != 3
     ):
         raise ValueError("kit phases must match this intake, custody and disjoint scopes")
+    if not for_restore or (output / "capacity-preflight").exists():
+        from installer.capacity import root_reserve
+
+        capacity, capacity_binding = cleanup_run.checked_pair(
+            output / "capacity-preflight", output / "cleanup-restore"
+        )
+        if (
+            capacity_binding.action != 1
+            or capacity.get("preflight_only") is not True
+            or capacity.get("capacity_reserve")
+            != root_reserve(
+                output / "replacements/commissioning",
+                output / "replacements/commissioning-pin.json",
+            )
+            or any(
+                capacity.get(k) != cleanup.get(k)
+                for k in ("plan_path", "backup", "libraries", "plan", "receipt", "shared_archive")
+            )
+        ):
+            raise ValueError("combined pre-write capacity check must match both kit phases")
     replacements.check(output / "replacements", session, for_restore=for_restore)
     return {
         "status": "private-stock-install-restore-kit-checked",
@@ -134,6 +154,14 @@ def build(
     )
     reader_build.command(reader_build.container("podman", reader_build.IMAGE, network), log)
     cleanup_kernel.finalize(network)
+    from installer.archive_discovery import discover
+    from installer.capacity import root_reserve
+
+    candidate = discover(session)
+    shared_archive = None
+    if candidate is not None:
+        shared_archive = output / "shared-originals.json"
+        save(output, shared_archive.name, candidate)
     for action, name in ((1, "install"), (2, "restore")):
         cleanup_profile.package(
             network,
@@ -144,7 +172,21 @@ def build(
             build / ("cleanup-helpers-" + name),
             output / ("cleanup-" + name),
             action=action,
+            shared_archive=shared_archive,
         )
+    cleanup_profile.package(
+        network,
+        libraries,
+        cleanup,
+        backup,
+        cleanup_pin,
+        build / "capacity-helpers",
+        output / "capacity-preflight",
+        action=1,
+        preflight_only=True,
+        shared_archive=shared_archive,
+        capacity_reserve=root_reserve(capsule, pin),
+    )
     core_record = json.loads(read(pin, 4096))
     cleanup_record = json.loads(read(cleanup_pin, 4096))
     save(

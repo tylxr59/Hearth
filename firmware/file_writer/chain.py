@@ -120,6 +120,66 @@ def commissioning_to_cleanup(record, binding, previous, *, sysfs=Path("/sys/bus/
     return {"status": "verified-commissioning-to-cleanup-handoff", "native_startup_required": False}
 
 
+def acquisition_to_capacity(record, binding, previous, *, sysfs=Path("/sys/bus/usb/devices")):
+    previous = private_path(previous)
+    if (
+        binding.action != 1
+        or record.get("preflight_only") is not True
+        or record.get("targets") != 3
+        or not record.get("capacity_reserve")
+        or record["libraries"] != str(previous)
+        or record["backup"] != str(previous / "network-backup")
+    ):
+        raise ValueError("same-acquisition no-commit combined capacity profile required")
+    # Reuse complete protected-reader custody, not just a USB identity or flag.
+    acquisition_install({"capsule": str(previous)}, binding, previous, sysfs=sysfs)
+    return {"status": "verified-acquisition-capacity-handoff", "native_startup_required": False}
+
+
+def capacity_to_commissioning(record, binding, previous, *, sysfs=Path("/sys/bus/usb/devices")):
+    from firmware.network_writer import run
+    from firmware.network_writer.session import result, selftest
+    from installer.capacity import passed, root_reserve
+
+    previous = private_path(previous)
+    execution = json.loads(private_read(previous / "execution.json", 65536))
+    prior, prior_binding = run.checked_pair(execution["profile"], execution["recovery"])
+    creation = private_path(execution["profile"])
+    observed = json.loads(private_read(previous / "observed.json", 65536))
+    row = result(
+        private_read(previous / "result.json", 16384), 1, target_count=3, preflight_only=True
+    )
+    selftest(
+        private_read(previous / "selftest.jsonl", 32768), shared_originals="shared_archive" in prior
+    )
+    if (
+        binding.action != 1
+        or prior_binding.action != 1
+        or prior.get("targets") != 3
+        or prior.get("preflight_only") is not True
+        or prior.get("capacity_reserve")
+        != root_reserve(Path(record["capsule"]), Path(record["pin"]))
+        or prior["libraries"] != record["base"]
+        or prior["backup"] != str(Path(record["base"]) / "network-backup")
+        or execution["plan"] != prior_binding.plan.hex()
+        or json.loads(private_read(creation / "execution-started.json", 65536)) != execution
+        or json.loads(private_read(previous / "finished.json", 4096))
+        != {"host_command_exited": True}
+        or observed != {"execution": execution, "result": row}
+        or not passed(row)
+        or any(
+            (previous / name).exists()
+            for name in ("decision-sending.json", "decision-sent.json", "preflight.json")
+        )
+    ):
+        raise ValueError(
+            "complete no-write combined capacity evidence required before commissioning"
+        )
+    custody.verify(private_path(record["base"]))
+    ram(sysfs)
+    return {"status": "verified-capacity-commissioning-handoff", "native_startup_required": False}
+
+
 def cleanup_restore_to_commissioning(
     record, binding, previous, *, sysfs=Path("/sys/bus/usb/devices")
 ):

@@ -130,7 +130,7 @@ static int preflight(void *opaque)
         c->preflight_target=(int)i;
         if(hearth_posix_file_ops.preflight(&c->files,i)) return -1;
     }
-    c->preflight_target=-1;return 0;
+    c->preflight_target=-1;c->diagnostic=0;return 0;
 }
 static int open_window(void *opaque)
 {

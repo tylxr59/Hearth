@@ -403,6 +403,7 @@ def run(
     handoff_from_acquisition=None,
     handoff_from_cleanup_restore=None,
     handoff_from_legacy_network_restore=None,
+    handoff_from_capacity=None,
 ):
     root, recovery = private_path(root), private_path(recovery)
     record, binding = checked_pair(root, recovery)
@@ -424,12 +425,17 @@ def run(
                 handoff_from_acquisition,
                 handoff_from_cleanup_restore,
                 handoff_from_legacy_network_restore,
+                handoff_from_capacity,
             )
         )
         > 1
     ):
         raise ValueError("one explicit RAM entry reason required")
-    if handoff_from_legacy_network_restore is not None:
+    if handoff_from_capacity is not None:
+        from firmware.file_writer.chain import capacity_to_commissioning
+
+        capacity_to_commissioning(record, binding, handoff_from_capacity)
+    elif handoff_from_legacy_network_restore is not None:
         from firmware.file_writer.chain import legacy_network_restore_to_stock
 
         legacy_network_restore_to_stock(record, binding, handoff_from_legacy_network_restore)

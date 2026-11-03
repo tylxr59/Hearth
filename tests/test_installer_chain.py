@@ -9,9 +9,96 @@ from firmware.file_writer import chain
 from firmware.file_writer.run import encode, save
 from tests import test_installer_replacements as stock_module
 from tests.test_file_writer_protocol import BINDING, result, selftests
+from tests.test_installer_capacity import successful_capacity
 from tests.test_network_writer_session import evidence
 
 stock_inputs = stock_module.stock
+
+
+@pytest.fixture
+def capacity_phase(tmp_path, ram_usb, monkeypatch):
+    from firmware.network_writer import run
+    from installer import capacity
+    from tools import elf_review
+
+    monkeypatch.setattr(elf_review, "PRIVATE", tmp_path)
+    previous, source = tmp_path / "capacity", tmp_path / "profile"
+    previous.mkdir(mode=0o700)
+    source.mkdir(mode=0o700)
+    record = {
+        "capsule": str(tmp_path / "capsule"),
+        "pin": str(tmp_path / "pin"),
+        "base": str(tmp_path / "acquisition"),
+    }
+    prior = {
+        "targets": 3,
+        "preflight_only": True,
+        "capacity_reserve": 4096,
+        "libraries": record["base"],
+        "backup": record["base"] + "/network-backup",
+    }
+    execution = {"profile": str(source), "recovery": str(source), "plan": BINDING.plan.hex()}
+    row = successful_capacity()
+    save(source, "execution-started.json", encode(execution))
+    for name, content in {
+        "execution.json": encode(execution),
+        "finished.json": encode({"host_command_exited": True}),
+        "result.json": encode(row),
+        "observed.json": encode({"execution": execution, "result": row}),
+        "selftest.jsonl": evidence(),
+    }.items():
+        save(previous, name, content)
+    monkeypatch.setattr(run, "checked_pair", lambda *a: (prior, BINDING))
+    monkeypatch.setattr(capacity, "root_reserve", lambda *a: 4096)
+    monkeypatch.setattr(chain.custody, "verify", lambda *a: None)
+    return record, prior, previous, ram_usb
+
+
+@pytest.mark.parametrize(
+    "fault",
+    (
+        None,
+        "reservation",
+        "wrong-acquisition",
+        "incomplete",
+        "write",
+        "commit",
+        "selftest",
+        "rom",
+        "source",
+        "manifest",
+    ),
+)
+def test_first_writer_requires_exited_zero_write_capacity_evidence(capacity_phase, fault):
+    record, prior, previous, sysfs = capacity_phase
+    if fault == "reservation":
+        prior["capacity_reserve"] = 1
+    elif fault == "wrong-acquisition":
+        prior["libraries"] += "-other"
+    elif fault == "incomplete":
+        (previous / "finished.json").unlink()
+    elif fault == "write":
+        row = successful_capacity() | {"program": 1}
+        (previous / "result.json").write_bytes(encode(row))
+    elif fault == "commit":
+        save(previous, "decision-sending.json", b"{}")
+    elif fault == "selftest":
+        (previous / "selftest.jsonl").write_bytes(evidence(transaction_cases=19))
+    elif fault == "rom":
+        (sysfs / "1-1/idVendor").write_text("0451")
+    elif fault == "source":
+        execution = json.loads((previous / "execution.json").read_bytes())
+        execution["plan"] = (b"q" * 32).hex()
+        (previous / "execution.json").write_bytes(encode(execution))
+    elif fault == "manifest":
+        (previous / "observed.json").write_bytes(b"{}")
+    if fault is None:
+        assert not chain.capacity_to_commissioning(record, BINDING, previous, sysfs=sysfs)[
+            "native_startup_required"
+        ]
+    else:
+        with pytest.raises((ValueError, OSError)):
+            chain.capacity_to_commissioning(record, BINDING, previous, sysfs=sysfs)
 
 
 @pytest.fixture
@@ -76,6 +163,36 @@ def test_protected_acquisition_handoff_requires_completed_bound_custody(acquisit
         chain.acquisition_install(record, BINDING, acquired, sysfs=sysfs)["native_startup_required"]
         is False
     )
+
+
+@pytest.mark.parametrize(
+    "fault", (None, "commit-capable", "wrong-custody", "unreserved", "restore")
+)
+def test_capacity_entry_preserves_reader_custody_and_never_accepts_a_writer(acquisition, fault):
+    acquired, _, sysfs = acquisition
+    record = {
+        "preflight_only": True,
+        "targets": 3,
+        "capacity_reserve": 4096,
+        "libraries": str(acquired),
+        "backup": str(acquired / "network-backup"),
+    }
+    binding = BINDING
+    if fault == "commit-capable":
+        record["preflight_only"] = False
+    elif fault == "wrong-custody":
+        record["backup"] += "-other"
+    elif fault == "unreserved":
+        record["capacity_reserve"] = 0
+    elif fault == "restore":
+        binding = replace(binding, action=2)
+    if fault is None:
+        assert not chain.acquisition_to_capacity(record, binding, acquired, sysfs=sysfs)[
+            "native_startup_required"
+        ]
+    else:
+        with pytest.raises(ValueError):
+            chain.acquisition_to_capacity(record, binding, acquired, sysfs=sysfs)
 
 
 @pytest.mark.parametrize(

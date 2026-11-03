@@ -92,10 +92,19 @@ The historical investigation is archived under `docs/development/history/` and
   metadata and NONE encoding verified; archive inventory, originals and restored
   journal fingerprints verified. Archived original0 alone contains NONE/ZLIB
   fragments, explaining strict final-encoding refusal. No extra write occurred.
-  Independent review clears a manual native restart; home-icon/normal-USB return
-  remains pending. No loader is armed. No further persistent write is authorized.
+  Independent review cleared native restart; the owner has confirmed the home
+  icon and normal Nest USB was independently observed. The display is charging
+  on USB in native startup. No loader is armed. No further persistent write is authorized.
   Offline NAND inventory finds one old rollback archive, with all four originals
   matching earlier host backups; no deletion/live deletion preflight is authorized.
+- Development now integrates exact archive nomination and combined no-commit
+  capacity preflight before either normal-wizard write. A fresh shared/capacity
+  preflight and restore reference reproduce all ten artifacts, but are unexecuted.
+  The full normal flow and shared writes remain unmeasured. Published0.10.2 is
+  unchanged; the extracted download has archived development-source updates.
+  The owner is handing repository cleanup to Claude. Finish the current work,
+  preserve evidence and leave the device in native USB mode; do not arm a loader
+  or restart HA as part of cleanup. See status and the ignored local handoff note.
 - The owner authorizes local implementation, docs, packaging, tests and commits/
   pushes. The current public-product work does not authorize another HA Core
   restart, a new persistent device write or an intentional HVAC call.

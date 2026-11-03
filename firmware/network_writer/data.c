@@ -27,6 +27,13 @@ unsigned int hn_memory_free,hn_space_available,hn_space_required,hn_data_diagnos
 static void *originals[HEARTH_TARGET_COUNT],*candidates[HEARTH_TARGET_COUNT];
 static unsigned int lengths[HEARTH_TARGET_COUNT];
 static int loaded;
+#ifndef HEARTH_CAPACITY_RESERVE
+#define HEARTH_CAPACITY_RESERVE 0U
+#endif
+/* Retained in the binary and read at runtime, so host custody checks can bind
+ * the exact extra reservation without accepting an unchecked compiler flag. */
+static const volatile unsigned int capacity_binding[4]={0x50534e48U,0x31454341U,
+ HEARTH_CAPACITY_RESERVE,HEARTH_CAPACITY_RESERVE^0xffffffffU};
 static int metadata(int fd,int directory,unsigned int length);
 #ifdef HN_CUSTOM_TIME
 #if HEARTH_TARGET_COUNT != 3 || !defined(HEARTH_NETWORK_VARIABLE_TIME)
@@ -182,5 +189,12 @@ int hn_space_guard(int fd,int restoring)
 #else
  hn_space_required=restoring?largest+4U*1048576U:3U*total+2U*1048576U;
 #endif
+ if(!restoring) {
+  unsigned int reserve=capacity_binding[2];
+  if(capacity_binding[0]!=0x50534e48U||capacity_binding[1]!=0x31454341U||
+     capacity_binding[3]!=(reserve^0xffffffffU)||reserve>8U*1048576U||
+     hn_space_required>0xffffffffU-reserve) return -1;
+  hn_space_required+=reserve;
+ }
  return hn_space_available>=hn_space_required?0:-1;
 }

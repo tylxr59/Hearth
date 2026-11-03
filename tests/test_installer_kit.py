@@ -9,6 +9,7 @@ from firmware.file_writer.protocol import Binding
 from firmware.file_writer.run import encode, save
 from installer import bundle as bundle_module
 from installer import kit, replacements
+from installer.capacity import root_reserve
 from tests import test_installer_replacements as stock_module
 from tests.conftest import SERIAL
 from tests.test_native_settings import TOKEN
@@ -51,7 +52,21 @@ def checked_kit(stock_inputs, monkeypatch):
     monkeypatch.setattr(
         kit.cleanup_run,
         "checked_pair",
-        lambda *_: (cleanup, Binding(bytes.fromhex(cleanup_plan), b"r" * 32, 1)),
+        lambda profile, *_: (
+            (
+                {
+                    **cleanup,
+                    "preflight_only": True,
+                    "capacity_reserve": root_reserve(
+                        output / "replacements/commissioning",
+                        output / "replacements/commissioning-pin.json",
+                    ),
+                }
+                if profile.name == "capacity-preflight"
+                else cleanup
+            ),
+            Binding(bytes.fromhex(cleanup_plan), b"r" * 32, 1),
+        ),
     )
     return session, output, core, cleanup, record
 

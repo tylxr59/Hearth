@@ -95,8 +95,8 @@ def test_three_file_evidence_requires_exact_scope_and_separate_commit(action):
     assert session.result["complete"] == 1
 
 
-@pytest.mark.parametrize("preflight_only", (False, True))
-def test_original_arm_cleanup_helpers_exclude_the_client_path(plan, preflight_only):
+@pytest.mark.parametrize("preflight_only,reserve", ((False, 0), (True, 0), (True, 2 * 1048576)))
+def test_original_arm_cleanup_helpers_exclude_the_client_path(plan, preflight_only, reserve):
     _, backup, destination, _, pin_path = plan
     root = Path(__file__).resolve().parents[1]
     (root / "build").mkdir(exist_ok=True)
@@ -104,10 +104,18 @@ def test_original_arm_cleanup_helpers_exclude_the_client_path(plan, preflight_on
         prefix="cleanup-helper-test-", dir=root / "build"
     ) as directory:
         output = Path(directory) / "helpers"
-        compile_helpers(output, destination, backup, pin_path, preflight_only=preflight_only)
+        compile_helpers(
+            output,
+            destination,
+            backup,
+            pin_path,
+            preflight_only=preflight_only,
+            capacity_reserve=reserve,
+        )
         for action in (1, 2):
             data = (output / f"action-{action}").read_bytes()
             assert data[:7] == b"\x7fELF\x01\x01\x01"
+            assert b"HNSPACE1" + struct.pack("<II", reserve, reserve ^ 0xFFFFFFFF) in data
             assert (b'"preflight_only"' in data) == preflight_only
             if preflight_only:
                 assert all(token not in data for token in (b"HFW_RUN1", b"HFW_RDY1"))

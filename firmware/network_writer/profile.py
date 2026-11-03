@@ -51,7 +51,7 @@ FILES = {
 
 
 def recipes():
-    names = set(matrix_recipes()) | set(kernel.RECIPES)
+    names = set(matrix_recipes()) | set(kernel.RECIPES) | {"installer/capacity.py"}
     for folder in ("network_writer", "file_writer", "file_reencode"):
         names |= {
             p.relative_to(ROOT).as_posix()
@@ -123,11 +123,15 @@ def package(
     action,
     preflight_only=False,
     shared_archive=None,
+    capacity_reserve=0,
 ):
     if type(preflight_only) is not bool or (preflight_only and action != 1):
         raise ValueError("preflight-only mode is an explicit install-scope diagnostic")
     if type(action) is not int or action not in (1, 2):
         raise ValueError("install1/restore2 only")
+    from installer.capacity import checked_reserve
+
+    checked_reserve(capacity_reserve, preflight_only)
     output = private_path(output)
     if output.parent.stat().st_mode & 0o077:
         raise ValueError("owner-only output parent required")
@@ -140,7 +144,13 @@ def package(
     bound = pinned_plan(plan, backup, pin)
     build = Path(build).absolute()
     compile_helpers(
-        build, plan, backup, pin, preflight_only=preflight_only, shared_archive=shared_archive
+        build,
+        plan,
+        backup,
+        pin,
+        preflight_only=preflight_only,
+        shared_archive=shared_archive,
+        capacity_reserve=capacity_reserve,
     )
     files = {
         n: read_build(Path(kernel_build) / "artifacts" / n, MAX_IMAGE)
@@ -177,6 +187,7 @@ def package(
         "action": action,
         "targets": bound["target_count"],
         **({"preflight_only": True} if preflight_only else {}),
+        **({"capacity_reserve": capacity_reserve} if capacity_reserve else {}),
         **(
             {"shared_archive": str(private_path(shared_archive))}
             if shared_archive is not None
@@ -230,6 +241,11 @@ def check(output):
         record.get("preflight_only", False) and record["action"] != 1
     ):
         raise ValueError("explicit install-scope preflight diagnostic required")
+    from installer.capacity import checked_reserve
+
+    reserve = checked_reserve(
+        record.get("capacity_reserve", 0), record.get("preflight_only", False)
+    )
     shared = None
     if "shared_archive" in record:
         from firmware.network_writer.shared import checked as shared_check
@@ -262,6 +278,9 @@ def check(output):
     }
     if any(sha(d) != record["files"][n] for n, d in files.items()):
         raise ValueError("network artifact changed")
+    capacity_marker = b"HNSPACE1" + struct.pack("<II", reserve, reserve ^ 0xFFFFFFFF)
+    if capacity_marker not in files["file-action"]:
+        raise ValueError("compiled capacity reservation differs")
     if shared is not None and shared["packed"] not in files["file-action"]:
         raise ValueError("compiled shared-original reference differs")
     if record.get("preflight_only", False) and any(

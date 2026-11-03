@@ -139,6 +139,16 @@ def execute(
             "error_type": failures[0] if failures else "interrupted",
         }
     outcome = result[0]
+    if _record.get("preflight_only") is True:
+        if outcome.get("preflight_passed") is True and outcome.get("safe_to_restart") is True:
+            print(
+                "Whole-install capacity passed without writes. Stay on USB in RAM for the next phase."
+            )
+        else:
+            print(
+                "Capacity check refused before installation. Preserve the report; no automatic retry."
+            )
+        return outcome
     if outcome.get("safe_to_restart") and not restart_after and outcome.get("complete"):
         print(
             "Phase verified. Stay on USB in RAM; wait for the next loader prompt before restarting."

@@ -85,14 +85,20 @@ Use fresh one-use profiles and reviewed prior custody; never rerun an attempted
 image or interpret this diagnostic as installation success.
 
 
-An internal shared-original prototype accepts an explicit reviewed archive spec,
-not arbitrary paths or automatic archive selection. Only an exact, fully restored
+The normal kit can nominate an archive spec from its checked full-NAND view;
+this is a candidate, never authority to reuse an inode. Only an exact, fully restored
 network4 archive matching all current cleanup3 originals is eligible. It adds
 verified references to the same original inodes under a fresh plan's journal;
 source names/data/journal remain intact. Exact link counts, inode/device identity,
 permissions, full hashes and encoding checks remain required. The install space
 bound is replacement staging plus one largest rollback temporary plus2MiB;
 copy-based installation and the largest-plus4MiB restoration bounds are unchanged.
-The shared matrix adds20 synthetic cases before actual-file preflight. This path
-has host/ARM compilation coverage and still needs a supervised hardware test and
-normal-wizard discovery/capacity integration before end-to-end claims.
+The shared matrix adds20 synthetic cases before actual-file preflight. The normal
+wizard now runs a separate no-commit combined-capacity profile before core9.
+It reserves all new root0 core staging plus128KiB metadata allowance, in addition
+to the network budget. Core9's backup/user-config space has its own preflight.
+The compiled capacity binding is checked on the host and read at runtime; it
+cannot be enabled on a commit-capable profile. A refused or incomplete check
+starts neither write phase. Checked zero-write evidence and matching acquisition
+custody are required for the direct RAM handoff to core9. This path has host/ARM
+coverage but still needs supervised hardware validation before end-to-end claims.

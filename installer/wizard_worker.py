@@ -76,7 +76,7 @@ def work(request):
             probe_port=row["probe_port"],
             ntp_server=row["ntp_server"],
         )
-    elif operation in ("commissioning", "cleanup"):
+    elif operation in ("capacity", "commissioning", "cleanup"):
         from firmware.file_writer import run as core
         from installer.workflow import network_engine
 

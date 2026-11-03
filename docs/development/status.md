@@ -11,9 +11,9 @@ The Gen2 Display-2.6 remains on primary5.9.4-5. Its HVAC base is wired to actual
 oil/baseboard heat; the display is detached on USB. The latest commissioning9
 stock-return transaction reported all nine targets restored with no transaction,
 rollback, journal, cleanup, unmount or protection errors. Its final readback failed
-(diagnostic21, verified0, safe_to_restart0). The command exited; the display remains
-in protected read-only audit RAM. Independent evidence now clears a manual
-native restart; owner home-icon/normal-USB return is pending. No loader is armed.
+(diagnostic21, verified0, safe_to_restart0). The command exited. The subsequent audit independently verified the stock
+return; the owner confirmed the native home icon and normal Nest USB was
+independently observed. The display is charging on USB. No loader is armed.
 Cleanup3 never committed or mounted writable.
 
 The fresh preflight-only diagnostic exited0, sealed/protected, with no writes.
@@ -55,10 +55,32 @@ reserve remain unchanged. Twenty additional synthetic shared-original cases cove
 identity/tampering refusals, incomplete staging, uncertain renames and restoration;
 the same sources compile for ARM. Shared-original hardware writes are unmeasured.
 
-Normal-wizard archive discovery and a combined capacity check before the first
-write are still pending. Do not ask the owner to continue a partial installation
-or advertise the complete stock-device flow as verified. After the checked stock
-return, finish that integration and test the normal wizard with fresh profiles.
+The normal kit now nominates candidates from the checked full-NAND root0 view.
+The bounded original parser checks record/data CRCs, versioned directory entries,
+restored journal, exact archive names and full original contents. Ambiguous or
+unsupported data refuses sharing. A nomination is never permission to reuse:
+all native inode/link/ownership/encoding/hash checks still run on the device.
+
+The wizard now runs a no-commit combined-capacity profile before either write.
+It reserves all root0 core staging plus128KiB, in addition to the network budget;
+core's separate user-config/backup preflight remains enforced. The reservation is
+bound into the checked ARM binary. Only exited, sealed, zero-write successful
+capacity evidence with matching acquisition custody admits the first writer.
+A failure starts neither phase. No user-facing continuation path was reintroduced.
+
+A fresh no-commit shared/capacity profile and matching restore reference are
+checked; all ten artifacts reproduce. The extra core reservation is216,202 bytes.
+This preparation used existing preserved inputs for a development preflight,
+not a completed fresh-user run. No loader was armed and no device attempt occurred.
+The next optional hardware step is one owner-ready no-commit preflight of this
+path. Shared-original writes, native-recompressed archive handling and the full
+stock-to-HA normal wizard remain unverified. Do not advertise them as measured.
+
+The owner is handing repository cleanup to Claude. Leave the Nest in native USB
+stock-file state. The extracted download contains development-source updates for
+this reviewed preparation, with prior exact source snapshots retained privately;
+it is not a pristine published0.10.2 download. Do not rerun old executed profiles.
+Private handoff details are in the ignored local handoff note.
 
 ## Published delivery and validation
 
@@ -69,10 +91,11 @@ The owner's HA entry/bundle were created successfully during the fresh wizard.
 No agent HA Core restart or live HA deployment occurred during this storage work.
 Use HACS for delivery and obtain fresh approval for another agent Core restart.
 
-The combined development suite passes1,816 tests with seven optional skips;
-the separately enabled pinned BCH checks pass16 tests, covering the two optional
-BCH skips. All27 focused encoding-audit/startup checks and static checks pass. The network-isolated real HA2026.10.4 sandbox passes24 native control round
-trips and the separate-process admin onboarding/address/bundle exchange.
+The current combined suite passes1,878 tests with five optional skips, including
+the enabled pinned BCH checks. Static checks pass. The network-isolated real
+HA2026.10.4 sandbox passes24 native control round trips and the separate-process
+admin onboarding/address/bundle exchange. Shared/capacity ARM compilation and
+fresh private profile reproduction pass; hardware validation is still pending.
 
 Previously measured: local telemetry, targets63→62→63F, Eco on/off, future schedule
 entry/readback/empty-week restoration, local weather/time correction, full raw/OOB

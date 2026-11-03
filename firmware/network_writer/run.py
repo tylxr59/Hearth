@@ -18,6 +18,7 @@ from firmware.network_writer.session import NetworkSession
 from firmware.probe.observe import require_native
 from firmware.settings_compat_probe.observe import observe
 from firmware.tls_probe.package import private_read
+from installer.capacity import passed as capacity_passed
 from tools.elf_review import private_path
 
 
@@ -76,6 +77,7 @@ def boot(
     execute=False,
     recover_from=None,
     handoff_from_commissioning=None,
+    handoff_from_acquisition=None,
 ):
     root, recovery = private_path(root), private_path(recovery)
     record, binding = checked_pair(root, recovery)
@@ -96,7 +98,19 @@ def boot(
         or (root / "execution-started.json").exists()
     ):
         raise ValueError("fresh one-use private profile and output required")
-    if handoff_from_commissioning is not None:
+    if (
+        sum(
+            v is not None
+            for v in (recover_from, handoff_from_commissioning, handoff_from_acquisition)
+        )
+        > 1
+    ):
+        raise ValueError("one explicit network RAM entry reason required")
+    if handoff_from_acquisition is not None:
+        from firmware.file_writer.chain import acquisition_to_capacity
+
+        acquisition_to_capacity(record, binding, handoff_from_acquisition)
+    elif handoff_from_commissioning is not None:
         if recover_from is not None:
             raise ValueError("one explicit RAM entry reason required")
         from firmware.file_writer.chain import commissioning_to_cleanup
@@ -164,6 +178,7 @@ def boot(
 
         row = observe("1-1", 120, receive_fn=collect)
         return {
+            **({"preflight_passed": capacity_passed(row)} if record.get("preflight_only") else {}),
             "status": "network-file-action-observed",
             "action": record["action"],
             "complete": bool(row["complete"]),

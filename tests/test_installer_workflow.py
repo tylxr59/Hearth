@@ -23,6 +23,7 @@ def flow(tmp_path, monkeypatch):
     for name in (
         "completed",
         "acquisition_install",
+        "capacity_to_commissioning",
         "commissioning_to_cleanup",
         "cleanup_restore_to_commissioning",
     ):
@@ -30,7 +31,12 @@ def flow(tmp_path, monkeypatch):
 
     def runner(profile, recovery, output, **kwargs):
         calls.append((profile.name, output.name, kwargs))
-        return {"complete": True, "safe_to_restart": True, "encoding_verified": True}
+        return {
+            "complete": True,
+            "safe_to_restart": True,
+            "encoding_verified": True,
+            "preflight_passed": True,
+        }
 
     return root, session, calls, runner
 
@@ -38,10 +44,15 @@ def flow(tmp_path, monkeypatch):
 def test_install_orders_disjoint_phases_with_verified_ram_handoffs(flow):
     root, session, calls, runner = flow
     assert workflow.install(root, Path("/unused"), runner=runner)["complete"]
-    assert [c[0] for c in calls] == ["commissioning-install", "cleanup-install"]
+    assert [c[0] for c in calls] == [
+        "capacity-preflight",
+        "commissioning-install",
+        "cleanup-install",
+    ]
     assert calls[0][2]["entry"] == {"handoff_from_acquisition": session / "acquisition"}
-    assert calls[1][2]["entry"] == {"handoff_from_commissioning": root / "install-commissioning"}
-    assert [c[2]["restart_after"] for c in calls] == [False, True]
+    assert calls[1][2]["entry"] == {"handoff_from_capacity": root / "check-capacity"}
+    assert calls[2][2]["entry"] == {"handoff_from_commissioning": root / "install-commissioning"}
+    assert [c[2]["restart_after"] for c in calls] == [False, False, True]
     assert (root / "commissioning-outcome.json").exists()
     assert (root / "cleanup-outcome.json").exists()
 
@@ -55,7 +66,7 @@ def test_install_never_advances_on_incomplete_or_nonboolean_evidence(flow, field
         return {**runner(*a, **kw), field: value}
 
     assert not workflow.install(root, "/unused", runner=failed)["complete"]
-    assert len(calls) == 1
+    assert len(calls) == (1 if field == "safe_to_restart" else 2)
 
 
 def test_cancelled_unarmed_phase_does_not_consume_kit(flow):
@@ -126,3 +137,16 @@ def test_review_only_kit_refuses_before_usb(monkeypatch):
     monkeypatch.setattr(workflow, "identity", forbidden)
     with pytest.raises(ValueError, match="review-only"):
         workflow.install("/unused", "/unused")
+
+
+@pytest.mark.parametrize("value", (False, None, 1))
+def test_failed_capacity_never_starts_either_write_phase(flow, value):
+    root, _, calls, runner = flow
+
+    def refused(*args, **kwargs):
+        return {**runner(*args, **kwargs), "preflight_passed": value}
+
+    result = workflow.install(root, "/unused", runner=refused)
+    assert not result["complete"] and result["completed_phases"] == []
+    assert [c[0] for c in calls] == ["capacity-preflight"]
+    assert not (root / "commissioning-outcome.json").exists()

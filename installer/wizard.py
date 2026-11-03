@@ -290,17 +290,27 @@ class Worker:
 
         engine = core if engine is None else engine
         _, binding = engine.checked_pair(profile, recovery)
+        capacity = profile.name == "capacity-preflight"
         operation = (
-            "cleanup" if binding.action == 1 and "cleanup" in profile.name else "commissioning"
+            "capacity"
+            if capacity
+            else "cleanup"
+            if binding.action == 1 and "cleanup" in profile.name
+            else "commissioning"
         )
-        print(
-            "This phase changes "
-            + (
-                "three network files."
-                if operation == "cleanup"
-                else "nine settings, trust and startup files."
+        if capacity:
+            print(
+                "This check reads original files and total space; it has no install/commit command."
             )
-        )
+        else:
+            print(
+                "This phase changes "
+                + (
+                    "three network files."
+                    if operation == "cleanup"
+                    else "nine settings, trust and startup files."
+                )
+            )
         print("The base must stay detached. Do not unplug USB during a write.")
         if ask("Type READY to arm this phase's checked RAM loader: ").strip() != "READY":
             return {"cancelled": True}
@@ -314,6 +324,14 @@ class Worker:
             entry={k: str(v) for k, v in (entry or {}).items()},
             **({"backup_session": str(backup_session)} if backup_session is not None else {}),
         )
+        if capacity:
+            if result.get("preflight_passed") is True and result.get("safe_to_restart") is True:
+                print("Whole-install capacity verified. Stay connected in RAM for the first phase.")
+            else:
+                print(
+                    "Capacity check refused before writes. Preserve this session; no installation started."
+                )
+            return result
         if not workflow.complete(result):
             print(
                 "The phase is incomplete. Keep USB connected; do not restart or retry without reviewing its report."

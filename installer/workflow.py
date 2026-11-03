@@ -35,6 +35,7 @@ def network_engine():
 
 def fresh(root, role, output):
     outcomes = {
+        "capacity-preflight": "capacity-outcome.json",
         "commissioning-install": "commissioning-outcome.json",
         "cleanup-install": "cleanup-outcome.json",
         "commissioning-restore": "commissioning-restore-outcome.json",
@@ -98,6 +99,30 @@ def install(root, disk, *, ask=input, runner=None):
     if mode == "ram":
         chain.acquisition_install(record, binding, session / "acquisition")
         entry = {"handoff_from_acquisition": session / "acquisition"}
+    capacity = root / "check-capacity"
+    fresh(root, "capacity-preflight", capacity)
+    print("Check total installation space before changing any thermostat file.")
+    row = runner(
+        root / "capacity-preflight",
+        root / "cleanup-restore",
+        capacity,
+        ask=ask,
+        engine=network_engine(),
+        entry={"handoff_from_acquisition": session / "acquisition"} if mode == "ram" else {},
+        restart_after=False,
+        backup_session=session,
+    )
+    if not row.get("cancelled"):
+        save(root, "capacity-outcome.json", encode(row))
+    if row.get("preflight_passed") is not True or row.get("safe_to_restart") is not True:
+        return {
+            "complete": False,
+            "completed_phases": [],
+            "automatic_retry": False,
+            "capacity_passed": False,
+        }
+    chain.capacity_to_commissioning(record, binding, capacity)
+    entry = {"handoff_from_capacity": capacity}
     print("Step1/2: install local HA settings, trust and startup (nine files).")
     row = runner(
         root / "commissioning-install",

@@ -71,6 +71,7 @@ def recipes():
             if p.is_file() and p.suffix in (".py", ".c", ".h", ".sh", ".json")
         }
     paths |= {
+        "installer/capacity.py",
         "tools/elf_review.py",
         "backend/validation.py",
         "firmware/probe/observe.py",
