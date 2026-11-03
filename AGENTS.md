@@ -72,6 +72,13 @@ The historical investigation is archived under `docs/development/history/` and
   and hassfest pass, and default HACS selection chooses v0.10.2.
   The owner may use the explicit pre-device continuation; do not rerun failed
   hardware attempts or recreate this HA entry. No agent Core restart occurred.
+- The owner's continued public wizard has since installed/verified commissioning9.
+  Cleanup3 refused resource preflight (diagnostic40) before commit or writable
+  mounts, with zero program/erase/marker activity; it exited sealed/protected
+  and safe_to_restart1. The first phase remains installed, USB RAM mode is
+  retained and the HVAC base remains detached. Do not rerun attempted phases.
+  Fresh preflight-only resource images are prepared/reproduced but not executed;
+  obtain owner readiness before arming. Original reports and source are retained.
 - The owner authorizes local implementation, docs, packaging, tests and commits/
   pushes. The current public-product work does not authorize another HA Core
   restart, a new persistent device write or an intentional HVAC call.

@@ -26,6 +26,12 @@ static const char control[]="/sys/bus/platform/devices/omap2-nand.0/hearth_file_
 static const char status_path[]="/sys/bus/platform/devices/omap2-nand.0/hearth_file_status";
 static unsigned char report[8192];
 static int tty=-1;
+#ifndef HEARTH_PREFLIGHT_ONLY
+#define HEARTH_PREFLIGHT_ONLY 0
+#endif
+#if HEARTH_PREFLIGHT_ONLY != 0 && HEARTH_PREFLIGHT_ONLY != 1
+#error "Explicit preflight-only mode required"
+#endif
 struct action_context {
     struct hearth_posix_context files;
     unsigned int mounted;
@@ -104,7 +110,8 @@ static int preflight(void *opaque)
 {
     struct action_context *c=opaque;unsigned int i;
     c->diagnostic=40;
-    if(hn_memory_guard()||hn_space_guard(c->files.roots[0],HEARTH_FILE_ACTION==2)) return -1;
+    if(hn_memory_guard()) { c->diagnostic=41;return -1; }
+    if(hn_space_guard(c->files.roots[0],HEARTH_FILE_ACTION==2)) { c->diagnostic=42;return -1; }
     if(c->files.recovery!=-1||c->mounted!=3||read_status(c)||c->phase!=0||
        c->protected!=1||c->programs||c->erases||c->markers||c->failed) return -1;
     if(HEARTH_FILE_ACTION!=1) {
@@ -226,7 +233,7 @@ int main(void)
         if(fd>=0&&close(fd)) initial=1;
     }
     if(!initial&&(read_status(&c)||c.phase!=0||c.protected!=1||readonly_roots(&c)||preflight(&c))) initial=2;
-    if(!initial) committed=await_commit();
+    if(!initial&&!HEARTH_PREFLIGHT_ONLY) committed=await_commit();
     if(committed) result=hfa_run(&action_ops,&c,HEARTH_FILE_ACTION!=1);
     else result=hfa_cancel(&action_ops,&c);
     n=snprintf((char *)report+84,sizeof(report)-92,
@@ -236,13 +243,21 @@ int main(void)
         "\"cleanup_error\":%d,\"attempted\":%u,\"restored\":%u,\"committed\":%d,"
         "\"release_error\":%d,\"unmount_errors\":%u,\"seal_error\":%d,\"verified\":%d,"
         "\"safe_to_restart\":%d,\"complete\":%d,\"phase\":%u,\"protected\":%u,"
-        "\"program\":%u,\"erase\":%u,\"marker\":%u,\"failed\":%u,\"snapshot_available\":%u,\"encoding_verified\":%d,\"diagnostic\":%u,\"snapshot_target\":%d,\"settings_state\":%d}\n",
+        "\"program\":%u,\"erase\":%u,\"marker\":%u,\"failed\":%u,\"snapshot_available\":%u,\"encoding_verified\":%d,\"diagnostic\":%u,\"snapshot_target\":%d,\"settings_state\":%d"
+#if HEARTH_PREFLIGHT_ONLY
+        ",\"memory_free\":%u,\"space_available\":%u,\"space_required\":%u,\"preflight_only\":%u"
+#endif
+        "}\n",
         HEARTH_FILE_ACTION,initial,c.preflight_target,committed,result.stage_error,result.window_opened,
         result.rw_attempted,result.transaction_called,result.transaction.error,result.transaction.rollback_error,
         result.transaction.journal_error,result.transaction.cleanup_error,result.transaction.attempted,
         result.transaction.restored,result.transaction.committed,result.release_error,result.unmount_errors,
         result.seal_error,result.verified,result.safe_to_restart,result.complete,c.phase,c.protected,
-        c.programs,c.erases,c.markers,c.failed,0U,c.encoding_verified,c.diagnostic,c.snapshot_target,c.settings_state);
+        c.programs,c.erases,c.markers,c.failed,0U,c.encoding_verified,c.diagnostic,c.snapshot_target,c.settings_state
+#if HEARTH_PREFLIGHT_ONLY
+        ,hn_memory_free,hn_space_available,hn_space_required,HEARTH_PREFLIGHT_ONLY
+#endif
+        );
     if(n<=0||(unsigned int)n>=sizeof(report)-92) for(;;) pause_short();
     binding_frame(report,"HFW_RES1");put(report+76,(unsigned int)n);put(report+80,crc(report+84,(unsigned int)n));
     length=84+(unsigned int)n;

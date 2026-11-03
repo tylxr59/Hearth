@@ -150,7 +150,10 @@ def boot(
                 execution,
                 lambda: checked_pair(root, recovery),
                 session_factory=lambda binding, save: NetworkSession(
-                    binding, save, target_count=record.get("targets", 4)
+                    binding,
+                    save,
+                    target_count=record.get("targets", 4),
+                    preflight_only=record.get("preflight_only", False),
                 ),
                 ready_message=f"All61 RAM checks and {record.get('targets', 4)} real-file/resource preflights passed. Paused before writes; waiting for separate local commit/abort.",
             )

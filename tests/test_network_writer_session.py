@@ -44,6 +44,79 @@ def session(action=1):
     ), saved
 
 
+def refused_resource_result(**changes):
+    row = json.loads(legacy_result())
+    for key in (
+        "commit_received",
+        "window_opened",
+        "rw_attempted",
+        "transaction_called",
+        "attempted",
+        "committed",
+        "verified",
+        "encoding_verified",
+        "complete",
+    ):
+        row[key] = 0
+    row.update(
+        initial_error=2,
+        error=-2,
+        diagnostic=42,
+        memory_free=32 * 1048576,
+        space_available=10 * 1048576,
+        space_required=19 * 1048576,
+        preflight_only=1,
+    )
+    row.update(changes)
+    return json.dumps(row).encode()
+
+
+def test_refused_resource_diagnostic_keeps_counters_without_authorizing_a_decision():
+    saved = {}
+    s = NetworkSession(
+        BINDING, lambda n, d: saved.setdefault(n, d), target_count=3, preflight_only=True
+    )
+    s.event(p.SELFTEST, evidence())
+    for kind in (p.READY, p.PREFLIGHT_INFO):
+        with pytest.raises(ValueError):
+            s.event(kind, b"")
+    with pytest.raises(ValueError):
+        s.decide(True)
+    s.event(p.RESULT, refused_resource_result())
+    assert s.result["space_available"] < s.result["space_required"]
+    assert s.result["safe_to_restart"] and not s.result["complete"]
+    assert set(saved) == {"selftest.jsonl", "result.json"}
+
+
+@pytest.mark.parametrize(
+    "changes",
+    (
+        {"memory_free": True},
+        {"space_available": -1},
+        {"space_required": 2**32},
+        {"memory_free": 2**31},
+        {"preflight_only": 0},
+        {"commit_received": 1},
+        {"rw_attempted": 3},
+        {"program": 1},
+        {"erase": 1},
+        {"marker": 1},
+    ),
+)
+def test_diagnostic_refuses_bad_counts_mode_or_any_persistent_activity(changes):
+    with pytest.raises(ValueError):
+        result(refused_resource_result(**changes), 1, target_count=3, preflight_only=True)
+
+
+def test_partial_resource_payload_and_unbound_diagnostic_are_refused():
+    row = json.loads(refused_resource_result())
+    row.pop("space_required")
+    with pytest.raises(ValueError):
+        result(json.dumps(row).encode(), 1, preflight_only=True)
+    with pytest.raises(ValueError):
+        result(refused_resource_result(), 1)
+
+
 @pytest.mark.parametrize("action", [1, 2])
 def test_four_target_end_to_end_ordered_evidence_and_separate_commit(action):
     s, saved = session(action)

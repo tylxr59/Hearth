@@ -111,7 +111,11 @@ def archive(program, action, harness, libraries, backup, *, target_count=4):
     return raw
 
 
-def package(kernel_build, libraries, plan, backup, pin, build, output, *, action):
+def package(
+    kernel_build, libraries, plan, backup, pin, build, output, *, action, preflight_only=False
+):
+    if type(preflight_only) is not bool or (preflight_only and action != 1):
+        raise ValueError("preflight-only mode is an explicit install-scope diagnostic")
     if type(action) is not int or action not in (1, 2):
         raise ValueError("install1/restore2 only")
     output = private_path(output)
@@ -125,7 +129,7 @@ def package(kernel_build, libraries, plan, backup, pin, build, output, *, action
         raise ValueError("exact kernel plan/receipt custody required")
     bound = pinned_plan(plan, backup, pin)
     build = Path(build).absolute()
-    compile_helpers(build, plan, backup, pin)
+    compile_helpers(build, plan, backup, pin, preflight_only=preflight_only)
     files = {
         n: read_build(Path(kernel_build) / "artifacts" / n, MAX_IMAGE)
         for n in ("kernel.config", "x-load-gen2.bin", "u-boot.bin", "omap_loader")
@@ -160,6 +164,7 @@ def package(kernel_build, libraries, plan, backup, pin, build, output, *, action
         "device_executed": False,
         "action": action,
         "targets": bound["target_count"],
+        **({"preflight_only": True} if preflight_only else {}),
         "kernel": str(Path(kernel_build).absolute()),
         "libraries": str(Path(libraries).absolute()),
         "plan_path": str(Path(plan).absolute()),
@@ -204,6 +209,10 @@ def check(output):
         or set(record["files"]) != FILES
     ):
         raise ValueError("exact original network action scope/source required")
+    if type(record.get("preflight_only", False)) is not bool or (
+        record.get("preflight_only", False) and record["action"] != 1
+    ):
+        raise ValueError("explicit install-scope preflight diagnostic required")
     provenance = kernel.check(record["kernel"])
     source_pins = json.loads((ROOT / "firmware/file_writer/sources.json").read_bytes())["files"]
     tree = Path(record["kernel"]) / "src/Dev/linux"
@@ -227,6 +236,10 @@ def check(output):
     }
     if any(sha(d) != record["files"][n] for n, d in files.items()):
         raise ValueError("network artifact changed")
+    if record.get("preflight_only", False) and any(
+        token in files["file-action"] for token in (b"HFW_RUN1", b"HFW_RDY1")
+    ):
+        raise ValueError("preflight-only helper must have no commit/ready parser")
     for n in ("kernel.config", "x-load-gen2.bin", "u-boot.bin", "omap_loader"):
         if files[n] != read_build(Path(record["kernel"]) / "artifacts" / n, MAX_IMAGE):
             raise ValueError("root0-only kernel/bootstrap differs")

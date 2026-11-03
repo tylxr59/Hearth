@@ -94,7 +94,8 @@ def test_three_file_evidence_requires_exact_scope_and_separate_commit(action):
     assert session.result["complete"] == 1
 
 
-def test_original_arm_cleanup_helpers_exclude_the_client_path(plan):
+@pytest.mark.parametrize("preflight_only", (False, True))
+def test_original_arm_cleanup_helpers_exclude_the_client_path(plan, preflight_only):
     _, backup, destination, _, pin_path = plan
     root = Path(__file__).resolve().parents[1]
     (root / "build").mkdir(exist_ok=True)
@@ -102,9 +103,12 @@ def test_original_arm_cleanup_helpers_exclude_the_client_path(plan):
         prefix="cleanup-helper-test-", dir=root / "build"
     ) as directory:
         output = Path(directory) / "helpers"
-        compile_helpers(output, destination, backup, pin_path)
+        compile_helpers(output, destination, backup, pin_path, preflight_only=preflight_only)
         for action in (1, 2):
             data = (output / f"action-{action}").read_bytes()
             assert data[:7] == b"\x7fELF\x01\x01\x01"
+            assert (b'"preflight_only"' in data) == preflight_only
+            if preflight_only:
+                assert all(token not in data for token in (b"HFW_RUN1", b"HFW_RDY1"))
             assert b"etc/nestlabs/client.config" not in data
             assert b"nestlabs/sbin/nlclient" in data and b"etc/connman/main.conf" in data

@@ -11,7 +11,9 @@ ROOT = Path(__file__).resolve().parents[2]
 IMPORT_SET = set(IMPORTS) | {"strstr", "memcpy", "malloc", "free", "mmap", "munmap", "mprotect"}
 
 
-def compile_helpers(output, plan, backup, pin):
+def compile_helpers(output, plan, backup, pin, *, preflight_only=False):
+    if type(preflight_only) is not bool:
+        raise ValueError("explicit preflight-only mode required")
     output = Path(output).absolute()
     if output.resolve() != output or not output.is_relative_to(ROOT / "build"):
         raise ValueError("fresh literal build path required")
@@ -80,6 +82,7 @@ def compile_helpers(output, plan, backup, pin):
             + entry
             + [
                 "-DHEARTH_NETWORK_ADAPTER",
+                *(["-DHEARTH_PREFLIGHT_ONLY=1"] if preflight_only else []),
                 f"-DHEARTH_FILE_MASK={(1 << target_count) - 1}U",
                 f"-DHEARTH_FILE_ACTION={action}",
                 *[

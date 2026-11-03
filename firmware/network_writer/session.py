@@ -1,6 +1,7 @@
 """Strict four-file evidence ordering; never authorizes a device boot or commit."""
 
 import hashlib
+import json
 
 from backend.validation import loads
 from firmware.file_writer import protocol as p
@@ -26,8 +27,45 @@ def selftest(payload):
     return row
 
 
-def result(payload, action, *, target_count=4):
-    row = p.validate_result(payload, action, target_count=target_count)
+def result(payload, action, *, target_count=4, preflight_only=False):
+    if len(payload) > p.MAX_PAYLOAD or type(preflight_only) is not bool:
+        raise ValueError("bounded result and explicit preflight-only mode required")
+    raw = loads(payload)
+    extra = {"memory_free", "space_available", "space_required", "preflight_only"}
+    counters = {}
+    if isinstance(raw, dict) and extra & raw.keys():
+        if not extra <= raw.keys():
+            raise ValueError("complete resource diagnostic fields required")
+        counters = {key: raw.pop(key) for key in extra}
+        if (
+            any(type(v) is not int for v in counters.values())
+            or not 0 <= counters["memory_free"] <= 1073741824
+            or not 0 <= counters["space_available"] < 2**32
+            or not 0 <= counters["space_required"] < 2**32
+            or counters["preflight_only"] != int(preflight_only)
+        ):
+            raise ValueError("bounded matching resource diagnostic required")
+    elif preflight_only:
+        raise ValueError("explicit preflight-only result required")
+    row = p.validate_result(json.dumps(raw).encode(), action, target_count=target_count)
+    if preflight_only and (
+        action != 1
+        or any(
+            row[k]
+            for k in (
+                "commit_received",
+                "window_opened",
+                "rw_attempted",
+                "transaction_called",
+                "program",
+                "erase",
+                "marker",
+                "failed",
+                "complete",
+            )
+        )
+    ):
+        raise ValueError("preflight diagnostic cannot accept a commit or persistent activity")
     if (
         row["snapshot_available"]
         or row.get("snapshot_target", -1) != -1
@@ -36,7 +74,7 @@ def result(payload, action, *, target_count=4):
         raise ValueError("four network targets only; no settings repair/snapshot")
     if row["complete"] and not row["program"]:
         raise ValueError("completed full-file action requires fresh page programs")
-    return row
+    return row | counters
 
 
 def resources(payload, *, target_count=4):
@@ -58,22 +96,27 @@ def resources(payload, *, target_count=4):
 
 
 class NetworkSession(Session):
-    def __init__(self, binding, save, *, target_count=4):
+    def __init__(self, binding, save, *, target_count=4, preflight_only=False):
         if type(target_count) is not int or target_count not in (3, 4):
             raise ValueError("fixed network scope required")
         if binding.action not in (1, 2):
             raise ValueError("network install/restore only")
         self.target_count = target_count
+        if type(preflight_only) is not bool or (preflight_only and binding.action != 1):
+            raise ValueError("explicit install-scope preflight-only diagnostic required")
+        self.preflight_only = preflight_only
         super().__init__(
             binding,
             save,
             selftest_validator=selftest,
             result_validator=lambda payload, action: result(
-                payload, action, target_count=target_count
+                payload, action, target_count=target_count, preflight_only=preflight_only
             ),
         )
 
     def event(self, kind, payload):
+        if self.preflight_only and kind in (p.READY, p.PREFLIGHT_INFO):
+            raise ValueError("preflight-only diagnostics cannot request a decision")
         if kind not in (p.SELFTEST, p.PREFLIGHT_INFO, p.READY, p.RESULT):
             raise ValueError("event outside four-file network action scope")
         if kind == p.PREFLIGHT_INFO:

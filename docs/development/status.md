@@ -1,5 +1,23 @@
 # Current development status
 
+The owner's continued stock-device wizard has now preserved a full NAND archive,
+acquired readable originals and built its kit. Commissioning9 committed and
+verified successfully. Cleanup3 passed all61 RAM checks but refused its initial
+resource guard (diagnostic40) before READY/commit, writable remount or any NAND
+program/erase. Its report is exited, sealed/protected and safe_to_restart1. The
+first phase remains installed; the device is on USB in exited RAM mode with its
+HVAC base detached. Do not rerun the attempted phase or wizard. Original results
+and a reviewed no-write receipt are retained privately.
+
+A fresh preflight-only diagnostic pair now reproduces all ten artifacts per role.
+It reports RAM/flash-space counters and distinguishes memory41 from space42;
+resource thresholds and persistent-write gates are unchanged. Its action helper
+has no commit/READY parser; the host rejects decision events and persistent
+activity for this mode. No loader is armed. Owner readiness is needed for one
+fresh measurement. Host tests pass1,802 with five optional skips; static checks
+and focused protocol/compiler refusal checks pass.
+
+
 Published experimental0.10.2 fixes a source-only packaging failure exposed by the owner's
 fresh0.10.1 installer run: reader builds passed, but the recovery-source snapshot
 incorrectly tried to package the HA integration, which is absent from the installer

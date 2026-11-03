@@ -74,3 +74,12 @@ under the owner's accepted one-machine recovery exception.
 The explicit `--execute-supervised-network-update` flag arms the owner-timed loader;
 `commit OUTPUT --action 1` is a separate persistent decision, never implied by boot.
 No published image contains owner data, native firmware bytes or credentials.
+
+The internal `preflight_only=True` profile is an install-scope diagnostic, not an
+installer retry. Its compiled action has no READY/commit parser and always takes
+the protected cancellation path after the same resource/file checks. The host
+rejects decision events or any persistent activity for that profile. It reports
+bounded RAM/space counters; diagnostic41 identifies the unchanged memory gate and
+42 the unchanged space gate. Existing reports without counters remain supported.
+Use fresh one-use profiles and reviewed prior custody; never rerun an attempted
+image or interpret this diagnostic as installation success.
