@@ -96,6 +96,26 @@ def test_hacs_and_installer_archives_reproduce_without_private_material(tmp_path
         text=True,
         check=True,
     )
+    # The installed archive must be able to snapshot itself without HA sources.
+    assert not (extracted / "custom_components").exists()
+    subprocess.run(
+        [
+            sys.executable,
+            "-S",
+            "-c",
+            "from tools.public_release import installer_archive; installer_archive('recovery-source.zip')",
+        ],
+        cwd=extracted,
+        env={**os.environ, "PYTHONPATH": str(extracted)},
+        check=True,
+        capture_output=True,
+    )
+    with (
+        zipfile.ZipFile(extracted / "recovery-source.zip") as snapshot,
+        zipfile.ZipFile(a / "hearth-installer-source.zip") as original,
+    ):
+        assert snapshot.namelist() == original.namelist()
+        assert all(snapshot.read(n) == original.read(n) for n in original.namelist())
     assert all(name in result.stdout for name in ("build-kit", "install-kit", "restore-kit"))
     assert (
         json.loads((a / "release.json").read_bytes())["stock_device_kit_generation"]

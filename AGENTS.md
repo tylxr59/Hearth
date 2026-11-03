@@ -63,6 +63,13 @@ The historical investigation is archived under `docs/development/history/` and
   The live HA instance has not been updated; use HACS for delivery. Obtain
   fresh approval before executing another Core restart. Do not recreate the old
   profile or manually deploy over the HACS test.
+  Subsequent owner-run0.10.1 onboarding has now created a fresh HA entry and
+  matching private bundle (local create_entry receipt verified). Its host prepare
+  failed only at source archiving after both reader builds; no device attempt
+  occurred. The extracted download was updated in place to the checked0.10.2
+  candidate with original source preserved. Existing profiles still validate.
+  The owner may use the explicit pre-device continuation; do not rerun failed
+  hardware attempts or recreate this HA entry. No agent Core restart occurred.
 - The owner authorizes local implementation, docs, packaging, tests and commits/
   pushes. The current public-product work does not authorize another HA Core
   restart, a new persistent device write or an intentional HVAC call.

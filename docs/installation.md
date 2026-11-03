@@ -16,7 +16,7 @@ internal HTTP frontend when that route is available on the thermostat network.
 
 ## Guided setup
 
-The **0.10.1 experimental preview** includes the full-NAND archive and `--restore`
+The **0.10.2 experimental preview** includes the full-NAND archive and `--restore`
 flow below. The full backup, read-only acquisition handoff and native restart
 have been measured on the development unit. The complete stock-device installation
 and matching restore flow still need supervised hardware validation.
@@ -72,6 +72,24 @@ before any restart or recovery attempt. The newly combined wizard, cleanup3 and
 custom-NTP writer have host/ARM build coverage; their complete stock-device
 hardware installation and restoration still need measurement.
 
+### A stopped host prepare
+
+Version0.10.1 could finish its reader builds and then fail while saving installer
+source because the extracted download has no HA integration tree. Version0.10.2
+fixes the source-only snapshot. A reviewed, in-place update can continue an unused
+prepared session without recreating its HA entry:
+
+```sh
+python3 provision.py --continue-prepared private/setup-YOUR-SAVED-SESSION
+```
+
+This accepts only a failed `prepare` with complete, unchanged reader artifacts,
+a matching USB identity/bundle and no device-attempt markers. It preserves the
+original failure evidence and still requires readiness for each loader and a
+separate install confirmation. It does not resume failed reads or writes. Keep
+the original source folder and build paths; do not move a session between folders
+or repeat the normal fresh-setup command against its existing HA entry.
+
 ## Home Assistant
 
 Add `https://github.com/tylxr59/Hearth` as a HACS custom repository of type
@@ -80,7 +98,7 @@ Core. For fresh setup, use [automatic USB onboarding](#automatic-usb-onboarding)
 below. It creates the HA entry, local trust and unique device credential without
 copying the device ID by hand. It refuses to replace an existing profile.
 
-The current release is the experimental **v0.10.1**. In HACS, open Hearth and select
+The current release is the experimental **v0.10.2**. In HACS, open Hearth and select
 that tagged version for download. It is an ordinary GitHub release so HACS's
 default selection works; the project remains experimental and is not stable v1.
 If an older repository cache shows a commit hash, use Hearth's **Update information**

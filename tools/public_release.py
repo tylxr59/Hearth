@@ -20,24 +20,8 @@ def archive(path, files):
             output.writestr(info, data)
 
 
-def release(output):
-    sync(check=True)
-    output = Path(output)
-    output.mkdir(parents=True, exist_ok=False)
-    version = json.loads((ROOT / "custom_components/hearth/manifest.json").read_text())["version"]
-    if not version.startswith("0."):
-        raise ValueError(
-            "stable release requires closing the public installer and hardware release gates"
-        )
-    with tempfile.TemporaryDirectory() as temp:
-        root = Path(temp) / "integration"
-        integration = package(root)
-        files = {
-            p.relative_to(integration).as_posix(): p.read_bytes()
-            for p in integration.rglob("*")
-            if p.is_file()
-        }
-        archive(output / "hearth.zip", files)
+def installer_archive(path):
+    """Snapshot only public installer inputs, also from an extracted source ZIP."""
     public = {}
     for folder in ("installer", "backend", "provisioning", "firmware", "tools"):
         for p in (ROOT / folder).rglob("*"):
@@ -84,7 +68,28 @@ def release(output):
         "docs/development/firmware-kit.md",
     ):
         public[name] = (ROOT / name).read_bytes()
-    archive(output / "hearth-installer-source.zip", public)
+    archive(path, public)
+
+
+def release(output):
+    sync(check=True)
+    output = Path(output)
+    output.mkdir(parents=True, exist_ok=False)
+    version = json.loads((ROOT / "custom_components/hearth/manifest.json").read_text())["version"]
+    if not version.startswith("0."):
+        raise ValueError(
+            "stable release requires closing the public installer and hardware release gates"
+        )
+    with tempfile.TemporaryDirectory() as temp:
+        root = Path(temp) / "integration"
+        integration = package(root)
+        files = {
+            p.relative_to(integration).as_posix(): p.read_bytes()
+            for p in integration.rglob("*")
+            if p.is_file()
+        }
+        archive(output / "hearth.zip", files)
+    installer_archive(output / "hearth-installer-source.zip")
     (output / "SHA256SUMS").write_text(
         "".join(
             hashlib.sha256((output / name).read_bytes()).hexdigest() + "  " + name + "\n"

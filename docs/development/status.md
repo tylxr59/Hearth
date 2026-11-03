@@ -1,5 +1,19 @@
 # Current development status
 
+The0.10.2 candidate fixes a source-only packaging failure exposed by the owner's
+fresh0.10.1 installer run: reader builds passed, but the recovery-source snapshot
+incorrectly tried to package the HA integration, which is absent from the installer
+ZIP. It now snapshots installer inputs independently. An explicit, guarded
+`--continue-prepared` accepts only complete unused reader builds after a failed
+host prepare; device attempts and write recovery remain excluded. Focused fresh-ZIP
+snapshot and continuation refusal tests pass. The owner's HA entry and private
+bundle were created successfully; no device loader/write occurred in that session.
+The extracted download was updated exactly to the checked0.10.2 candidate, with
+original public source preserved privately. Existing reader/ECC integrity checks
+still pass. No loader is armed. Full host tests pass1,788 plus the subsequently
+added focused continuation test; the isolated real-HA sandbox passes24 control
+round trips and admin onboarding. No live HA update/restart was executed.
+
 Published experimental0.10.1 provides the single-entry `python3 provision.py`
 setup wizard, mandatory full-NAND archive, guided selected-file restore, HACS
 onboarding and optional NTP defaulting to time.nist.gov for both native sources.
