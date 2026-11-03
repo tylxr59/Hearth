@@ -168,3 +168,11 @@ optional skips. Formatting/static/security checks pass. Both encoded profiles
 retain the protected parent's write-denying callbacks/configuration and reproduce
 all eight artifacts; the single ioctl extension is checked against original
 source. Neither encoding profile has run; owner readiness is required next.
+
+Protected encoding audit completed without flash writes or native execution.
+All active selected inodes pass encoding checks, and its fresh nine-file capture
+again matches the originals exactly. Rollback copies0,6,8 return EOPNOTSUPP under
+the strict NONE/ZERO audit; that archive-only condition caused the original final
+verification to fail. The writer's incomplete result remains unchanged. Independent
+stock-file/metadata/encoding verification is recorded privately. No further write
+is needed to attempt native startup; manual USB startup/UI confirmation is next.

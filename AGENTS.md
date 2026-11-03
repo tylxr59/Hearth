@@ -16,10 +16,14 @@ The historical investigation is archived under `docs/development/history/` and
   owner-confirmed heating idle. The Nov3 stock return restored network4 successfully.
   Core9 reported restored511 with no transaction errors, but final readback failed
   (verified0, safe_to_restart0, diagnostic21). It is exited in protected/sealed RAM
-  mode; keep USB powered and do not start native firmware yet. The protected
-  read-only diagnostic independently matched all nine stock targets and metadata,
-  including absent Hearth additions. An additional protected read-only inode
-  encoding audit is prepared to isolate the failed broader verification.
+  mode. The protected read-only snapshot matches all nine original targets and
+  metadata, including absent Hearth additions. The additional protected encoding
+  audit verifies every active stock inode. Its archive codes isolate the old
+  failure to compressed rollback copies for targets0,6,8. No additional writes
+  were made or are needed to test native startup. The audit exited; manual native
+  restart on USB with the HVAC base detached is now the next reviewed step.
+  Native UI return still needs owner confirmation. Do not rewrite the retained
+  incomplete writer report as successful; retain the independent verification.
   No loader is armed. Do not assume an unwired
   base when it is reattached.
 - For the owner-authorized clean onboarding test, the owner removed the Hearth
