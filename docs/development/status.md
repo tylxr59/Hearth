@@ -6,9 +6,13 @@ its retained profile/state was archived with exact readback and the live profile
 path is absent. The native listener stopped. One authorized HA0.7.0 activation
 and Core restart completed, then its manual source copy was archived so the owner
 can test a genuine HACS download. No manual source/profile remains in the live
-paths. The v0.7.0 preview is published; both downloaded archives match the tested
-source contents and published checksums. The44-file integration still needs its
-owner-performed HACS install/onboarding measurement. No thermostat reset or write
+paths. The first HACS download failed: GitHub prerelease filtering skipped0.7.0,
+so HACS requested the ZIP asset at a development commit. The packaging-only0.7.1
+fix is published as an ordinary GitHub release, retaining experimental status.
+Actual installed HACS filtering/selection methods now select v0.7.1 without beta
+flags; both downloaded archives match the tested source and published checksums.
+The44-file integration still needs the owner's successful HACS download and
+onboarding measurement. No thermostat reset or write
 occurred during this cleanup. The integration uses native HTTPS directly inside
 HA Core. The latest confirmed physical state
 is Heat63F, manual Ecooff, empty schedule, heating idle. The equipment is described

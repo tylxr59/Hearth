@@ -20,9 +20,12 @@ The historical investigation is archived under `docs/development/history/` and
   privately archived with exact readback; both live paths are absent and the
   native listener is stopped. One owner-authorized0.7.0 activation/Core restart
   completed before the manual copy was archived for a genuine HACS install test.
-  HACS is configured; Hearth was not yet registered/downloaded through it at last
-  inspection. The published v0.7.0 preview assets were downloaded and checked
-  against the tested source. Wait for the owner's HACS download, then obtain
+  HACS is configured and Hearth is registered. Its first download failed because
+  the v0.7.0 GitHub prerelease was skipped and HACS requested a ZIP at a commit
+  hash. Published v0.7.1 is an ordinary GitHub release with experimental metadata;
+  actual installed HACS selection methods now choose that tag without beta flags.
+  Downloaded assets match checksums/tested source. The owner's successful HACS
+  download is still pending. Wait for it, then obtain
   fresh approval before executing another Core restart. Do not recreate the old
   profile or manually deploy over the HACS test.
 - The owner authorizes local implementation, docs, packaging, tests and commits/
