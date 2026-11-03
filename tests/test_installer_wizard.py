@@ -459,3 +459,70 @@ def test_y_n_prompts_need_an_explicit_yes_and_ha_step_can_quit(setup):
     _, _, calls = setup
     assert wizard.run(ask=answers("", "", "q"), secret=lambda _: "unused") == 0
     assert calls == []
+
+
+def _refusal(**overrides):
+    row = {
+        "preflight_only": 1,
+        "protected": 1,
+        "safe_to_restart": 1,
+        "program": 0,
+        "erase": 0,
+        "marker": 0,
+        "rw_attempted": 0,
+        "window_opened": 0,
+        "committed": 0,
+        "diagnostic": 42,
+        "space_available": 13_217_792,
+        "space_required": 13_248_165,
+    }
+    return row | overrides
+
+
+@pytest.mark.parametrize("row", (_refusal(), _refusal(program=3), _refusal(protected=0)))
+def test_space_refusal_reports_numbers_and_only_calls_provable_zero_writes_safe(
+    tmp_path, monkeypatch, capsys, row
+):
+    folder = _session(tmp_path, monkeypatch)
+    output = folder / "check-capacity"
+    output.mkdir(mode=0o700)
+    observed = output / "observed.json"
+    observed.write_text(json.dumps({"result": row}))
+    observed.chmod(0o600)
+    engine = SimpleNamespace(checked_pair=lambda *a: ({}, SimpleNamespace(action=1)))
+    worker = wizard.Worker(folder, tmp_path)
+    monkeypatch.setattr(
+        worker, "run", lambda *a, **kw: {"preflight_passed": False, "safe_to_restart": True}
+    )
+    result = worker.writer(
+        tmp_path / "capacity-preflight",
+        tmp_path / "restore",
+        output,
+        engine=engine,
+        ask=lambda _: "y",
+    )
+    shown = capsys.readouterr().out
+    assert "13,248,165" in shown and "30,373 short" in shown
+    safe = row["program"] == 0 and row["protected"] == 1
+    assert result["zero_write_refusal"] is safe
+    assert ("safe to restart" in shown) is safe
+
+
+def test_zero_write_space_refusal_tells_the_owner_to_restart_normally(setup, monkeypatch, capsys):
+    _, private, _ = setup
+    monkeypatch.setattr(
+        wizard.workflow,
+        "install",
+        lambda *a, **kw: {
+            "complete": False,
+            "capacity_passed": False,
+            "capacity_zero_write_refusal": True,
+        },
+    )
+    ask = answers("", "", "", "http://10.0.0.12:8123", "y", "y", "8123")
+    assert wizard.run(ask=ask, secret=lambda _: "hidden-token") == 1
+    stop = capsys.readouterr().out.split("Setup stopped")[-1]
+    assert "nothing was written" in stop and "Restart it normally" in stop
+    assert "don't restart the Nest" not in stop and "Keep USB connected" not in stop
+    folder = next(private.iterdir())
+    assert json.loads((folder / "wizard-stopped.json").read_bytes())["phase"] == "space-check"

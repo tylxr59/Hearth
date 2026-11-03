@@ -219,6 +219,28 @@ def usb_access(folder, ask=input):
     )
 
 
+def space_report(output):
+    """The device's own capacity counters from a finished check, or {}."""
+    try:
+        observed = json.loads(private_read(output / "observed.json", 65536))
+    except (OSError, ValueError):
+        return {}
+    row = observed.get("result") if isinstance(observed, dict) else None
+    return row if isinstance(row, dict) else {}
+
+
+def zero_write_refusal(row, result):
+    """True only for an exited, sealed preflight that provably wrote nothing."""
+    zeros = ("program", "erase", "marker", "rw_attempted", "window_opened", "committed")
+    return (
+        result.get("safe_to_restart") is True
+        and row.get("preflight_only") == 1
+        and row.get("protected") == 1
+        and row.get("safe_to_restart") == 1
+        and all(type(row.get(k)) is int and row[k] == 0 for k in zeros)
+    )
+
+
 WORK_LABELS = {
     "prepare": "Building the USB reader",
     "nand": "Preparing the backup loader",
@@ -478,8 +500,20 @@ class Worker:
         if capacity:
             if result.get("preflight_passed") is True and result.get("safe_to_restart") is True:
                 ui.ok("There is enough space. Stay connected; the first phase is next.")
+                return result
+            row = space_report(Path(output))
+            if row.get("space_required") and row.get("space_available") is not None:
+                short = row["space_required"] - row["space_available"]
+                ui.fail(
+                    f"Not enough free flash space: the install needs {row['space_required']:,} "
+                    f"bytes and the Nest has {row['space_available']:,}"
+                    + (f" ({short:,} short)." if short > 0 else ".")
+                )
             else:
-                ui.fail("Not enough space, or the check refused. Nothing was installed or written.")
+                ui.fail("The space check refused before any write.")
+            result = result | {"zero_write_refusal": zero_write_refusal(row, result)}
+            if result["zero_write_refusal"]:
+                ui.ok("Nothing was written, and the Nest reports it is safe to restart.")
             return result
         if not workflow.complete(result):
             ui.fail(
@@ -501,6 +535,7 @@ PHASES = {
     "acquire": "saving the original files",
     "kit": "building your install kit",
     "install": "installation",
+    "space-check": "the free-space check",
     "verify": "the final check",
 }
 
@@ -752,6 +787,12 @@ def run(*, ask=input, secret=getpass.getpass):
         result = workflow.install(folder / "kit", disk, ask=ask, runner=worker.writer)
         save(folder, "wizard-install-result.json", encode(result))
         if not result.get("complete"):
+            if result.get("capacity_zero_write_refusal"):
+                phase = "space-check"
+                raise Invalid(
+                    "The Nest doesn't have enough free space for a safe install, so nothing "
+                    "was written. Restart it normally: " + RESTART
+                )
             raise Invalid("Installation did not finish.")
 
         phase = "verify"

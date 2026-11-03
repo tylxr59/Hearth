@@ -21,7 +21,7 @@
 | Stuck at "The loader is waiting now" | Hold the ring **10 seconds**, let go, then press once. Keep the display off its base |
 | Build step failed | Check the `.log` in your private folder. Common causes are no internet, too little disk space or Podman not working rootless |
 | Kit step says an existing installation was found | That Nest already has Hearth (or part of it). The wizard only installs on stock units |
-| Space check refused | The Nest's flash is too full for a safe install. Nothing was written |
+| Space check refused | The Nest's flash is too full for a safe install. The wizard shows how much is needed and how much is free. Nothing was written, so restart the Nest normally when it says so. Please report the numbers in an issue |
 
 ### Setup stopped partway
 

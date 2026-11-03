@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "hearth-local"
-version = "0.11.1"
+version = "0.11.2"
 description = "Local Nest thermostat integration and guided USB installer"
 requires-python = ">=3.12"
 dependencies = ["aiohttp==3.14.5", "paho-mqtt==2.1.0"]

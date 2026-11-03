@@ -161,6 +161,22 @@ fail:
  if(fd>=0) close(fd);
  hn_data_release();return -1;
 }
+/* Margins above the measured file bytes. f_bavail from the pinned 2.6.37 JFFS2
+ * statfs already excludes the kernel's own resv_blocks_write (two deletion
+ * blocks plus 2% of the partition), which keeps garbage collection and
+ * deletions possible. Hearth writes NONE-encoded nodes: about 68 header bytes
+ * per 4 KiB page, plus block-boundary splits, wbuf page padding, journal and
+ * dirents. For the measured 10.9 MB worst-case install that is about 250 KB,
+ * and about 100 KB for the 5.1 MB largest restore. The restore margin covers
+ * that roughly tenfold. The shared install margin adds 256 KiB on top, so an
+ * install that passes leaves room for its own guided restore (it keeps the
+ * originals and adds the replacements). Measured 2026-11-03: 13,217,792
+ * available against 13,248,165 required with the previous 2 MiB/4 MiB. */
+#define HN_SHARED_INSTALL_MARGIN 1310720U
+#define HN_RESTORE_MARGIN 1048576U
+#if HN_SHARED_INSTALL_MARGIN < HN_RESTORE_MARGIN + 262144U
+#error "an install must leave room for its own guided restore"
+#endif
 int hn_space_guard(int fd,int restoring)
 {
  unsigned int i,total=0,largest=0,block,available;
@@ -185,9 +201,9 @@ int hn_space_guard(int fd,int restoring)
  /* Shared mode proves the existing original inodes before this guard. Only
   * replacement staging plus one rollback temporary allocate file data. */
 #ifdef HEARTH_NETWORK_SHARED_BACKUPS
- hn_space_required=restoring?largest+4U*1048576U:total+largest+2U*1048576U;
+ hn_space_required=restoring?largest+HN_RESTORE_MARGIN:total+largest+HN_SHARED_INSTALL_MARGIN;
 #else
- hn_space_required=restoring?largest+4U*1048576U:3U*total+2U*1048576U;
+ hn_space_required=restoring?largest+HN_RESTORE_MARGIN:3U*total+2U*1048576U;
 #endif
  if(!restoring) {
   unsigned int reserve=capacity_binding[2];

@@ -58,13 +58,26 @@ Unless stated otherwise, every fact here was measured on **one unit**.
   natively recompressed archive originals is still open work.
 - Byte-equal readback isn't enough: a successful write has to be readable by
   the **native** kernel.
-- **Flash space is tight.** root0 had 13,201,408 bytes free against the
-  19,534,505 a copy-based cleanup needs. This led to shared-original
-  (hardlinked) rollback archives and the combined capacity preflight.
+- **Flash space is tight, and Hearth's own history consumed it.** Stock root0
+  had about 22 MB free. Factory files are **ZLIB-compressed** (stock
+  `nlclient`: 2.92 MB on flash for 5.12 MB of data). Hearth writes NONE only,
+  so the stock return left uncompressed originals plus a 5.9 MB uncompressed
+  rollback archive. root0 is now down to about 13.2 MB.
+- **`f_bavail` is already net of the kernel's write reserve**
+  (`resv_blocks_write`: 2 + 2% of the partition, 10 × 128 KiB on root0).
+  Measured NONE-node overhead is 1.71% (about 70 bytes per 4 KiB). The writer's
+  margins above the file bytes are sized from that: shared install 1.25 MiB,
+  restore 1 MiB, with install ≥ restore + 256 KiB so an install always leaves
+  room for its own undo. The old 4 MiB restore margin would have blocked undo on
+  this unit after any successful install.
+- Shared-original rollback reuses an exact restored archive's inodes instead of
+  copying. The combined no-commit capacity preflight checks both phases before
+  either writes.
 - A settings file can re-serialise differently while holding identical
   values, which invalidates an exact-original snapshot. Never loosen the byte
   comparison. Take a fresh snapshot instead.
 
+[capacity-preflight-result](history/research/capacity-preflight-result-2026-11-03.md) ·
 [compression-recovery](history/research/compression-recovery-2026-10-31.md) ·
 [startup-stall](history/research/startup-stall-2026-10-31.md) ·
 [file-install-result](history/research/file-install-result-2026-10-31.md) ·

@@ -18,11 +18,22 @@ Hearth stays on `0.x` experimental releases until every box below is checked.
 
 ### Installer
 
+- [ ] Measure the lowered space margins (shared install 1.25 MiB, restore
+      1 MiB) on hardware, including a guided restore after install.
+- [ ] Recover flash space: write native-supported ZLIB instead of NONE (never
+      LZO), with writer-kernel and encoding-audit changes and a measurement.
+- [ ] Fewer ring presses. Today: backup, originals, space check, phase 1,
+      phase 2, then a final restart is six presses. Options, best first:
+      (1) a supervised test of whether a software reset from the RAM kernel
+      re-enters ROM USB boot without the ring; (2) derive originals from the
+      NAND backup offline (device preflight still verifies exact bytes);
+      (3) fold the space check into phase 1's preflight; (4) one writer boot for
+      both phases.
 - [ ] Run the complete source-built wizard on a **pristine stock** unit: full
       backup, both install phases, HA readings, then the full restore. (The offline
       composed build and profile reproduction already pass.)
-- [ ] Measure the combined capacity preflight and shared-original writes on
-      hardware.
+- [ ] Measure a passing combined capacity preflight and shared-original writes
+      on hardware (a refusal by 30 KB was measured on 2026-11-03).
 - [ ] Handle natively recompressed archive originals without loosening the
       NONE/ZERO gate.
 - [ ] Support USB ports other than the measured **1-1**, through scoped rules

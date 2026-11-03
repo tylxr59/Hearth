@@ -120,6 +120,7 @@ def install(root, disk, *, ask=input, runner=None):
             "completed_phases": [],
             "automatic_retry": False,
             "capacity_passed": False,
+            "capacity_zero_write_refusal": row.get("zero_write_refusal") is True,
         }
     chain.capacity_to_commissioning(record, binding, capacity)
     entry = {"handoff_from_capacity": capacity}

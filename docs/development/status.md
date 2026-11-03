@@ -8,7 +8,7 @@ in [history](history/), and lasting facts go in [findings](findings.md)._
 | | |
 | --- | --- |
 | Unit | Gen 2, Display-2.6, primary firmware 5.9.4-5 (the only measured target) |
-| Where it is | Display **detached**, on USB to the dev PC, charging, in **native (stock UI) mode** |
+| Where it is | Display **detached**, on USB to the dev PC. After the 0.11.1 space refusal it was in sealed RAM mode (`safe_to_restart 1`, zero writes); the owner was advised to restart it normally. Confirm native mode before the next run |
 | HVAC base | **Wired to real oil/baseboard heat.** Never assume an unwired base when it's reattached |
 | Last on-base state | Heat 63 °F, Eco off, empty schedule, heating idle (owner confirmed) |
 | Loader | **None armed** |
@@ -21,6 +21,15 @@ or intentional HVAC calls. Each needs fresh owner approval.
 
 ## Last hardware events (newest first)
 
+0. **v0.11.1 public wizard run.** Steps 1–5 passed: HA onboarding, reader build,
+   full-NAND backup, acquisition and kit with a shared-original nomination. The
+   combined capacity preflight refused by **30,373 bytes** (13,217,792
+   available against 13,248,165 required, diagnostic 42), with zero writes.
+   Analysis and the margin change (shared install 2 → 1.25 MiB, restore
+   4 → 1 MiB) are in
+   [capacity-preflight-result](history/research/capacity-preflight-result-2026-11-03.md).
+   That session's HA entry exists. A fresh run needs it removed and
+   `/config/.storage/hearth` moved aside.
 1. **Commissioning-only stock return** (after step 3) ran once. All nine files
    were restored (restored mask 511) with zero transaction, rollback, journal or
    seal errors, but its own final verify failed (diagnostic 21: `verified 0`,
@@ -71,6 +80,11 @@ originals, the cleanup3 writer, the custom-NTP writer and the full
 stock-to-HA wizard.
 
 ## Published
+
+**v0.11.2** lowers the JFFS2 space margins from measured overhead (shared
+install 1.25 MiB, restore 1 MiB). It explains a zero-write space refusal with
+its numbers and a safe-restart message. The margins are not yet measured on
+hardware.
 
 **v0.11.1** fixes a v0.11.0 wizard crash: the step 3 backup crashed as soon as
 the loader started waiting, before anything reached the Nest. It also adds a
