@@ -110,3 +110,8 @@ Static/format/security checks pass. The pinned network-isolated real HA2026.10.4
 sandbox passes24 native control round trips and the separate-process admin setup,
 address-suggestion and private-bundle exchange. Public integration and installer
 archives reproduce. Live owner HA is unchanged; this is source/release work only.
+
+The0.9.0 release run was cancelled before publication during final USB-rule review.
+The corrected wizard pins udev's root-executed ACL helper to the root-managed
+/usr/bin/setfacl, refusing symlinks or writable/non-root-owned executables.
+It never embeds a helper selected from a user-controlled PATH in a root rule.

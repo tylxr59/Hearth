@@ -70,12 +70,15 @@ def usb_access(folder, ask=input):
 
     if identity() != "native":
         raise Invalid("Connect a single Nest in its normal USB mode before starting.")
-    acl = Path(shutil.which("setfacl") or "")
-    if not acl.is_absolute() or any(
-        c not in "/abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-"
-        for c in str(acl)
+    # udev executes RUN as root: never trust a user-controlled PATH executable.
+    acl = Path("/usr/bin/setfacl")
+    if (
+        not acl.is_file()
+        or acl.is_symlink()
+        or acl.stat().st_uid != 0
+        or acl.stat().st_mode & 0o022
     ):
-        raise Invalid("A standard absolute setfacl executable path is required.")
+        raise Invalid("The USB rule requires the root-managed /usr/bin/setfacl executable.")
     uid = os.getuid()
     rules = (
         f'ACTION=="add", SUBSYSTEM=="usb", ENV{{DEVTYPE}}=="usb_device", KERNEL=="1-1", '

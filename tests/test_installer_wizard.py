@@ -249,11 +249,29 @@ def test_usb_rule_requires_explicit_permission_and_never_grants_disk_access(tmp_
     # Redirect only the fixed rule destination; never touch /etc or use sudo here.
     original_path = wizard.Path
     target = tmp_path / "70-hearth-wizard.rules"
+
+    class RootACL:
+        def is_file(self):
+            return True
+
+        def is_symlink(self):
+            return False
+
+        def stat(self):
+            return SimpleNamespace(st_uid=0, st_mode=0o100755)
+
+        def __str__(self):
+            return "/usr/bin/setfacl"
+
     monkeypatch.setattr(
         wizard,
         "Path",
         lambda value: (
-            target if value == "/etc/udev/rules.d/70-hearth-wizard.rules" else original_path(value)
+            target
+            if value == "/etc/udev/rules.d/70-hearth-wizard.rules"
+            else RootACL()
+            if value == "/usr/bin/setfacl"
+            else original_path(value)
         ),
     )
     monkeypatch.setattr(wizard.workflow, "identity", lambda: "native")
@@ -269,3 +287,28 @@ def test_usb_rule_requires_explicit_permission_and_never_grants_disk_access(tmp_
     assert f"u:{wizard.os.getuid()}:rw" in content
     assert 'SUBSYSTEM=="block"' not in content and "/dev/sd" not in content
     assert 'KERNEL=="1-1"' in content and 'KERNELS=="1-1"' in content
+
+
+@pytest.mark.parametrize("fault", ("missing", "symlink", "owner", "writable"))
+def test_root_udev_helper_never_comes_from_user_path(monkeypatch, tmp_path, fault):
+    class ACL:
+        def is_file(self):
+            return fault != "missing"
+
+        def is_symlink(self):
+            return fault == "symlink"
+
+        def stat(self):
+            return SimpleNamespace(
+                st_uid=1000 if fault == "owner" else 0,
+                st_mode=0o100777 if fault == "writable" else 0o100755,
+            )
+
+    monkeypatch.setattr(wizard, "Path", lambda _: ACL())
+    monkeypatch.setattr(wizard.workflow, "identity", lambda: "native")
+    monkeypatch.setattr(wizard.shutil, "which", lambda _: "/home/user/bin/setfacl")
+    monkeypatch.setattr(
+        wizard.subprocess, "run", lambda *a, **kw: pytest.fail("must not invoke sudo")
+    )
+    with pytest.raises(Invalid, match="root-managed"):
+        wizard.usb_access(tmp_path, lambda _: "USB ACCESS")

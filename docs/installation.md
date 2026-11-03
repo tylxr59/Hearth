@@ -70,7 +70,7 @@ Core. For fresh setup, use [automatic USB onboarding](#automatic-usb-onboarding)
 below. It creates the HA entry, local trust and unique device credential without
 copying the device ID by hand. It refuses to replace an existing profile.
 
-The current release is the experimental **v0.9.0**. In HACS, open Hearth and select
+The current release is the experimental **v0.9.1**. In HACS, open Hearth and select
 that tagged version for download. It is an ordinary GitHub release so HACS's
 default selection works; the project remains experimental and is not stable v1.
 If an older repository cache shows a commit hash, use Hearth's **Update information**
