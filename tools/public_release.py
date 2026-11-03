@@ -95,7 +95,8 @@ def release(output):
             {
                 "format": "hearth-public-release-v1",
                 "version": version,
-                "prerelease": True,
+                "prerelease": False,
+                "experimental": True,
                 "integration_archive": "hearth.zip",
                 "installer_archive": "hearth-installer-source.zip",
                 "per_device_firmware_included": False,

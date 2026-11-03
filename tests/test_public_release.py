@@ -2,7 +2,9 @@ import json
 import os
 import subprocess
 import sys
+import tomllib
 import zipfile
+from pathlib import Path
 
 from firmware.acquisition.profile import recipes as acquisition_recipes
 from firmware.file_writer.profile import recipes as commissioning_recipes
@@ -33,7 +35,9 @@ def test_hacs_and_installer_archives_reproduce_without_private_material(tmp_path
             name.startswith(("private/", "build/")) or name.endswith((".key", ".pem", ".crl"))
             for name in names
         )
-        assert json.loads(z.read("manifest.json"))["version"] == "0.7.0"
+        version = json.loads(z.read("manifest.json"))["version"]
+        project = tomllib.loads(Path("pyproject.toml").read_text())
+        assert version == project["project"]["version"] == "0.7.1"
     with zipfile.ZipFile(a / "hearth-installer-source.zip") as z:
         names = set(z.namelist())
         assert {
@@ -81,3 +85,11 @@ def test_hacs_and_installer_archives_reproduce_without_private_material(tmp_path
     assert not json.loads((a / "release.json").read_bytes())[
         "stock_install_restore_hardware_verified"
     ]
+    metadata = json.loads((a / "release.json").read_bytes())
+    # Default HACS release filtering must have an ordinary GitHub release to
+    # select; otherwise zip_release falls back to a nonexistent commit asset.
+    assert metadata["prerelease"] is False and metadata["experimental"] is True
+    workflow = Path(".github/workflows/release.yml").read_text()
+    publish = next(line for line in workflow.splitlines() if "run: gh release create " in line)
+    assert "--prerelease" not in publish and "--latest" in publish
+    assert "Experimental preview" in publish

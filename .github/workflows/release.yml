@@ -44,4 +44,6 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-        run: gh release create "$GITHUB_REF_NAME" release/* --verify-tag --prerelease --generate-notes --title "Hearth $GITHUB_REF_NAME"
+        # HACS hides GitHub prereleases by default. These are experimental0.x
+        # releases, but must be ordinary GitHub releases for the default ZIP path.
+        run: gh release create "$GITHUB_REF_NAME" release/* --verify-tag --latest --generate-notes --title "Hearth $GITHUB_REF_NAME — Experimental preview"
