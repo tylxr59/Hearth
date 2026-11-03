@@ -1,0 +1,12 @@
+{
+  "date": "2026-11-02",
+  "version": "0.7.1",
+  "owner_reported_hacs_download_success": true,
+  "installed_files_match_published_zip": true,
+  "exact_source_files_verified": 44,
+  "old_profile_absent": true,
+  "hearth_entry_configured": false,
+  "core_restarted_after_hacs_download": false,
+  "fresh_onboarding_completed": false,
+  "thermostat_modified": false
+}

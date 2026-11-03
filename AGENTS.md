@@ -17,15 +17,16 @@ The historical investigation is archived under `docs/development/history/` and
   base when it is reattached.
 - For the owner-authorized clean onboarding test, the owner removed the Hearth
   entry through HA. Retained profile/state and the manual integration copy are
-  privately archived with exact readback; both live paths are absent and the
+  privately archived with exact readback; the live profile is absent and the
   native listener is stopped. One owner-authorized0.7.0 activation/Core restart
   completed before the manual copy was archived for a genuine HACS install test.
   HACS is configured and Hearth is registered. Its first download failed because
   the v0.7.0 GitHub prerelease was skipped and HACS requested a ZIP at a commit
   hash. Published v0.7.1 is an ordinary GitHub release with experimental metadata;
   actual installed HACS selection methods now choose that tag without beta flags.
-  Downloaded assets match checksums/tested source. The owner's successful HACS
-  download is still pending. Wait for it, then obtain
+  Downloaded assets match checksums/tested source. The owner now successfully
+  downloaded0.7.1 through HACS; all44 installed source files independently match
+  the published ZIP. No Hearth entry or retained profile exists yet. Obtain
   fresh approval before executing another Core restart. Do not recreate the old
   profile or manually deploy over the HACS test.
 - The owner authorizes local implementation, docs, packaging, tests and commits/

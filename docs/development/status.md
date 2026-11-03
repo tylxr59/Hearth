@@ -11,8 +11,9 @@ so HACS requested the ZIP asset at a development commit. The packaging-only0.7.1
 fix is published as an ordinary GitHub release, retaining experimental status.
 Actual installed HACS filtering/selection methods now select v0.7.1 without beta
 flags; both downloaded archives match the tested source and published checksums.
-The44-file integration still needs the owner's successful HACS download and
-onboarding measurement. No thermostat reset or write
+The owner successfully downloaded0.7.1 through HACS, and all44 installed source
+files independently match the published ZIP. The entry/profile are still absent;
+a separate Core restart and fresh onboarding measurement are next. No thermostat reset or write
 occurred during this cleanup. The integration uses native HTTPS directly inside
 HA Core. The latest confirmed physical state
 is Heat63F, manual Ecooff, empty schedule, heating idle. The equipment is described
