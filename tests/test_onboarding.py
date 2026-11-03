@@ -113,7 +113,7 @@ def setup(tmp_path, monkeypatch):
 
 def test_identity_and_chosen_vlan_pass_to_ha_and_bundle_stays_private(setup, capsys):
     session, client = setup
-    answers = iter(("2", "SETUP"))
+    answers = iter(("2", "y"))
     result = onboard.onboard(
         "http://10.0.0.12:8123",
         "admin-token",
@@ -210,7 +210,7 @@ def test_mismatch_or_server_refusal_is_preserved_without_resubmitting(setup, mon
             session,
             info(),
             target="https://192.168.50.2:8443",
-            ask=lambda _: "SETUP",
+            ask=lambda _: "y",
             client=client,
         )
     assert len([call for call in client.calls if call[0] == onboard.FLOW + "/flow1"]) == 1

@@ -81,21 +81,28 @@ Then, in a terminal in that folder:
 python3 provision.py
 ```
 
-The wizard runs seven steps. You'll be asked to confirm before anything touches
-the thermostat:
+The wizard runs seven steps. Most questions are `[y/N]`: only `y` goes ahead,
+and pressing Enter means no. The one exception is writing to the thermostat's
+flash, where you type `INSTALL`, so it can't happen by accident:
 
 | Step | What happens | Your part | Time |
 | --- | --- | --- | --- |
 | Checks | Tools, USB connection, thermostat model and software | Choose a time server (Enter = `time.nist.gov`) | 1 min |
 | 1. Home Assistant | Installs Hearth via HACS and creates the HA entry | Follow the HACS steps, restart HA, paste a temporary access token | 5 min |
 | 2. Build reader | Builds a small read-only USB boot tool in Podman | Nothing | ~10 min |
-| 3. Full backup | Copies the Nest's entire flash twice and verifies it | Type `READY`, press the ring when told | ~25 min |
-| 4. Save originals | Reads the files Hearth will change | Type `READY`, press the ring when told | 2 min |
+| 3. Full backup | Copies the Nest's entire flash twice and cross-checks the copies | Answer `y`, press the ring when told | ~25 min |
+| 4. Save originals | Reads the files Hearth will change | Answer `y`, press the ring when told | 2 min |
 | 5. Build kit | Builds install and undo images for *your* unit only | Confirm HA's HTTP port (Enter = 8123) | ~5 min |
-| 6. Install | Space check, then two install phases | Type `READY`, then `INSTALL`, for each part | 5 min |
+| 6. Install | Space check, then two install phases | Answer `y` to start each part; type `INSTALL` to write | 5 min |
 | 7. Finish | Restart the Nest, refit it to the base, check HA | Confirm readings appear | 5 min |
 
-Times are rough estimates.
+Times are rough estimates. A live status line shows the current stage, the
+elapsed time and, during the backup, a percentage.
+
+**Why back up twice?** NAND flash has normal bit-level noise, so two raw reads
+never match byte for byte. After error correction, both passes must match
+exactly. That cross-check is how the wizard knows the backup is real data, not
+a one-off glitch, without ever having to restore it.
 
 ### Pressing the ring
 
@@ -168,8 +175,8 @@ python3 -m installer.cli onboard --ha-url http://YOUR_HA_IP:8123 --session priva
   Plain HTTP is accepted only for a private LAN IP address.
 - It asks for a temporary HA admin access token (hidden, never saved).
 - It reads the Nest's identity over USB (read-only), lists HA's local addresses
-  so you can pick the one on the thermostat's network, and asks you to type
-  `SETUP`.
+  so you can pick the one on the thermostat's network, and asks you to confirm
+  with `y`.
 - It saves `identity.json` and `commissioning.zip` in your session folder. Both
   are private.
 

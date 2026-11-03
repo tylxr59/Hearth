@@ -14,6 +14,7 @@ from firmware.network_writer import profile as cleanup_profile
 from firmware.network_writer import run as cleanup_run
 from installer import build as reader_build
 from installer import replacements, sources
+from installer.ui import stage
 from provisioning.time_server import DEFAULT, time_server
 from tools.elf_review import private_path
 
@@ -121,6 +122,7 @@ def build(
         "build-started.json",
         encode({"device_executed": False, "persistent_actions": False}),
     )
+    stage(1, 5, "Preparing the replacement files")
     replacements.prepare(
         session,
         build / "storage-shim",
@@ -137,18 +139,21 @@ def build(
     libraries = session / "acquisition"
     log = build / "build.log"
     core = build / "commissioning-kernel"
+    stage(2, 5, "Building the phase 1 boot image")
     core_kernel.prepare(
         cache / "nestdfu", cache / "xloader", cache / "loader", reader / "probe", core, capsule, pin
     )
     reader_build.command(reader_build.container("podman", reader_build.IMAGE, core), log)
     core_kernel.finalize(core, reader / "probe")
     helpers = build / "commissioning-helpers"
+    stage(3, 5, "Packaging phase 1 install and restore images")
     core_compile.compile_helpers(helpers, capsule, pin)
     for action, name in ((1, "install"), (2, "restore")):
         core_profile.package(
             core, libraries, helpers, capsule, pin, output / ("commissioning-" + name), action
         )
     network = build / "cleanup-kernel"
+    stage(4, 5, "Building the phase 2 boot image")
     cleanup_kernel.stage(
         reader / "probe", reader / "protected", cleanup, backup, cleanup_pin, network
     )
@@ -157,6 +162,7 @@ def build(
     from installer.archive_discovery import discover
     from installer.capacity import root_reserve
 
+    stage(5, 5, "Packaging phase 2 images and the space check")
     candidate = discover(session)
     shared_archive = None
     if candidate is not None:

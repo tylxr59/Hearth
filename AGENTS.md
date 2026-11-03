@@ -70,9 +70,11 @@ independently verified. Leave it that way.
 - Firmware changes need the existing bounded source/ABI/RAM/backup checks for
   that writer. **Never remove a gate to make an installer pass.**
 - The wizard's terminal output goes through `installer/ui.py`, which is stdlib
-  only because the wizard runs before any venv exists. Tests feed `ask()`
-  answers positionally, so adding or removing a prompt means updating the
-  tests.
+  only because the wizard runs before any venv exists. Questions use
+  `ui.confirm` (`[y/N]`, default no). Only flash writes use a typed word
+  (`INSTALL`/`RESTORE`). Long work emits `ui.stage(n, total, label)` markers
+  for the live status line. Tests feed `ask()` answers positionally, so adding
+  or removing a prompt means updating the tests.
 - Read the detected target OS before running package or service commands. Add
   no new system packages or host services without task authorisation.
 

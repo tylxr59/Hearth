@@ -11,6 +11,7 @@ import shutil
 import subprocess  # nosec B404
 import sys
 import time
+import traceback
 import uuid
 from datetime import datetime
 from pathlib import Path
@@ -191,7 +192,7 @@ def usb_access(folder, ask=input):
         ],
         "cyan",
     )
-    if ask(ui.prompt("Type USB ACCESS to add the rule", "[Enter = stop]")).strip() != "USB ACCESS":
+    if not ui.confirm(ask, "Add the USB rule now?"):
         raise Invalid("USB access setup cancelled; no loader started.")
     source = folder / "70-hearth-wizard.rules"
     save(folder, source.name, rules)
@@ -218,9 +219,63 @@ def usb_access(folder, ask=input):
     )
 
 
+WORK_LABELS = {
+    "prepare": "Building the USB reader",
+    "nand": "Preparing the backup loader",
+    "acquire": "Preparing the file reader",
+    "kit": "Building your install kit",
+    "capacity": "Preparing the space check",
+    "commissioning": "Preparing phase 1",
+    "cleanup": "Preparing phase 2",
+}
+# Shown once the loader reports that the Nest's boot ROM answered.
+CONNECTED_LABELS = {
+    "nand": "Nest connected, starting the backup",
+    "acquire": "Nest connected, reading the original files",
+    "capacity": "Nest connected, checking free space",
+    "commissioning": "Nest connected, running safety checks",
+    "cleanup": "Nest connected, running safety checks",
+}
+
+
 class Worker:
     def __init__(self, folder, build, *, ask=input):
         self.folder, self.build, self.ask = folder, build, ask
+
+    RECORDS = re.compile(rb'"records": (\d+), "total_records": 262144')
+
+    def _confirm_write(self, values, binding, engine, cancelled):
+        ui.box(
+            "Ready to write",
+            [
+                (
+                    "All checks passed: the test boot worked and the files on the Nest "
+                    "exactly match your saved originals."
+                ),
+                (
+                    "The next step writes to the thermostat's flash. Do not unplug USB "
+                    "until the wizard says it is finished."
+                ),
+                (
+                    "Your saved files can be restored later, but a full-chip restore has "
+                    "not been verified yet."
+                ),
+            ],
+        )
+        commit = not cancelled and (
+            self.ask(ui.prompt("Type INSTALL to write", "[Enter = cancel]")).strip() == "INSTALL"
+        )
+        if commit and values.get("backup_session"):
+            from installer.nand_backup import check as check_backup
+
+            try:
+                check_backup(Path(values["backup_session"]))
+            except (ValueError, OSError):
+                ui.fail(
+                    "Rechecking the full flash backup failed. Cancelled before writing anything."
+                )
+                commit = False
+        engine.decide(Path(values["output"]), commit=commit, expected_action=binding.action)
 
     def run(self, operation, *, engine=None, binding=None, **values):
         request = {
@@ -229,154 +284,136 @@ class Worker:
             "build": str(self.build),
         } | values
         save(self.folder, operation + "-request.json", encode(request))
+        log_name = self.folder / (operation + ".log")
+        status = ui.Live(WORK_LABELS.get(operation, "Working"))
         master, slave = pty.openpty()
         process = None
-        decided = False
-        cancelled = False
-        scan_seen = False
+        log = None
+        decided = cancelled = scan_seen = connected = False
         pending = b""
-        last_record = 0
-        started = last = time.monotonic()
-        progress = ui.Progress("Reading flash")
-        log_name = self.folder / (operation + ".log")
-        try:
-            with (self.folder / (operation + ".log")).open("xb") as log:
-                os.chmod(log.name, 0o600)
-                process = subprocess.Popen(  # nosec B603
-                    [
-                        sys.executable,
-                        "-u",
-                        "-m",
-                        "installer.wizard_worker",
-                        str(self.folder / (operation + "-request.json")),
-                    ],
-                    cwd=ROOT,
-                    stdin=subprocess.DEVNULL,
-                    stdout=slave,
-                    stderr=slave,
-                    start_new_session=True,
-                )
-                os.close(slave)
-                slave = -1
-                while True:
-                    try:
-                        ready, _, _ = select.select([master], [], [], 0.2)
-                        if ready:
-                            try:
-                                data = os.read(master, 8192)
-                            except OSError as exc:
-                                if exc.errno != errno.EIO:
-                                    raise
-                                data = b""
-                            if data:
-                                log.write(data)
-                                log.flush()
-                                pending = (pending + data)[-16384:]
-                                if operation == "nand":
-                                    progress = list(
-                                        re.finditer(
-                                            rb'"records": (\d+), "total_records": 262144', pending
-                                        )
-                                    )
-                                    if progress:
-                                        count = int(progress[-1][1])
-                                        if last_record < count <= 262144:
-                                            progress.update(count * 100 // 262144)
-                                            last_record = count
-                                            last = time.monotonic()
-                                if not scan_seen and b"scanning for USB device" in pending:
-                                    scan_seen = True
-                                    progress.interrupt()
-                                    ui.blank()
-                                    ui.action("The loader is waiting now. " + RESTART)
-                                    ui.muted(
-                                        "Keep USB plugged in and the display off its base. "
-                                        "The wizard continues by itself once the Nest connects."
-                                    )
-                        if (
-                            engine
-                            and not decided
-                            and (Path(values["output"]) / "preflight.json").exists()
-                        ):
-                            progress.interrupt()
-                            ui.box(
-                                "Ready to write",
-                                [
-                                    (
-                                        "All checks passed: the test boot worked and the files on "
-                                        "the Nest exactly match your saved originals."
-                                    ),
-                                    (
-                                        "The next step writes to the thermostat's flash. Do not "
-                                        "unplug USB until the wizard says it is finished."
-                                    ),
-                                    (
-                                        "Your saved files can be restored later, but a full-chip "
-                                        "restore has not been verified yet."
-                                    ),
-                                ],
-                            )
-                            commit = not cancelled and (
-                                self.ask(
-                                    ui.prompt("Type INSTALL to write", "[Enter = cancel]")
-                                ).strip()
-                                == "INSTALL"
-                            )
-                            if commit and values.get("backup_session"):
-                                from installer.nand_backup import check as check_backup
 
-                                try:
-                                    check_backup(Path(values["backup_session"]))
-                                except (ValueError, OSError):
-                                    ui.fail(
-                                        "Rechecking the full flash backup failed. "
-                                        "Cancelled before writing anything."
-                                    )
-                                    commit = False
-                            engine.decide(
-                                Path(values["output"]),
-                                commit=commit,
-                                expected_action=binding.action,
-                            )
-                            decided = True
-                        if process.poll() is not None and not ready:
-                            break
-                        if process.poll() is not None and ready and not data:
-                            break
-                        if time.monotonic() - last >= 30:
-                            progress.interrupt()
-                            ui.muted(
-                                "Still working ("
-                                + ui.duration(time.monotonic() - started)
-                                + f" so far). Full log: {log_name}"
-                            )
-                            last = time.monotonic()
-                    except (KeyboardInterrupt, EOFError):
-                        cancelled = True
-                        if (
-                            engine
-                            and not decided
-                            and (Path(values["output"]) / "preflight.json").exists()
-                        ):
-                            engine.decide(
-                                Path(values["output"]), commit=False, expected_action=binding.action
-                            )
-                            decided = True
-                        progress.interrupt()
-                        ui.warn(
-                            "Stopping safely: waiting for the current operation to finish. "
-                            "Keep USB connected."
+        def pump(timeout):
+            """Read and log worker output; False once the stream has ended."""
+            ready, _, _ = select.select([master], [], [], timeout)
+            if not ready:
+                return True
+            try:
+                data = os.read(master, 8192)
+            except OSError as exc:
+                if exc.errno != errno.EIO:
+                    raise
+                return False
+            if not data:
+                return False
+            if log is not None and not log.closed:
+                log.write(data)
+                log.flush()
+            nonlocal pending
+            pending = (pending + data)[-16384:]
+            return True
+
+        def preflight_ready():
+            return (
+                engine is not None
+                and not decided
+                and (Path(values["output"]) / "preflight.json").exists()
+            )
+
+        try:
+            log = log_name.open("xb")
+            os.chmod(log.name, 0o600)
+            process = subprocess.Popen(  # nosec B603
+                [
+                    sys.executable,
+                    "-u",
+                    "-m",
+                    "installer.wizard_worker",
+                    str(self.folder / (operation + "-request.json")),
+                ],
+                cwd=ROOT,
+                stdin=subprocess.DEVNULL,
+                stdout=slave,
+                stderr=slave,
+                start_new_session=True,
+            )
+            os.close(slave)
+            slave = -1
+            open_stream = True
+            while True:
+                try:
+                    if open_stream:
+                        open_stream = pump(0.2)
+                    else:
+                        time.sleep(0.2)
+                    stages = list(ui.STAGE.finditer(pending))
+                    if stages:
+                        number, total, label = stages[-1].groups()
+                        status.set_stage(int(number), int(total), label.decode(errors="replace"))
+                    if operation == "nand":
+                        records = list(self.RECORDS.finditer(pending))
+                        if records:
+                            count = int(records[-1][1])
+                            if 0 < count <= 262144:
+                                status.set_percent(count * 100 // 262144)
+                                status.set_label(
+                                    "Reading flash (two passes)"
+                                    if count < 262144
+                                    else "Verifying the backup"
+                                )
+                    if not scan_seen and b"scanning for USB device" in pending:
+                        scan_seen = True
+                        status.clear()
+                        ui.blank()
+                        ui.action("The loader is waiting now. " + RESTART)
+                        ui.muted(
+                            "Keep USB plugged in and the display off its base. The wizard "
+                            "continues by itself once the Nest connects (within 90 seconds)."
                         )
-                progress.interrupt()
-                if process.wait() != 0:
-                    raise Invalid(
-                        f"The {operation} step stopped with an error. "
-                        f"Details are in {log_name}. Nothing is retried automatically."
+                        status.set_label("Waiting for the Nest to restart")
+                    if not connected and b"ROM boot command transferred" in pending:
+                        connected = True
+                        status.set_label(CONNECTED_LABELS.get(operation, "Nest connected"))
+                    if preflight_ready():
+                        status.clear()
+                        self._confirm_write(values, binding, engine, cancelled)
+                        decided = True
+                    if process.poll() is not None and not open_stream:
+                        break
+                    if process.poll() is not None and not select.select([master], [], [], 0)[0]:
+                        break
+                    status.refresh()
+                except (KeyboardInterrupt, EOFError):
+                    cancelled = True
+                    if preflight_ready():
+                        engine.decide(
+                            Path(values["output"]), commit=False, expected_action=binding.action
+                        )
+                        decided = True
+                    status.clear()
+                    ui.warn(
+                        "Stopping safely: waiting for the current operation to finish. "
+                        "Keep USB connected."
                     )
+            status.clear()
+            if process.wait() != 0:
+                raise Invalid(
+                    f"The {operation} step stopped with an error. "
+                    f"Details are in {log_name}. Nothing is retried automatically."
+                )
         finally:
-            # Never kill a writer or boot process because the terminal was interrupted.
-            if process is not None and process.poll() is None:
-                process.wait()
+            status.clear()
+            # Never kill a writer or boot process because the wizard stopped, and
+            # keep draining its output so it can never block on a full terminal.
+            while process is not None and process.poll() is None:
+                try:
+                    if not pump(0.2):
+                        time.sleep(0.2)
+                except (KeyboardInterrupt, EOFError):
+                    ui.warn("Still waiting for the current operation to finish safely.")
+                except OSError:
+                    time.sleep(0.2)
+            if log is not None:
+                log.close()
             if slave >= 0:
                 os.close(slave)
             os.close(master)
@@ -426,7 +463,7 @@ class Worker:
                 )
             )
         ui.muted("Keep the display off its base, and don't unplug USB during a write.")
-        if ask(ui.prompt("Type READY to start", "[Enter = cancel]")).strip() != "READY":
+        if not ui.confirm(ask, "Run the space check?" if capacity else "Start this phase?"):
             return {"cancelled": True}
         result = self.run(
             operation,
@@ -574,6 +611,7 @@ def run(*, ask=input, secret=getpass.getpass):
             )
         from installer.cli import inspect_disk
 
+        sudo_read = False
         try:
             info = inspect_disk(disk)
         except subprocess.CalledProcessError:
@@ -581,9 +619,10 @@ def run(*, ask=input, secret=getpass.getpass):
                 "Your account can't read the Nest's info file directly. One read-only "
                 "sudo command (mtype) can read it for you."
             )
-            if ask(ui.prompt("Type READ to allow it", "[Enter = cancel]")).strip() != "READ":
+            if not ui.confirm(ask, "Allow this one read-only sudo command?"):
                 raise Invalid("Reading the thermostat's info file was cancelled.")
             info = inspect_disk(disk, sudo_read=True)
+            sudo_read = True
         device_info(info)
         ui.ok("Found a supported Nest. Its serial number stays private.")
         ui.section("Time server")
@@ -601,6 +640,7 @@ def run(*, ask=input, secret=getpass.getpass):
         build = ROOT / "build" / name
         build.mkdir(mode=0o700, parents=True)
 
+        phase = "ha-setup"
         ui.step(1, TOTAL, "Install Hearth in Home Assistant")
         ui.numbered(
             [
@@ -614,7 +654,8 @@ def run(*, ask=input, secret=getpass.getpass):
             ]
         )
         ui.warn("Don't add the Hearth integration yourself. This wizard does it next.")
-        if ask(ui.prompt("Type HA READY once Home Assistant has restarted")).strip() != "HA READY":
+        done = ask(ui.prompt("Press Enter once Home Assistant has restarted", "[q = quit]"))
+        if done.strip().lower() in ("q", "quit"):
             return 0
         ui.say("Enter the address you use to open Home Assistant in your browser.")
         ha_url = ask(ui.prompt("Home Assistant address", "(e.g. http://192.168.1.10:8123)")).strip()
@@ -628,7 +669,6 @@ def run(*, ask=input, secret=getpass.getpass):
         )
         ui.muted("The token is used once and never saved. Delete it after setup.")
         token = secret(ui.prompt("Access token", "(hidden)"))
-        phase = "ha-setup"
         result = onboard.onboard(ha_url, token, folder, info, ask=ask)
         del token
         if result.get("cancelled"):
@@ -652,19 +692,20 @@ def run(*, ask=input, secret=getpass.getpass):
         phase = "nand"
         ui.step(3, TOTAL, "Back up the whole thermostat")
         ui.say(
-            "Hearth now copies the Nest's entire flash memory to this computer, twice, "
-            "and checks the copies. The read takes up to 20 minutes, then a few more "
-            "minutes to verify."
+            "Hearth now copies the Nest's entire flash memory to this computer, twice. "
+            "Flash has normal bit-level noise, so the two copies are cross-checked after "
+            "error correction: that is how the wizard knows the backup is genuine. The "
+            "read takes up to 20 minutes, then a few minutes to verify."
         )
         device_info(
-            inspect_disk(disk, sudo_read=True),
+            inspect_disk(disk, sudo_read=sudo_read),
             read_bundle(private_read(folder / "commissioning.zip", 65536))[0],
         )
         ui.say(
-            "When you type READY, the wizard waits for the Nest. It will tell you when "
-            "to press the ring."
+            "Once you say yes, the wizard waits for the Nest. It will tell you when to "
+            "press the ring."
         )
-        if ask(ui.prompt("Type READY to start the backup", "[Enter = stop]")).strip() != "READY":
+        if not ui.confirm(ask, "Start the backup?"):
             return 0
         worker.run("nand")
         ui.ok("Full backup saved and verified.")
@@ -676,7 +717,7 @@ def run(*, ask=input, secret=getpass.getpass):
             "checked and put back later. Don't restart the Nest yourself; wait for the "
             "ring prompt."
         )
-        if ask(ui.prompt("Type READY to read the files", "[Enter = stop]")).strip() != "READY":
+        if not ui.confirm(ask, "Read the original files now?"):
             ui.warn(
                 "Stopped. Your full backup is saved. Keep USB connected until this "
                 "window has closed, then restart the Nest normally."
@@ -727,16 +768,14 @@ def run(*, ask=input, secret=getpass.getpass):
                 ),
             ]
         )
-        answer = ask(
-            ui.prompt("Are fresh readings showing in Home Assistant?", "[YES / Enter = not yet]")
-        ).strip()
+        readings = ui.confirm(ask, "Are fresh readings showing in Home Assistant?")
         result = {
             "files_verified": True,
-            "fresh_readings_owner_verified": answer == "YES",
+            "fresh_readings_owner_verified": readings,
             "control_tested": False,
         }
         save(folder, "wizard-complete.json", encode(result))
-        if answer == "YES":
+        if readings:
             ui.box(
                 "Hearth is set up",
                 [
@@ -764,33 +803,49 @@ def run(*, ask=input, secret=getpass.getpass):
             ],
         )
         return 1
-    except (
-        ValueError,
-        OSError,
-        subprocess.SubprocessError,
-        RuntimeError,
-        EOFError,
-        KeyboardInterrupt,
-    ) as exc:
+    except (Exception, KeyboardInterrupt) as exc:  # noqa: BLE001 - always record the stop
+        # Expected refusals explain themselves; anything else is a wizard bug, but
+        # the stop must still be recorded and the same safety guidance shown.
+        expected = isinstance(
+            exc,
+            (ValueError, OSError, subprocess.SubprocessError, RuntimeError, KeyboardInterrupt),
+        )
         ui.blank()
         ui.fail(f"Setup stopped during {PHASES.get(phase, phase)}.")
         if isinstance(exc, Invalid):
             ui.say(str(exc))
-        if folder and folder.exists():
-            save(
-                folder,
-                "wizard-stopped.json",
-                encode(
-                    {"phase": phase, "error_type": type(exc).__name__, "automatic_retry": False}
-                ),
-            )
+        elif not expected:
+            ui.say(f"Unexpected error ({type(exc).__name__}). This is a bug in the wizard.")
         lines = ["Nothing is retried automatically."]
         if folder and folder.exists():
+            try:
+                save(
+                    folder,
+                    "wizard-stopped.json",
+                    encode(
+                        {
+                            "phase": phase,
+                            "error_type": type(exc).__name__,
+                            "unexpected": not expected,
+                            "automatic_retry": False,
+                        }
+                    ),
+                )
+                if not expected:
+                    save(folder, "wizard-error.log", traceback.format_exc().encode())
+            except (OSError, ValueError):
+                pass
             lines.append(f"Keep your private folder: {folder}")
         if phase in ("install", "nand", "acquire", "kit"):
             lines.append(
                 "Keep USB connected, and don't restart the Nest or run setup again until "
                 "the report in that folder has been reviewed."
+            )
+        if not expected:
+            lines.append(
+                "Please report it at https://github.com/tylxr59/Hearth/issues with the "
+                "message above. wizard-error.log has the details; check it for private "
+                "paths before sharing."
             )
         lines.append(f"Help: {DOCS}troubleshooting.md")
         ui.box("What to do now", lines, "red")

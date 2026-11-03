@@ -146,10 +146,7 @@ def onboard(ha_url, token, session, info, *, target=None, ask=input, client=None
         raise Invalid("fresh user setup required; close any open Hearth setup dialog first")
     try:
         target = _choose(form, target, ask)
-        confirmed = (
-            ask(ui.prompt("Type SETUP to add Hearth to Home Assistant", "[Enter = cancel]")).strip()
-            == "SETUP"
-        )
+        confirmed = ui.confirm(ask, "Add Hearth to Home Assistant now?")
     except BaseException:
         # Never leave HA holding an open dialog: it blocks every later attempt.
         _cancel(client, flow_id)

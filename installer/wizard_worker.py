@@ -7,6 +7,7 @@ from pathlib import Path
 
 from firmware.file_writer.run import encode, save
 from firmware.tls_probe.package import private_read
+from installer.ui import stage
 from tools.elf_review import private_path
 
 
@@ -19,14 +20,19 @@ def work(request):
         from installer import build as reader
         from installer import sources
 
+        stage(1, 5, "Downloading pinned sources")
         sources.fetch(build / "sources")
+        stage(2, 5, "Building the read-only boot image (the longest part)")
         result = reader.build(build / "sources", build / "reader", session / "reader")
         from firmware.nand_capture.profile import build as build_nand
         from tools.installer_archive import installer_archive
         from tools.nand_archive.build import fetch as build_bch
 
+        stage(3, 5, "Building the flash backup reader")
         build_nand(build / "sources", build / "reader", build / "nand-reader")
+        stage(4, 5, "Building the backup checker")
         build_bch(build / "nand-bch")
+        stage(5, 5, "Saving a copy of this installer for restores")
         (build / "recovery-source").mkdir(mode=0o700)
         installer_archive(build / "recovery-source/installer-source.zip")
         save(

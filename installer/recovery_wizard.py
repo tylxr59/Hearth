@@ -72,7 +72,7 @@ def run(*, ask=input):
                 "Your account can't read the Nest's info file directly. One read-only "
                 "sudo command (mtype) can read it for you."
             )
-            if ask(ui.prompt("Type READ to allow it", "[Enter = cancel]")).strip() != "READ":
+            if not ui.confirm(ask, "Allow this one read-only sudo command?"):
                 return 0
             inspect_disk(disk, sudo_read=True)
             sudo_read = True

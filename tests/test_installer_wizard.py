@@ -94,9 +94,7 @@ def setup(tmp_path, monkeypatch):
 @pytest.mark.parametrize("server", ("", "ntp.example.test", "10.0.0.8"))
 def test_single_wizard_routes_selected_time_and_keeps_tokens_out_of_artifacts(setup, server):
     _, private, calls = setup
-    ask = answers(
-        "", server, "HA READY", "http://10.0.0.12:8123", "READY", "READY", "8123", "", "YES"
-    )
+    ask = answers("", server, "", "http://10.0.0.12:8123", "y", "y", "8123", "", "y")
     assert wizard.run(ask=ask, secret=lambda _: "hidden-token") == 0
     folder = next(private.iterdir())
     expected = server or "time.nist.gov"
@@ -118,7 +116,7 @@ def test_declining_acquisition_never_arms_reader_or_writer(setup):
     _, _, calls = setup
     assert (
         wizard.run(
-            ask=answers("", "", "HA READY", "http://10.0.0.12:8123", ""),
+            ask=answers("", "", "", "http://10.0.0.12:8123", ""),
             secret=lambda _: "hidden-token",
         )
         == 0
@@ -139,7 +137,7 @@ def test_failed_kit_does_not_run_writer_or_retry(setup, monkeypatch):
     monkeypatch.setattr(wizard.workflow, "install", lambda *a, **kw: pytest.fail("must not write"))
     assert (
         wizard.run(
-            ask=answers("", "", "HA READY", "http://10.0.0.12:8123", "READY", "READY", ""),
+            ask=answers("", "", "", "http://10.0.0.12:8123", "y", "y", ""),
             secret=lambda _: "hidden-token",
         )
         == 1
@@ -302,7 +300,7 @@ def test_usb_rule_requires_explicit_permission_and_never_grants_disk_access(tmp_
     with pytest.raises(Invalid, match="cancelled"):
         wizard.usb_access(tmp_path, lambda _: "")
     assert not calls
-    wizard.usb_access(tmp_path, lambda _: "USB ACCESS")
+    wizard.usb_access(tmp_path, lambda _: "y")
     assert len(calls) == 2 and all(command[:2] == ["sudo", "--"] for command in calls)
     content = (tmp_path / "70-hearth-wizard.rules").read_text()
     assert f"u:{wizard.os.getuid()}:rw" in content
@@ -332,7 +330,7 @@ def test_root_udev_helper_never_comes_from_user_path(monkeypatch, tmp_path, faul
         wizard.subprocess, "run", lambda *a, **kw: pytest.fail("must not invoke sudo")
     )
     with pytest.raises(Invalid, match="root-managed"):
-        wizard.usb_access(tmp_path, lambda _: "USB ACCESS")
+        wizard.usb_access(tmp_path, lambda _: "y")
 
 
 @pytest.mark.parametrize(
@@ -363,7 +361,101 @@ def test_wizard_output_is_plain_when_captured(capsys):
 
     ui.step(2, 7, "Build")
     ui.box("Ready to write", ["line"])
-    ui.Progress("Reading").update(55)
+    live = ui.Live("Reading")
+    live.set_percent(55)
+    live.set_stage(2, 5, "Building")
+    live.refresh()
+    live.clear()
     shown = capsys.readouterr().out
     assert "\033[" not in shown
-    assert "Step 2 of 7" in shown and "Reading: 55%" in shown
+    assert "Step 2 of 7" in shown and "Reading: 55%" in shown and "[2/5] Building" in shown
+
+
+def _fake_worker(monkeypatch, script):
+    real_popen = subprocess.Popen
+    monkeypatch.setattr(
+        wizard.subprocess,
+        "Popen",
+        lambda command, **kw: real_popen([sys.executable, "-c", script, command[-1]], **kw),
+    )
+
+
+def _session(tmp_path, monkeypatch):
+    from tools import elf_review
+
+    tmp_path.chmod(0o700)
+    monkeypatch.setattr(elf_review, "PRIVATE", tmp_path)
+    folder = tmp_path / "session"
+    folder.mkdir(mode=0o700)
+    return folder
+
+
+def test_backup_progress_loader_prompt_and_stages_render_through_a_real_pty(
+    tmp_path, monkeypatch, capsys
+):
+    folder = _session(tmp_path, monkeypatch)
+    script = (
+        "import json,sys,time; from pathlib import Path; "
+        "r=json.loads(Path(sys.argv[1]).read_bytes()); "
+        "print('[stage 1/2] Getting ready',flush=True); "
+        "print('[+] scanning for USB device matching 0451:d00e...',flush=True); time.sleep(.3); "
+        "[print(json.dumps({'status':'capturing','records':n,'total_records':262144}),"
+        "flush=True) or time.sleep(.05) for n in range(8192,262145,8192)]; "
+        "Path(r['session'],'nand-worker-result.json').write_text('{\"complete\": true}')"
+    )
+    _fake_worker(monkeypatch, script)
+    assert wizard.Worker(folder, tmp_path / "build").run("nand") == {"complete": True}
+    shown = capsys.readouterr().out
+    assert "The loader is waiting now" in shown
+    assert "Reading flash (two passes): 50%" in shown and "100%" in shown
+    assert "[1/2] Getting ready" in shown
+    assert "total_records" not in shown
+
+
+def test_an_error_in_the_wizard_never_blocks_or_kills_the_worker(tmp_path, monkeypatch):
+    folder = _session(tmp_path, monkeypatch)
+    done = tmp_path / "worker-finished"
+    # Far more output than a PTY buffer holds, written after the wizard fails.
+    script = (
+        "import sys; from pathlib import Path; "
+        "print('[stage 1/1] Busy',flush=True); "
+        "[sys.stdout.write('x'*1023+'\\n') for _ in range(4096)]; sys.stdout.flush(); "
+        f"Path({str(done)!r}).write_text('ok')"
+    )
+    _fake_worker(monkeypatch, script)
+
+    def broken(*_):
+        raise RuntimeError("synthetic wizard bug")
+
+    monkeypatch.setattr(wizard.ui.Live, "set_stage", broken)
+    with pytest.raises(RuntimeError, match="synthetic"):
+        wizard.Worker(folder, tmp_path / "build").run("prepare")
+    assert done.read_text() == "ok"
+    assert (folder / "prepare.log").stat().st_size > 4_000_000
+
+
+def test_unexpected_errors_are_recorded_and_explained(setup, monkeypatch, capsys):
+    _, private, _ = setup
+
+    def broken(self, op, **kw):
+        raise AttributeError("synthetic")
+
+    monkeypatch.setattr(wizard.Worker, "run", broken)
+    ask = answers("", "", "", "http://10.0.0.12:8123")
+    assert wizard.run(ask=ask, secret=lambda _: "hidden-token") == 1
+    folder = next(private.iterdir())
+    stopped = json.loads((folder / "wizard-stopped.json").read_bytes())
+    assert stopped["unexpected"] and stopped["phase"] == "prepare"
+    assert b"AttributeError" in (folder / "wizard-error.log").read_bytes()
+    assert "This is a bug in the wizard" in capsys.readouterr().out
+
+
+def test_y_n_prompts_need_an_explicit_yes_and_ha_step_can_quit(setup):
+    from installer import ui
+
+    assert ui.confirm(lambda _: " Yes ", "Go?") and ui.confirm(lambda _: "y", "Go?")
+    for answer in ("", "n", "no", "READY", "yess"):
+        assert not ui.confirm(lambda _, a=answer: a, "Go?")
+    _, _, calls = setup
+    assert wizard.run(ask=answers("", "", "q"), secret=lambda _: "unused") == 0
+    assert calls == []

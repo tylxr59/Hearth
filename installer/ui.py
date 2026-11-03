@@ -7,9 +7,11 @@ captured output and logs stay readable.
 """
 
 import os
+import re
 import shutil
 import sys
 import textwrap
+import time
 
 _CODES = {
     "bold": "1",
@@ -158,37 +160,102 @@ def prompt(text, hint=None):
     return f"\n  {arrow} {text}{suffix}: "
 
 
+def confirm(ask, question):
+    """A y/N question: only y or yes proceeds; Enter or anything else means no.
+
+    Typed words are reserved for flash writes (INSTALL, RESTORE).
+    """
+    return ask(prompt(question, "[y/N]")).strip().lower() in ("y", "yes")
+
+
 def duration(seconds):
     seconds = int(seconds)
     minutes, seconds = divmod(seconds, 60)
     return f"{minutes}m {seconds:02d}s" if minutes else f"{seconds}s"
 
 
-class Progress:
-    """A single-line bar on a terminal; coarse 10% lines when captured."""
+def stage(number, total, label):
+    """Announce a long-running stage. Workers print this; the wizard parses it."""
+    print(f"[stage {number}/{total}] {label}", flush=True)
+
+
+STAGE = re.compile(rb"\[stage (\d+)/(\d+)\] ([^\r\n]+)")
+
+
+class Live:
+    """One self-updating status line: spinner, bar, stage, elapsed time.
+
+    The bar shows a real percentage when one is known (flash backup), otherwise
+    completed stages. On a captured stream it prints only stage changes, 10%
+    steps and an occasional heartbeat, so logs stay short.
+    """
+
+    FRAMES = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"
+    HEARTBEAT = 60
 
     def __init__(self, label):
-        self.label, self.shown, self.drawn = label, -1, False
+        self.label, self.started = label, time.monotonic()
+        self.stage = self.percent = None
+        self.drawn, self.frame, self.reported = False, 0, -1
+        self.heartbeat = self.started
 
-    def update(self, percent):
+    def set_label(self, label):
+        if label != self.label:
+            self.label = label
+            if not _tty():
+                print(f"  {label}")
+            self.refresh()
+
+    def set_stage(self, number, total, label):
+        if (number, total) != self.stage:
+            self.stage, self.percent, self.label = (number, total), None, label
+            if not _tty():
+                print(f"  [{number}/{total}] {label}")
+            self.refresh()
+
+    def set_percent(self, percent):
         percent = max(0, min(100, int(percent)))
-        if percent <= self.shown:
+        if self.percent is not None and percent <= self.percent:
             return
-        if _tty():
-            size = 30
-            full = percent * size // 100
-            bar = _glyph("█", "#") * full + _glyph("░", ".") * (size - full)
-            sys.stdout.write(f"\r  {self.label}  {style(bar, 'cyan')} {percent:3d}%")
-            sys.stdout.flush()
-            self.drawn = True
-        elif percent // 10 > self.shown // 10 or percent == 100:
+        self.percent = percent
+        if not _tty() and (percent // 10 > self.reported // 10 or percent == 100):
             print(f"  {self.label}: {percent}%")
-        self.shown = percent
+            self.reported = percent
+        self.refresh()
 
-    def interrupt(self):
-        """End the current bar line before printing something else."""
+    def _bar(self, fraction, size=24):
+        full = round(fraction * size)
+        return style(_glyph("█", "#") * full + _glyph("░", ".") * (size - full), "cyan")
+
+    def refresh(self):
+        now = time.monotonic()
+        elapsed = duration(now - self.started)
+        if not _tty():
+            if now - self.heartbeat >= self.HEARTBEAT:
+                print(f"  Still working ({elapsed} so far)")
+                self.heartbeat = now
+            return
+        self.frame = (self.frame + 1) % len(self.FRAMES)
+        spinner = style(self.FRAMES[self.frame] if _unicode() else "|/-\\"[self.frame % 4], "cyan")
+        if self.percent is not None:
+            gauge = f"{self._bar(self.percent / 100)} {self.percent:3d}%  "
+        elif self.stage:
+            done, total = self.stage
+            gauge = f"{self._bar((done - 1) / total)} {done}/{total}  "
+        else:
+            gauge = ""
+        tail = style(f"  {elapsed}", "dim")
+        visible_gauge = len(re.sub(r"\033\[[0-9;]*m", "", gauge))
+        room = max(8, width() - 6 - len(elapsed) - visible_gauge)
+        label = self.label if len(self.label) <= room else self.label[: room - 1] + "…"
+        text = gauge + label
+        sys.stdout.write(f"\r\033[K  {spinner} {text}{tail}")
+        sys.stdout.flush()
+        self.drawn = True
+
+    def clear(self):
+        """Remove the status line before printing anything else."""
         if self.drawn:
-            sys.stdout.write("\n")
+            sys.stdout.write("\r\033[K")
             sys.stdout.flush()
             self.drawn = False
-            self.shown = max(-1, self.shown - 1)

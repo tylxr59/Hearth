@@ -72,6 +72,11 @@ stock-to-HA wizard.
 
 ## Published
 
+**v0.11.1** fixes a v0.11.0 wizard crash: the step 3 backup crashed as soon as
+the loader started waiting, before anything reached the Nest. It also adds a
+live staged status line, drains worker output after errors, records unexpected
+errors and closes HA dialogs left open by refusals.
+
 **v0.11.0** (experimental, ordinary GitHub release, so the HACS default picks
 it) is the first release with:
 
