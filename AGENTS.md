@@ -53,6 +53,11 @@ The historical investigation is archived under `docs/development/history/` and
   CI and hassfest pass. The complete stock-device wizard/cleanup3/custom-time
   hardware install and restore remain unmeasured. No new live entry, HA update,
   Core restart or device write occurred during the backup implementation. The
+  Published0.10.1 adds mandatory full-NAND archiving and guided selected-file
+  restore. Fresh full read, offline verification, read-only acquisition handoff
+  and native restart passed. All46 integration and343 installer files match the
+  tested source and published checksums; CI/hassfest pass and default HACS
+  selection chooses v0.10.1. No live HA update occurred. The
   selected-file stock return is independently verified as described above;
   do not bypass restore refusals or blindly erase NAND.
   The live HA instance has not been updated; use HACS for delivery. Obtain

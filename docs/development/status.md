@@ -1,8 +1,11 @@
 # Current development status
 
-Published experimental0.9.1 provides the single-entry `python3 provision.py`
-setup wizard, HACS guidance, USB identity/HA-address onboarding and an optional
-NTP choice defaulting to time.nist.gov for both native time sources.
+Published experimental0.10.1 provides the single-entry `python3 provision.py`
+setup wizard, mandatory full-NAND archive, guided selected-file restore, HACS
+onboarding and optional NTP defaulting to time.nist.gov for both native sources.
+Its downloaded46-file integration and343-file installer archive match the tested
+contents and published checksums. CI/hassfest pass and the actual installed HACS
+selection methods choose v0.10.1 without beta flags. Live HA has not been updated.
 
 ## Live owner unit and HA
 
@@ -33,10 +36,10 @@ approval before another agent-executed Core restart. Do not manually reinstall
 or recreate the old profile. There has been no new HA deployment during backup
 work. Whole-chip restoration and hardware power-loss recovery remain unverified.
 
-## 0.10.1 release candidate
+## 0.10.1 published experimental preview
 
 The0.10.0 release was not published: CI caught a compiler test assuming a
-preexisting build directory. The0.10.1 candidate creates that fixture parent
+preexisting build directory. Published0.10.1 creates that fixture parent
 explicitly; no device code or write gate changed.
 
 The owner requests a full NAND backup before provisioning and a guided recovery
