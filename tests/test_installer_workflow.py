@@ -11,6 +11,11 @@ def flow(tmp_path, monkeypatch):
     root.mkdir()
     session = tmp_path / "session"
     calls = []
+    from installer import nand_backup
+
+    monkeypatch.setattr(
+        nand_backup, "check", lambda _: {"status": "synthetic-full-archive-checked"}
+    )
     monkeypatch.setattr(workflow, "checked", lambda *a, **k: (root, session, {}))
     monkeypatch.setattr(workflow, "identity", lambda: "ram")
     monkeypatch.setattr(workflow.core, "checked_pair", lambda *a: ({}, object()))

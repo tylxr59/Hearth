@@ -43,6 +43,11 @@ def test_hacs_and_installer_archives_reproduce_without_private_material(tmp_path
         assert {
             "provision.py",
             "installer/wizard.py",
+            "installer/recovery_wizard.py",
+            "installer/nand_backup.py",
+            "tools/nand_archive/bch-input.json",
+            "tools/nand_archive/verify.py",
+            "firmware/nand_capture/profile.py",
             "installer/wizard_worker.py",
             "provisioning/time_server.py",
             "installer/cli.py",

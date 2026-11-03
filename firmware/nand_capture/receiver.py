@@ -17,6 +17,12 @@ FAILED = b"HEARTH_RAW_CAPTURE_FAILED_V1\n"
 HEADER = struct.Struct("<8s6I")
 PAGES, RECORD, PASSES = 131072, 2112, 2
 START = b"HRTHGO1\n"
+
+
+class CaptureMismatch(ValueError):
+    """Both complete, footer-checked raw passes differ; ECC review is required."""
+
+
 PRIVATE_ROOT = Path(__file__).resolve().parents[2] / "private"
 
 
@@ -189,7 +195,7 @@ def collect(fd, deadline, output, private_root=None):
             "raw-nand-capture-matched" if hashes[0] == hashes[1] else "raw-nand-capture-mismatch"
         )
         if hashes[0] != hashes[1]:
-            raise ValueError("raw NAND capture passes differ; retained privately for review")
+            raise CaptureMismatch("raw NAND capture passes differ; retained privately for review")
     finally:
         storage_error = None
         try:

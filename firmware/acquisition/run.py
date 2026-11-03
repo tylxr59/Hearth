@@ -159,7 +159,7 @@ def receive(fd, deadline, session, output):
             save(output, "incomplete-frame.bin", bytes(decoder.buffer))
 
 
-def run(root, output=None, *, execute=False):
+def run(root, output=None, *, execute=False, handoff_from_nand=None):
     root = private_path(root)
     checked = profile.check(root)
     if not execute:
@@ -169,7 +169,12 @@ def run(root, output=None, *, execute=False):
     output = private_path(output)
     if output.exists() or output.parent.stat().st_mode & 0o077:
         raise ValueError("fresh owner-only acquisition output required")
-    require_native("1-1")
+    if handoff_from_nand is None:
+        require_native("1-1")
+    else:
+        from installer.nand_backup import require_handoff
+
+        require_handoff(handoff_from_nand, output.parent)
     record = json.loads(private_read(root / "profile.json", 65536))
     session = bytes.fromhex(record["session"])
     output.mkdir(mode=0o700)
@@ -192,6 +197,11 @@ def run(root, output=None, *, execute=False):
                 "session": record["session"],
                 "flash_writes": False,
                 "library_scope": list(codec.GROUPS),
+                **(
+                    {"handoff_from_nand": str(private_path(handoff_from_nand))}
+                    if handoff_from_nand is not None
+                    else {}
+                ),
             }
         ),
     )

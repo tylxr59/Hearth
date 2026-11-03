@@ -11,10 +11,10 @@ from firmware.nand_sample import configure
 from firmware.probe import check as probe
 
 
-def finalize(root, base):
+def finalize(root, base, *, verify_only=False):
     root, base = Path(root), Path(base)
     target = root / "probe-manifest.json"
-    if target.exists():
+    if target.exists() and not verify_only:
         raise ValueError("refusing to replace existing manifest")
     probe.check(base)
     if not os.access(root / "artifacts/omap_loader", os.X_OK):
@@ -37,7 +37,25 @@ def finalize(root, base):
         raise ValueError("unexpected whole-chip framing")
     if (root / "serial_observe.py").read_text() != stage.serial_helper():
         raise ValueError("unexpected capture serial helper")
+    from firmware.nand_contract.configure import patch_build_metadata
+
+    metadata = kernel / "scripts/mkcompile_h"
+    if metadata.read_text() != patch_build_metadata(
+        metadata.with_suffix(".hearth-capture-original").read_text()
+    ):
+        raise ValueError("raw capture compile metadata changed")
+    expected_script = (
+        (assets.parent / "nand_metadata/build.sh")
+        .read_text()
+        .replace(
+            "export SOURCE_DATE_EPOCH=1793318400",
+            "export SOURCE_DATE_EPOCH=1793318400\nexport KCONFIG_NOTIMESTAMP=1",
+        )
+    )
+    if (root / "build.sh").read_text() != expected_script:
+        raise ValueError("fixed deterministic capture build script required")
     pairs = [
+        (assets.parent / "nand_contract/configure.py", root / "contract_configure.py"),
         (root / "sample.h", driver.parent / "hearth-sample.h"),
         (assets.parent / "nand_metadata/readonly.h", driver.parent / "hearth-metadata-readonly.h"),
         (assets.parent / "nand_sample/configure.py", root / "sample_configure.py"),
@@ -78,6 +96,10 @@ def finalize(root, base):
             "passes": 2,
         },
     }
+    if verify_only:
+        if json.loads(target.read_bytes()) != record:
+            raise ValueError("full-read build source/artifact manifest changed")
+        return record
     with target.open("x") as stream:
         stream.write(json.dumps(record, sort_keys=True, indent=2) + "\n")
 

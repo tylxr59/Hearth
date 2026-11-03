@@ -1,5 +1,11 @@
 # Recovery
 
+The0.10.0 source preview adds `python3 provision.py --restore` and a full-NAND
+archive before installation. It retains both raw/OOB passes, ECC-derived views,
+quality receipts and the matching public installer source. The guided restore
+uses the checked saved-file images, not a blind whole-chip reflash. Native settings
+changes and incomplete prior writes can still require explicit recovery review.
+
 Keep the private originals, custody receipts, exact plan and matching restore
 profile for each installation. Preserve earlier recovery archives. A commissioning
 bundle is not a firmware backup, and a raw capture is not proof of restoration.

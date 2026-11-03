@@ -5,6 +5,7 @@ import getpass
 import json
 import os
 import pty
+import re
 import select
 import shutil
 import subprocess  # nosec B404
@@ -154,6 +155,7 @@ class Worker:
         cancelled = False
         scan_seen = False
         pending = b""
+        last_record = 0
         last = time.monotonic()
         try:
             with (self.folder / (operation + ".log")).open("xb") as log:
@@ -188,6 +190,17 @@ class Worker:
                                 log.write(data)
                                 log.flush()
                                 pending = (pending + data)[-16384:]
+                                if operation == "nand":
+                                    progress = list(
+                                        re.finditer(
+                                            rb'"records": (\d+), "total_records": 262144', pending
+                                        )
+                                    )
+                                    if progress:
+                                        count = int(progress[-1][1])
+                                        if last_record < count <= 262144:
+                                            print(f"Backup read: {count * 100 // 262144}%")
+                                            last_record = count
                                 if not scan_seen and b"scanning for USB device" in pending:
                                     scan_seen = True
                                     print("The loader is waiting now. " + RESTART)
@@ -207,6 +220,16 @@ class Worker:
                                 ).strip()
                                 == "INSTALL"
                             )
+                            if commit and values.get("backup_session"):
+                                from installer.nand_backup import check as check_backup
+
+                                try:
+                                    check_backup(Path(values["backup_session"]))
+                                except (ValueError, OSError):
+                                    print(
+                                        "Full NAND backup recheck failed. Aborting before writes."
+                                    )
+                                    commit = False
                             engine.decide(
                                 Path(values["output"]),
                                 commit=commit,
@@ -252,7 +275,16 @@ class Worker:
         return json.loads(private_read(self.folder / (operation + "-worker-result.json"), 65536))
 
     def writer(
-        self, profile, recovery, output, *, ask=input, engine=None, entry=None, restart_after=True
+        self,
+        profile,
+        recovery,
+        output,
+        *,
+        ask=input,
+        engine=None,
+        entry=None,
+        restart_after=True,
+        backup_session=None,
     ):
         from firmware.file_writer import run as core
 
@@ -280,6 +312,7 @@ class Worker:
             recovery=str(recovery),
             output=str(output),
             entry={k: str(v) for k, v in (entry or {}).items()},
+            **({"backup_session": str(backup_session)} if backup_session is not None else {}),
         )
         if not workflow.complete(result):
             print(
@@ -301,8 +334,17 @@ def run(*, ask=input, secret=getpass.getpass):
     print(
         "Start with the display detached from its HVAC base and connected to this computer by USB."
     )
-    if ask("Press Enter to begin, or type QUIT: ").strip().upper() == "QUIT":
+    choice = (
+        ask("Press Enter to set up, type RESTORE for a saved installation, or QUIT: ")
+        .strip()
+        .upper()
+    )
+    if choice == "QUIT":
         return 0
+    if choice == "RESTORE":
+        from installer.recovery_wizard import run as recover
+
+        return recover(ask=ask)
     folder = None
     phase = "requirements"
     try:
@@ -335,7 +377,7 @@ def run(*, ask=input, secret=getpass.getpass):
         folder = PRIVATE / name
         build = ROOT / "build" / name
         build.mkdir(mode=0o700, parents=True)
-        print("1/6 Install Hearth in Home Assistant")
+        print("1/7 Install Hearth in Home Assistant")
         print("Open HACS → three-dot menu → Custom repositories.")
         print(f"Add {REPOSITORY} with category Integration; download the latest tagged release.")
         print("Restart HA Core yourself, then return here. Do not manually add a Hearth entry.")
@@ -361,7 +403,8 @@ def run(*, ask=input, secret=getpass.getpass):
             "READ-ME-FIRST.txt",
             (
                 "Private Hearth setup and recovery files. Do not publish this folder.\n"
-                "Keep this folder and the matching installer source version. No complete firmware backup is claimed.\n"
+                "This folder retains the full NAND/OOB archive, ECC views, readable originals and pinned installer source. Whole-chip restoration remains unverified.\n"
+                "Keep the matching build workspace too; portable cold rebuild/restore is not yet implemented.\n"
                 "Never rerun an attempted loader/profile. A failed or interrupted write requires report review.\n"
                 "If installation finishes, selected originals may be restored with the checked kit's reverse-order restore.\n"
                 "Do not run restore-kit blindly after a failure or native settings changes; its strict checks may refuse.\n"
@@ -372,20 +415,33 @@ def run(*, ask=input, secret=getpass.getpass):
         usb_access(folder, ask)
         worker = Worker(folder, build, ask=ask)
         phase = "prepare"
-        print("2/6 Download and build the protected reader. This can take several minutes.")
+        print("2/7 Download and build the protected reader. This can take several minutes.")
         worker.run("prepare")
-        phase = "acquire"
-        print("3/6 Save the original files. This RAM reader cannot write flash.")
+        phase = "nand"
+        print("3/7 Save a full NAND backup (two raw/OOB passes and offline ECC checks).")
+        print(
+            "The read can take up to 20 minutes; offline verification follows. Keep USB connected and the base detached."
+        )
         device_info(
             inspect_disk(disk, sudo_read=True),
             read_bundle(private_read(folder / "commissioning.zip", 65536))[0],
         )
         if ask("Type READY to arm one read-only loader: ").strip() != "READY":
             return 0
+        worker.run("nand")
+        phase = "acquire"
+        print(
+            "4/7 Save readable original files. Stay in RAM; do not restart until the loader is waiting."
+        )
+        if ask("Type READY to arm the original-file reader: ").strip() != "READY":
+            print(
+                "The full backup is saved. Keep USB connected; return to normal startup only after this command exits."
+            )
+            return 0
         worker.run("acquire")
         phase = "kit"
         print(
-            "4/6 Build and verify your private install and restore kit. Keep USB connected; do not reboot."
+            "5/7 Build and verify your private install and restore kit. Keep USB connected; do not reboot."
         )
         # The connectivity check uses HA's plain HTTP frontend, not its TLS listener.
         probe = ask("HA's local plain HTTP port for connectivity checks [8123]: ").strip() or "8123"
@@ -393,7 +449,7 @@ def run(*, ask=input, secret=getpass.getpass):
             raise Invalid("A reachable plain HTTP frontend port is required.")
         worker.run("kit", ntp_server=ntp, probe_port=int(probe))
         phase = "install"
-        print("5/6 Install the checked files in two separately confirmed phases.")
+        print("6/7 Install the checked files in two separately confirmed phases.")
         result = workflow.install(folder / "kit", disk, ask=ask, runner=worker.writer)
         save(folder, "wizard-install-result.json", encode(result))
         if not result.get("complete"):
@@ -401,7 +457,7 @@ def run(*, ask=input, secret=getpass.getpass):
                 "Installation did not finish. Preserve the folder; do not retry old profiles."
             )
         phase = "verify"
-        print("6/6 Return to the normal Nest UI. " + RESTART)
+        print("7/7 Return to the normal Nest UI. " + RESTART)
         ask("Press Enter when the home/attach-to-base screen is back: ")
         print(
             "Disconnect USB, refit the display to its base, and use normal Wi-Fi setup if needed."
@@ -451,7 +507,7 @@ def run(*, ask=input, secret=getpass.getpass):
                 ),
             )
             print(f"Preserve this private folder: {folder}")
-            if phase in ("install", "acquire", "kit"):
+            if phase in ("install", "nand", "acquire", "kit"):
                 print(
                     "Keep USB connected. Check the private report before restarting or trying anything again."
                 )

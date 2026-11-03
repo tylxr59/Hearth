@@ -16,6 +16,11 @@ internal HTTP frontend when that route is available on the thermostat network.
 
 ## Guided setup
 
+The full-NAND archive and `--restore` flow below are in the **0.10.0 source
+preview**, awaiting its supervised archive/handoff test and publication. Published
+0.9.1 has the earlier selected-file backup wizard. Do not expect the new archive
+step in that older download.
+
 Download `hearth-installer-source.zip` from the latest experimental release and
 extract it on the Linux computer connected to your Nest. Open a terminal in that
 folder and run:
@@ -26,7 +31,8 @@ python3 provision.py
 
 The wizard walks through HACS installation, reads the device identity, offers HA's
 local addresses, saves the matching private bundle, builds the protected reader,
-acquires original files, and prepares both install and restore images. It then
+saves two complete raw NAND/OOB passes and matching ECC-derived data views,
+acquires readable original files, and prepares both install and restore images. It then
 runs two checked installation phases, each requiring its own confirmation before
 writing. Finish by reconnecting normal Wi-Fi and checking fresh readings in HA.
 You do not need to assemble the individual commands below. `hearth` or
@@ -44,6 +50,10 @@ these and reports missing requirements; it does not install system packages.
 It runs as your normal user. It may ask permission for a fixed read-only `sudo
 mtype` diagnostic read and for a narrowly scoped root-managed USB access rule.
 It never grants block-device write access or runs the whole wizard as root.
+Allow at least1.2GB for private raw/data backup files, plus space for source/kernel
+builds. The full NAND read can take up to20 minutes; offline verification follows.
+The archive retains unclassified-but-identical ECC chunks unchanged and records
+that limitation. It is not a validated whole-chip restore image.
 The current measured loader is restricted to USB port **1-1**; arbitrary ports,
 other operating systems and other firmware are not supported by this preview.
 
@@ -89,6 +99,26 @@ For source installation, run `python -m tools.package_native_ha build/ha-package
 and copy `build/ha-package/custom_components/hearth` into HA's
 `config/custom_components/`. All required runtime files are included. Restart
 Core once, then add the integration. Do not copy the entire research repository.
+
+## Guided recovery
+
+From the original matching installer source, run:
+
+```sh
+python3 provision.py --restore
+```
+
+Choose the saved `private/setup-…` installation. The wizard checks the full NAND
+archive, original-file custody and matching restore images, then uses separate
+read-only preflight and RESTORE decisions for the two phases. It restores the
+saved original settings and selected system/network files and removes Hearth's
+additions. Later native settings changes can make this exact-restore preview
+refuse; it does not guess new settings or automatically recover partial writes.
+Preserve the source ZIP stored in the private folder **and the matching build
+workspace**. The preview still validates restore images against those build trees;
+automatic relocation/cold reconstruction on another PC is not implemented yet.
+No whole-chip erase/write,
+HA deletion or HVAC control request is included.
 
 ## Automatic USB onboarding
 

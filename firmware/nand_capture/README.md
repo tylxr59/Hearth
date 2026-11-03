@@ -75,3 +75,19 @@ recovered nlclient/osm for static analysis, with zero scanned node/data/dirent
 CRC failures. Four ECC chunks remain unclassified, and restoration is unverified.
 Normal Nest USB returned after the owner restarted. See the
 [measurement and private preservation record](../../docs/research/nand-capture-2026-10-30.md).
+
+## Provisioning archive wrapper
+
+The provisioning wizard now builds a fresh full-read image from pinned public
+sources. The collector's default raw-hash mismatch failure remains unchanged.
+Its typed `CaptureMismatch` is emitted only after both complete passes and the
+checked footer; the archive wrapper then independently verifies pinned public BCH
+analysis before accepting the archive. Storage, transport and incomplete captures
+remain fatal. Both raw/OOB passes are preserved unchanged with two derived data
+views. Unclassified-but-identical ECC chunks are recorded explicitly, never
+labelled ECC verified. A full archive is not proof of whole-chip restoration.
+
+The public wizard binds this archive to the USB-read identity, saves its installer
+source, rechecks all four large files before installation and before commit, and
+uses an explicit checked RAM handoff into original-file acquisition. Whole-chip
+write/erase or bootloader restoration is not exposed by this wrapper.

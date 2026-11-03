@@ -161,3 +161,12 @@ The startup diagnostic's static syscall supervisor, bounded read-only tree reade
 framing and host tests are original MIT code. It reuses the unchanged pinned GPL
 snapshot kernel with a raw newc external initramfs; no additional runtime library
 or upstream implementation is copied. Acquired native logs/settings stay private.
+
+The separate offline verifier in `tools/nand_archive/bch.py` and `verify.py` is
+GPL-2.0-only. It uses public bchlib 2.1.3's generic BCH implementation (Ivan Djelic,
+Parrot S.A.; GPL-2.0-only). The source archive and individual source/license hashes
+are pinned in `tools/nand_archive/bch-input.json`; the standalone verifier is
+built locally and invoked as a separate process. Upstream source/binaries are not
+vendored in the public installer archive. Preserve the upstream COPYING file
+with the local build; the GPL text also ships at `firmware/probe/COPYING.GPL-2.0`.
+This is an offline installer analysis tool, not a Home Assistant dependency.

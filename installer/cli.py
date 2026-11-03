@@ -76,6 +76,7 @@ def execute(
     engine=writer,
     entry=None,
     restart_after=True,
+    backup_session=None,
 ):
     """Run one checked preflight, then ask separately before one scoped commit."""
     profile, recovery, output = map(private_path, (profile, recovery, output))
@@ -111,7 +112,16 @@ def execute(
                     "RAM checks and real-file preflight passed. The next decision writes NAND. Keep USB connected."
                 )
                 answer = ask(f"Type {phrase} to write, or press Enter to abort: ").strip()
-                engine.decide(output, commit=answer == phrase, expected_action=binding.action)
+                commit = answer == phrase
+                if commit and not restore and backup_session is not None:
+                    from installer.nand_backup import check as check_backup
+
+                    try:
+                        check_backup(backup_session)
+                    except (ValueError, OSError):
+                        print("Full NAND backup could not be reverified. Aborting before writes.")
+                        commit = False
+                engine.decide(output, commit=commit, expected_action=binding.action)
                 decided = True
             thread.join(0.2)
     except (KeyboardInterrupt, EOFError):
@@ -148,6 +158,7 @@ def main(argv=None):
     parser = argparse.ArgumentParser(prog="hearth", description="Hearth guided Linux USB installer")
     commands = parser.add_subparsers(dest="command")
     commands.add_parser("wizard")
+    commands.add_parser("restore-wizard")
     commands.add_parser("doctor")
     fetch_sources = commands.add_parser("sources")
     fetch_sources.add_argument("--output", type=Path, required=True)
@@ -214,6 +225,10 @@ def main(argv=None):
     restore.add_argument("--profile", type=Path, required=True)
     restore.add_argument("--output", type=Path, required=True)
     args = parser.parse_args(argv)
+    if args.command == "restore-wizard":
+        from installer.recovery_wizard import run
+
+        return run()
     if args.command in (None, "wizard"):
         from installer.wizard import run
 

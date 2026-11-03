@@ -6,7 +6,7 @@ from pathlib import Path
 
 from firmware.nand_sample import stage as sample
 
-HOST_FILES = sample.HOST_FILES | {"sample_configure.py"}
+HOST_FILES = sample.HOST_FILES | {"sample_configure.py", "contract_configure.py", "build.sh"}
 
 
 def raw_header():
@@ -49,6 +49,14 @@ def stage(nestdfu, xloader, loader, base_build, output):
     output = sample.stage(nestdfu, xloader, loader, base_build, output)
     assets = Path(__file__).resolve().parent
     shutil.copyfile(output / "configure.py", output / "sample_configure.py")
+    shutil.copyfile(assets.parent / "nand_contract/configure.py", output / "contract_configure.py")
+    build_script = (output / "build.sh").read_text()
+    (output / "build.sh").write_text(
+        build_script.replace(
+            "export SOURCE_DATE_EPOCH=1793318400",
+            "export SOURCE_DATE_EPOCH=1793318400\nexport KCONFIG_NOTIMESTAMP=1",
+        )
+    )
     for name, target in (
         ("configure.py", "configure.py"),
         ("init.c", "probe-init.c"),

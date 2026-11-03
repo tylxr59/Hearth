@@ -76,12 +76,15 @@ def setup(tmp_path, monkeypatch):
 @pytest.mark.parametrize("server", ("", "ntp.example.test", "10.0.0.8"))
 def test_single_wizard_routes_selected_time_and_keeps_tokens_out_of_artifacts(setup, server):
     _, private, calls = setup
-    ask = answers("", server, "HA READY", "http://10.0.0.12:8123", "READY", "8123", "", "YES")
+    ask = answers(
+        "", server, "HA READY", "http://10.0.0.12:8123", "READY", "READY", "8123", "", "YES"
+    )
     assert wizard.run(ask=ask, secret=lambda _: "hidden-token") == 0
     folder = next(private.iterdir())
     expected = server or "time.nist.gov"
     assert calls == [
         ("prepare", {}),
+        ("nand", {}),
         ("acquire", {}),
         ("kit", {"ntp_server": expected, "probe_port": 8123}),
     ]
@@ -118,14 +121,14 @@ def test_failed_kit_does_not_run_writer_or_retry(setup, monkeypatch):
     monkeypatch.setattr(wizard.workflow, "install", lambda *a, **kw: pytest.fail("must not write"))
     assert (
         wizard.run(
-            ask=answers("", "", "HA READY", "http://10.0.0.12:8123", "READY", ""),
+            ask=answers("", "", "HA READY", "http://10.0.0.12:8123", "READY", "READY", ""),
             secret=lambda _: "hidden-token",
         )
         == 1
     )
     folder = next(private.iterdir())
     assert json.loads((folder / "wizard-stopped.json").read_bytes())["phase"] == "kit"
-    assert [op for op, _ in calls] == ["prepare", "acquire"]
+    assert [op for op, _ in calls] == ["prepare", "nand", "acquire"]
 
 
 @pytest.mark.parametrize("failure", (False, True))

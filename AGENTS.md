@@ -16,14 +16,12 @@ The historical investigation is archived under `docs/development/history/` and
   owner-confirmed heating idle. The Nov3 stock return restored network4 successfully.
   Core9 reported restored511 with no transaction errors, but final readback failed
   (verified0, safe_to_restart0, diagnostic21). It is exited in protected/sealed RAM
-  mode. The protected read-only snapshot matches all nine original targets and
-  metadata, including absent Hearth additions. The additional protected encoding
-  audit verifies every active stock inode. Its archive codes isolate the old
-  failure to compressed rollback copies for targets0,6,8. No additional writes
-  were made or are needed to test native startup. The audit exited; manual native
-  restart on USB with the HVAC base detached is now the next reviewed step.
-  Native UI return still needs owner confirmation. Do not rewrite the retained
-  incomplete writer report as successful; retain the independent verification.
+  mode. Protected snapshots and an inode encoding audit subsequently verified all
+  active stock files and metadata; the old failure came from compressed archived
+  rollback copies0,6,8. The incomplete writer result remains unchanged. The owner
+  has now confirmed the native home icon and normal USB was independently observed.
+  The display is again connected to this PC by USB with its HVAC base detached.
+  On-base stock UI has not yet been checked. No extra flash write was needed.
   No loader is armed. Do not assume an unwired
   base when it is reattached.
 - For the owner-authorized clean onboarding test, the owner removed the Hearth
@@ -47,9 +45,9 @@ The historical investigation is archived under `docs/development/history/` and
   and327-file installer archive match tested contents and published checksums;
   CI and hassfest pass. The complete stock-device wizard/cleanup3/custom-time
   hardware install and restore remain unmeasured. No new live entry, HA update,
-  Core restart or device write occurred. The owner's stock-return request remains
-  pending; preserved current native settings differ from the old strict restore
-  baseline, so do not bypass that refusal or blindly erase NAND.
+  Core restart or device write occurred during the backup implementation. The
+  selected-file stock return is independently verified as described above;
+  do not bypass restore refusals or blindly erase NAND.
   The live HA instance has not been updated; use HACS for delivery. Obtain
   fresh approval before executing another Core restart. Do not recreate the old
   profile or manually deploy over the HACS test.

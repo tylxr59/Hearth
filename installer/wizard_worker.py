@@ -21,11 +21,32 @@ def work(request):
 
         sources.fetch(build / "sources")
         result = reader.build(build / "sources", build / "reader", session / "reader")
+        from firmware.nand_capture.profile import build as build_nand
+        from tools.nand_archive.build import fetch as build_bch
+        from tools.public_release import release
+
+        build_nand(build / "sources", build / "reader", build / "nand-reader")
+        build_bch(build / "nand-bch")
+        release(build / "recovery-source")
+        save(
+            session,
+            "installer-source.zip",
+            (build / "recovery-source/hearth-installer-source.zip").read_bytes(),
+        )
+    elif operation == "nand":
+        from installer.nand_backup import run
+
+        result = run(session, build / "nand-reader", build / "nand-bch/compiled/libbch.so")
     elif operation == "acquire":
         from firmware.acquisition.run import run
         from installer.corpus import inspect
 
-        result = run(session / "reader", session / "acquisition", execute=True)
+        result = run(
+            session / "reader",
+            session / "acquisition",
+            execute=True,
+            handoff_from_nand=session / "nand",
+        )
         execution = json.loads(private_read(session / "acquisition/execution.json", 65536))
         save(
             session / "acquisition",

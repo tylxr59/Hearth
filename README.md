@@ -68,6 +68,11 @@ python3 provision.py
 
 The wizard explains how to install Hearth through HACS, reads the USB identity,
 offers HA addresses, saves originals and builds the checked install/restore kit.
+The next **0.10.0 source preview** additionally saves full raw NAND/OOB and ECC
+data views before installation and adds `python3 provision.py --restore` for a
+saved installation. Published0.9.1 has the earlier selected-file backup flow.
+Whole-chip restoration remains unverified.
+
 It asks before each device write. Its optional time-server prompt defaults to
 `time.nist.gov` and updates both native time sources. See the
 [setup guide and current hardware limits](docs/installation.md#guided-setup).

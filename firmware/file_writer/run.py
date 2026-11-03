@@ -478,7 +478,7 @@ def run(
         flush=True,
     )
     print(
-        "Keep USB connected and the unwired base detached. Waiting up to 90 seconds for the reviewed ROM restart.",
+        "Keep USB connected and the HVAC base detached. Waiting up to 90 seconds for the reviewed ROM restart.",
         flush=True,
     )
     artifacts = root / "artifacts"

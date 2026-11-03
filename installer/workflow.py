@@ -52,10 +52,10 @@ def fresh(root, role, output):
         )
 
 
-def inspect_native(disk, bundle):
+def inspect_native(disk, bundle, *, sudo_read=False):
     from installer.cli import inspect_disk
 
-    device_info(inspect_disk(disk), bundle)
+    device_info(inspect_disk(disk, sudo_read=sudo_read), bundle)
 
 
 def checked(root, *, for_restore=False):
@@ -80,6 +80,9 @@ def install(root, disk, *, ask=input, runner=None, continue_cleanup=False):
 
     runner = execute if runner is None else runner
     root, session, bundle = checked(root)
+    from installer.nand_backup import check as check_backup
+
+    check_backup(session)
     mode = identity()
     if mode == "native":
         inspect_native(disk, bundle)
@@ -106,6 +109,7 @@ def install(root, disk, *, ask=input, runner=None, continue_cleanup=False):
             ask=ask,
             entry=entry,
             restart_after=False,
+            backup_session=session,
         )
         if not row.get("cancelled"):
             save(root, "commissioning-outcome.json", encode(row))
@@ -117,6 +121,7 @@ def install(root, disk, *, ask=input, runner=None, continue_cleanup=False):
         record, binding = cleanup.checked_pair(root / "cleanup-install", root / "cleanup-restore")
         chain.commissioning_to_cleanup(record, binding, first)
         entry = {"handoff_from_commissioning": first}
+    check_backup(session)
     print("Step2/2: redirect connectivity checks and time locally (three disjoint files).")
     row = runner(
         root / "cleanup-install",
@@ -126,6 +131,7 @@ def install(root, disk, *, ask=input, runner=None, continue_cleanup=False):
         engine=network_engine(),
         entry=entry,
         restart_after=True,
+        backup_session=session,
     )
     if not row.get("cancelled"):
         save(root, "cleanup-outcome.json", encode(row))
@@ -137,7 +143,7 @@ def install(root, disk, *, ask=input, runner=None, continue_cleanup=False):
     }
 
 
-def restore(root, disk, *, phase="all", ask=input, runner=None):
+def restore(root, disk, *, phase="all", ask=input, runner=None, sudo_read=False):
     from installer.cli import execute
 
     if phase not in ("all", "cleanup", "commissioning"):
@@ -146,7 +152,7 @@ def restore(root, disk, *, phase="all", ask=input, runner=None):
     root, _, bundle = checked(root, for_restore=True)
     mode = identity()
     if mode == "native":
-        inspect_native(disk, bundle)
+        inspect_native(disk, bundle, **({"sudo_read": True} if sudo_read else {}))
     if phase in ("all", "cleanup"):
         fresh(root, "cleanup-restore", root / "restore-cleanup")
     if phase in ("all", "commissioning"):
