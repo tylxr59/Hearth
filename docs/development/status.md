@@ -154,3 +154,17 @@ The owner requests full NAND backup as the pre-install recovery archive. Planned
 provisioning must preserve raw data/OOB, ECC and bad-block metadata plus validated
 readable originals. A capture alone does not validate full-chip restoration;
 routine recovery should remain scoped until boot-critical restoration is measured.
+
+The protected post-restore capture completed without writes. All nine targets
+match original bytes/existence/modes/ownership exactly, including absent Hearth
+library/launcher. Final encoding verification is being isolated with a new
+write-disabled parent kernel plus only the existing read-only inode ioctl. Its
+fixed static supervisor reports selected-file and legacy-archive encoding codes
+separately and re-captures originals.29 focused tests pass; all eight artifacts
+reproduce. No native boot or further write is authorized automatically.
+
+The protected encoding audit passes the complete host suite:1,755 passed, five
+optional skips. Formatting/static/security checks pass. Both encoded profiles
+retain the protected parent's write-denying callbacks/configuration and reproduce
+all eight artifacts; the single ioctl extension is checked against original
+source. Neither encoding profile has run; owner readiness is required next.
