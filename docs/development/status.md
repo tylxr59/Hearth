@@ -1,5 +1,16 @@
 # Current development status
 
+The fresh preflight-only resource run has exited0 and confirmed space refusal42:
+RAM free50,913,280 bytes; root0 available13,201,408 versus required19,534,505.
+No commit/remount/program/erase/marker occurred, phase2/protected1 and
+safe_to_restart1. The first commissioning phase remains verified; cleanup3 has
+not installed. No loader is armed. Native USB restart is the next owner action.
+Offline inventory of the newly saved corrected NAND view finds one older rollback
+archive (5,822,879 file bytes); all four originals match the earlier preserved host
+backup. This is not a live deletion preflight, and no archive deletion is authorized
+or executed. Preserve all reports, current recovery data and source versions.
+
+
 The owner's continued stock-device wizard has now preserved a full NAND archive,
 acquired readable originals and built its kit. Commissioning9 committed and
 verified successfully. Cleanup3 passed all61 RAM checks but refused its initial

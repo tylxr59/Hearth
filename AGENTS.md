@@ -79,6 +79,11 @@ The historical investigation is archived under `docs/development/history/` and
   retained and the HVAC base remains detached. Do not rerun attempted phases.
   Fresh preflight-only resource images are prepared/reproduced but not executed;
   obtain owner readiness before arming. Original reports and source are retained.
+  That diagnostic has since exited0, sealed/protected with no writes. It measured
+  space refusal42: available13,201,408 versus required19,534,505 bytes; RAM free
+  50,913,280. Safe_to_restart1; native USB restart is the next owner action.
+  Offline NAND inventory finds one old rollback archive, with all four originals
+  matching earlier host backups; no deletion/live deletion preflight is authorized.
 - The owner authorizes local implementation, docs, packaging, tests and commits/
   pushes. The current public-product work does not authorize another HA Core
   restart, a new persistent device write or an intentional HVAC call.
