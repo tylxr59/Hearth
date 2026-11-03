@@ -31,7 +31,15 @@ The historical investigation is archived under `docs/development/history/` and
   retained profile is known yet. Published0.8.1 adds HA-interface suggestions and
   the PC-side USB-to-HA onboarding command. Its46-file published ZIP and source
   archive match the tested inputs, and normal HACS selection chooses v0.8.1.
-  The live HA instance has not been updated to it; use HACS for delivery. Obtain
+  Published0.9.1 adds the single-entry provisioning wizard and configurable
+  primary/fallback NTP (default time.nist.gov). Its downloaded46-file integration
+  and327-file installer archive match tested contents and published checksums;
+  CI and hassfest pass. The complete stock-device wizard/cleanup3/custom-time
+  hardware install and restore remain unmeasured. No new live entry, HA update,
+  Core restart or device write occurred. The owner's stock-return request remains
+  pending; preserved current native settings differ from the old strict restore
+  baseline, so do not bypass that refusal or blindly erase NAND.
+  The live HA instance has not been updated; use HACS for delivery. Obtain
   fresh approval before executing another Core restart. Do not recreate the old
   profile or manually deploy over the HACS test.
 - The owner authorizes local implementation, docs, packaging, tests and commits/

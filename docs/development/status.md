@@ -1,5 +1,15 @@
 # Current development status
 
+Published experimental0.9.1 provides the single-entry `python3 provision.py`
+wizard and the optional NTP choice (default time.nist.gov), applied to both native
+time sources. Its release gates passed:1,709 CI tests passed,13 optional/platform
+tests skipped, and hassfest reported zero invalid integrations. Downloaded assets
+have verified published checksums; all46 integration files and327 installer-source
+files match the locally tested contents. Compressed ZIP bytes vary across zlib
+versions; both local and CI builds reproduce independently. The full combined
+stock-device wizard/custom-NTP install and restore remain unmeasured. No live HA
+or thermostat changes were made. The owner's stock-return request is still pending.
+
 The owner installation last ran configured HA0.6.9 with a Gen2 Display-2.6 on primary5.9.4-5.
 For the clean onboarding test, the owner removed the Hearth entry through HA;
 its retained profile/state was archived with exact readback and the live profile
