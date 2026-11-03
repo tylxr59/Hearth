@@ -336,6 +336,17 @@ static int activate(void *opaque,unsigned int index)
 done:
     close(directory);return result;
 }
+static int restore_replacement(struct hearth_posix_context *c,unsigned int index,int directory,const char *name)
+{
+    const struct hearth_file_change *f=&c->changes[index];
+    if(!contents(directory,name,f->replacement,f->replacement_mode,c)) return 0;
+#ifndef HEARTH_NETWORK_ADAPTER
+    if(c->count==9&&f->target==HEARTH_SETTINGS&&c->restore_settings.data&&
+       c->restore_settings.size&&c->restore_settings.size<=HEARTH_FILE_BYTES)
+        return contents(directory,name,c->restore_settings,f->replacement_mode,c);
+#endif
+    return -1;
+}
 static int restore_checked(void *opaque,unsigned int index,int allow_missing)
 {
     struct hearth_posix_context *c=opaque;const struct hearth_file_change *f=&c->changes[index];
@@ -343,7 +354,7 @@ static int restore_checked(void *opaque,unsigned int index,int allow_missing)
     if(directory<0) return -1;
     if(!check_original(c,index,directory,name)) { result=0;goto done; }
     if(!(allow_missing&&f->existed&&absent(directory,name)==1)&&
-       contents(directory,name,f->replacement,f->replacement_mode,c)) goto done;
+       restore_replacement(c,index,directory,name)) goto done;
     if(!f->existed) {
         if(unlinkat(directory,name,0)||fsync(directory)) goto done;
     } else {
@@ -437,6 +448,11 @@ static int restore_preflight(struct hearth_posix_context *c,unsigned int missing
     char archive[96];const char *saved;
     if(!c||c->recovery!=-1||!c->count||c->count>HEARTH_FILE_LIMIT||
        (missing_restored&~(1U<<HEARTH_SETTINGS))) return HEARTH_INVALID_PLAN;
+ #ifndef HEARTH_NETWORK_ADAPTER
+    if((c->restore_settings.data||c->restore_settings.size)&&
+       (c->count!=9||!c->restore_settings.data||!c->restore_settings.size||
+        c->restore_settings.size>HEARTH_FILE_BYTES)) return HEARTH_INVALID_PLAN;
+ #endif
     for(i=0;i<c->count;i++) if(valid_change(c,i)) return HEARTH_INVALID_PLAN;
     saved=recovery_name(c,archive);if(!saved) return HEARTH_INVALID_PLAN;
     if(local_root(c,c->roots[0])||local_root(c,c->roots[1])) goto invalid;
@@ -459,7 +475,7 @@ static int restore_preflight(struct hearth_posix_context *c,unsigned int missing
                  * absent. Only durable intent plus an exact backup permits
                  * reconstructing that specific existing target. */
                 c->created[i]|=8U;
-            } else if(contents(directory,name,f->replacement,f->replacement_mode,c)) goto checked;
+            } else if(restore_replacement(c,i,directory,name)) goto checked;
             if(f->existed) {
                 backup_name(i,backup);
                 if(contents(c->recovery,backup,f->original,0600,c)) goto checked;

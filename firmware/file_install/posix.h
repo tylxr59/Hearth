@@ -26,6 +26,8 @@ struct hearth_posix_context {
     unsigned char plan_id[32];
     /* 0: legacy fixed archive; 1: immutable plan-derived archive name. */
     unsigned int archive_layout;
+    /* Restore-only exact settings observation; zero for ordinary install/restore. */
+    struct hearth_file_bytes restore_settings;
 };
 extern const struct hearth_file_ops hearth_posix_file_ops;
 /* Explicit interrupted-install restoration from an exact caller-supplied plan.

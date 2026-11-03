@@ -70,12 +70,14 @@ def completed(previous, engine, action, count):
     selftest = private_read(previous / "selftest.jsonl", 32768)
     if count == 9:
         protocol.validate_selftest(selftest)
-    elif count == 3:
+    elif count in (3, 4):
         from firmware.network_writer.session import selftest as validate_selftest
 
         validate_selftest(selftest)
     else:
-        raise ValueError("only the disjoint commissioning9 and cleanup3 phases may chain")
+        raise ValueError(
+            "only the reviewed commissioning9, cleanup3 and legacy network4 phases may chain"
+        )
     result = protocol.validate_result(
         private_read(previous / "result.json", 16384), action, target_count=count
     )
@@ -138,3 +140,29 @@ def cleanup_restore_to_commissioning(
         "status": "verified-cleanup-to-original-restoration-handoff",
         "native_startup_required": False,
     }
+
+
+def legacy_network_restore_to_stock(
+    record, binding, previous, *, sysfs=Path("/sys/bus/usb/devices")
+):
+    """Owner legacy4 overlap: network original3 must be core installed8 exactly."""
+    from firmware.file_writer.restore_settings import check
+    from firmware.network_writer import run
+
+    admission = record.get("restore_observation")
+    if binding.action != 2 or admission is None:
+        raise ValueError("explicit observed-settings original restoration required")
+    check(admission, record["capsule"], record["pin"])
+    prior = completed(previous, run, 2, 4)
+    if (
+        prior.get("targets", 4) != 4
+        or prior["libraries"] != record["base"]
+        or prior["plan_path"] != admission["network"]
+        or prior["backup"] != admission["network_backup"]
+        or prior["pin"] != admission["network_pin"]
+    ):
+        raise ValueError("exact observed legacy network restoration required")
+    # check() verifies independently preserved acquisition, every installed file,
+    # both plans/custody and the exact restored overlap before admitting settings.
+    ram(sysfs)
+    return {"status": "verified-legacy-network-to-stock-handoff", "native_startup_required": False}

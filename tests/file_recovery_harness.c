@@ -121,6 +121,21 @@ static int recovery_scenario_main(int argc,char **argv)
         assert(read(fd,record,sizeof(record))==(ssize_t)sizeof(record)&&record[4]==HEARTH_COMMITTED);
         assert(close(fd)==0&&close(c.recovery)==0);c.recovery=-1;
     }
+    if(recovery_case==0||recovery_case==24) {
+        static const unsigned char observed[]="exact separately observed native preferences";
+        write_file(c.roots[1],paths[7],observed,sizeof(observed)-1,new_modes[7]);
+        /* Ordinary recovery still refuses unknown settings before any writes. */
+        assert(hearth_posix_restore_preflight(&c)==HEARTH_PREFLIGHT_FAILED);
+        if(c.recovery>=0) { assert(close(c.recovery)==0);c.recovery=-1; }
+        c.restore_settings=(struct hearth_file_bytes){observed,sizeof(observed)-1};
+        assert(hearth_posix_restore_preflight(&c)==0);
+        check_file(c.roots[1],paths[7],observed,sizeof(observed)-1,new_modes[7]);
+        assert(close(c.recovery)==0);c.recovery=-1;
+        c.restore_settings.size--;
+        assert(hearth_posix_restore_preflight(&c)==HEARTH_PREFLIGHT_FAILED);
+        if(c.recovery>=0) { assert(close(c.recovery)==0);c.recovery=-1; }
+        c.restore_settings.size++;
+    }
     r=hearth_posix_restore_files(&c);
     if(recovery_case==23) {
         assert(r.error==HEARTH_ROLLBACK_FAILED&&r.rollback_error&&!r.committed&&!r.journal_error);

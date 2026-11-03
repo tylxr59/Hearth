@@ -125,3 +125,18 @@ The0.9.0 release run was cancelled before publication during final USB-rule revi
 The corrected wizard pins udev's root-executed ACL helper to the root-managed
 /usr/bin/setfacl, refusing symlinks or writable/non-root-owned executables.
 It never embeds a helper selected from a user-controlled PATH in a root rule.
+
+Stock return preparation now builds fresh network4 and original core9 restore
+images. A restore-only admission binds the exact later native settings observation
+through independent acquisition custody, both old plans and the legacy client-file
+overlap. Unknown bytes still fail; original backups/journals and all other file
+checks remain required. RAM recovery cases additionally exercise this admission.
+Both fresh images reproduce offline. No loader or write has run during preparation.
+The owner's additional request is to integrate a guided backup/restore path into
+provisioning. Selected-file recovery can be carried into that UI; a full NAND copy
+must not be described as a tested boot-critical/full-chip restoration procedure.
+
+Stock-return offline validation:1,738 host tests pass with five optional skips;
+static checks and the pinned real HA sandbox pass (24 native round trips plus
+admin onboarding). Both fresh core/network restore profiles pass the full check
+and reproduce every artifact. They remain unused, with no loader armed.

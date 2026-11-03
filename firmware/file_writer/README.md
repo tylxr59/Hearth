@@ -109,3 +109,19 @@ identity. It does not grant persistent-write permission. It avoids another nativ
 startup changing settings between capture and the separate installation preflight.
 The owner still performs one reviewed restart into the new loader; there is no
 automatic retry. Keep the old archive and all historical private evidence intact.
+
+## Exact observed native settings during stock return
+
+An explicit restore-only helper may include a separately preserved current settings
+file from a custody-verified acquisition. This does not replace the original plan,
+original backup, journal or ordinary current-file checks. The additional candidate
+applies only to settings target7 and requires exact bytes and original metadata;
+all other targets retain their strict checks. Install/reencode profiles cannot use
+this admission. The existing RAM recovery cases exercise unknown-settings refusal,
+exact observation acceptance, changed-observation refusal and original restoration.
+
+The measured owner's legacy network4 update overlaps commissioning target8. Its
+new guarded RAM handoff requires the complete sealed network restore, exact plans,
+custody, preserved library source and proof that network original3 is commissioning
+replacement8. This path is separate from the public disjoint cleanup3 workflow.
+It does not authorize a whole-NAND restore or erase the user's settings implicitly.

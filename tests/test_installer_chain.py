@@ -109,7 +109,7 @@ def test_acquisition_handoff_refuses_stale_or_unrelated_capture(acquisition, fau
         chain.acquisition_install(record, binding, acquired, sysfs=sysfs)
 
 
-@pytest.fixture(params=(9, 3))
+@pytest.fixture(params=(9, 3, 4))
 def finished_phase(tmp_path, monkeypatch, request):
     from tools import elf_review
 

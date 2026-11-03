@@ -366,6 +366,9 @@ def package(kernel_root, base, helpers, capsule, pin, output, action):
         "reencode-init",
     }:
         raise ValueError("unexpected original helper set")
+    from firmware.file_writer.restore_settings import check_helpers
+
+    admission = check_helpers(compiled, helpers, capsule, pin, action)
     programs = {name: read_build(helpers / name, 2 * 1024 * 1024) for name in compiled["files"]}
     if any(sha(data) != compiled["files"][name] for name, data in programs.items()):
         raise ValueError("original action helper bytes changed")
@@ -428,6 +431,8 @@ def package(kernel_root, base, helpers, capsule, pin, output, action):
         "files": {name: sha(data) for name, data in files.items()},
         "root_inventory": inventory(entries),
     }
+    if admission is not None:
+        record["restore_observation"] = admission
     path = output / "file-action-profile.json"
     path.write_text(json.dumps(record, sort_keys=True, indent=2) + "\n")
     path.chmod(0o600)
@@ -495,6 +500,11 @@ def check(root):
         != sha(private_read(Path(record["capsule"]) / "capsule.h", 96 * 1024 * 1024))
     ):
         raise ValueError("file-action original helper compilation changed")
+    from firmware.file_writer.restore_settings import check_helpers
+
+    admission = check_helpers(compiled, helpers, record["capsule"], record["pin"], record["action"])
+    if record.get("restore_observation") != admission:
+        raise ValueError("profile observed-settings admission changed")
     action_name = {1: "file-install", 2: "file-restore", 3: "file-reencode"}[record["action"]]
     init_name = {1: "install-init", 2: "restore-init", 3: "reencode-init"}[record["action"]]
     expected_programs = {

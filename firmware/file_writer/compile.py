@@ -21,6 +21,7 @@ SOURCES = (
     "firmware/file_writer/lifecycle.c",
     "firmware/file_writer/lifecycle.h",
     "firmware/file_writer/compile.py",
+    "firmware/file_writer/restore_settings.py",
     "firmware/file_install/posix.c",
     "firmware/file_install/posix.h",
     "firmware/file_install/transaction.c",
@@ -91,7 +92,7 @@ def source_hashes():
     return {name: sha((ROOT / name).read_bytes()) for name in SOURCES}
 
 
-def compile_helpers(output, capsule, pin):
+def compile_helpers(output, capsule, pin, *, restore_observation=None):
     output, capsule = Path(output).resolve(), Path(capsule).resolve()
     plan = pin_read(pin)
     check_capsule(capsule, expected_plan=plan)
@@ -103,6 +104,10 @@ def compile_helpers(output, capsule, pin):
         path = output / name
         path.write_bytes(data)
         path.chmod(0o600)
+    if restore_observation is not None:
+        from firmware.file_writer.restore_settings import check
+
+        (output / "restore-settings.h").write_bytes(check(restore_observation, capsule, pin))
     common = [
         "clang",
         "--target=arm-linux-gnueabihf",
@@ -142,6 +147,11 @@ def compile_helpers(output, capsule, pin):
             + entry
             + [
                 "-DHEARTH_FILE_ACTION=" + str(action),
+                *(
+                    ["-DHEARTH_RESTORE_SETTINGS"]
+                    if action == 2 and restore_observation is not None
+                    else []
+                ),
                 *[
                     str(ROOT / name)
                     for name in (
@@ -200,6 +210,8 @@ def compile_helpers(output, capsule, pin):
         "stub_not_for_target": True,
         "files": {name: sha((output / name).read_bytes()) for name in names},
     }
+    if restore_observation is not None:
+        record["restore_observation"] = restore_observation
     path = output / "helpers.json"
     path.write_text(json.dumps(record, sort_keys=True, indent=2) + "\n")
     for path in output.iterdir():
