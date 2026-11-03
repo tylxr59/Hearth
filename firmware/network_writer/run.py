@@ -32,6 +32,8 @@ def checked_pair(root, recovery):
         for k in ("kernel", "libraries", "plan_path", "backup", "pin", "plan", "receipt", "recipes")
     ):
         raise ValueError("matching fully checked four-file restore profile required")
+    if record.get("shared_archive") != restore.get("shared_archive"):
+        raise ValueError("matching shared-original install/restore binding required")
     if record.get("targets", 4) != restore.get("targets", 4):
         raise ValueError("matching install/restore target scope required")
     return record, protocol.Binding(
@@ -115,8 +117,9 @@ def boot(
     }
     shared.save(root, "execution-started.json", shared.encode(execution))
     shared.save(output, "execution.json", shared.encode(execution))
+    cases = 81 if record.get("shared_archive") else 61
     print(
-        f"EXPERIMENTAL {record.get('targets', 4)}-FILE NETWORK UPDATE: root0-only write-capable kernel, initially protected.61 RAM checks then real-file/space/memory preflight; separate scoped commit required. Keep USB connected and base detached. Whole-firmware recovery remains unverified.",
+        f"EXPERIMENTAL {record.get('targets', 4)}-FILE NETWORK UPDATE: root0-only write-capable kernel, initially protected.{cases} RAM checks then real-file/space/memory preflight; separate scoped commit required. Keep USB connected and base detached. Whole-firmware recovery remains unverified.",
         flush=True,
     )
     print("Waiting up to90 seconds for the reviewed manual ROM restart.", flush=True)
@@ -154,8 +157,9 @@ def boot(
                     save,
                     target_count=record.get("targets", 4),
                     preflight_only=record.get("preflight_only", False),
+                    shared_originals="shared_archive" in record,
                 ),
-                ready_message=f"All61 RAM checks and {record.get('targets', 4)} real-file/resource preflights passed. Paused before writes; waiting for separate local commit/abort.",
+                ready_message=f"All{cases} RAM checks and {record.get('targets', 4)} real-file/resource preflights passed. Paused before writes; waiting for separate local commit/abort.",
             )
 
         row = observe("1-1", 120, receive_fn=collect)

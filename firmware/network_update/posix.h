@@ -16,6 +16,9 @@ typedef __SIZE_TYPE__ hearth_file_size;
 /* Sentinel outside the four targets: every selected path is rooted at roots[0].
  * roots[1] is a second descriptor for the SAME root0, used only for its archive. */
 #define HEARTH_SETTINGS 4
+#ifdef HEARTH_NETWORK_SHARED_BACKUPS
+#include "../network_writer/shared.h"
+#endif
 struct hearth_file_bytes { const unsigned char *data;hearth_file_size size; };
 struct hearth_file_change {
  unsigned int target;int existed;
@@ -28,6 +31,9 @@ struct hearth_posix_context {
  const struct hearth_file_change *changes;
  unsigned int created[HEARTH_FILE_LIMIT];int journal_temporary;
  unsigned char plan_id[32];unsigned int archive_layout;
+#ifdef HEARTH_NETWORK_SHARED_BACKUPS
+ const struct hn_shared_archive *shared;
+#endif
 };
 static const char *const hearth_target_paths[HEARTH_TARGET_COUNT]={"nestlabs/sbin/nlclient","usr/sbin/connmand","etc/connman/main.conf"
 #if HEARTH_TARGET_COUNT == 4

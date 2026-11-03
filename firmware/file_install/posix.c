@@ -22,6 +22,7 @@ extern int openat(int,const char *,int,...),close(int),fsync(int);
 extern int fchmod(int,unsigned int),fchown(int,unsigned int,unsigned int);
 extern int mkdirat(int,const char *,unsigned int);
 extern int renameat(int,const char *,int,const char *),unlinkat(int,const char *,int);
+extern int linkat(int,const char *,int,const char *,int);
 extern long read(int,void *,hearth_file_size),write(int,const void *,hearth_file_size);
 extern long syscall(long,...);
 extern long flistxattr(int,char *,hearth_file_size);
@@ -43,7 +44,11 @@ extern int *__errno_location(void);
 #define H_DIRECTORY O_DIRECTORY
 #define H_NOFOLLOW O_NOFOLLOW
 #endif
-struct metadata { unsigned int mode,links,owner,group; unsigned long long size; };
+struct metadata { unsigned int mode,links,owner,group; unsigned long long size;
+#ifdef HEARTH_NETWORK_SHARED_BACKUPS
+ unsigned long long device,inode;
+#endif
+};
 #ifndef HEARTH_NETWORK_ADAPTER
 #include "targets.h"
 #endif
@@ -74,12 +79,19 @@ static int metadata(int fd,struct metadata *m)
     if(fstat(fd,&s)) return -1;
     m->mode=s.st_mode; m->links=s.st_nlink; m->owner=s.st_uid;
     m->group=s.st_gid; m->size=(unsigned long long)s.st_size;
+#ifdef HEARTH_NETWORK_SHARED_BACKUPS
+    m->device=s.st_dev;m->inode=s.st_ino;
+#endif
 #else
     unsigned long long buffer[16];
     unsigned char *b=(unsigned char *)buffer;
     if(syscall(197,fd,buffer)) return -1; /* ARM fstat64 */
     m->mode=word(b+16);m->links=word(b+20);m->owner=word(b+24);m->group=word(b+28);
     m->size=(unsigned long long)word(b+48)|((unsigned long long)word(b+52)<<32);
+#ifdef HEARTH_NETWORK_SHARED_BACKUPS
+    m->device=(unsigned long long)word(b)|((unsigned long long)word(b+4)<<32);
+    m->inode=(unsigned long long)word(b+96)|((unsigned long long)word(b+100)<<32);
+#endif
 #endif
     return 0;
 }
@@ -150,8 +162,8 @@ static int no_attributes(int fd)
     return count==0 ? 0 : -1;
 #endif
 }
-static int contents(int directory,const char *name,struct hearth_file_bytes bytes,
-                    unsigned int mode,struct hearth_posix_context *c)
+static int contents_links(int directory,const char *name,struct hearth_file_bytes bytes,
+                    unsigned int mode,struct hearth_posix_context *c,unsigned int links)
 {
     unsigned char buffer[1024]; hearth_file_size at=0; int result=-1;
     struct metadata m;
@@ -159,7 +171,7 @@ static int contents(int directory,const char *name,struct hearth_file_bytes byte
     if(entry(directory,name,&m)||(m.mode&0170000)!=0100000) return -1;
     fd=openat(directory,name,H_RDONLY|H_NONBLOCK|H_NOFOLLOW|H_CLOEXEC);
     if(fd<0) return -1;
-    if(metadata(fd,&m)||(m.mode&0170000)!=0100000||m.links!=1||m.owner!=c->owner||
+    if(metadata(fd,&m)||(m.mode&0170000)!=0100000||m.links!=links||m.owner!=c->owner||
        m.group!=c->group||(m.mode&07777)!=mode||m.size!=bytes.size) goto done;
     /* Production requires observable attributes; only the explicit synthetic
      * RAM build accepts EOPNOTSUPP from a RAM filesystem. */
@@ -177,6 +189,16 @@ static int contents(int directory,const char *name,struct hearth_file_bytes byte
 done:
     if(close(fd)) result=-1;
     return result;
+}
+static int contents(int directory,const char *name,struct hearth_file_bytes bytes,
+                    unsigned int mode,struct hearth_posix_context *c)
+{ return contents_links(directory,name,bytes,mode,c,1); }
+static int backup_contents(struct hearth_posix_context *c,unsigned int index,const char *name)
+{
+#ifdef HEARTH_NETWORK_SHARED_BACKUPS
+    if(c->shared) return hn_shared_contents(c,index,name);
+#endif
+    return contents(c->recovery,name,c->changes[index].original,0600,c);
 }
 static int append(char *name,const char *tail)
 {
@@ -307,6 +329,10 @@ static int stage(void *opaque,unsigned int index)
     if(check_original(c,index,directory,name)) goto done;
     if(f->existed) {
         backup_name(index,backup);
+#ifdef HEARTH_NETWORK_SHARED_BACKUPS
+        if(c->shared) { if(hn_shared_stage(c,index,backup)) goto done; }
+        else
+#endif
         if(create_file(c,c->recovery,backup,f->original,0600,&c->created[index],1)) goto done;
     }
     if(append(name,suffix)||create_file(c,directory,name,f->replacement,f->replacement_mode,&c->created[index],2)) goto done;
@@ -359,7 +385,7 @@ static int restore_checked(void *opaque,unsigned int index,int allow_missing)
         if(unlinkat(directory,name,0)||fsync(directory)) goto done;
     } else {
         backup_name(index,backup);
-        if(contents(c->recovery,backup,f->original,0600,c)) goto done;
+        if(backup_contents(c,index,backup)) goto done;
         for(i=0;(temporary[i]=name[i]);i++) {}
         if(append(temporary,restore_suffix)||create_file(c,directory,temporary,f->original,f->original_mode,&c->created[index],4)) goto done;
         if(renameat(directory,temporary,directory,name)) goto done;
@@ -478,7 +504,7 @@ static int restore_preflight(struct hearth_posix_context *c,unsigned int missing
             } else if(restore_replacement(c,i,directory,name)) goto checked;
             if(f->existed) {
                 backup_name(i,backup);
-                if(contents(c->recovery,backup,f->original,0600,c)) goto checked;
+                if(backup_contents(c,i,backup)) goto checked;
             }
         }
         for(j=0;(temporary[j]=name[j]);j++) {}
@@ -510,6 +536,16 @@ struct hearth_install_result hearth_posix_restore_files(struct hearth_posix_cont
      * decide whether each original already exists or needs restoration. */
     r.attempted=(1U<<c->count)-1;
     if(journal(c,HEARTH_RESTORING,r.attempted)) r.journal_error=1;
+#ifdef HEARTH_NETWORK_SHARED_BACKUPS
+    if(c->shared) for(i=0;i<c->count;i++) {
+        char backup[16];int missing;backup_name(i,backup);missing=absent(c->recovery,backup);
+        /* A failed staging phase may have created only a prefix of references.
+         * Exact preflight proved the original data before this write window. */
+        if(missing<0||(missing&&hn_shared_stage(c,i,backup))) {
+            r.error=HEARTH_STAGE_FAILED;r.rollback_error=1;return r;
+        }
+    }
+#endif
     for(i=c->count;i;i--) {
         unsigned int index=i-1,staged=c->created[index]&2U;
         /* Only clear a verified interrupted restore temporary before retry.
@@ -525,3 +561,6 @@ struct hearth_install_result hearth_posix_restore_files(struct hearth_posix_cont
     if(r.rollback_error) r.error=HEARTH_ROLLBACK_FAILED;
     return r;
 }
+#ifdef HEARTH_NETWORK_SHARED_BACKUPS
+#include "../network_writer/shared.c"
+#endif

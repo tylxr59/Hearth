@@ -325,7 +325,7 @@ class Worker:
         return result
 
 
-def run(*, ask=input, secret=getpass.getpass, prepared=None):
+def run(*, ask=input, secret=getpass.getpass):
     print("Hearth setup — experimental Gen 2 / Display-2.6 / primary 5.9.4-5 only")
     print(
         "This guides you through HACS, original-file backup and a checked local-service installation."
@@ -335,13 +335,9 @@ def run(*, ask=input, secret=getpass.getpass, prepared=None):
         "Start with the display detached from its HVAC base and connected to this computer by USB."
     )
     choice = (
-        ""
-        if prepared is not None
-        else (
-            ask("Press Enter to set up, type RESTORE for a saved installation, or QUIT: ")
-            .strip()
-            .upper()
-        )
+        ask("Press Enter to set up, type RESTORE for a saved installation, or QUIT: ")
+        .strip()
+        .upper()
     )
     if choice == "QUIT":
         return 0
@@ -373,68 +369,54 @@ def run(*, ask=input, secret=getpass.getpass, prepared=None):
             info = inspect_disk(disk, sudo_read=True)
         device_info(info)
         print("A supported thermostat is connected. Its identifier will stay private.")
-        if prepared is not None:
-            from installer.prepared import load
-
-            phase = "prepared-check"
-            folder, build, ntp = load(Path(prepared).absolute(), info)
-            print(
-                "Existing HA setup and unused reader builds verified; no build or device attempt is repeated."
-            )
-            worker = Worker(folder, build, ask=ask)
-        else:
-            ntp = choose_time(ask)
-            PRIVATE.mkdir(mode=0o700, exist_ok=True)
-            if PRIVATE.is_symlink() or PRIVATE.stat().st_mode & 0o077:
-                raise Invalid("The private folder must be owner-only and must not be a symlink.")
-            name = "setup-" + datetime.now().strftime("%Y%m%d-%H%M%S-") + uuid.uuid4().hex[:8]
-            folder = PRIVATE / name
-            build = ROOT / "build" / name
-            build.mkdir(mode=0o700, parents=True)
-            print("1/7 Install Hearth in Home Assistant")
-            print("Open HACS → three-dot menu → Custom repositories.")
-            print(
-                f"Add {REPOSITORY} with category Integration; download the latest tagged release."
-            )
-            print("Restart HA Core yourself, then return here. Do not manually add a Hearth entry.")
-            if (
-                ask(
-                    "Type HA READY when HACS installation and the Core restart are complete: "
-                ).strip()
-                != "HA READY"
-            ):
-                return 0
-            ha_url = ask("Home Assistant address (the URL you use to open HA): ").strip()
-            print(
-                "In your HA profile → Security, create a temporary long-lived access token as an administrator."
-            )
-            print("Paste it at the hidden prompt. It is used only for setup and is never saved.")
-            token = secret("Temporary HA administrator token (hidden): ")
-            phase = "ha-setup"
-            result = onboard.onboard(ha_url, token, folder, info, ask=ask)
-            del token
-            if result.get("cancelled"):
-                return 0
-            save(folder, "wizard-settings.json", encode({"ntp_server": ntp, "ha_url": ha_url}))
-            save(
-                folder,
-                "READ-ME-FIRST.txt",
-                (
-                    "Private Hearth setup and recovery files. Do not publish this folder.\n"
-                    "This folder retains the full NAND/OOB archive, ECC views, readable originals and pinned installer source. Whole-chip restoration remains unverified.\n"
-                    "Keep the matching build workspace too; portable cold rebuild/restore is not yet implemented.\n"
-                    "Never rerun an attempted loader/profile. A failed or interrupted write requires report review.\n"
-                    "If installation finishes, selected originals may be restored with the checked kit's reverse-order restore.\n"
-                    "Do not run restore-kit blindly after a failure or native settings changes; its strict checks may refuse.\n"
-                    f"Kit: {folder / 'kit'}\nLogs and progress: this folder.\n"
-                ).encode(),
-            )
-            print(f"Private setup and recovery folder: {folder}")
-            usb_access(folder, ask)
-            worker = Worker(folder, build, ask=ask)
-            phase = "prepare"
-            print("2/7 Download and build the protected reader. This can take several minutes.")
-            worker.run("prepare")
+        ntp = choose_time(ask)
+        PRIVATE.mkdir(mode=0o700, exist_ok=True)
+        if PRIVATE.is_symlink() or PRIVATE.stat().st_mode & 0o077:
+            raise Invalid("The private folder must be owner-only and must not be a symlink.")
+        name = "setup-" + datetime.now().strftime("%Y%m%d-%H%M%S-") + uuid.uuid4().hex[:8]
+        folder = PRIVATE / name
+        build = ROOT / "build" / name
+        build.mkdir(mode=0o700, parents=True)
+        print("1/7 Install Hearth in Home Assistant")
+        print("Open HACS → three-dot menu → Custom repositories.")
+        print(f"Add {REPOSITORY} with category Integration; download the latest tagged release.")
+        print("Restart HA Core yourself, then return here. Do not manually add a Hearth entry.")
+        if (
+            ask("Type HA READY when HACS installation and the Core restart are complete: ").strip()
+            != "HA READY"
+        ):
+            return 0
+        ha_url = ask("Home Assistant address (the URL you use to open HA): ").strip()
+        print(
+            "In your HA profile → Security, create a temporary long-lived access token as an administrator."
+        )
+        print("Paste it at the hidden prompt. It is used only for setup and is never saved.")
+        token = secret("Temporary HA administrator token (hidden): ")
+        phase = "ha-setup"
+        result = onboard.onboard(ha_url, token, folder, info, ask=ask)
+        del token
+        if result.get("cancelled"):
+            return 0
+        save(folder, "wizard-settings.json", encode({"ntp_server": ntp, "ha_url": ha_url}))
+        save(
+            folder,
+            "READ-ME-FIRST.txt",
+            (
+                "Private Hearth setup and recovery files. Do not publish this folder.\n"
+                "This folder retains the full NAND/OOB archive, ECC views, readable originals and pinned installer source. Whole-chip restoration remains unverified.\n"
+                "Keep the matching build workspace too; portable cold rebuild/restore is not yet implemented.\n"
+                "Never rerun an attempted loader/profile. A failed or interrupted write requires report review.\n"
+                "If installation finishes, selected originals may be restored with the checked kit's reverse-order restore.\n"
+                "Do not run restore-kit blindly after a failure or native settings changes; its strict checks may refuse.\n"
+                f"Kit: {folder / 'kit'}\nLogs and progress: this folder.\n"
+            ).encode(),
+        )
+        print(f"Private setup and recovery folder: {folder}")
+        usb_access(folder, ask)
+        worker = Worker(folder, build, ask=ask)
+        phase = "prepare"
+        print("2/7 Download and build the protected reader. This can take several minutes.")
+        worker.run("prepare")
         phase = "nand"
         print("3/7 Save a full NAND backup (two raw/OOB passes and offline ECC checks).")
         print(
@@ -519,9 +501,7 @@ def run(*, ask=input, secret=getpass.getpass, prepared=None):
         if folder and folder.exists():
             save(
                 folder,
-                "wizard-stopped.json"
-                if prepared is None
-                else "wizard-continuation-stopped-" + uuid.uuid4().hex + ".json",
+                "wizard-stopped.json",
                 encode(
                     {"phase": phase, "error_type": type(exc).__name__, "automatic_retry": False}
                 ),

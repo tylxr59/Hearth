@@ -175,6 +175,12 @@ int hn_space_guard(int fd,int restoring)
  hn_space_available=block*available;
  /* Account for backups, staging and one large restore temporary. Reported
   * JFFS2 space includes dirty/reclaimable bytes; this is not a guarantee. */
+ /* Shared mode proves the existing original inodes before this guard. Only
+  * replacement staging plus one rollback temporary allocate file data. */
+#ifdef HEARTH_NETWORK_SHARED_BACKUPS
+ hn_space_required=restoring?largest+4U*1048576U:total+largest+2U*1048576U;
+#else
  hn_space_required=restoring?largest+4U*1048576U:3U*total+2U*1048576U;
+#endif
  return hn_space_available>=hn_space_required?0:-1;
 }

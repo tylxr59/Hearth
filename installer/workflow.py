@@ -75,7 +75,7 @@ def complete(row):
     )
 
 
-def install(root, disk, *, ask=input, runner=None, continue_cleanup=False):
+def install(root, disk, *, ask=input, runner=None):
     from installer.cli import execute
 
     runner = execute if runner is None else runner
@@ -90,32 +90,29 @@ def install(root, disk, *, ask=input, runner=None, continue_cleanup=False):
     fresh(root, "cleanup-install", second)
     fresh(root, "cleanup-restore", root / "restore-cleanup")
     fresh(root, "commissioning-restore", root / "restore-commissioning")
-    if continue_cleanup:
-        chain.completed(first, core, 1, 9)
-    else:
-        fresh(root, "commissioning-install", first)
-        record, binding = core.checked_pair(
-            root / "commissioning-install", root / "commissioning-restore"
-        )
-        entry = {}
-        if mode == "ram":
-            chain.acquisition_install(record, binding, session / "acquisition")
-            entry = {"handoff_from_acquisition": session / "acquisition"}
-        print("Step1/2: install local HA settings, trust and startup (nine files).")
-        row = runner(
-            root / "commissioning-install",
-            root / "commissioning-restore",
-            first,
-            ask=ask,
-            entry=entry,
-            restart_after=False,
-            backup_session=session,
-        )
-        if not row.get("cancelled"):
-            save(root, "commissioning-outcome.json", encode(row))
-        if not complete(row):
-            return {"complete": False, "completed_phases": [], "automatic_retry": False}
-        mode = "ram"
+    fresh(root, "commissioning-install", first)
+    record, binding = core.checked_pair(
+        root / "commissioning-install", root / "commissioning-restore"
+    )
+    entry = {}
+    if mode == "ram":
+        chain.acquisition_install(record, binding, session / "acquisition")
+        entry = {"handoff_from_acquisition": session / "acquisition"}
+    print("Step1/2: install local HA settings, trust and startup (nine files).")
+    row = runner(
+        root / "commissioning-install",
+        root / "commissioning-restore",
+        first,
+        ask=ask,
+        entry=entry,
+        restart_after=False,
+        backup_session=session,
+    )
+    if not row.get("cancelled"):
+        save(root, "commissioning-outcome.json", encode(row))
+    if not complete(row):
+        return {"complete": False, "completed_phases": [], "automatic_retry": False}
+    mode = "ram"
     entry = {}
     if mode == "ram":
         record, binding = cleanup.checked_pair(root / "cleanup-install", root / "cleanup-restore")

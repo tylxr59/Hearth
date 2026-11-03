@@ -117,6 +117,19 @@ def test_partial_resource_payload_and_unbound_diagnostic_are_refused():
         result(refused_resource_result(), 1)
 
 
+@pytest.mark.parametrize("count", (None, True, 19, 20, 21))
+def test_shared_original_matrix_requires_all_twenty_explicit_cases(count):
+    s = NetworkSession(BINDING, lambda *a: None, target_count=3, shared_originals=True)
+    row = json.loads(evidence())
+    if count is not None:
+        row["shared_transaction_cases"] = count
+    if type(count) is int and count == 20:
+        assert s.event(p.SELFTEST, json.dumps(row).encode()) == BINDING.prefix(b"HFW_ACK1")
+    else:
+        with pytest.raises(ValueError):
+            s.event(p.SELFTEST, json.dumps(row).encode())
+
+
 @pytest.mark.parametrize("action", [1, 2])
 def test_four_target_end_to_end_ordered_evidence_and_separate_commit(action):
     s, saved = session(action)

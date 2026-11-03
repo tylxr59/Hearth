@@ -189,7 +189,7 @@ int hearth_posix_selected_encoding(struct hearth_posix_context *c,int replacemen
    result=encoding_fd(fd,name);if(close(fd)) result=-1;if(result) return -1;
   }
   backup_name(i,backup);
-  if(f->existed&&(contents(c->recovery,backup,f->original,0600,c)||encoding_fd(c->recovery,backup))) return -1;
+  if(f->existed&&(backup_contents(c,i,backup)||encoding_fd(c->recovery,backup))) return -1;
   if(!f->existed&&absent(c->recovery,backup)!=1) return -1;
   if(append(backup,".plain")||absent(c->recovery,backup)!=1) return -1;
  }

@@ -70,8 +70,10 @@ The historical investigation is archived under `docs/development/history/` and
   release with original source preserved. Existing profiles still validate.
   Published0.10.2 and the patched download match every tested public file; CI
   and hassfest pass, and default HACS selection chooses v0.10.2.
-  The owner may use the explicit pre-device continuation; do not rerun failed
-  hardware attempts or recreate this HA entry. No agent Core restart occurred.
+  That historical pre-device continuation was used once. The owner now requires
+  one normal setup from beginning to end; user-facing continuation options and
+  the prepared-session module are removed from development source. Do not rerun
+  failed hardware attempts or recreate this HA entry. No agent Core restart occurred.
 - The owner's continued public wizard has since installed/verified commissioning9.
   Cleanup3 refused resource preflight (diagnostic40) before commit or writable
   mounts, with zero program/erase/marker activity; it exited sealed/protected
@@ -81,7 +83,9 @@ The historical investigation is archived under `docs/development/history/` and
   obtain owner readiness before arming. Original reports and source are retained.
   That diagnostic has since exited0, sealed/protected with no writes. It measured
   space refusal42: available13,201,408 versus required19,534,505 bytes; RAM free
-  50,913,280. Safe_to_restart1; native USB restart is the next owner action.
+  50,913,280. Safe_to_restart1; owner home-icon return and normal USB are now
+  confirmed. A fresh commissioning-only stock-return profile is prepared and
+  reproduced, but not executed. Obtain fresh readiness/authorization for it.
   Offline NAND inventory finds one old rollback archive, with all four originals
   matching earlier host backups; no deletion/live deletion preflight is authorized.
 - The owner authorizes local implementation, docs, packaging, tests and commits/

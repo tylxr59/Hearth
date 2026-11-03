@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+import struct
 import tempfile
 from dataclasses import replace
 from pathlib import Path
@@ -112,3 +113,119 @@ def test_original_arm_cleanup_helpers_exclude_the_client_path(plan, preflight_on
                 assert all(token not in data for token in (b"HFW_RUN1", b"HFW_RDY1"))
             assert b"etc/nestlabs/client.config" not in data
             assert b"nestlabs/sbin/nlclient" in data and b"etc/connman/main.conf" in data
+
+
+@pytest.fixture
+def shared_plan(plan):
+    snapshot, backup, destination, _, pin = plan
+    journal = b"HFI1" + struct.pack("<3I", 6, 15, 4) + b"1" * 32
+    row = {
+        "format": "hearth-restored-network-originals-v1",
+        "directory": ".hearth-rollback-" + journal[16:].hex(),
+        "journal": journal.hex(),
+        "files": [
+            {"bytes": len(r.data), "sha256": hashlib.sha256(r.data).hexdigest()}
+            for r in snapshot.records
+        ],
+    }
+    path = backup.parent / "shared.json"
+    path.write_text(json.dumps(row))
+    path.chmod(0o600)
+    return backup, destination, pin, path
+
+
+def test_shared_plan_requires_matching_full_originals_and_distinct_restored_journal(shared_plan):
+    from firmware.network_probe.profile import pinned_plan
+    from firmware.network_writer.shared import checked
+
+    backup, destination, pin, shared = shared_plan
+    bound = pinned_plan(destination, backup, pin)
+    result = checked(shared, backup, bound["plan"])
+    assert len(result["packed"]) == 288
+    for fault in ("path", "journal", "bytes", "hash", "unknown"):
+        row = json.loads(shared.read_bytes())
+        if fault == "path":
+            row["directory"] = "../elsewhere"
+        elif fault == "journal":
+            row["journal"] = (b"HFI1" + b"\0" * 44).hex()
+        elif fault == "bytes":
+            row["files"][0]["bytes"] += 1
+        elif fault == "hash":
+            row["files"][0]["sha256"] = "f" * 64
+        else:
+            row["extra"] = 1
+        original = shared.read_bytes()
+        shared.write_text(json.dumps(row))
+        with pytest.raises(ValueError):
+            checked(shared, backup, bound["plan"])
+        shared.write_bytes(original)
+
+
+def test_shared_original_arm_helpers_compile_with_bound_reference_and_without_commit_parser(
+    shared_plan,
+):
+    from firmware.network_probe.profile import pinned_plan
+    from firmware.network_writer.shared import checked
+
+    backup, destination, pin, shared = shared_plan
+    root = Path(__file__).resolve().parents[1]
+    (root / "build").mkdir(exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix="shared-helper-test-", dir=root / "build") as directory:
+        output = Path(directory) / "helpers"
+        compile_helpers(
+            output, destination, backup, pin, shared_archive=shared, preflight_only=True
+        )
+        block = checked(shared, backup, pinned_plan(destination, backup, pin)["plan"])["packed"]
+        for action in (1, 2):
+            data = (output / f"action-{action}").read_bytes()
+            assert block in data
+            assert all(token not in data for token in (b"HFW_RUN1", b"HFW_RDY1"))
+
+
+@pytest.fixture(scope="module")
+def shared_harness(tmp_path_factory):
+    import subprocess
+
+    path = tmp_path_factory.mktemp("shared-harness") / "test"
+    subprocess.run(
+        [
+            "clang",
+            "-DHEARTH_HOST_LAB",
+            "-DHEARTH_NETWORK_ADAPTER",
+            "-DHEARTH_NETWORK_SHARED_BACKUPS",
+            "-DHEARTH_NETWORK_TARGET_COUNT=3",
+            "-DHEARTH_CLEAN_FIXTURE",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            "-O1",
+            "-g",
+            "-fsanitize=address,undefined",
+            "-Wl,--wrap=write,--wrap=read,--wrap=fsync,--wrap=renameat,--wrap=fchmod,--wrap=fchown",
+            "tests/network_transaction_harness.c",
+            "firmware/file_install/posix.c",
+            "firmware/file_install/transaction.c",
+            "firmware/network_update/hash.c",
+            "-o",
+            str(path),
+        ],
+        check=True,
+        capture_output=True,
+    )
+    return path
+
+
+@pytest.mark.parametrize("scenario", range(20))
+def test_shared_original_transaction_restore_identity_refusals_and_faults(
+    shared_harness, tmp_path, scenario
+):
+    import subprocess
+
+    result = subprocess.run(
+        [str(shared_harness), str(scenario), str(tmp_path)],
+        check=False,
+        capture_output=True,
+        timeout=15,
+    )
+    assert result.returncode == 0, result.stderr.decode()
+    assert not result.stdout and not result.stderr and not list(tmp_path.iterdir())

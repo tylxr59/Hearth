@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[2]
 IMPORT_SET = set(IMPORTS) | {"strstr", "memcpy", "malloc", "free", "mmap", "munmap", "mprotect"}
 
 
-def compile_helpers(output, plan, backup, pin, *, preflight_only=False):
+def compile_helpers(output, plan, backup, pin, *, preflight_only=False, shared_archive=None):
     if type(preflight_only) is not bool:
         raise ValueError("explicit preflight-only mode required")
     output = Path(output).absolute()
@@ -23,6 +23,13 @@ def compile_helpers(output, plan, backup, pin, *, preflight_only=False):
     (output / "plan.h").write_bytes(bound["header"])
     (output / "binding.h").write_bytes(binding(plan, backup, pin))
     (output / "session.h").write_text("static const unsigned char hearth_session[32]={0};\n")
+    if shared_archive is not None:
+        from firmware.network_writer.shared import checked
+
+        if target_count != 3:
+            raise ValueError("shared originals are cleanup3-only")
+        shared = checked(shared_archive, backup, bound["plan"])
+        (output / "shared-plan.h").write_bytes(shared["header"])
     common = [
         "clang",
         "--target=arm-linux-gnueabihf",
@@ -43,6 +50,7 @@ def compile_helpers(output, plan, backup, pin, *, preflight_only=False):
         "-Wl,--build-id=none,-z,noexecstack",
         "-I" + str(output),
         f"-DHEARTH_NETWORK_TARGET_COUNT={target_count}",
+        *(["-DHEARTH_NETWORK_SHARED_BACKUPS"] if shared_archive is not None else []),
         *(["-DHEARTH_NETWORK_VARIABLE_TIME"] if bound.get("custom_time") else []),
     ]
     stub = output / "libc.stub.c"
@@ -71,6 +79,7 @@ def compile_helpers(output, plan, backup, pin, *, preflight_only=False):
                     "firmware/file_install/transaction.c",
                 )
             ],
+            *([str(ROOT / "firmware/network_update/hash.c")] if shared_archive is not None else []),
             str(output / "libc.so.6"),
             "-o",
             str(output / "network-transaction"),

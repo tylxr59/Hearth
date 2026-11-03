@@ -1,148 +1,80 @@
 # Current development status
 
-The fresh preflight-only resource run has exited0 and confirmed space refusal42:
-RAM free50,913,280 bytes; root0 available13,201,408 versus required19,534,505.
-No commit/remount/program/erase/marker occurred, phase2/protected1 and
-safe_to_restart1. The first commissioning phase remains verified; cleanup3 has
-not installed. No loader is armed. Native USB restart is the next owner action.
-Offline inventory of the newly saved corrected NAND view finds one older rollback
-archive (5,822,879 file bytes); all four originals match the earlier preserved host
-backup. This is not a live deletion preflight, and no archive deletion is authorized
-or executed. Preserve all reports, current recovery data and source versions.
+The owner requires a normal setup run from beginning to end, without continuation
+commands. The development source removes `--continue-prepared`, `--continue-cleanup`
+and the prepared-session module. Published0.10.2 remains immutable. Recovery tools
+for a reviewed failed write remain separate from fresh installation.
 
+## Current unit and next hardware step
 
-The owner's continued stock-device wizard has now preserved a full NAND archive,
-acquired readable originals and built its kit. Commissioning9 committed and
-verified successfully. Cleanup3 passed all61 RAM checks but refused its initial
-resource guard (diagnostic40) before READY/commit, writable remount or any NAND
-program/erase. Its report is exited, sealed/protected and safe_to_restart1. The
-first phase remains installed; the device is on USB in exited RAM mode with its
-HVAC base detached. Do not rerun the attempted phase or wizard. Original results
-and a reviewed no-write receipt are retained privately.
+The Gen2 Display-2.6 remains on primary5.9.4-5. Its HVAC base is wired to actual
+oil/baseboard heat; the display is detached on USB. The owner confirmed the home
+icon after the latest diagnostic, and normal USB was independently observed.
+No loader is armed. The first commissioning9 phase is installed and verified;
+cleanup3 never committed or mounted writable. Keep that partial state explicit.
 
-A fresh preflight-only diagnostic pair now reproduces all ten artifacts per role.
-It reports RAM/flash-space counters and distinguishes memory41 from space42;
-resource thresholds and persistent-write gates are unchanged. Its action helper
-has no commit/READY parser; the host rejects decision events and persistent
-activity for this mode. No loader is armed. Owner readiness is needed for one
-fresh measurement. Host tests pass1,802 with five optional skips; static checks
-and focused protocol/compiler refusal checks pass.
+The fresh preflight-only diagnostic exited0, sealed/protected, with no writes.
+It measured RAM free50,913,280 bytes and root0 available13,201,408 against the
+copy-based update requirement19,534,505. The root cause is flash space, not RAM.
+A saved corrected NAND view contains one old restored network4 archive
+(5,822,879 file bytes); all four originals match the earlier preserved host backup.
+No archive has been deleted or reused on hardware.
 
+A fresh commissioning-only stock-return image is prepared and reproduces, with
+original capsule/backup custody, full-NAND archive and native ABI checked. It
+restores seven original files/settings and removes the added library/launcher.
+It does not repeat commissioning or touch the unmodified cleanup targets. The
+original source is privately archived; executed profiles/reports remain unchanged.
+Owner readiness/authorization is required before arming or committing that restore.
 
-Published experimental0.10.2 fixes a source-only packaging failure exposed by the owner's
-fresh0.10.1 installer run: reader builds passed, but the recovery-source snapshot
-incorrectly tried to package the HA integration, which is absent from the installer
-ZIP. It now snapshots installer inputs independently. An explicit, guarded
-`--continue-prepared` accepts only complete unused reader builds after a failed
-host prepare; device attempts and write recovery remain excluded. Focused fresh-ZIP
-snapshot and continuation refusal tests pass. The owner's HA entry and private
-bundle were created successfully; no device loader/write occurred in that session.
-The extracted download was updated exactly to published0.10.2, with
-original public source preserved privately. Existing reader/ECC integrity checks
-still pass. No loader is armed. Full host tests pass1,788 plus the subsequently
-added focused continuation test; the isolated real-HA sandbox passes24 control
-round trips and admin onboarding. No live HA update/restart was executed. CI passes1,779 tests with15 optional
-skips, plus hassfest. Downloaded checksums and every public file match tested
-packages; the owner's patched source matches the release, and default HACS
-selection chooses v0.10.2.
+## Normal-flow storage work
 
-Published experimental0.10.1 provides the single-entry `python3 provision.py`
-setup wizard, mandatory full-NAND archive, guided selected-file restore, HACS
-onboarding and optional NTP defaulting to time.nist.gov for both native sources.
-Its downloaded46-file integration and343-file installer archive match the tested
-contents and published checksums. CI/hassfest pass and the actual installed HACS
-selection methods choose v0.10.1 without beta flags. Live HA has not been updated.
+An explicit prototype can share exact existing original inodes into a new
+plan-specific rollback archive. It requires a fully restored, plan-named four-file
+journal; complete original hashes, ownership/modes/attributes and exact reference
+identities/counts. The old archive's bytes, names and journal remain in place.
+The candidate staging, intent journal, atomic rename, rollback and NONE/ZERO
+audits remain enforced. The ordinary copy-based path is unchanged.
 
-## Live owner unit and HA
+The allocation bound for this mode is replacement staging plus one largest
+rollback temporary plus the existing2MiB reserve, because originals already
+occupy flash. The ordinary3-times-total reserve and restore largest-plus4MiB
+reserve remain unchanged. Twenty additional synthetic shared-original cases cover
+identity/tampering refusals, incomplete staging, uncertain renames and restoration;
+the same sources compile for ARM. Shared-original hardware writes are unmeasured.
 
-The owner's Gen2 Display-2.6 remains on primary5.9.4-5. Its base is wired to
-actual oil/baseboard HVAC. The display is detached and connected to this PC by
-USB. The owner confirmed native home-icon return after the Nov3 stock-file
-restoration; normal2464:0002 USB was independently observed. The fresh full-NAND
-backup and the read-only file-acquisition handoff have exited successfully in
-protected RAM mode. The owner then confirmed native home-icon return, and normal
-USB was independently observed again. No loader is armed.
-On-base stock UI and physical heating after restoration are not yet measured.
+Normal-wizard archive discovery and a combined capacity check before the first
+write are still pending. Do not ask the owner to continue a partial installation
+or advertise the complete stock-device flow as verified. After the checked stock
+return, finish that integration and test the normal wizard with fresh profiles.
 
-The stock return restored legacy network4 successfully. Core9 reported all511
-target bits restored without transaction/cleanup errors, but its final check
-failed. Independent protected snapshots subsequently matched every original
-byte, existence, mode and owner/group, including absent Hearth library/launcher.
-A protected inode audit verified every active stock file. The earlier failure
-was isolated to compression of archived rollback copies0,6,8 outside the strict
-NONE/ZERO audit. The original incomplete writer result is retained unchanged;
-the independent verification and owner native-return evidence remain private.
-No additional flash write was needed for that diagnosis.
+## Published delivery and validation
 
-For clean HA onboarding, the owner removed Hearth's entry; retained profile,
-state and manual source were privately archived with exact readback. HACS0.7.1
-was downloaded/verified and Core restarted by the owner. No submitted fresh entry
-or retained live profile was known at that earlier stage. The subsequent owner
-wizard run created a new entry/bundle, as recorded above. Use HACS for further
-delivery; obtain fresh
-approval before another agent-executed Core restart. Do not manually reinstall
-or recreate the old profile. There has been no new HA deployment during backup
-work. Whole-chip restoration and hardware power-loss recovery remain unverified.
+Experimental0.10.2 fixes source-only recovery ZIP creation. Its HACS integration
+and installer assets/checksums were downloaded and matched tested source; CI and
+hassfest pass, and installed HACS selection methods choose the ordinary release.
+The owner's HA entry/bundle were created successfully during the fresh wizard.
+No agent HA Core restart or live HA deployment occurred during this storage work.
+Use HACS for delivery and obtain fresh approval for another agent Core restart.
 
-## 0.10.1 published experimental preview
+The combined development suite passes1,812 tests with five optional skips, plus
+the subsequently added focused public-interface removal check. Static checks
+pass. The network-isolated real HA2026.10.4 sandbox passes24 native control round
+trips and the separate-process admin onboarding/address/bundle exchange.
 
-The0.10.0 release was not published: CI caught a compiler test assuming a
-preexisting build directory. Published0.10.1 creates that fixture parent
-explicitly; no device code or write gate changed.
+Previously measured: local telemetry, targets63→62→63F, Eco on/off, future schedule
+entry/readback/empty-week restoration, local weather/time correction, full raw/OOB
+archive with matching corrected views and read-only acquisition handoff. Four
+matching chunks per NAND pass remain unclassified, with zero uncorrectable chunks.
+Selected-file restoration and native UI return have been measured. Whole-chip
+restoration, hardware power-loss recovery, intentional heating, cooling/fan and
+other models/firmware remain unverified.
 
-The owner requests a full NAND backup before provisioning and a guided recovery
-path. The wizard now builds a fresh write-disabled full reader and saves
-two complete raw/OOB passes plus two independently ECC-derived data views. It
-retains original raw bytes, quality receipts, USB identity and matching public
-installer source. Public original BCH source is hash-pinned and built locally;
-the GPL-2.0-only offline verifier runs as a separate process, never in HA.
+The earlier Nov3 legacy stock-return writer's incomplete readback report remains
+unchanged: independent snapshots and inode audits verified all active originals,
+isolating that old failure to compressed archived copies. Preserve the independent
+verification rather than relabelling the original report successful.
 
-Raw mismatch remains a capture failure classification. Only complete footer-
-checked passes may proceed to independent analysis. Corrected views/OOB must
-match, uncorrectable chunks stop acceptance, and unclassified chunks must remain
-identical and are explicitly not labelled ECC-verified. The verifier reproduces
-the historical owner's two matching derived views, including the four retained
-unclassified chunks. This is archival evidence, not validated whole-chip recovery.
-
-The full archive is checked before installation and again before commits. An
-explicit checked RAM handoff leads into readable-file acquisition, then the
-existing disjoint commissioning9/cleanup3 phases. The script's `--restore` menu
-checks a saved kit and archive and runs the original selected-file restore;
-it does not erase boot flash or guess changed native settings. Exact-restore
-refusal on later preferences, interrupted-session review, portable cold recovery
-and preservation of current native configuration remain release gaps. Keep the
-matching build workspace as well as the private folder/source ZIP.
-
-The first full-reader reproduction exposed only build-time/host metadata drift.
-The same exact-source-checked metadata normalization already used by protected
-readers now applies; all six artifacts reproduce between fresh full builds. No
-NAND-read or write-denial policy was changed. The fresh supervised backup now
-passed: both full raw/OOB passes were preserved, independently corrected views
-and all OOB bytes match, and neither pass has uncorrectable chunks. Four matching
-unclassified chunks per pass remain explicitly not ECC-verified. No flash writes
-occurred. The explicit RAM handoff then preserved both fixed snapshots and all
-four library groups (134 private files), with no native execution or flash writes.
-The process exited successfully; native restart and normal USB return are confirmed.
-End-to-end stock
-wizard installation remains unmeasured.
-
-## Validation and measured capabilities
-
-The complete host suite passed1,774 tests with five optional skips; focused archive, parity-order, mutation,
-permission, cancellation and source-package checks pass. Static/format/security
-checks pass. The pinned network-isolated HA2026.10.4 sandbox passes24 native
-control round trips and the separate-process admin onboarding/address/bundle
-exchange. Public integration and installer-source archives reproduce locally.
-
-Previously measured on the owner's configured installation: authenticated local
-telemetry, corrected timezone and weather requests; bounded63→62→63F targets;
-Eco on/off with original restored; native schedule acquisition, HA future entry,
-revision readback and empty-week restoration; selected-file install/restoration
-and native UI return. No intentional heating start/stop, cooling, fan, emergency
-heat or other model/firmware support is established by simulations.
-
-Canonical sources are `backend/`, `custom_components/hearth/`, `installer/`,
-`provisioning/`, `firmware/` and the standalone offline archive verifier under
-`tools/nand_archive/`. Generated HA transport must remain exact. See
-[release checklist](roadmap.md) for remaining gates; old investigation belongs
-under [history](history/) and `docs/research/`.
+Canonical sources remain `backend/`, `custom_components/hearth/`, `installer/`,
+`provisioning/`, `firmware/` and `tools/nand_archive/`. See the
+[release checklist](roadmap.md); older investigation belongs in [history](history/).

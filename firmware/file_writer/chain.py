@@ -73,7 +73,9 @@ def completed(previous, engine, action, count):
     elif count in (3, 4):
         from firmware.network_writer.session import selftest as validate_selftest
 
-        validate_selftest(selftest)
+        validate_selftest(
+            selftest, **({"shared_originals": True} if record.get("shared_archive") else {})
+        )
     else:
         raise ValueError(
             "only the reviewed commissioning9, cleanup3 and legacy network4 phases may chain"

@@ -7,6 +7,9 @@
 int hn_exact_readback(struct hearth_posix_context *c,int replacement)
 {
  unsigned int i;if(replacement!=0&&replacement!=1) return -1;
+#ifdef HEARTH_NETWORK_SHARED_BACKUPS
+ if(c->shared&&hn_shared_preflight(c,1)) return -1;
+#endif
  for(i=0;i<HEARTH_TARGET_COUNT;i++) {
   const struct hearth_file_change *f=&c->changes[i];char name[128];int result;
   int directory=parent(c,f->target,name);if(directory<0) return -1;

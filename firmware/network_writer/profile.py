@@ -112,7 +112,17 @@ def archive(program, action, harness, libraries, backup, *, target_count=4):
 
 
 def package(
-    kernel_build, libraries, plan, backup, pin, build, output, *, action, preflight_only=False
+    kernel_build,
+    libraries,
+    plan,
+    backup,
+    pin,
+    build,
+    output,
+    *,
+    action,
+    preflight_only=False,
+    shared_archive=None,
 ):
     if type(preflight_only) is not bool or (preflight_only and action != 1):
         raise ValueError("preflight-only mode is an explicit install-scope diagnostic")
@@ -129,7 +139,9 @@ def package(
         raise ValueError("exact kernel plan/receipt custody required")
     bound = pinned_plan(plan, backup, pin)
     build = Path(build).absolute()
-    compile_helpers(build, plan, backup, pin, preflight_only=preflight_only)
+    compile_helpers(
+        build, plan, backup, pin, preflight_only=preflight_only, shared_archive=shared_archive
+    )
     files = {
         n: read_build(Path(kernel_build) / "artifacts" / n, MAX_IMAGE)
         for n in ("kernel.config", "x-load-gen2.bin", "u-boot.bin", "omap_loader")
@@ -165,6 +177,11 @@ def package(
         "action": action,
         "targets": bound["target_count"],
         **({"preflight_only": True} if preflight_only else {}),
+        **(
+            {"shared_archive": str(private_path(shared_archive))}
+            if shared_archive is not None
+            else {}
+        ),
         "kernel": str(Path(kernel_build).absolute()),
         "libraries": str(Path(libraries).absolute()),
         "plan_path": str(Path(plan).absolute()),
@@ -213,6 +230,15 @@ def check(output):
         record.get("preflight_only", False) and record["action"] != 1
     ):
         raise ValueError("explicit install-scope preflight diagnostic required")
+    shared = None
+    if "shared_archive" in record:
+        from firmware.network_writer.shared import checked as shared_check
+
+        if record.get("targets", 4) != 3:
+            raise ValueError("shared originals are cleanup3-only")
+        shared = shared_check(
+            record["shared_archive"], record["backup"], bytes.fromhex(record["plan"])
+        )
     provenance = kernel.check(record["kernel"])
     source_pins = json.loads((ROOT / "firmware/file_writer/sources.json").read_bytes())["files"]
     tree = Path(record["kernel"]) / "src/Dev/linux"
@@ -236,6 +262,8 @@ def check(output):
     }
     if any(sha(d) != record["files"][n] for n, d in files.items()):
         raise ValueError("network artifact changed")
+    if shared is not None and shared["packed"] not in files["file-action"]:
+        raise ValueError("compiled shared-original reference differs")
     if record.get("preflight_only", False) and any(
         token in files["file-action"] for token in (b"HFW_RUN1", b"HFW_RDY1")
     ):
@@ -268,7 +296,7 @@ def check(output):
         "action": record["action"],
         "device_executed": False,
         "targets": bound["target_count"],
-        "ram_cases": 61,
+        "ram_cases": 81 if shared is not None else 61,
         "image_bytes": len(files["uImage"]),
         "root0_only": True,
         "recovery": "whole-firmware-unverified",

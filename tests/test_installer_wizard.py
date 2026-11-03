@@ -29,6 +29,24 @@ def test_no_argument_cli_launches_wizard(monkeypatch):
     assert cli.main(["wizard"]) == 37
 
 
+def test_setup_has_no_continuation_switches():
+    launch = subprocess.run(
+        [sys.executable, "-S", "provision.py", "--continue-prepared", "unused"],
+        check=False,
+        capture_output=True,
+        timeout=10,
+    )
+    assert launch.returncode == 2 and b"unrecognized arguments" in launch.stderr
+    assert b"Hearth setup" not in launch.stdout
+    launch = subprocess.run(
+        [sys.executable, "-S", "-m", "installer.cli", "install-kit", "--help"],
+        check=True,
+        capture_output=True,
+        timeout=10,
+    )
+    assert b"--continue-cleanup" not in launch.stdout
+
+
 @pytest.fixture
 def setup(tmp_path, monkeypatch):
     from tools import elf_review
@@ -106,29 +124,6 @@ def test_declining_acquisition_never_arms_reader_or_writer(setup):
         == 0
     )
     assert calls == [("prepare", {})]
-
-
-def test_checked_prepare_continuation_skips_ha_and_build_and_still_requires_ready(
-    setup, monkeypatch
-):
-    from installer import prepared
-
-    root, private, calls = setup
-    private.mkdir(mode=0o700)
-    folder = private / "setup-existing"
-    folder.mkdir(mode=0o700)
-    (folder / "commissioning.zip").write_bytes(b"synthetic")
-    monkeypatch.setattr(prepared, "load", lambda *a: (folder, root / "build", "time.nist.gov"))
-    monkeypatch.setattr(wizard.onboard, "onboard", lambda *a, **kw: pytest.fail("no HA changes"))
-    assert (
-        wizard.run(
-            prepared=folder,
-            ask=answers(""),
-            secret=lambda _: pytest.fail("no token needed for continuation"),
-        )
-        == 0
-    )
-    assert calls == []
 
 
 def test_failed_kit_does_not_run_writer_or_retry(setup, monkeypatch):

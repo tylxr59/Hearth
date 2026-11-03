@@ -145,6 +145,9 @@ emit:
 #endif
  append("{\"type\":\"network_ram_preflight\",\"stream_cases\":");number(stream_cases);
  append(",\"transaction_cases\":");number(transaction_cases);
+#ifdef HEARTH_NETWORK_SHARED_BACKUPS
+ append(",\"shared_transaction_cases\":");number(transaction_cases);
+#endif
  append(",\"child_status\":");number(child_status);append(",\"child_output_bytes\":");number(error_bytes);
  append(",\"real_files_checked\":");number(real_files);append(",\"real_preflight\":");
 #ifdef HEARTH_WRITER_ACTION

@@ -12,6 +12,9 @@
 #define hearth_capsule_changes hn_changes
 #define hearth_capsule_count HEARTH_TARGET_COUNT
 #include "binding.h"
+#ifdef HEARTH_NETWORK_SHARED_BACKUPS
+#include "shared-plan.h"
+#endif
 #ifndef HEARTH_CAPSULE_ARCHIVE_LAYOUT
 #define HEARTH_CAPSULE_ARCHIVE_LAYOUT 1
 #endif
@@ -110,6 +113,9 @@ static int preflight(void *opaque)
 {
     struct action_context *c=opaque;unsigned int i;
     c->diagnostic=40;
+#ifdef HEARTH_NETWORK_SHARED_BACKUPS
+    if(hn_shared_preflight(&c->files,HEARTH_FILE_ACTION==2)) { c->diagnostic=43;return -1; }
+#endif
     if(hn_memory_guard()) { c->diagnostic=41;return -1; }
     if(hn_space_guard(c->files.roots[0],HEARTH_FILE_ACTION==2)) { c->diagnostic=42;return -1; }
     if(c->files.recovery!=-1||c->mounted!=3||read_status(c)||c->phase!=0||
@@ -222,6 +228,9 @@ int main(void)
     memset(&c,0,sizeof(c));c.files.roots[0]=c.files.roots[1]=c.files.recovery=-1;c.preflight_target=-1;
     c.files.owner=0;c.files.group=0;c.files.count=HEARTH_TARGET_COUNT;c.files.changes=hearth_capsule_changes;c.snapshot_target=-1;c.settings_state=5;
     c.files.archive_layout=HEARTH_CAPSULE_ARCHIVE_LAYOUT;
+#ifdef HEARTH_NETWORK_SHARED_BACKUPS
+    c.files.shared=&hearth_shared_spec;
+#endif
     for(i=0;i<32;i++) { c.files.plan_id[i]=hearth_capsule_plan_id[i];if(hearth_capsule_plan_id[i]!=hearth_expected_plan[i]) initial=1; }
     if(getuid()!=0||getgid()!=0||hearth_capsule_count!=HEARTH_TARGET_COUNT) initial=1;
     umask(077);

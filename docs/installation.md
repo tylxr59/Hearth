@@ -72,24 +72,6 @@ before any restart or recovery attempt. The newly combined wizard, cleanup3 and
 custom-NTP writer have host/ARM build coverage; their complete stock-device
 hardware installation and restoration still need measurement.
 
-### A stopped host prepare
-
-Version0.10.1 could finish its reader builds and then fail while saving installer
-source because the extracted download has no HA integration tree. Version0.10.2
-fixes the source-only snapshot. A reviewed, in-place update can continue an unused
-prepared session without recreating its HA entry:
-
-```sh
-python3 provision.py --continue-prepared private/setup-YOUR-SAVED-SESSION
-```
-
-This accepts only a failed `prepare` with complete, unchanged reader artifacts,
-a matching USB identity/bundle and no device-attempt markers. It preserves the
-original failure evidence and still requires readiness for each loader and a
-separate install confirmation. It does not resume failed reads or writes. Keep
-the original source folder and build paths; do not move a session between folders
-or repeat the normal fresh-setup command against its existing HA entry.
-
 ## Home Assistant
 
 Add `https://github.com/tylxr59/Hearth` as a HACS custom repository of type

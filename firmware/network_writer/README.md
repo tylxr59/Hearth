@@ -19,7 +19,7 @@ matching install/restore pair, resource evidence and exact completion mask.
 Unknown counts or mismatched receipts/scopes refuse before a commit.
 
 Both scopes pass the host transaction/fault/restore suite and original ARM helper
-compilation. The new three-file action has not run on hardware; source/host tests
+compilation. The three-file action has not performed persistent hardware writes; source/host tests
 do not authorize a persistent use or establish physical restoration.
 
 The reviewed changes replace the two observed Google connectivity-probe slots
@@ -83,3 +83,16 @@ bounded RAM/space counters; diagnostic41 identifies the unchanged memory gate an
 42 the unchanged space gate. Existing reports without counters remain supported.
 Use fresh one-use profiles and reviewed prior custody; never rerun an attempted
 image or interpret this diagnostic as installation success.
+
+
+An internal shared-original prototype accepts an explicit reviewed archive spec,
+not arbitrary paths or automatic archive selection. Only an exact, fully restored
+network4 archive matching all current cleanup3 originals is eligible. It adds
+verified references to the same original inodes under a fresh plan's journal;
+source names/data/journal remain intact. Exact link counts, inode/device identity,
+permissions, full hashes and encoding checks remain required. The install space
+bound is replacement staging plus one largest rollback temporary plus2MiB;
+copy-based installation and the largest-plus4MiB restoration bounds are unchanged.
+The shared matrix adds20 synthetic cases before actual-file preflight. This path
+has host/ARM compilation coverage and still needs a supervised hardware test and
+normal-wizard discovery/capacity integration before end-to-end claims.

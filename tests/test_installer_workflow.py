@@ -87,24 +87,6 @@ def test_native_identity_failure_precedes_any_loader(flow, monkeypatch):
     assert not calls
 
 
-def test_explicit_continue_requires_completed_core_evidence(flow, monkeypatch):
-    root, _, calls, runner = flow
-
-    def incomplete(*a):
-        raise ValueError("missing completion")
-
-    monkeypatch.setattr(workflow.chain, "completed", incomplete)
-    with pytest.raises(ValueError, match="missing completion"):
-        workflow.install(root, "/unused", runner=runner, continue_cleanup=True)
-    assert not calls
-
-
-def test_explicit_continue_runs_only_cleanup(flow):
-    root, _, calls, runner = flow
-    assert workflow.install(root, "/unused", runner=runner, continue_cleanup=True)["complete"]
-    assert [c[0] for c in calls] == ["cleanup-install"]
-
-
 def test_restore_reverses_order_and_links_successful_ram_completion(flow):
     root, _, calls, runner = flow
     result = workflow.restore(root, "/unused", runner=runner)

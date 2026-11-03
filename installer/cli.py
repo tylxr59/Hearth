@@ -186,7 +186,6 @@ def main(argv=None):
     install_kit = commands.add_parser("install-kit")
     install_kit.add_argument("--kit", type=Path, required=True)
     install_kit.add_argument("--disk", required=True)
-    install_kit.add_argument("--continue-cleanup", action="store_true")
     restore_kit = commands.add_parser("restore-kit")
     restore_kit.add_argument("--kit", type=Path, required=True)
     restore_kit.add_argument("--disk", required=True)
@@ -290,7 +289,7 @@ def main(argv=None):
             from installer.workflow import install, restore
 
             result = (
-                install(args.kit, args.disk, continue_cleanup=args.continue_cleanup)
+                install(args.kit, args.disk)
                 if args.command == "install-kit"
                 else restore(args.kit, args.disk, phase=args.phase)
             )

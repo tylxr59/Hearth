@@ -9,8 +9,19 @@ from firmware.file_writer.session import Session
 from firmware.network_probe.run import validate_payload
 
 
-def selftest(payload):
-    row = validate_payload(payload)
+def selftest(payload, *, shared_originals=False):
+    if shared_originals:
+        raw = loads(payload)
+        if (
+            not isinstance(raw, dict)
+            or type(raw.get("shared_transaction_cases")) is not int
+            or raw.pop("shared_transaction_cases") != 20
+        ):
+            raise ValueError("all twenty shared-original RAM cases required")
+        row = validate_payload(json.dumps(raw).encode())
+        row["shared_transaction_cases"] = 20
+    else:
+        row = validate_payload(payload)
     expected = {
         "stream_cases": 41,
         "transaction_cases": 20,
@@ -96,9 +107,13 @@ def resources(payload, *, target_count=4):
 
 
 class NetworkSession(Session):
-    def __init__(self, binding, save, *, target_count=4, preflight_only=False):
+    def __init__(
+        self, binding, save, *, target_count=4, preflight_only=False, shared_originals=False
+    ):
         if type(target_count) is not int or target_count not in (3, 4):
             raise ValueError("fixed network scope required")
+        if type(shared_originals) is not bool or (shared_originals and target_count != 3):
+            raise ValueError("shared-original cases are cleanup3-only")
         if binding.action not in (1, 2):
             raise ValueError("network install/restore only")
         self.target_count = target_count
@@ -108,7 +123,7 @@ class NetworkSession(Session):
         super().__init__(
             binding,
             save,
-            selftest_validator=selftest,
+            selftest_validator=lambda payload: selftest(payload, shared_originals=shared_originals),
             result_validator=lambda payload, action: result(
                 payload, action, target_count=target_count, preflight_only=preflight_only
             ),

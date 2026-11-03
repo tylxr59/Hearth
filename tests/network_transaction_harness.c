@@ -99,12 +99,18 @@ static void clean_fixture(int root,const char *const *dirs)
  for(i=7;i;i--) remove_known(root,dirs[i-1],AT_REMOVEDIR);
 }
 #endif
+#ifdef HEARTH_NETWORK_SHARED_BACKUPS
+#include "network_shared_cases.h"
+#endif
 int main(int argc,char **argv)
 {
  const char *dirs[]={"nestlabs","nestlabs/sbin","usr","usr/sbin","etc","etc/connman","etc/nestlabs"};
  struct hearth_posix_context c;struct hearth_file_change changes[HEARTH_TARGET_COUNT];struct hearth_install_result result;
  unsigned char *original,*replacement;unsigned int i,length=2U*1048576U+17U;int fd,root,status;
  assert(argc==3);scenario=atoi(argv[1]);root=open(argv[2],O_RDONLY|O_DIRECTORY);assert(root>=0);
+#ifdef HEARTH_NETWORK_SHARED_BACKUPS
+ shared_case(root,(unsigned int)scenario,dirs);
+#endif
  original=malloc(length);replacement=malloc(length);assert(original&&replacement);
  for(i=0;i<length;i++) original[i]=(unsigned char)i;
  memcpy(replacement,original,length);for(i=4090;i<4130;i++) replacement[i]^=0x5a;
