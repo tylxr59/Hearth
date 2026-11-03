@@ -286,3 +286,10 @@ def test_explicit_sudo_flag_wraps_only_the_fixed_readonly_mtype_command(monkeypa
     with pytest.raises(Invalid):
         cli.inspect_disk("/dev/../private", sudo_read=True)
     assert len(calls) == 2
+
+
+def test_leftover_ha_profile_gets_a_clear_message():
+    from installer import onboard
+
+    with pytest.raises(Invalid, match=r"config/\.storage/hearth"):
+        onboard.choices({"data_schema": []})

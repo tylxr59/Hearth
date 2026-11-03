@@ -54,6 +54,14 @@ class HAClient:
 
 def choices(form):
     fields = form.get("data_schema")
+    if fields == []:
+        # HA offers an empty form when config/.storage/hearth already exists:
+        # removing the integration keeps the old profile and its credential.
+        raise Invalid(
+            "Home Assistant still has a saved Hearth profile from an earlier install "
+            "(config/.storage/hearth). Move that folder aside (don't delete it; it holds "
+            "the old credential), then run setup again. No restart is needed."
+        )
     if (
         not isinstance(fields, list)
         or len(fields) != 2

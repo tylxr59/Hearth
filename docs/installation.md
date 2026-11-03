@@ -179,7 +179,9 @@ one is connected. `--endpoint https://IP:8443` sets the thermostat-facing
 address yourself.
 
 Close any open Hearth setup dialog in HA first. Onboarding refuses to replace an
-existing Hearth profile, and it never writes to the thermostat.
+existing Hearth profile, and it never writes to the thermostat. Removing the
+integration in HA keeps its profile in `config/.storage/hearth`. For a fresh
+install, move that folder aside first.
 
 ## Undo
 
