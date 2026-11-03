@@ -23,6 +23,13 @@ AUDIT_MAGIC, AUDIT_END = b"HFEAUD1\n", b"HFEEND1\n"
 BACKUP_MAGIC = b"HFEAHSH1"
 
 
+def restored_archive_plan(manifest, plan):
+    layout = manifest.get("archive_layout")
+    if layout not in (None, "plan-id-directory-v1"):
+        raise ValueError("known restored archive layout required")
+    return plan.hex() if layout is not None else None
+
+
 def original_records(capsule, pin):
     capsule, pin = private_path(capsule), private_path(pin)
     from firmware.file_writer.prepare import pin_read
@@ -190,7 +197,7 @@ def run(root, output, previous, capsule, pin, *, execute=False, from_restore=Fal
         raise ValueError("fresh owner-only output required")
     creation = json.loads(private_read(root / "profile.json", 65536))
     manifest = json.loads(private_read(capsule / "plan.json", 32768))
-    expected_archive = binding.plan.hex() if manifest.get("archive_layout", 0) == 1 else None
+    expected_archive = restored_archive_plan(manifest, binding.plan)
     if creation.get("archive_plan") != expected_archive:
         raise ValueError("audit must inspect the exact restored plan's archive")
     session = bytes.fromhex(creation["session"])

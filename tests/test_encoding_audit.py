@@ -69,6 +69,17 @@ def test_audit_archive_binding_accepts_only_a_complete_plan():
             profile.archive_name(value)
 
 
+def test_restored_archive_binding_uses_capsule_manifest_layout_name():
+    from firmware.encoding_audit.run import restored_archive_plan
+
+    plan = b"p" * 32
+    assert restored_archive_plan({}, plan) is None
+    assert restored_archive_plan({"archive_layout": "plan-id-directory-v1"}, plan) == plan.hex()
+    for layout in (1, 0, "unknown", True):
+        with pytest.raises(ValueError):
+            restored_archive_plan({"archive_layout": layout}, plan)
+
+
 @pytest.mark.parametrize(
     "fault", ("short", "long", "version", "count", "positive", "unknown-error")
 )
