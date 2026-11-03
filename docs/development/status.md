@@ -1,6 +1,6 @@
 # Current development status
 
-The0.10.2 candidate fixes a source-only packaging failure exposed by the owner's
+Published experimental0.10.2 fixes a source-only packaging failure exposed by the owner's
 fresh0.10.1 installer run: reader builds passed, but the recovery-source snapshot
 incorrectly tried to package the HA integration, which is absent from the installer
 ZIP. It now snapshots installer inputs independently. An explicit, guarded
@@ -8,11 +8,14 @@ ZIP. It now snapshots installer inputs independently. An explicit, guarded
 host prepare; device attempts and write recovery remain excluded. Focused fresh-ZIP
 snapshot and continuation refusal tests pass. The owner's HA entry and private
 bundle were created successfully; no device loader/write occurred in that session.
-The extracted download was updated exactly to the checked0.10.2 candidate, with
+The extracted download was updated exactly to published0.10.2, with
 original public source preserved privately. Existing reader/ECC integrity checks
 still pass. No loader is armed. Full host tests pass1,788 plus the subsequently
 added focused continuation test; the isolated real-HA sandbox passes24 control
-round trips and admin onboarding. No live HA update/restart was executed.
+round trips and admin onboarding. No live HA update/restart was executed. CI passes1,779 tests with15 optional
+skips, plus hassfest. Downloaded checksums and every public file match tested
+packages; the owner's patched source matches the release, and default HACS
+selection chooses v0.10.2.
 
 Published experimental0.10.1 provides the single-entry `python3 provision.py`
 setup wizard, mandatory full-NAND archive, guided selected-file restore, HACS
@@ -45,7 +48,9 @@ No additional flash write was needed for that diagnosis.
 For clean HA onboarding, the owner removed Hearth's entry; retained profile,
 state and manual source were privately archived with exact readback. HACS0.7.1
 was downloaded/verified and Core restarted by the owner. No submitted fresh entry
-or retained live profile is known. Use HACS for further delivery; obtain fresh
+or retained live profile was known at that earlier stage. The subsequent owner
+wizard run created a new entry/bundle, as recorded above. Use HACS for further
+delivery; obtain fresh
 approval before another agent-executed Core restart. Do not manually reinstall
 or recreate the old profile. There has been no new HA deployment during backup
 work. Whole-chip restoration and hardware power-loss recovery remain unverified.

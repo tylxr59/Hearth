@@ -67,7 +67,9 @@ The historical investigation is archived under `docs/development/history/` and
   matching private bundle (local create_entry receipt verified). Its host prepare
   failed only at source archiving after both reader builds; no device attempt
   occurred. The extracted download was updated in place to the checked0.10.2
-  candidate with original source preserved. Existing profiles still validate.
+  release with original source preserved. Existing profiles still validate.
+  Published0.10.2 and the patched download match every tested public file; CI
+  and hassfest pass, and default HACS selection chooses v0.10.2.
   The owner may use the explicit pre-device continuation; do not rerun failed
   hardware attempts or recreate this HA entry. No agent Core restart occurred.
 - The owner authorizes local implementation, docs, packaging, tests and commits/
