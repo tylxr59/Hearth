@@ -9,7 +9,10 @@ NTP choice defaulting to time.nist.gov for both native time sources.
 The owner's Gen2 Display-2.6 remains on primary5.9.4-5. Its base is wired to
 actual oil/baseboard HVAC. The display is detached and connected to this PC by
 USB. The owner confirmed native home-icon return after the Nov3 stock-file
-restoration; normal2464:0002 USB was independently observed. No loader is armed.
+restoration; normal2464:0002 USB was independently observed. The fresh full-NAND
+backup and the read-only file-acquisition handoff have exited successfully in
+protected RAM mode. The owner then confirmed native home-icon return, and normal
+USB was independently observed again. No loader is armed.
 On-base stock UI and physical heating after restoration are not yet measured.
 
 The stock return restored legacy network4 successfully. Core9 reported all511
@@ -30,10 +33,10 @@ approval before another agent-executed Core restart. Do not manually reinstall
 or recreate the old profile. There has been no new HA deployment during backup
 work. Whole-chip restoration and hardware power-loss recovery remain unverified.
 
-## 0.10.0 source preview (not published)
+## 0.10.0 release candidate
 
 The owner requests a full NAND backup before provisioning and a guided recovery
-path. The draft wizard now builds a fresh write-disabled full reader and saves
+path. The wizard now builds a fresh write-disabled full reader and saves
 two complete raw/OOB passes plus two independently ECC-derived data views. It
 retains original raw bytes, quality receipts, USB identity and matching public
 installer source. Public original BCH source is hash-pinned and built locally;
@@ -58,9 +61,15 @@ matching build workspace as well as the private folder/source ZIP.
 The first full-reader reproduction exposed only build-time/host metadata drift.
 The same exact-source-checked metadata normalization already used by protected
 readers now applies; all six artifacts reproduce between fresh full builds. No
-NAND-read or write-denial policy was changed. The wrapper plus archive/handoff
-still need a fresh supervised hardware test before publication or claims of an
-end-to-end stock-device installation.
+NAND-read or write-denial policy was changed. The fresh supervised backup now
+passed: both full raw/OOB passes were preserved, independently corrected views
+and all OOB bytes match, and neither pass has uncorrectable chunks. Four matching
+unclassified chunks per pass remain explicitly not ECC-verified. No flash writes
+occurred. The explicit RAM handoff then preserved both fixed snapshots and all
+four library groups (134 private files), with no native execution or flash writes.
+The process exited successfully; native restart and normal USB return are confirmed.
+End-to-end stock
+wizard installation remains unmeasured.
 
 ## Validation and measured capabilities
 

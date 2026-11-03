@@ -22,6 +22,13 @@ The historical investigation is archived under `docs/development/history/` and
   has now confirmed the native home icon and normal USB was independently observed.
   The display is again connected to this PC by USB with its HVAC base detached.
   On-base stock UI has not yet been checked. No extra flash write was needed.
+  The fresh full-NAND archive passed both raw/OOB passes and offline quality
+  checks; corrected data/OOB match with no uncorrectable chunks, while four
+  matching chunks per pass remain unclassified. The capture process exited0,
+  and the reviewed read-only handoff also exited0, preserving both snapshots and
+  four library groups (134 private files) without writes/native execution. The
+  owner confirmed native home-icon return afterward and normal USB was observed.
+  The display remains detached and charging by USB.
   No loader is armed. Do not assume an unwired
   base when it is reattached.
 - For the owner-authorized clean onboarding test, the owner removed the Hearth

@@ -16,10 +16,10 @@ internal HTTP frontend when that route is available on the thermostat network.
 
 ## Guided setup
 
-The full-NAND archive and `--restore` flow below are in the **0.10.0 source
-preview**, awaiting its supervised archive/handoff test and publication. Published
-0.9.1 has the earlier selected-file backup wizard. Do not expect the new archive
-step in that older download.
+The **0.10.0 experimental preview** includes the full-NAND archive and `--restore`
+flow below. The full backup, read-only acquisition handoff and native restart
+have been measured on the development unit. The complete stock-device installation
+and matching restore flow still need supervised hardware validation.
 
 Download `hearth-installer-source.zip` from the latest experimental release and
 extract it on the Linux computer connected to your Nest. Open a terminal in that
@@ -80,7 +80,7 @@ Core. For fresh setup, use [automatic USB onboarding](#automatic-usb-onboarding)
 below. It creates the HA entry, local trust and unique device credential without
 copying the device ID by hand. It refuses to replace an existing profile.
 
-The current release is the experimental **v0.9.1**. In HACS, open Hearth and select
+The current release is the experimental **v0.10.0**. In HACS, open Hearth and select
 that tagged version for download. It is an ordinary GitHub release so HACS's
 default selection works; the project remains experimental and is not stable v1.
 If an older repository cache shows a commit hash, use Hearth's **Update information**

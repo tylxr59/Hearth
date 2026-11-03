@@ -68,9 +68,9 @@ python3 provision.py
 
 The wizard explains how to install Hearth through HACS, reads the USB identity,
 offers HA addresses, saves originals and builds the checked install/restore kit.
-The next **0.10.0 source preview** additionally saves full raw NAND/OOB and ECC
+The **0.10.0 experimental preview** additionally saves full raw NAND/OOB and ECC
 data views before installation and adds `python3 provision.py --restore` for a
-saved installation. Published0.9.1 has the earlier selected-file backup flow.
+saved installation. The backup and read-only acquisition handoff are measured.
 Whole-chip restoration remains unverified.
 
 It asks before each device write. Its optional time-server prompt defaults to
@@ -136,6 +136,6 @@ loader projects underpin the reviewed RAM-boot research. See
 
 ## 📃 License
 
-Hearth's original code is available under the [MIT License](LICENSE). Referenced
-components retain their own licenses. Proprietary Nest firmware, per-device keys
+Hearth uses the [MIT License](LICENSE), except the standalone offline NAND ECC
+verifier, which is GPL-2.0-only. Referenced components retain their own licenses. Proprietary Nest firmware, per-device keys
 and owner recovery images are not included in releases.
