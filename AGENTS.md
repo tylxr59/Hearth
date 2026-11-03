@@ -10,16 +10,21 @@ The historical investigation is archived under `docs/development/history/` and
   native subscriptions; do not implement relay or replacement regulation logic.
 - Gen2 Display-2.6, primary firmware5.9.4-5 is the measured target. Do not claim
   Gen1, other firmware, cooling, emergency heat or fan operation from simulations.
-- Live owner HA is0.6.9. Its base is wired to actual oil/baseboard HVAC;
+- The owner's base is wired to actual oil/baseboard HVAC;
   the display is currently detached and charging by USB after the supervised
   installer-reader test. Last on-base state was Heat63F, Ecooff, empty schedule,
   owner-confirmed heating idle. No loader is armed. Do not assume an unwired
   base when it is reattached.
 - For the owner-authorized clean onboarding test, the owner removed the Hearth
-  entry through HA. Retained profile/state is privately archived with exact
-  readback; the live profile path is absent and the native listener is stopped.
-  HA0.7.0 source is staged and verified but not activated. Fresh approval is
-  still required before its Core restart. Do not recreate the old profile.
+  entry through HA. Retained profile/state and the manual integration copy are
+  privately archived with exact readback; both live paths are absent and the
+  native listener is stopped. One owner-authorized0.7.0 activation/Core restart
+  completed before the manual copy was archived for a genuine HACS install test.
+  HACS is configured; Hearth was not yet registered/downloaded through it at last
+  inspection. The published v0.7.0 preview assets were downloaded and checked
+  against the tested source. Wait for the owner's HACS download, then obtain
+  fresh approval before executing another Core restart. Do not recreate the old
+  profile or manually deploy over the HACS test.
 - The owner authorizes local implementation, docs, packaging, tests and commits/
   pushes. The current public-product work does not authorize another HA Core
   restart, a new persistent device write or an intentional HVAC call.

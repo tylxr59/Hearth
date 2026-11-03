@@ -24,6 +24,12 @@ port, normally8443) and the device ID obtained locally with the USB identify too
 The wizard generates private keys, local trust and a unique device credential.
 It refuses to overwrite an existing profile.
 
+The current published preview is **v0.7.0**. In HACS, open Hearth and select that
+version for download; enable beta/preview versions if it is hidden. A manual copy
+of the integration does not establish a successful HACS installation. For a clean
+onboarding test, retain private backups and remove the previous integration/profile
+before starting; removing an HA entry alone does not erase its retained profile.
+
 A previously prepared profile is imported without creating new credentials.
 Normal HA upgrades do not reflash the thermostat or rotate its identity.
 

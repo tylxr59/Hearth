@@ -62,8 +62,8 @@ For an already commissioned thermostat, add
 `https://github.com/tylxr59/Hearth` to **HACS → Custom repositories**, category
 **Integration**, install Hearth, then restart HA and add **Hearth** under
 **Settings → Devices & services**. Tagged previews provide the `hearth.zip`
-release asset; before the first tagged preview, use the source packaging steps
-in the [installation guide](docs/installation.md).
+release asset. Select the **v0.7.0** preview, enabling beta versions if HACS hides
+it. Follow the [installation guide](docs/installation.md) for fresh commissioning.
 
 For a stock thermostat, start with the supported-device and firmware-kit
 requirements in that guide. The USB tools can inspect the device without writing:

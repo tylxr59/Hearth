@@ -1,0 +1,25 @@
+{
+  "date": "2026-11-02",
+  "preview": "v0.7.0",
+  "source_commit": "7cc11d3",
+  "release_url": "https://github.com/tylxr59/Hearth/releases/tag/v0.7.0",
+  "release_workflow": "passed",
+  "source_ci": "passed including host checks, pinned real HA sandbox, dependency audits, HACS and hassfest",
+  "downloaded_checksums_verified": true,
+  "downloaded_zip_contents_match_tested_source": true,
+  "integration_files": 44,
+  "release_is_prerelease": true,
+  "per_device_firmware_included": false,
+  "owner_test_preparation": {
+    "old_integration_removed_through_ha": true,
+    "old_profile_archived_and_exact_readback_verified": true,
+    "authorized_manual_activation_and_core_restart_completed": true,
+    "manual_source_subsequently_archived_for_genuine_hacs_test": true,
+    "live_source_and_profile_paths_absent": true,
+    "hacs_available": true,
+    "hearth_hacs_registration_and_download_verified": false,
+    "thermostat_modified": false,
+    "thermostat_commands_sent": false
+  },
+  "remaining": "Owner performs HACS custom-repository download, then fresh onboarding; stock installer and hardware release gates remain open."
+}
