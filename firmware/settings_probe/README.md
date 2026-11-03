@@ -4,11 +4,11 @@ A bounded diagnostic for the privately recovered Display-2.6 / 5.9.4-5 settings
 library. The first supervised boot produced five complete rows before native
 diagnostics exhausted the initial reporting budget. Native startup returned.
 The corrected second run received all twelve cases and returned to native
-startup. See the [measured results](../../docs/research/settings-probe-result-2026-10-31.md)
-and [preserved first attempt](../../docs/research/settings-probe-attempt-2026-10-31.md).
+startup. See the [measured results](../../docs/development/history/research/settings-probe-result-2026-10-31.md)
+and [preserved first attempt](../../docs/development/history/research/settings-probe-attempt-2026-10-31.md).
 It is not an installation, recovery procedure or storage fix.
 
-The purpose is to measure the [reviewed writer defects](../../docs/research/native-storage-2026-10-30.md)
+The purpose is to measure the [reviewed writer defects](../../docs/development/history/research/native-storage-2026-10-30.md)
 without touching real settings. Original helper code loads only the native base
 settings class and its dependencies, never nlclient/osm or control/lifecycle
 methods. It reads/writes public synthetic ID/secret strings under `/state` in the

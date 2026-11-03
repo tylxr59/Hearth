@@ -54,7 +54,7 @@ A pass would validate this bounded ARM RAM behavior and the exact standalone
 settings build. It would not establish JFFS2 durability, installation, real
 credentials, full native startup, authenticated device transport or HVAC control.
 
-The first combined [attempt](../../docs/research/file-commissioning-attempt-2026-10-31.md)
+The first combined [attempt](../../docs/development/history/research/file-commissioning-attempt-2026-10-31.md)
 transferred successfully but did not deliver a complete report. The cached sender
 now retains its offset across USB backpressure, and the collector handles restarted
 prefixes without concatenation. The wrapper also creates a durable execution marker;
@@ -70,7 +70,7 @@ remain unmeasured pending the fresh corrected profile; see the dated attempt not
 The third owner-timed run from `a0bc948` passed all 68 cases with three zero
 child statuses and a complete privately retained report. The owner confirmed
 native home icon and normal USB was independently observed afterward. See the
-[successful result](../../docs/research/file-commissioning-attempt-2026-10-31.md#third-attempt-all-68-cases-observed).
+[successful result](../../docs/development/history/research/file-commissioning-attempt-2026-10-31.md#third-attempt-all-68-cases-observed).
 Earlier pending notes describe preparation history. JFFS2 installation, full
 native application behavior and physical device transport remain unverified.
 
@@ -90,6 +90,6 @@ a device writer or measures JFFS2 write durability.
 
 The 91-case recovery revision subsequently passed one owner-timed run from
 `aaf93b7`, with a complete privately retained report and native startup/USB
-return. See the [result](../../docs/research/file-recovery-result-2026-10-31.md).
+return. See the [result](../../docs/development/history/research/file-recovery-result-2026-10-31.md).
 Earlier unexecuted notes record preparation history. Actual JFFS2 write,
 hardware power-loss recovery and persistent commissioning remain unverified.

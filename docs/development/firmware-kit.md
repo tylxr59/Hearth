@@ -1,5 +1,16 @@
 # Device-bound firmware kit
 
+How `build-kit` turns one unit's acquisition and HA bundle into checked install
+and restore images. Terms used below:
+
+| Term | Meaning |
+| --- | --- |
+| **commissioning9** | Phase 1: nine files covering HA endpoint/settings, TLS trust (CA/CRL, credential) and startup |
+| **cleanup3** | Phase 2: three files covering the native client probe, ConnMan probe and ConnMan NTP settings |
+| **capacity preflight** | A no-commit run that proves root0 has space for both phases before either writes |
+| **profile** | A single-use, plan-bound RAM image (action 1 = install, action 2 = restore) |
+| **custody** | Receipts that bind the saved originals to the acquisition session |
+
 The public USB frontend runs the existing checked writer. It does not replace
 its plan binding, image-source checks, original-file custody, RAM selftests,
 read-only preflight, explicit commit, encoding audit or matching restore image.
@@ -18,7 +29,7 @@ and `acquire`. A fresh end-to-end source build passed offline, including the hos
 loader's USB simulation. Eight acquisition artifacts reproduce against its
 protected base. The rebuilt bootstrap code/data match the earlier build, with
 only version timestamps differing. A supervised corrected reader run acquired
-both snapshots and four top-level groups, verified136 private files and the full
+both snapshots and four top-level groups, verified 136 private files and the full
 34-library closure, and returned to native UI/USB. The existing owner unit was
 already commissioned; this is not a stock installation or completed write kit.
 
@@ -44,7 +55,7 @@ The preparation stages are:
 5. `firmware.file_writer.prepare` binds the kernel to that exact plan/receipt;
    compile from the pinned public sources with the rootless builder.
 6. `firmware.file_writer.compile` creates the bound action helpers.
-7. `firmware.file_writer.profile.package` creates action1 install and action2
+7. `firmware.file_writer.profile.package` creates action 1 install and action 2
    restore images. `checked_pair` revalidates their source, custody and equality.
 8. The guided CLI additionally checks the exact bundle credential/CA/CRL/endpoint
    before arming the writer. Fresh real files must still pass the device preflight.

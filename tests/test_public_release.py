@@ -9,7 +9,7 @@ from pathlib import Path
 from firmware.acquisition.profile import recipes as acquisition_recipes
 from firmware.file_writer.profile import recipes as commissioning_recipes
 from firmware.network_writer.profile import recipes as cleanup_recipes
-from tools.public_release import release
+from tools.public_release import ASSETS, INSTALLER, release
 from tools.sync_integration import sync
 
 
@@ -38,8 +38,40 @@ def test_hacs_and_installer_archives_reproduce_without_private_material(tmp_path
         version = json.loads(z.read("manifest.json"))["version"]
         project = tomllib.loads(Path("pyproject.toml").read_text())
         assert version == project["project"]["version"]
-    with zipfile.ZipFile(a / "hearth-installer-source.zip") as z:
-        names = set(z.namelist())
+    assert set(ASSETS) == {"hearth.zip", "hearth-nest-installer.zip", "SHA256SUMS"}
+    assert {"RELEASE-NOTES.md", "release.json"} | set(ASSETS) == {p.name for p in a.iterdir()}
+    sums = (a / "SHA256SUMS").read_text()
+    assert "hearth.zip" in sums and INSTALLER in sums
+    with zipfile.ZipFile(a / INSTALLER) as z:
+        prefix = f"hearth-nest-installer-{version}/"
+        assert all(name.startswith(prefix) for name in z.namelist())
+        names = {name.removeprefix(prefix) for name in z.namelist()}
+        assert {"README.md", "docs/installation.md", "docs/troubleshooting.md"} <= names
+        # Developer tooling, retired laboratory code and pytest-only fixtures
+        # are not installer inputs.
+        assert not any(
+            name.startswith(
+                (
+                    "tools/ghidra/",
+                    "firmware/scratch_test/",
+                    "firmware/nand_ecc_sample/",
+                    "custom_components/",
+                    "homeassistant/",
+                )
+            )
+            or name
+            in {
+                "tools/package_addon.py",
+                "tools/simulator.py",
+                "tools/check_native_ha.py",
+                "tools/public_release.py",
+                "backend/mqtt.py",
+                "backend/haos.py",
+                "requirements-dev.lock",
+                "tests/scratch_core_harness.c",
+            }
+            for name in names
+        )
         assert {
             "provision.py",
             "installer/wizard.py",
@@ -76,8 +108,8 @@ def test_hacs_and_installer_archives_reproduce_without_private_material(tmp_path
         assert (
             set(acquisition_recipes()) | set(commissioning_recipes()) | set(cleanup_recipes())
         ) <= names
-        extracted = tmp_path / "source"
-        z.extractall(extracted)
+        z.extractall(tmp_path / "unpacked")
+        extracted = tmp_path / "unpacked" / prefix.rstrip("/")
     launch = subprocess.run(
         [sys.executable, "-S", "provision.py"],
         input=b"QUIT\n",
@@ -103,7 +135,7 @@ def test_hacs_and_installer_archives_reproduce_without_private_material(tmp_path
             sys.executable,
             "-S",
             "-c",
-            "from tools.public_release import installer_archive; installer_archive('recovery-source.zip')",
+            "from tools.installer_archive import installer_archive; installer_archive('recovery-source.zip')",
         ],
         cwd=extracted,
         env={**os.environ, "PYTHONPATH": str(extracted)},
@@ -112,10 +144,10 @@ def test_hacs_and_installer_archives_reproduce_without_private_material(tmp_path
     )
     with (
         zipfile.ZipFile(extracted / "recovery-source.zip") as snapshot,
-        zipfile.ZipFile(a / "hearth-installer-source.zip") as original,
+        zipfile.ZipFile(a / INSTALLER) as original,
     ):
-        assert snapshot.namelist() == original.namelist()
-        assert all(snapshot.read(n) == original.read(n) for n in original.namelist())
+        assert [prefix + n for n in snapshot.namelist()] == original.namelist()
+        assert all(snapshot.read(n) == original.read(prefix + n) for n in snapshot.namelist())
     assert all(name in result.stdout for name in ("build-kit", "install-kit", "restore-kit"))
     assert (
         json.loads((a / "release.json").read_bytes())["stock_device_kit_generation"]
@@ -131,5 +163,7 @@ def test_hacs_and_installer_archives_reproduce_without_private_material(tmp_path
     workflow = Path(".github/workflows/release.yml").read_text()
     publish = next(line for line in workflow.splitlines() if "run: gh release create " in line)
     assert "--prerelease" not in publish and "--latest" in publish
+    assert all("release/" + name in publish for name in ASSETS) and "release/*" not in publish
+    assert "--notes-file release/RELEASE-NOTES.md" in publish
     assert "Experimental preview" in publish
     assert "needs: [package, hassfest]" in workflow

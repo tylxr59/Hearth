@@ -142,7 +142,7 @@ with native return and telemetry reconnect observed. The owner observed the
 chosen public NIST time service and no new Google entries during the bounded
 watch. This does not establish that every future endpoint has been removed.
 
-See [the feature checklist](architecture/0003-native-ha-controls.md) for remaining
+See [the feature checklist](../architecture/0003-native-ha-controls.md) for remaining
 eco, scheduling, settings, weather and supervised equipment work.
 
 ## Native weather fallback and schedule metadata (0.6.6)

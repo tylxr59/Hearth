@@ -34,6 +34,7 @@ def release(output):
         root / name
         for name in (
             "AGENTS.md",
+            "CLAUDE.md",
             "README.md",
             "LICENSE",
             "THIRD_PARTY.md",

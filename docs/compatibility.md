@@ -1,19 +1,30 @@
-# Compatibility and evidence
+# What's tested
 
-| Capability | Real device result | Remaining scope |
+Hearth keeps three kinds of evidence separate: **tested on a real Nest**,
+**tested in simulation or automated tests only**, and **not tested**. A
+feature showing up in Home Assistant doesn't mean it has been verified on real
+hardware.
+
+All real-hardware results come from one unit: a **Gen 2, Display-2.6, software
+5.9.4-5**, wired to an oil-fired baseboard heating system.
+
+| Feature | Real Nest | Still to do |
 | --- | --- | --- |
-| Gen2 Display-2.6, primary5.9.4-5 | Installed, native UI works | Other models/versions unsupported |
-| Local telemetry and HA climate | Working | Multi-day reliability |
-| Single target |63→62→63F and matching HA acknowledgement | Explicit native echo is separate |
-| Manual Eco | On/off confirmed by device mode and restored physically | Other configurations and bound writes |
-| Weekly HEAT schedule | Future point, correct readback, ACK, backups, original restore | Actual timed execution and other modes |
-| Weather | Native requests served, timezone correct | Full physical forecast-view verification |
-| New device settings | Host/native-protocol and HA sandbox tests | Per-field actual-unit validation |
-| Actual HVAC switching | Not measured | Identify equipment and supervise a complete cycle |
-| Cooling, fan, range, emergency heat | Synthetic coverage | Appropriate real hardware |
-| Outage/restart behavior | No-intent-replay tests | Supervised actual outage/return and sustained use |
-| Installer | Guided checked-profile frontend | Automatic acquisition/per-unit build and fresh-unit validation |
-| Recovery | Selected original files restored and native UI recovered | Whole-firmware and hardware power-loss recovery |
+| Temperature/humidity readings in HA | ✅ Working | Multi-day reliability |
+| Target temperature changes | ✅ 63 → 62 → 63 °F confirmed on the dial | Native value echo back to HA |
+| Eco on/off | ✅ Confirmed on the device | Other configurations |
+| Weekly heat schedule | ✅ Replace, read back, backup and restore of the original | A real timed schedule change; other modes |
+| Weather from HA | ✅ Nest requests served, timezone correct | Every forecast field on the Nest's screen |
+| Local time | ✅ Corrected local time on the Nest | — |
+| Choosing your own time server | 🧪 Built and host-tested | Running the wizard's time-server writer on a real Nest |
+| Device settings | 🧪 Automated and HA-sandbox tests | Each field on a real unit |
+| Actually switching the furnace on/off | ❌ Not tested | A supervised heating cycle |
+| Cooling, fan, ranges, emergency heat | 🧪 Simulation only | Suitable real equipment |
+| Power cut / HA outage behaviour | 🧪 No-replay tests | A real outage and return |
+| Full flash backup | ✅ Two passes, cross-checked offline | — |
+| Saved-file restore | ✅ Back to the stock home screen | — |
+| Full-chip restore | ❌ Not tested, no tool for it | — |
+| Full wizard on a stock Nest | ❌ Not run end to end | One supervised stock install and restore |
+| Other models / software / Gen 1 / Gen 3 | ❌ Not supported | Their own measured profiles |
 
-Do not use the feature list as a claim that all equipment or a stock-unit public
-installer has been validated. Gen1 remains a research target.
+✅ verified on hardware · 🧪 automated/simulated only · ❌ not done

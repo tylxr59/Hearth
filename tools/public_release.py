@@ -1,74 +1,48 @@
-"""Deterministic public integration/installer archives; no per-device material."""
+"""Deterministic public release assets; no per-device material.
+
+Assets published on each ``v0.x.y`` GitHub release:
+
+- ``hearth.zip``: the Home Assistant integration. HACS downloads it by this
+  exact name (see ``hacs.json``); users never need to download it by hand.
+- ``hearth-nest-installer.zip``: the USB setup wizard for the thermostat,
+  inside a ``hearth-nest-installer-<version>/`` folder. Its contents are
+  computed by ``tools.installer_archive``.
+- ``SHA256SUMS``: checksums for both.
+
+``release.json`` and ``RELEASE-NOTES.md`` are build metadata and the release
+body; they are not uploaded as assets.
+"""
 
 import argparse
 import hashlib
 import json
 import tempfile
-import zipfile
 from pathlib import Path
 
+from tools.installer_archive import files as installer_files
+from tools.installer_archive import write
 from tools.package_native_ha import ROOT, package
 from tools.sync_integration import sync
 
+INTEGRATION = "hearth.zip"
+INSTALLER = "hearth-nest-installer.zip"
+ASSETS = (INTEGRATION, INSTALLER, "SHA256SUMS")
 
-def archive(path, files):
-    with zipfile.ZipFile(path, "x", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as output:
-        for name, data in sorted(files.items()):
-            info = zipfile.ZipInfo(name, date_time=(1980, 1, 1, 0, 0, 0))
-            info.external_attr = 0o100644 << 16
-            info.compress_type = zipfile.ZIP_DEFLATED
-            output.writestr(info, data)
+NOTES = """> [!WARNING]
+> **Experimental preview.** Supports only the Nest Learning Thermostat 2nd gen,
+> Display-2.6, software 5.9.4-5. The complete stock-device install and restore
+> has not been verified on hardware yet. See the [install guide]({docs}installation.md).
 
+### Which file do I need?
 
-def installer_archive(path):
-    """Snapshot only public installer inputs, also from an extracted source ZIP."""
-    public = {}
-    for folder in ("installer", "backend", "provisioning", "firmware", "tools"):
-        for p in (ROOT / folder).rglob("*"):
-            if (
-                p.is_file()
-                and not p.is_symlink()
-                and "__pycache__" not in p.parts
-                and (
-                    p.suffix
-                    in {
-                        ".py",
-                        ".c",
-                        ".h",
-                        ".S",
-                        ".map",
-                        ".json",
-                        ".sh",
-                        ".md",
-                        ".patch",
-                        ".txt",
-                        ".config",
-                        ".lds",
-                    }
-                    or p.name in {"Dockerfile", "LICENSE", "Makefile", "COPYING.GPL-2.0"}
-                )
-            ):
-                public[p.relative_to(ROOT).as_posix()] = p.read_bytes()
-    # Original host/RAM fault fixtures are compiler inputs for the guarded
-    # writers, not optional developer-only tests. Ship their source, never
-    # generated helper executables or per-device fixture data.
-    for p in (ROOT / "tests").rglob("*"):
-        if p.is_file() and not p.is_symlink() and p.suffix in {".c", ".h"}:
-            public[p.relative_to(ROOT).as_posix()] = p.read_bytes()
-    for name in (
-        "LICENSE",
-        "provision.py",
-        "THIRD_PARTY.md",
-        "pyproject.toml",
-        "requirements.lock",
-        "requirements-dev.lock",
-        "requirements-build.lock",
-        "docs/installation.md",
-        "docs/recovery.md",
-        "docs/development/firmware-kit.md",
-    ):
-        public[name] = (ROOT / name).read_bytes()
-    archive(path, public)
+| File | What it is | Do I download it? |
+| --- | --- | --- |
+| `{installer}` | The USB setup wizard for your thermostat (Linux) | **Yes**, to set up a Nest: extract it and run `python3 provision.py` |
+| `{integration}` | The Home Assistant integration | **No**, HACS installs it for you |
+| `SHA256SUMS` | Checksums for both files | Optional, to verify downloads |
+
+Neither file contains Nest firmware, keys or anyone's backups.
+"""
 
 
 def release(output):
@@ -88,23 +62,32 @@ def release(output):
             for p in integration.rglob("*")
             if p.is_file()
         }
-        archive(output / "hearth.zip", files)
-    installer_archive(output / "hearth-installer-source.zip")
+        write(output / INTEGRATION, files)
+    write(output / INSTALLER, installer_files(ROOT), f"hearth-nest-installer-{version}/")
     (output / "SHA256SUMS").write_text(
         "".join(
             hashlib.sha256((output / name).read_bytes()).hexdigest() + "  " + name + "\n"
-            for name in ("hearth.zip", "hearth-installer-source.zip")
+            for name in (INTEGRATION, INSTALLER)
+        )
+    )
+    (output / "RELEASE-NOTES.md").write_text(
+        NOTES.format(
+            installer=INSTALLER,
+            integration=INTEGRATION,
+            docs="https://github.com/tylxr59/Hearth/blob/main/docs/",
         )
     )
     (output / "release.json").write_text(
         json.dumps(
             {
-                "format": "hearth-public-release-v1",
+                "format": "hearth-public-release-v2",
                 "version": version,
                 "prerelease": False,
                 "experimental": True,
-                "integration_archive": "hearth.zip",
-                "installer_archive": "hearth-installer-source.zip",
+                "assets": list(ASSETS),
+                "integration_archive": INTEGRATION,
+                "installer_archive": INSTALLER,
+                "installer_folder": f"hearth-nest-installer-{version}/",
                 "per_device_firmware_included": False,
                 "private_keys_included": False,
                 "stock_device_kit_generation": "experimental-source-builder",

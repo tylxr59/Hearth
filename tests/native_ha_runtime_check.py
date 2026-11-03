@@ -231,14 +231,21 @@ async def check(root, profile):
             # logo/dark/high-density fallbacks, without a CDN request.
             assert await async_setup_component(hass, "brands", {})
             brand_token = hass.data["brands"][-1]
-            original_icon = (root / "custom_components/hearth/brand/icon.png").read_bytes()
-            for image in ("icon.png", "logo.png", "dark_icon.png", "icon@2x.png"):
+            brand = root / "custom_components/hearth/brand"
+            icon, icon2x = (brand / "icon.png").read_bytes(), (brand / "icon@2x.png").read_bytes()
+            expected = {
+                "icon.png": icon,
+                "logo.png": icon,
+                "dark_icon.png": icon,
+                "icon@2x.png": icon2x,
+            }
+            for image, data in expected.items():
                 async with client.get(
                     "http://127.0.0.1:8123/api/brands/integration/hearth/" + image,
                     params={"token": brand_token, "placeholder": "no"},
                 ) as response:
                     assert response.status == 200 and response.content_type == "image/png"
-                    assert await response.read() == original_icon
+                    assert await response.read() == data
             async with client.get(probe_url) as response:
                 assert response.status == 204 and await response.read() == b""
             async with client.get(probe_url + "?unexpected=value") as response:
@@ -1435,8 +1442,10 @@ async def check_automatic_onboarding(root):
     from homeassistant import bootstrap, loader
 
     source = root / "public-installer"
-    with zipfile.ZipFile("/package/installer-artifacts/hearth-installer-source.zip") as archive:
-        archive.extractall(source)
+    with zipfile.ZipFile("/package/installer-artifacts/hearth-nest-installer.zip") as archive:
+        archive.extractall(root)
+    (folder,) = root.glob("hearth-nest-installer-*")
+    folder.rename(source)
     config = root / "fresh-ha"
     config.mkdir(mode=0o700)
     shutil.copytree("/package/custom_components", config / "custom_components")

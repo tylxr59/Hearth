@@ -5,7 +5,7 @@ Hearth's original source is MIT licensed (see LICENSE). This does not grant righ
 ## References
 
 The additional Google Nest5.9.4 ConnMan source review is pinned separately in
-[connman-5.9.4.json](docs/research/connman-5.9.4.json), revision
+[connman-5.9.4.json](docs/development/references/connman-5.9.4.json), revision
 `ba669b5831fd37dd868237c13db163256d1b0c52`. The inspected source carries GPLv2
 notices. It informs connectivity/time behavior only; no ConnMan implementation
 or proprietary executable is copied into the HA integration or source release.
@@ -20,7 +20,7 @@ or proprietary executable is copied into the HA integration or source release.
 | Google Nest 5.9.4 x-loader | 9b7bb7281b715544e6f5201390d8dac416a4a494 | GPL notices/COPYING in the published source; retain complete corresponding source/notices for any later redistribution. | Compiled locally for the model-specific RAM probe; no binary committed or published. |
 | ajb142/omap_loader (also grant-h) | dc0758f91a4698054b0629a05f1b38b9b8b13de3 | GPL-2.0-or-later in source; LICENSE.md contains GPLv2. | Source reviewed, patched and compiled locally. Checked-in patch and combined C sanitizer harness are GPL-2.0-or-later. No upstream full source or executable vendored. |
 
-[upstreams.json](docs/research/upstreams.json) includes URLs, revisions and individual hashes for reproducible inspection. [binary-inventory.json](docs/research/binary-inventory.json) identifies NLE prebuilts without redistributing them. No source-to-prebuilt correspondence, signature chain, vendor authenticity or legal permission is asserted by matching a Git blob or SHA-256. Any future firmware input must be lawfully obtained by the owner, independently identified and kept out of source/releases.
+[upstreams.json](docs/development/references/upstreams.json) includes URLs, revisions and individual hashes for reproducible inspection. [binary-inventory.json](docs/development/references/binary-inventory.json) identifies NLE prebuilts without redistributing them. No source-to-prebuilt correspondence, signature chain, vendor authenticity or legal permission is asserted by matching a Git blob or SHA-256. Any future firmware input must be lawfully obtained by the owner, independently identified and kept out of source/releases.
 
 [The probe inputs](firmware/probe/inputs.json) additionally pin Google's source,
 the historical CodeSourcery compiler mirror/archive and the reviewed host loader.
@@ -51,7 +51,7 @@ No third-party binary, full kernel source or private capture is added to Git.
 
 Offline NAND analysis additionally used public `python-bchlib` 2.1.3 source
 (GPL-2.0), with sdist/file SHA-256 pinned in
-[the analysis source lock](docs/research/bchlib-2.1.3.json). Only standalone public
+[the analysis source lock](docs/development/references/bchlib-2.1.3.json). Only standalone public
 BCH C code was compiled on the host; no Python package was installed and no
 proprietary firmware was executed. The source/library remains under ignored
 build/, is not vendored or redistributed, and is not a product runtime dependency.
@@ -60,7 +60,7 @@ The optional static-review workflow uses the owner's installed Ghidra 12.1.2 DEV
 and Java 27. Only original `tools/ghidra/HearthStaticReview.java` is included;
 Ghidra, its projects and proprietary decompilations are not bundled. Public
 OpenSSL 1.0.2h/curl 7.49.1 reference files are pinned in
-[the native TLS source record](docs/research/native-tls-source-pins.json), retained
+[the native TLS source record](docs/development/references/native-tls-source-pins.json), retained
 under ignored build/, and neither vendored nor executed as target firmware.
 
 The separate original firmware/tls_probe/ diagnostic reuses the same pinned
@@ -85,7 +85,7 @@ a source/binary-correspondence claim for the recovered native NSPR library.
 
 ## Runtime dependencies
 
-Full versions and package metadata: [python-dependencies.json](docs/security/python-dependencies.json). Hash-locked distributions: requirements.lock. Runtime directly uses aiohttp (Apache-2.0 AND MIT) and paho-mqtt (EPL-2.0 OR BSD-3-Clause per distribution metadata; retain notices when distributing). Transitives include aiohappyeyeballs (PSF-2.0), aiosignal/frozenlist/multidict/propcache/yarl (Apache-2.0), attrs (MIT) idna (BSD-3-Clause) and conditional typing_extensions (PSF-2.0); see each distribution's license files for authoritative terms. Metadata inventory is not a substitute for retaining the installed licenses. No dependencies are vendored.
+Full versions and package metadata: [python-dependencies.json](docs/development/references/python-dependencies.json). Hash-locked distributions: requirements.lock. Runtime directly uses aiohttp (Apache-2.0 AND MIT) and paho-mqtt (EPL-2.0 OR BSD-3-Clause per distribution metadata; retain notices when distributing). Transitives include aiohappyeyeballs (PSF-2.0), aiosignal/frozenlist/multidict/propcache/yarl (Apache-2.0), attrs (MIT) idna (BSD-3-Clause) and conditional typing_extensions (PSF-2.0); see each distribution's license files for authoritative terms. Metadata inventory is not a substitute for retaining the installed licenses. No dependencies are vendored.
 
 Python container base is official `python:3.13.16-slim`, pinned by manifest digest in Dockerfile. It includes CPython (PSF license) and Debian/system packages with their own licenses and sources; Docker's upstream digest is an integrity pin, not a vulnerability clearance. MQTT integration tests use official eclipse-mosquitto 2.0.22 pinned by digest in tests/test_broker.py; it is a development-only download, not bundled firmware. Mosquitto has its own EPL/EDL licensing terms. OpenSSL and Docker are development tools supplied by the host.
 
@@ -108,7 +108,7 @@ The optional storage-lab historical-linker comparison uses GNU ld 2.18.50 in the
 existing CodeSourcery builder described above, without bundling its executable or
 linking firmware on the host. GNU ld is GPL-3.0; no third-party implementation is
 copied into the original candidate. Additional public glibc 2.19 relocation
-references are pinned in docs/research/glibc-relocation-2.19.json and remain
+references are pinned in docs/development/references/glibc-relocation-2.19.json and remain
 uncompiled reference inputs under ignored build/.
 
 The original controller-metadata extension under firmware/nand_contract/ combines

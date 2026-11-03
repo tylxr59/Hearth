@@ -273,7 +273,7 @@ prior0.6.8 on/off physical behavior was already measured. No intentional heatcal
 
 Build a local-first Nest Learning Thermostat modification that preserves native hardware/HVAC control. Gen 2 is the primary target; Gen 1 is secondary. Prefer a verified local on-device interface if feasible; otherwise retain the native transport behind a minimal local backend. Do not rewrite HVAC control loops.
 
-The user's unit has arrived and received USB intake on their PC. Arrival/ownership alone does not authorize flashing or physical control. The owner has explicitly authorized device investigation and requests advance notification for potentially dangerous actions such as flashing; preserve the backup/recovery gates below. The [2026-10-30 intake](docs/research/device-intake-2026-10-30.md) records enclosure `02A`, reported `Display-2.6`, firmware `5.9.4-5`, normal-mode USB `2464:0002` and an authorized manual restart briefly exposing OMAP `0451:d00e`. A later paced diagnostic RAM boot succeeded and returned to native startup. One supervised fixed scratch-block program/ECC/erase/restoration test subsequently passed with native USB return; the later nine-file commissioning is recorded below. HVAC operation and whole-firmware recovery remain untested. Two complete owner raw NAND captures and independently matching BCH-derived data views now exist privately; native nlclient/osm were reconstructed for static inspection. Programmed firmware-block and whole-chip restoration remain unverified.
+The user's unit has arrived and received USB intake on their PC. Arrival/ownership alone does not authorize flashing or physical control. The owner has explicitly authorized device investigation and requests advance notification for potentially dangerous actions such as flashing; preserve the backup/recovery gates below. The [2026-10-30 intake](research/device-intake-2026-10-30.md) records enclosure `02A`, reported `Display-2.6`, firmware `5.9.4-5`, normal-mode USB `2464:0002` and an authorized manual restart briefly exposing OMAP `0451:d00e`. A later paced diagnostic RAM boot succeeded and returned to native startup. One supervised fixed scratch-block program/ECC/erase/restoration test subsequently passed with native USB return; the later nine-file commissioning is recorded below. HVAC operation and whole-firmware recovery remain untested. Two complete owner raw NAND captures and independently matching BCH-derived data views now exist privately; native nlclient/osm were reconstructed for static inspection. Programmed firmware-block and whole-chip restoration remain unverified.
 
 On 2026-10-31 the owner confirmed this is their only unit and explicitly accepted
 potentially dangerous same-unit work after asking why a spare was required. A
@@ -295,7 +295,7 @@ Implementation baseline: commit `30c82f5`. It contains an authenticated host-sid
 
 The canonical `/v1/device/*` contract is new; stock Nest does not implement it. `backend/nest.py` is a strict partial PUT decoder, disabled in the normal runtime. Pairing, revision/CAS reconciliation, chunked subscriptions and physical command delivery remain incomplete. A passing simulator is not Nest compatibility.
 
-The [2026-10-30 acquisition review](docs/research/acquisition-review-2026-10-30.md)
+The [2026-10-30 acquisition review](research/acquisition-review-2026-10-30.md)
 adds the diagnostic RAM probe under `firmware/probe/`. The first unpaced upload
 failed at the ROM length field. A paced loader then successfully transferred the
 three generated files, and the expected USB heartbeat was observed without sudo.
@@ -315,7 +315,7 @@ Its wrapper requires normal Nest mode before a fresh attempt and never retries
 a boot automatically. Use a PTY when launching it so native output is immediate.
 A prior piped wait timed out without enough buffered stage evidence.
 
-The separate [geometry-only kernel](firmware/nand_metadata/README.md) is built at
+The separate [geometry-only kernel](../../../firmware/nand_metadata/README.md) is built at
 `build/nand-geometry-20261030` and passed offline integrity/configuration checks.
 It asserts hardware WP, checks protected status, skips BBT scanning, denies write
 callbacks and exposes only master sysfs geometry (no MTD char/block interface).
@@ -667,7 +667,7 @@ raw inputs and separate derived views. See docs/research/nand-capture-2026-10-30
 Notify the owner before experimental RAM execution under
 their existing authorization; do not re-ask general device permission. Continue
 to enforce backup/recovery gates before persistent writes and separate HVAC
-authorization/equipment requirements. See [handshake evidence](docs/research/usb-handshake-2026-10-30.md)
+authorization/equipment requirements. See [handshake evidence](research/usb-handshake-2026-10-30.md)
 and the separate dated USB validation report. Heartbeat plus native startup is
 not firmware recovery, battery/HVAC validation or product compatibility.
 

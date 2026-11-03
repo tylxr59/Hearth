@@ -9,7 +9,7 @@ from firmware.file_writer import chain
 from firmware.file_writer import run as core
 from firmware.file_writer.run import encode, save
 from firmware.network_writer import run as cleanup
-from installer import kit
+from installer import kit, ui
 from installer.bundle import device_info, read_bundle
 from tools.elf_review import private_path
 
@@ -101,7 +101,7 @@ def install(root, disk, *, ask=input, runner=None):
         entry = {"handoff_from_acquisition": session / "acquisition"}
     capacity = root / "check-capacity"
     fresh(root, "capacity-preflight", capacity)
-    print("Check total installation space before changing any thermostat file.")
+    ui.section("Part 1 of 3: check free space (read-only)")
     row = runner(
         root / "capacity-preflight",
         root / "cleanup-restore",
@@ -123,7 +123,7 @@ def install(root, disk, *, ask=input, runner=None):
         }
     chain.capacity_to_commissioning(record, binding, capacity)
     entry = {"handoff_from_capacity": capacity}
-    print("Step1/2: install local HA settings, trust and startup (nine files).")
+    ui.section("Part 2 of 3: Home Assistant settings, trust and startup (nine files)")
     row = runner(
         root / "commissioning-install",
         root / "commissioning-restore",
@@ -144,7 +144,7 @@ def install(root, disk, *, ask=input, runner=None):
         chain.commissioning_to_cleanup(record, binding, first)
         entry = {"handoff_from_commissioning": first}
     check_backup(session)
-    print("Step2/2: redirect connectivity checks and time locally (three disjoint files).")
+    ui.section("Part 3 of 3: local connectivity check and time server (three files)")
     row = runner(
         root / "cleanup-install",
         root / "cleanup-restore",
@@ -184,9 +184,7 @@ def restore(root, disk, *, phase="all", ask=input, runner=None, sudo_read=False)
         output = root / "restore-cleanup"
         fresh(root, "cleanup-restore", output)
         entry = {"recover_from": root / "install-cleanup"} if mode == "ram" else {}
-        print(
-            "Restore step: original three network files; real journal preflight remains required."
-        )
+        ui.section("Restore part 1 of 2: original network files (three files)")
         row = runner(
             root / "cleanup-restore",
             root / "cleanup-restore",
@@ -216,9 +214,7 @@ def restore(root, disk, *, phase="all", ask=input, runner=None, sudo_read=False)
                 entry = {"handoff_from_cleanup_restore": root / "restore-cleanup"}
             else:
                 entry = {"recover_from": root / "install-commissioning"}
-        print(
-            "Restore step: original nine commissioning files; exact backup and journal checks remain required."
-        )
+        ui.section("Restore part 2 of 2: original settings, trust and startup files (nine files)")
         row = runner(
             root / "commissioning-restore",
             root / "commissioning-restore",

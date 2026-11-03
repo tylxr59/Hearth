@@ -1,6 +1,6 @@
 """Opt-in telemetry lab for the pinned NLE wire contract; no command delivery.
 
-Protocol observations: docs/research/upstreams.json, NLE backend MIT reference.
+Protocol observations: docs/development/references/upstreams.json, NLE backend MIT reference.
 Original implementation. Raw native values are never persisted or echoed; only
 allowlisted telemetry and keyed, process-local field fingerprints are retained.
 """

@@ -39,7 +39,7 @@ the unwired base and on USB. After acquisition/wrapper exit, return to native
 startup once. No HVAC operation or flash modification is included. Whole-chip
 raw bytes alone are not a verified full-device backup: calibration, credentials,
 ECC/bad-block interpretation, partition identity and backplate/recovery coverage
-must be established before the [pre-write gates](../../docs/hardware.md) can close.
+must be established before the [pre-write gates](../../docs/development/history/hardware-gates.md) can close.
 
 Build with `firmware.nand_capture.stage` and `firmware.nand_capture.finalize`,
 using the same flags/isolated builder as the sample profile. Current local build:
@@ -74,7 +74,7 @@ match; all four embedded image payload CRCs pass. Root0 JFFS2 reconstruction
 recovered nlclient/osm for static analysis, with zero scanned node/data/dirent
 CRC failures. Four ECC chunks remain unclassified, and restoration is unverified.
 Normal Nest USB returned after the owner restarted. See the
-[measurement and private preservation record](../../docs/research/nand-capture-2026-10-30.md).
+[measurement and private preservation record](../../docs/development/history/research/nand-capture-2026-10-30.md).
 
 ## Provisioning archive wrapper
 

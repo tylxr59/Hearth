@@ -6,12 +6,12 @@ A local-first laboratory for Nest Learning Thermostat Gen 2, with Gen 1 as a sec
 
 **Current target: native Home Assistant integration, without MQTT.** The owner
 retired Hearth's MQTT bridge after verifying its three sensor readings end to
-end. The [native HA integration](docs/home-assistant-native.md) is staged and
+end. The [native HA integration](../../installation.md) is staged and
 configured, and the owner confirmed live readings for all three sensors. It receives
 the existing Nest HTTPS protocol directly inside HA Core and exposes HA entities.
 The separate Hearth Laboratory app has been retired and uninstalled.
 
-**Hardware result:** the corrected [nine-file installation](docs/research/recommissioning-preparation-2026-10-31.md)
+**Hardware result:** the corrected [nine-file installation](research/recommissioning-preparation-2026-10-31.md)
 passes byte/mode and native-compatible flash-encoding checks, and the owner
 confirmed the working primary UI on5.9.4-5. Do not use the old LZO-writing images.
 
@@ -21,16 +21,16 @@ observed on the owner unit. Experimental native climate controls are live; the
 eco/schedule/HA-weather0.5 build is active and awaiting supervised native acceptance. Full protocol
 reconciliation, power-loss/whole-firmware recovery and physical HVAC remain
 unverified. Keep this prototype
-on its unwired bench base. The [first physical HTTPS/telemetry result](docs/research/native-wifi-result-2026-10-31.md)
+on its unwired bench base. The [first physical HTTPS/telemetry result](research/native-wifi-result-2026-10-31.md)
 records the earlier broker-backed measurement separately from the HA-native migration.
 
 
 An authorized restart exposed OMAP ROM mode on the unit reporting `Display-2.6` /
-`5.9.4-5`. A separate [experimental RAM heartbeat probe](firmware/probe/README.md)
+`5.9.4-5`. A separate [experimental RAM heartbeat probe](../../../firmware/probe/README.md)
 has now booted on this unit, emitted its expected USB heartbeat and returned to
-native startup after a manual restart. It does not acquire flash or provide recovery. [Current evidence and next test](docs/research/acquisition-review-2026-10-30.md).
+native startup after a manual restart. It does not acquire flash or provide recovery. [Current evidence and next test](research/acquisition-review-2026-10-30.md).
 
-A separate [NAND geometry-only RAM profile](firmware/nand_metadata/README.md)
+A separate [NAND geometry-only RAM profile](../../../firmware/nand_metadata/README.md)
 has booted once and reported 256 MiB NAND with 2 KiB pages. It reads
 master geometry through sysfs with layered write guards, without acquiring
 firmware contents or establishing recovery.
@@ -39,21 +39,21 @@ Two full raw NAND reads are now preserved privately. Their raw bit differences
 were resolved in separate offline BCH-derived data views, which match; four boot
 image payload CRCs pass and native `nlclient`/`osm` were reconstructed for static
 inspection. This is acquisition evidence, not verified restoration or a usable
-native control API. [Measurement and limits](docs/research/nand-capture-2026-10-30.md).
+native control API. [Measurement and limits](research/nand-capture-2026-10-30.md).
 
-The [native interface review](docs/research/native-interface-2026-10-30.md)
+The [native interface review](research/native-interface-2026-10-30.md)
 identified a loopback temperature-control candidate. Startup and request framing
 remain unverified; the host transport remains provisional and no native bridge
 is enabled.
 
-A [private RAM-only TLS experiment](firmware/tls_probe/README.md) now completed
+A [private RAM-only TLS experiment](../../../firmware/tls_probe/README.md) now completed
 all 18 expected callback cases on the device; the candidate accepted valid and
 rejected all eight invalid cases. Native startup returned afterward. See the
-[measured scope](docs/research/tls-probe-result-2026-10-30.md): nothing was installed,
+[measured scope](research/tls-probe-result-2026-10-30.md): nothing was installed,
 and full transport/configuration, credential persistence, recovery and HVAC
 remain unverified.
 
-An opt-in [authenticated native telemetry laboratory](docs/research/native-telemetry-2026-10-31.md) now accepts bounded NLE-style entry/PUT/metadata/subscription requests and publishes read-only MQTT sensors. Host validation does not establish physical Nest compatibility.
+An opt-in [authenticated native telemetry laboratory](research/native-telemetry-2026-10-31.md) now accepts bounded NLE-style entry/PUT/metadata/subscription requests and publishes read-only MQTT sensors. Host validation does not establish physical Nest compatibility.
 
 Implemented:
 
@@ -80,7 +80,7 @@ make audit
 make demo
 ```
 
-`make container-test` builds and tests the unprivileged HTTPS container. `make integration` starts an ephemeral TLS Mosquitto container on loopback and removes it afterward. It does not access USB or HVAC hardware. `make demo` creates synthetic input, `build/demo/review.tar`, a SHA-256 manifest and private offline replacement files. All firmware artifacts are inert and explicitly marked non-flashable. Offline replacements also prepare `uploadlogs=0`; the config editor requires the reviewed XML structure and preserves other bytes. Native storage error handling and a complete outbound-service audit remain unresolved; see [storage review](docs/research/native-storage-2026-10-30.md).
+`make container-test` builds and tests the unprivileged HTTPS container. `make integration` starts an ephemeral TLS Mosquitto container on loopback and removes it afterward. It does not access USB or HVAC hardware. `make demo` creates synthetic input, `build/demo/review.tar`, a SHA-256 manifest and private offline replacement files. All firmware artifacts are inert and explicitly marked non-flashable. Offline replacements also prepare `uploadlogs=0`; the config editor requires the reviewed XML structure and preserves other bytes. Native storage error handling and a complete outbound-service audit remain unresolved; see [storage review](research/native-storage-2026-10-30.md).
 
 Prepare a simulated device (secrets are written to private files, never printed):
 
@@ -91,18 +91,18 @@ Prepare a simulated device (secrets are written to private files, never printed)
   --endpoint https://127.0.0.1:8443 --modes off heat cool
 ```
 
-Generation is a user claim, **not** detection or verification. See [local setup](docs/development.md) for certificates, the simulator, commands and MQTT configuration. `detect` reads sysfs only and refuses to infer a generation from TI USB identity.
+Generation is a user claim, **not** detection or verification. See [local setup](../README.md) for certificates, the simulator, commands and MQTT configuration. `detect` reads sysfs only and refuses to infer a generation from TI USB identity.
 
 ## Read next
 
-- [Next-agent handoff and instructions](AGENTS.md)
+- [Next-agent handoff and instructions](../../../AGENTS.md)
 
-- [Implementation plan and status](docs/implementation-plan.md)
-- [Research and evidence](docs/research/findings.md), [pinned upstream sources](docs/research/upstreams.json)
-- [Architecture decision](docs/architecture/0001-local-transport.md), [protocol](docs/protocol/nest.md)
-- [Threat model](docs/security/threat-model.md), [audit](docs/security/audit.md), [network policy](docs/security/network.md)
-- [HAOS installation and upgrades](homeassistant/DOCS.md)
-- [Hardware validation and recovery gates](docs/hardware.md)
-- [Licensing and provenance](THIRD_PARTY.md), [remaining work](TODO.md)
+- [Implementation plan and status](implementation-plan.md)
+- [Research and evidence](research/findings.md), [pinned upstream sources](../references/upstreams.json)
+- [Architecture decision](../architecture/0001-local-transport.md), [protocol](laboratory-protocol.md)
+- [Threat model](security/threat-model.md), [audit](security/audit.md), [network policy](security/network.md)
+- [HAOS installation and upgrades](../../../homeassistant/DOCS.md)
+- [Hardware validation and recovery gates](hardware-gates.md)
+- [Licensing and provenance](../../../THIRD_PARTY.md), [remaining work](TODO.md)
 
 Research references: [NLE thermostat](https://github.com/codykociemba/NoLongerEvil-Thermostat), [backend](https://github.com/codykociemba/NoLongerEvil-SelfHosted), [HA add-on](https://github.com/codykociemba/NoLongerEvil-HomeAssistant), [Valetudo](https://github.com/Hypfer/Valetudo). Exact revisions and individual source hashes are recorded; moving branches are not build inputs.

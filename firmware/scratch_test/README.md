@@ -1,7 +1,7 @@
 # Fixed scratch recovery experiment
 
 **Observed once:** programmed ECC and exact fixed-block restoration passed,
-followed by native USB return. See the [result](../../docs/research/scratch-result-2026-10-31.md).
+followed by native USB return. See the [result](../../docs/development/history/research/scratch-result-2026-10-31.md).
 This does not establish whole-firmware recovery. This directory
 contains an original transaction core, synthetic NAND fault model, durable host
 snapshot gate, independent BCH4 encoder, duplex session and experimental
@@ -49,7 +49,7 @@ The integrated profile is sealed and has executed ONCE at `build/scratch-restore
 `-repro` build has six byte-identical artifacts and 17 byte-identical host helpers.
 Both pass offline image/configuration/minimal-initramfs integrity checks. The
 earlier `build/scratch-compile-20261031` and standalone-supervisor compile drafts
-remain preserved and must not execute. Their [historical scope](../../docs/security/validation-2026-10-31-scratch-draft.json)
+remain preserved and must not execute. Their [historical scope](../../docs/development/history/validation/validation-2026-10-31-scratch-draft.json)
 is superseded for preparation only, not physical validation. Compilation and host
 simulation cannot establish hardware safety or restoration.
 Preserve the executed profile, private output and separate observation record;
@@ -91,7 +91,7 @@ checks all 256 programmed reference sectors in the earlier measured block. No
 private mask, data or digest is logged or sent to the target. The scoped duplex
 observer is an exact checked derivation; the shared read-only observer is unchanged.
 
-The [prepared validation](../../docs/security/validation-2026-10-31-scratch-prepared.json)
+The [prepared validation](../../docs/development/history/validation/validation-2026-10-31-scratch-prepared.json)
 records 432 passing host tests, three unchanged optional integration skips and
 passing lint/format/security checks. No loader was armed by preparation. Future
 execution requires a fresh private output directory, native USB preflight, a PTY,

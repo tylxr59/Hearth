@@ -1,7 +1,7 @@
 """Experimental, deliberately partial adapter for observed NLE bucket shapes.
 
 No pairing simulation, timestamp reconciliation or power-management claims.
-Never auto-enable on a real device. See docs/protocol/nest.md.
+Never auto-enable on a real device. See docs/development/history/laboratory-protocol.md.
 """
 
 from .validation import Invalid

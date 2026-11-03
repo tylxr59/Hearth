@@ -1,149 +1,115 @@
-# Hearth contributor instructions
+# Hearth: agent instructions
 
-Read [current status](docs/development/status.md) and the relevant source before work.
-The historical investigation is archived under `docs/development/history/` and
-`docs/research/`; dated preparation notes are not the current project status.
+Hearth connects a modified Nest Learning Thermostat (Gen 2) directly to Home
+Assistant over the Nest's native local protocol. It has two parts: a HACS
+integration (`custom_components/hearth/`) and a Linux USB setup wizard
+(`provision.py` → `installer/`) that builds and installs per-device file
+changes.
 
-## Scope and live hardware
+**A real thermostat wired to real heating is attached to this project.** Read
+[docs/development/status.md](docs/development/status.md) before any work, and
+the relevant source before changing it. Older material under
+`docs/development/history/` is an archive, not current status.
 
-- Keep the Nest's native HVAC control loops. HA sends bounded settings through
-  native subscriptions; do not implement relay or replacement regulation logic.
-- Gen2 Display-2.6, primary firmware5.9.4-5 is the measured target. Do not claim
-  Gen1, other firmware, cooling, emergency heat or fan operation from simulations.
-- The owner's base is wired to actual oil/baseboard HVAC;
-  the display is currently detached and charging by USB after the supervised
-  installer-reader test. Last on-base state was Heat63F, Ecooff, empty schedule,
-  owner-confirmed heating idle. The Nov3 stock return restored network4 successfully.
-  Core9 reported restored511 with no transaction errors, but final readback failed
-  (verified0, safe_to_restart0, diagnostic21). It is exited in protected/sealed RAM
-  mode. Protected snapshots and an inode encoding audit subsequently verified all
-  active stock files and metadata; the old failure came from compressed archived
-  rollback copies0,6,8. The incomplete writer result remains unchanged. The owner
-  has now confirmed the native home icon and normal USB was independently observed.
-  The display is again connected to this PC by USB with its HVAC base detached.
-  On-base stock UI has not yet been checked. No extra flash write was needed.
-  The fresh full-NAND archive passed both raw/OOB passes and offline quality
-  checks; corrected data/OOB match with no uncorrectable chunks, while four
-  matching chunks per pass remain unclassified. The capture process exited0,
-  and the reviewed read-only handoff also exited0, preserving both snapshots and
-  four library groups (134 private files) without writes/native execution. The
-  owner confirmed native home-icon return afterward and normal USB was observed.
-  The display remains detached and charging by USB.
-  No loader is armed. Do not assume an unwired
-  base when it is reattached.
-- For the owner-authorized clean onboarding test, the owner removed the Hearth
-  entry through HA. Retained profile/state and the manual integration copy are
-  privately archived with exact readback; the live profile is absent and the
-  native listener is stopped. One owner-authorized0.7.0 activation/Core restart
-  completed before the manual copy was archived for a genuine HACS install test.
-  HACS is configured and Hearth is registered. Its first download failed because
-  the v0.7.0 GitHub prerelease was skipped and HACS requested a ZIP at a commit
-  hash. Published v0.7.1 is an ordinary GitHub release with experimental metadata;
-  actual installed HACS selection methods now choose that tag without beta flags.
-  Downloaded assets match checksums/tested source. The owner now successfully
-  downloaded0.7.1 through HACS; all44 installed source files independently match
-  the published ZIP. The owner restarted Core and reached its fresh setup form,
-  then requested automatic address/identity entry. No submitted Hearth entry or
-  retained profile is known yet. Published0.8.1 adds HA-interface suggestions and
-  the PC-side USB-to-HA onboarding command. Its46-file published ZIP and source
-  archive match the tested inputs, and normal HACS selection chooses v0.8.1.
-  Published0.9.1 adds the single-entry provisioning wizard and configurable
-  primary/fallback NTP (default time.nist.gov). Its downloaded46-file integration
-  and327-file installer archive match tested contents and published checksums;
-  CI and hassfest pass. The complete stock-device wizard/cleanup3/custom-time
-  hardware install and restore remain unmeasured. No new live entry, HA update,
-  Core restart or device write occurred during the backup implementation. The
-  Published0.10.1 adds mandatory full-NAND archiving and guided selected-file
-  restore. Fresh full read, offline verification, read-only acquisition handoff
-  and native restart passed. All46 integration and343 installer files match the
-  tested source and published checksums; CI/hassfest pass and default HACS
-  selection chooses v0.10.1. No live HA update occurred. The
-  selected-file stock return is independently verified as described above;
-  do not bypass restore refusals or blindly erase NAND.
-  The live HA instance has not been updated; use HACS for delivery. Obtain
-  fresh approval before executing another Core restart. Do not recreate the old
-  profile or manually deploy over the HACS test.
-  Subsequent owner-run0.10.1 onboarding has now created a fresh HA entry and
-  matching private bundle (local create_entry receipt verified). Its host prepare
-  failed only at source archiving after both reader builds; no device attempt
-  occurred. The extracted download was updated in place to the checked0.10.2
-  release with original source preserved. Existing profiles still validate.
-  Published0.10.2 and the patched download match every tested public file; CI
-  and hassfest pass, and default HACS selection chooses v0.10.2.
-  That historical pre-device continuation was used once. The owner now requires
-  one normal setup from beginning to end; user-facing continuation options and
-  the prepared-session module are removed from development source. Do not rerun
-  failed hardware attempts or recreate this HA entry. No agent Core restart occurred.
-- The owner's continued public wizard has since installed/verified commissioning9.
-  Cleanup3 refused resource preflight (diagnostic40) before commit or writable
-  mounts, with zero program/erase/marker activity; it exited sealed/protected
-  and safe_to_restart1. The first phase remains installed, USB RAM mode is
-  retained and the HVAC base remains detached. Do not rerun attempted phases.
-  Fresh preflight-only resource images are prepared/reproduced but not executed;
-  obtain owner readiness before arming. Original reports and source are retained.
-  That diagnostic has since exited0, sealed/protected with no writes. It measured
-  space refusal42: available13,201,408 versus required19,534,505 bytes; RAM free
-  50,913,280. Safe_to_restart1; owner home-icon return and normal USB are now
-  confirmed. The owner then authorized the fresh commissioning-only stock return.
-  It ran once: all511 targets restored with zero transaction/rollback/journal/
-  cleanup/unmount/seal errors, but final verification failed diagnostic21,
-  verified0/safe_to_restart0. The command exited; preserve that result unchanged.
-  The subsequent protected read-only audit exited0: active original bytes,
-  metadata and NONE encoding verified; archive inventory, originals and restored
-  journal fingerprints verified. Archived original0 alone contains NONE/ZLIB
-  fragments, explaining strict final-encoding refusal. No extra write occurred.
-  Independent review cleared native restart; the owner has confirmed the home
-  icon and normal Nest USB was independently observed. The display is charging
-  on USB in native startup. No loader is armed. No further persistent write is authorized.
-  Offline NAND inventory finds one old rollback archive, with all four originals
-  matching earlier host backups; no deletion/live deletion preflight is authorized.
-- Development now integrates exact archive nomination and combined no-commit
-  capacity preflight before either normal-wizard write. A fresh shared/capacity
-  preflight and restore reference reproduce all ten artifacts, but are unexecuted.
-  The full normal flow and shared writes remain unmeasured. Published0.10.2 is
-  unchanged; the extracted download has archived development-source updates.
-  The owner is handing repository cleanup to Claude. Finish the current work,
-  preserve evidence and leave the device in native USB mode; do not arm a loader
-  or restart HA as part of cleanup. See status and the ignored local handoff note.
-- The owner authorizes local implementation, docs, packaging, tests and commits/
-  pushes. The current public-product work does not authorize another HA Core
-  restart, a new persistent device write or an intentional HVAC call.
-- Before a persistent device write, explain its concrete scope and recovery
-  limits. Obtain owner readiness before arming any ROM loader. Use a PTY,
-  one owner-timed boot, no automatic retry, and a fresh private output/profile.
-- For physical controls, obtain a concrete supervised test first and restore the
-  saved original. Never infer equipment support from missing reported flags.
-- Recovery of selected files has been measured. Whole-firmware restoration and
-  hardware power-loss recovery remain unverified. No spare is mandatory: the
-  owner accepted same-unit investigation and one local recovery archive.
+## Live hardware: hard rules
 
-## Source, privacy and release
+- **Keep the Nest's native HVAC control loops.** HA sends bounded settings
+  through native subscriptions. Never implement relay logic or replacement
+  regulation.
+- **Measured target only:** Gen 2, Display-2.6, primary firmware 5.9.4-5. Never
+  claim Gen 1, other firmware, cooling, emergency heat or fan operation from
+  simulation or reference code.
+- **The owner's base is wired to real oil/baseboard heat.** Never assume an
+  unwired base when the display is reattached.
+- **Never re-run** an executed install/restore image, an attempted wizard phase
+  or an old HA control action. Profiles are single-use evidence.
+- **Before any persistent device write,** explain its concrete scope and
+  recovery limits, and get explicit owner approval.
+- **Before arming any ROM loader,** get owner readiness. Use a PTY, one
+  owner-timed boot, no automatic retry, and a fresh private output/profile.
+- **Physical controls** need a concrete supervised test plan first, and the
+  saved original must be restored afterwards. Never infer equipment support from
+  missing reported flags.
+- **Never bypass restore refusals or blindly erase NAND.** Never delete on-device
+  archives without explicit authorisation.
+- **HA Core restarts need fresh owner approval every time.** Deliver
+  integration updates through HACS. Never deploy by hand over the HACS install,
+  and never recreate the old profile or the owner's current HA entry.
+- **Recovery limits:** selected-file restore is measured. Whole-firmware restore
+  and hardware power-loss recovery are not. No spare unit is required: the owner
+  accepted same-unit work with one local recovery archive.
 
-- `backend/` is the canonical native transport. `_backend/` inside the HA
-  integration is generated by `python -m tools.sync_integration`; never hand-edit.
-  `python -m tools.sync_integration --check` enforces exact correspondence.
-- Keep all runtime HA files inside `custom_components/hearth/`. HACS distributes
-  the native integration; do not revive the retired laboratory app.
-- NLE is a pinned protocol/behavior reference. Write original implementations;
-  record behavioral sources and licensing. Do not copy proprietary firmware or
-  present reference-code confidence as hardware validation.
-- Keep identifiers, credentials, IP topology, native bytes, binary hashes,
-  proprietary libraries and per-device kits under ignored `private/`/`build/`.
-  Never publish a user's commissioning bundle, private key or restore capsule.
-- Preserve executed profiles, manifests, results and backup evidence. Never rerun
-  an executed install/restore image or old HA control action.
-- Strip photo metadata before publishing images. Keep user documentation free of
-  obsolete deployment paths; retain essential research under development docs.
-- Read the detected target OS before package/service commands. No new system
-  packages or host services without task authorization.
+## Current authorisation
+
+| Allowed without asking | Needs fresh owner approval |
+| --- | --- |
+| Local code, docs, packaging, tests | Any persistent device write |
+| Commits and pushes | Arming a ROM loader |
+| Building or reproducing private profiles (no execution) | An HA Core restart |
+| | Any intentional HVAC call |
+| | Deleting anything on the device |
+
+Current device state, recent hardware results and the next optional step are in
+[status](docs/development/status.md). In short: the display is detached, on USB
+in native mode, no loader is armed, and the stock files have been
+independently verified. Leave it that way.
+
+## Source rules
+
+- `backend/` is the canonical native transport. `custom_components/hearth/_backend/`
+  is **generated**: run `python -m tools.sync_integration` and never hand-edit
+  it. `--check` enforces an exact match.
+- All runtime HA files stay inside `custom_components/hearth/`. HACS ships only
+  that folder. Don't revive the retired laboratory add-on (`homeassistant/`,
+  `Dockerfile`, MQTT backend).
+- NoLongerEvil (NLE) is a pinned protocol/behaviour reference. Write original
+  implementations, record behavioural sources and licensing
+  (`docs/development/references/upstreams.json`, `THIRD_PARTY.md`), never copy
+  proprietary firmware, and never present reference-code agreement as hardware
+  validation.
+- Firmware changes need the existing bounded source/ABI/RAM/backup checks for
+  that writer. **Never remove a gate to make an installer pass.**
+- The wizard's terminal output goes through `installer/ui.py`, which is stdlib
+  only because the wizard runs before any venv exists. Tests feed `ask()`
+  answers positionally, so adding or removing a prompt means updating the
+  tests.
+- Read the detected target OS before running package or service commands. Add
+  no new system packages or host services without task authorisation.
+
+## Privacy and release
+
+- Identifiers, credentials, IP topology, native bytes, binary hashes,
+  proprietary libraries and per-device kits live only in git-ignored
+  `private/` or `build/`. Never publish a commissioning bundle, private key or
+  restore capsule.
+- Preserve executed profiles, manifests, results and backup evidence.
+- Strip metadata from images before committing.
+- Run `python build/review-source-push-20261030.py` before pushing, when it
+  exists. Release artifacts contain public original source only.
+- Release assets are `hearth.zip` (HACS; the name is fixed by `hacs.json`) and
+  `hearth-nest-installer.zip`, whose contents `tools/installer_archive.py`
+  computes. See [releases](docs/development/README.md#releases).
+- No stable v1 tag, and no "turnkey stock-device installer" claims, until the
+  [release checklist](docs/development/roadmap.md) is closed.
 
 ## Validation
 
-Use `make test`, `make check` and the pinned network-isolated real HA sandbox:
-`python -m tools.check_native_ha build/<fresh-name> --engine podman`.
-Firmware changes additionally require the existing bounded source/ABI/RAM/backup
-checks appropriate to that writer. Never remove gates to make an installer pass.
-Run `python build/review-source-push-20261030.py` when available before pushing;
-release artifacts must contain public original source only. Do not create a
-stable v1 tag or advertise a turnkey stock-device installer while its acquisition/
-build path or hardware validation is incomplete.
+```sh
+make test
+make check
+python -m tools.check_native_ha build/<fresh-name> --engine podman   # pinned, network-isolated real HA
+```
+
+## Documentation conventions
+
+- **User docs** (`README.md`, `docs/*.md`): plain language for a technical
+  generalist. Lead with what to do, and keep internal jargon (diagnostic codes,
+  profile names) out.
+- **Developer docs** (`docs/development/`): [status](docs/development/status.md)
+  (short and current), [findings](docs/development/findings.md) (lasting facts),
+  [roadmap](docs/development/roadmap.md) (release gates).
+- **New dated results** go in `docs/development/history/research/` (plus
+  `validation/` for JSON records). Then update status and, if lasting, findings.
+  Don't append dated diaries to this file or to the user docs.
+- Keep [compatibility](docs/compatibility.md) in step with the evidence:
+  hardware, simulation and not-tested are separate claims.

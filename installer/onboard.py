@@ -8,6 +8,7 @@ import urllib.request
 
 from backend.validation import Invalid, endpoint
 from firmware.file_writer.run import encode, save
+from installer import ui
 from installer.bundle import device_info, read_bundle
 from installer.download import frontend
 from tools.elf_review import private_path
@@ -94,13 +95,16 @@ def onboard(ha_url, token, session, info, *, target=None, ask=input, client=None
         raise Invalid("fresh user setup required; close any open Hearth setup dialog first")
     options = choices(form)
     if target is None:
-        for index, value in enumerate(options, 1):
-            print(f"{index}. {value}")
-        print(
-            "Choose HA's address on the thermostat network; VLAN reachability cannot be inferred."
+        ui.section("Which address should the Nest use to reach Home Assistant?")
+        ui.say(
+            "Home Assistant listens for the Nest on these addresses. Pick the one on the "
+            "same network as the thermostat, or type a different https:// address."
         )
+        ui.numbered(options)
         answer = ask(
-            "Address number or HTTPS endpoint" + (" [1]" if len(options) == 1 else "") + ": "
+            ui.prompt(
+                "Address number or https:// address", "[Enter = 1]" if len(options) == 1 else None
+            )
         ).strip()
         if not answer and len(options) == 1:
             target = options[0]
@@ -108,8 +112,11 @@ def onboard(ha_url, token, session, info, *, target=None, ask=input, client=None
             target = options[int(answer) - 1]
         else:
             target = endpoint(answer)
-    print(f"Supported Nest identity read. HA will use {target}.")
-    if ask("Type SETUP to create the HA entry and private bundle: ").strip() != "SETUP":
+    ui.ok(f"The Nest will connect to Home Assistant at {target}.")
+    if (
+        ask(ui.prompt("Type SETUP to add Hearth to Home Assistant", "[Enter = cancel]")).strip()
+        != "SETUP"
+    ):
         client.request("DELETE", FLOW + "/" + flow_id)
         save(
             session,

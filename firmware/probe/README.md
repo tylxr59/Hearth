@@ -1,14 +1,14 @@
 # Experimental Display-2.6 RAM probe
 
 This is a diagnostic boot experiment for the particular unit in
-[the intake record](../../docs/research/device-intake-2026-10-30.md). It is not
+[the intake record](../../docs/development/history/research/device-intake-2026-10-30.md). It is not
 Hearth firmware, a flash backup, a recovery tool, or a thermostat controller.
 It has been built and checked offline. The first physical upload attempt stalled
 at the ROM length field before sending the first-stage file. The owner then
 restored the home icon and normal Nest USB mode. A paced transport subsequently booted
 the custom diagnostic kernel, its heartbeat was observed without sudo, and the
 owner returned it to the native home icon and normal USB mode. See the
-[handshake investigation](../../docs/research/usb-handshake-2026-10-30.md).
+[handshake investigation](../../docs/development/history/research/usb-handshake-2026-10-30.md).
 Do not flash these files or use this profile for another model/revision.
 
 The Linux kernel has MTD, block storage and networking disabled. Its entire
@@ -25,7 +25,7 @@ Experimental code may hang, reset, misconfigure hardware or affect power/battery
 behavior. Native control services are absent during the probe: the display must
 remain detached from its unwired base. Notify the owner before execution under
 the existing device-work authorization. Persistent modifications still require
-the backup/recovery gates in [hardware.md](../../docs/hardware.md).
+the backup/recovery gates in [hardware.md](../../docs/development/history/hardware-gates.md).
 
 ## Inputs and build isolation
 
@@ -96,7 +96,7 @@ The [GPLv2 license text](COPYING.GPL-2.0) accompanies the patch/harness here.
 
 On this Linux host, gcc, pkg-config and libusb development files were already
 available. Compile the native loader and its host-only ASan/UBSan harness using
-the commands recorded in the [research review](../../docs/research/acquisition-review-2026-10-30.md).
+the commands recorded in the [research review](../../docs/development/history/research/acquisition-review-2026-10-30.md).
 The harness mocks libusb and tests the argument parser plus a full-size,
 unterminated device debug message without touching USB. Passing it does not
 validate ROM uploads or the custom kernel.

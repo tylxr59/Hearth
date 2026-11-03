@@ -9,7 +9,7 @@ from pathlib import Path
 
 def fetch(output):
     project = Path(__file__).resolve().parents[1]
-    lock = json.loads((project / "docs/research/upstreams.json").read_text())
+    lock = json.loads((project / "docs/development/references/upstreams.json").read_text())
     output = Path(output)
     output.mkdir(parents=True, exist_ok=False)
     for name, entry in lock.items():

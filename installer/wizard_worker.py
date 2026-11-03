@@ -22,17 +22,17 @@ def work(request):
         sources.fetch(build / "sources")
         result = reader.build(build / "sources", build / "reader", session / "reader")
         from firmware.nand_capture.profile import build as build_nand
+        from tools.installer_archive import installer_archive
         from tools.nand_archive.build import fetch as build_bch
-        from tools.public_release import installer_archive
 
         build_nand(build / "sources", build / "reader", build / "nand-reader")
         build_bch(build / "nand-bch")
         (build / "recovery-source").mkdir(mode=0o700)
-        installer_archive(build / "recovery-source/hearth-installer-source.zip")
+        installer_archive(build / "recovery-source/installer-source.zip")
         save(
             session,
             "installer-source.zip",
-            (build / "recovery-source/hearth-installer-source.zip").read_bytes(),
+            (build / "recovery-source/installer-source.zip").read_bytes(),
         )
     elif operation == "nand":
         from installer.nand_backup import run

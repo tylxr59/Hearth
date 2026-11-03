@@ -1,321 +1,186 @@
-# Install Hearth
+# Install guide
 
-Hearth has two separate installations: the HA integration and the thermostat's
-local-service modifications. HACS manages the integration, not the USB operation.
-Currently supported development profile: Linux, Gen2 Display-2.6, primary5.9.4-5.
-Keep the legacy thermostat on an isolated local network; do not expose its services
-or Hearth's listener directly to the internet. Native OS/security review and
-whole-firmware recovery remain incomplete.
+Setting up Hearth involves two pieces:
 
-The native connectivity check needs a reachable plain-HTTP `/api/h/204` on HA's
-frontend port (normally8123), even though thermostat telemetry/control use the
-separate authenticated HTTPS listener. A directly TLS-only HA frontend needs an
-explicit compatible local HTTP route; that topology is not yet covered by the
-guided kit. Reverse-proxy HTTPS for normal HA access does not prevent using HA's
-internal HTTP frontend when that route is available on the thermostat network.
+1. **The Home Assistant integration.** HACS installs it, like any other custom
+   integration.
+2. **A one-time USB setup on the thermostat.** This points the Nest at your Home
+   Assistant instead of Google. The setup wizard (`provision.py`) handles it,
+   and also walks you through part 1.
 
-## Guided setup
+> [!WARNING]
+> This is an **experimental preview**. The wizard has safety checks at every
+> step, but the complete stock-to-Home-Assistant install hasn't been tested end
+> to end yet, and restoring the whole flash chip has never been tested. See
+> [what's tested](compatibility.md).
 
-The **0.10.2 experimental preview** includes the full-NAND archive and `--restore`
-flow below. The full backup, read-only acquisition handoff and native restart
-have been measured on the development unit. The complete stock-device installation
-and matching restore flow still need supervised hardware validation.
+## 1. Check your thermostat
 
-Download `hearth-installer-source.zip` from the latest experimental release and
-extract it on the Linux computer connected to your Nest. Open a terminal in that
-folder and run:
+Hearth currently supports only the combination it has been tested on:
+
+| | Required |
+| --- | --- |
+| Model | Nest Learning Thermostat, **2nd generation** |
+| Display | **Display-2.6** |
+| Software | **5.9.4-5** |
+
+On the Nest, open **Settings → Technical info** to check. The wizard checks
+these too, and it stops if anything doesn't match. It also refuses a Nest that
+already has some or all of Hearth installed.
+
+## 2. Get your computer ready
+
+You need a **Linux** computer (the setup doesn't run on Windows or macOS yet) with:
+
+- Python 3.12 or newer and rootless Podman
+- Git, Clang + LLD, a C compiler, patch, pkg-config, mtools, acl and the libusb
+  development headers
+- About **7 GB free disk space** (roughly 5 GB of build files plus 1.2 GB of
+  backups) and **4 GB of RAM** available for the build container
+- An internet connection, to download pinned sources during the build
+
+The wizard checks all of this and prints the exact command for your distro if
+something is missing. Or install everything up front:
+
+| Distro | Command |
+| --- | --- |
+| Debian / Ubuntu | `sudo apt install podman git clang lld build-essential patch pkg-config mtools acl libusb-1.0-0-dev` |
+| Fedora | `sudo dnf install podman git clang lld gcc patch pkgconf-pkg-config mtools acl libusb1-devel` |
+| Arch / CachyOS | `sudo pacman -S --needed podman git clang lld base-devel patch pkgconf mtools acl libusb` |
+
+Run the wizard as your **normal user**, not with `sudo`. It asks for sudo once,
+to add a USB permission rule scoped to your account. It may also ask for one
+read-only `mtype` command if your account can't read the Nest's info file.
+
+## 3. Check your network
+
+The thermostat has to reach Home Assistant on two ports:
+
+| Port | Protocol | Purpose |
+| --- | --- | --- |
+| **8443** | HTTPS | Hearth's thermostat listener: telemetry and controls |
+| **8123** (your HA port) | Plain HTTP | The Nest's "am I online?" check at `/api/h/204` |
+
+If you normally reach HA through an HTTPS reverse proxy, that's fine, as long as
+HA's own plain-HTTP port is reachable from the thermostat's network. A
+TLS-only HA frontend isn't supported by the wizard yet.
+
+Keep the thermostat on a trusted or isolated network, and never expose it or
+port 8443 to the internet. [Security and privacy](security.md) has more.
+
+## 4. Run the setup wizard
+
+Download **`hearth-nest-installer.zip`** from the
+[latest release](https://github.com/tylxr59/Hearth/releases) and extract it.
+(Releases up to v0.10.2 called it `hearth-installer-source.zip`.) Ignore
+`hearth.zip`: that's the HA integration, and HACS fetches it itself.
+Take the Nest **display off its wall base** and plug it into the computer by USB.
+Then, in a terminal in that folder:
 
 ```sh
 python3 provision.py
 ```
 
-The wizard walks through HACS installation, reads the device identity, offers HA's
-local addresses, saves the matching private bundle, builds the protected reader,
-saves two complete raw NAND/OOB passes and matching ECC-derived data views,
-acquires readable original files, and prepares both install and restore images. It then
-runs two checked installation phases, each requiring its own confirmation before
-writing. Finish by reconnecting normal Wi-Fi and checking fresh readings in HA.
-You do not need to assemble the individual commands below. `hearth` or
-`python3 -m installer.cli wizard` launches the same flow from an installed checkout.
+The wizard runs seven steps. You'll be asked to confirm before anything touches
+the thermostat:
 
-At **Time server [time.nist.gov]**, press Enter for NIST or enter one NTP hostname
-or IPv4 address, such as your local time server. The selection is validated and
-applied to both the primary NTP configuration and ConnMan's fallback. No port,
-URL, password or additional configuration text is accepted. This is an installation
-time setting; changing it later requires another reviewed device update.
+| Step | What happens | Your part | Time |
+| --- | --- | --- | --- |
+| Checks | Tools, USB connection, thermostat model and software | Choose a time server (Enter = `time.nist.gov`) | 1 min |
+| 1. Home Assistant | Installs Hearth via HACS and creates the HA entry | Follow the HACS steps, restart HA, paste a temporary access token | 5 min |
+| 2. Build reader | Builds a small read-only USB boot tool in Podman | Nothing | ~10 min |
+| 3. Full backup | Copies the Nest's entire flash twice and verifies it | Type `READY`, press the ring when told | ~25 min |
+| 4. Save originals | Reads the files Hearth will change | Type `READY`, press the ring when told | 2 min |
+| 5. Build kit | Builds install and undo images for *your* unit only | Confirm HA's HTTP port (Enter = 8123) | ~5 min |
+| 6. Install | Space check, then two install phases | Type `READY`, then `INSTALL`, for each part | 5 min |
+| 7. Finish | Restart the Nest, refit it to the base, check HA | Confirm readings appear | 5 min |
 
-The computer needs Python3.12+, rootless Podman, Git, Clang/LLD, a C compiler,
-patch, pkg-config, mtools, acl and libusb development headers. The wizard checks
-these and reports missing requirements; it does not install system packages.
-It runs as your normal user. It may ask permission for a fixed read-only `sudo
-mtype` diagnostic read and for a narrowly scoped root-managed USB access rule.
-It never grants block-device write access or runs the whole wizard as root.
-Allow at least1.2GB for private raw/data backup files, plus space for source/kernel
-builds. The full NAND read can take up to20 minutes; offline verification follows.
-The archive retains unclassified-but-identical ECC chunks unchanged and records
-that limitation. It is not a validated whole-chip restore image.
-The current measured loader is restricted to USB port **1-1**; arbitrary ports,
-other operating systems and other firmware are not supported by this preview.
+Times are rough estimates.
 
-Keep the display detached from its base and USB connected through acquisition,
-build and installation. Follow the ring instructions only when the wizard says
-the loader is waiting. A private `private/setup-…` folder retains originals,
-custody, logs, plans and results; its `READ-ME-FIRST.txt` explains recovery limits.
-A temporary HA administrator token is entered hidden and never saved; revoke it
-after setup. The final live-reading check is confirmed by you, not inferred from
-a successful file write. No HVAC control test is sent by the wizard.
+### Pressing the ring
 
-This remains an experimental stock-device path, not a validated turnkey installer.
-The existing/partial-Hearth guard still refuses modified units. Failed steps are
-not automatically retried, and interrupted write sessions require report review
-before any restart or recovery attempt. The newly combined wizard, cleanup3 and
-custom-NTP writer have host/ARM build coverage; their complete stock-device
-hardware installation and restoration still need measurement.
+When the wizard says **"The loader is waiting now"**, hold the Nest's ring down
+for **10 seconds**, let go, then **press it once more**. This restarts the Nest
+into its USB boot mode. Only do this when the wizard asks.
 
-## Home Assistant
+### Things not to do
 
-Add `https://github.com/tylxr59/Hearth` as a HACS custom repository of type
-Integration. Install a tagged release with its `hearth.zip` asset and restart
-Core. For fresh setup, use [automatic USB onboarding](#automatic-usb-onboarding)
-below. It creates the HA entry, local trust and unique device credential without
-copying the device ID by hand. It refuses to replace an existing profile.
+- Don't unplug USB or put the display back on its base until step 7.
+- Don't restart the Nest yourself unless the wizard tells you to.
+- If something fails, **don't run the wizard again** on the same thermostat.
+  Each step runs only once by design. Keep the private folder and see
+  [troubleshooting](troubleshooting.md#setup-stopped-partway).
 
-The current release is the experimental **v0.10.2**. In HACS, open Hearth and select
-that tagged version for download. It is an ordinary GitHub release so HACS's
-default selection works; the project remains experimental and is not stable v1.
-If an older repository cache shows a commit hash, use Hearth's **Update information**
-action and reopen its download dialog. A manual copy
-of the integration does not establish a successful HACS installation. For a clean
-onboarding test, retain private backups and remove the previous integration/profile
-before starting; removing an HA entry alone does not erase its retained profile.
+### Your private folder
 
-A previously prepared profile can be imported through **Add integration → Hearth**
-without creating new credentials. Manual fresh setup is also available there:
-choose an offered local address or enter an explicit HTTPS IPv4 endpoint/port,
-then enter the USB-read device ID. Normal HA upgrades do not reflash the thermostat
-or rotate its identity.
+Everything the wizard saves goes into `private/setup-<date>-<id>/`: the full
+flash backup, the original files, your install kit, logs and a
+`READ-ME-FIRST.txt`. **Keep it**, along with the matching `build/setup-…`
+folder and the extracted Hearth folder itself. Restoring needs all three, on
+the same computer.
 
-For source installation, run `python -m tools.package_native_ha build/ha-package`
-and copy `build/ha-package/custom_components/hearth` into HA's
-`config/custom_components/`. All required runtime files are included. Restart
-Core once, then add the integration. Do not copy the entire research repository.
+Never share this folder. It contains your thermostat's credential.
 
-## Guided recovery
+## 5. After setup
 
-From the original matching installer source, run:
+- Delete the temporary access token. In HA, click your profile, then
+  **Security**, then **Long-lived access tokens**.
+- Choose a weather entity: **Settings → Devices & services → Hearth →
+  Configure**. See [weather](usage.md#weather).
+- Read [using Hearth](usage.md) for controls, Eco and schedules.
 
-```sh
-python3 provision.py --restore
-```
+The wizard never sends a heating command. The first time you control your
+heating from HA, do it while you're home and can watch it.
 
-Choose the saved `private/setup-…` installation. The wizard checks the full NAND
-archive, original-file custody and matching restore images, then uses separate
-read-only preflight and RESTORE decisions for the two phases. It restores the
-saved original settings and selected system/network files and removes Hearth's
-additions. Later native settings changes can make this exact-restore preview
-refuse; it does not guess new settings or automatically recover partial writes.
-Preserve the source ZIP stored in the private folder **and the matching build
-workspace**. The preview still validates restore images against those build trees;
-automatic relocation/cold reconstruction on another PC is not implemented yet.
-No whole-chip erase/write,
-HA deletion or HVAC control request is included.
+## Home Assistant only (HACS)
+
+Use this if your thermostat already has Hearth installed, or to install the
+integration by hand:
+
+1. In HACS, open the three-dot menu and choose **Custom repositories**.
+2. Add `https://github.com/tylxr59/Hearth` with the type **Integration**.
+3. Find **Hearth** in HACS, download the latest release and restart Home Assistant.
+4. If you have an existing Hearth profile, add it under **Settings → Devices &
+   services → Add integration → Hearth**.
+
+Hearth updates arrive through HACS like any other integration. Updating the
+integration never reflashes the thermostat or changes its identity.
+
+If HACS shows a commit hash instead of a version, use Hearth's **Update
+information** action in HACS and reopen the download dialog.
 
 ## Automatic USB onboarding
 
-Download `hearth-installer-source.zip` from the same release and extract it on the
-Linux computer connected to your Nest by USB. From that directory, with Python3.12+
-and `mtype` available:
+The wizard does this for you in step 1. Use this command only to create the
+Home Assistant entry on its own, for example when you run the
+[advanced CLI](advanced-cli.md) steps by hand.
+
+From the extracted installer folder, with the Nest plugged in by USB in normal
+mode:
 
 ```sh
+cd hearth-nest-installer-<version>
 mkdir -m 700 private
-python3 -m installer.cli onboard \
-  --ha-url http://YOUR_HA_LAN_IP:8123 --session private/my-install
+python3 -m installer.cli onboard --ha-url http://YOUR_HA_IP:8123 --session private/my-install
 ```
 
-Use the actual HA frontend address, including its port; this is the URL you use
-to open HA. HTTPS is supported and preferred when available. HTTP requires a
-literal private LAN address. Close any open Hearth setup dialog before running
-the command. The installer prompts privately for a temporary HA administrator
-access token, discovers a single normal-mode Nest disk, and reads only its
-diagnostic plist. Multiple disks require an explicit `--disk /dev/sdX` selection.
+- `--ha-url` is the address you use to open HA in a browser. HTTPS is preferred.
+  Plain HTTP is accepted only for a private LAN IP address.
+- It asks for a temporary HA admin access token (hidden, never saved).
+- It reads the Nest's identity over USB (read-only), lists HA's local addresses
+  so you can pick the one on the thermostat's network, and asks you to type
+  `SETUP`.
+- It saves `identity.json` and `commissioning.zip` in your session folder. Both
+  are private.
 
-HA offers its own private IPv4 interfaces as thermostat-facing HTTPS endpoints
-on port8443. Select the address on the thermostat's network; across VLANs,
-reachability still needs your confirmation. You can enter another explicit
-endpoint if needed. Type `SETUP` once to create the HA entry and save the matching
-bundle/identity in your private session. The HA administrator token is not saved;
-revoke the temporary token after onboarding. No ROM loader, flash write or
-thermostat control runs during this step.
+Useful options: `--sudo-read` allows one read-only `sudo mtype` if your account
+can't read the Nest's info file. `--disk /dev/sdX` picks a disk when more than
+one is connected. `--endpoint https://IP:8443` sets the thermostat-facing
+address yourself.
 
-If your account cannot read the diagnostic disk, add `--sudo-read` to permit only
-the fixed `sudo mtype` diagnostic read; sudo prompts locally for your PC password.
-This flag never grants write access or runs the installer as root. Alternatively,
-save the plist through your normal read-only workflow and pass
-`--info /path/to/Technical-Info.plist`.
-The installer extracts the identity from that file without asking you to type it.
-Do not grant block-device write access. `--endpoint https://YOUR_IOT_HA_IP:8443`
-can supply an endpoint explicitly while still reading the identity automatically.
+Close any open Hearth setup dialog in HA first. Onboarding refuses to replace an
+existing Hearth profile, and it never writes to the thermostat.
 
-The command creates `private/my-install/identity.json` and `commissioning.zip`;
-continue at [Build and acquire the original inputs](#build-and-acquire-the-original-inputs).
-An existing profile or refused setup stops without automatic resubmission. If HA
-created the entry but its listener is not ready, preserve the session and resolve
-the HA setup error before using the separate bundle-download command.
+## Undo
 
-## Commissioning bundle
-
-An HA administrator can download the private bundle with an authenticated GET of
-`/api/hearth/commissioning` on HA's frontend HTTP endpoint. This requires an HA
-Bearer token, not the separate thermostat credential. Use an authenticated client;
-navigating directly in a new browser tab does not automatically attach HA's token.
-The USB CLI can download it without putting a token in shell history:
-
-```sh
-mkdir -m 700 private
-.venv/bin/python -m installer.cli download --ha-url https://YOUR_HA_HOST --output private/commissioning.zip
-```
-
-Use your actual HA frontend origin. The command prompts for an HA administrator
-access token locally with input hidden, refuses redirects and saves a0600 file.
-HTTPS is preferred; HTTP is accepted only for a literal private LAN address.
-No HA SSH access is needed. The ZIP contains the
-thermostat's credential and public CA/CRL, never HA's private keys or manager token.
-The bundle is sensitive: anyone with it can authenticate as that thermostat.
-
-## USB identity and preparation
-
-From a source checkout with the development environment installed:
-
-```sh
-.venv/bin/python -m installer.cli doctor
-.venv/bin/python -m installer.cli identify --disk /dev/sdX
-```
-
-Replace `/dev/sdX` with the actual Nest diagnostic device; do not guess. This uses
-`mtype` read-only. If permissions require root, obtain the plist with your normal
-read-only terminal workflow and supply `--info 'Technical Info.plist'` instead.
-The default output omits identifiers. `--show-device-id` explicitly prints the ID
-needed for HA setup; do not publish it.
-
-```sh
-.venv/bin/python -m installer.cli setup \
-  --bundle /path/to/hearth-commissioning.zip \
-  --info '/path/to/Technical Info.plist' \
-  --session private/my-install
-```
-
-This checks exact supported model/version/partition and bundle/device identity,
-then preserves a private session. It does not open USB or write the thermostat.
-
-## Build and acquire the original inputs
-
-The experimental reader now builds from pinned public sources, without a
-developer's existing build tree. This needs Linux, rootless Podman, Clang/LLD,
-a native C compiler, Git, patch, pkg-config and libusb development files. The
-doctor reports available commands; install missing dependencies using your
-host distribution's package manager. Allow at least5GB of working disk and4GB
-of container memory. The pinned legacy compiler is downloaded and hash-checked;
-its independent signature and complete compiler reconstruction are not verified.
-
-```sh
-.venv/bin/python -m installer.cli sources --output build/installer-sources
-.venv/bin/python -m installer.cli build-reader \
-  --sources build/installer-sources --output build/installer-reader \
-  --profile private/my-reader
-.venv/bin/python -m installer.cli acquire \
-  --session private/my-install --profile private/my-reader --disk /dev/sdX
-.venv/bin/python -m installer.cli check-inputs --session private/my-install
-```
-
-Only source fetching and container image assembly need internet access. Kernel
-compilation runs without networking, capabilities, USB or private-directory
-mounts. The native USB loader is compiled on the host and its simulated USB
-regressions run without a physical device. Build output is under the specified
-directory; a failed build preserves `build.log` and is not automatically retried.
-
-Acquisition requires a terminal, matching fresh identity and an explicit READY
-confirmation before the owner-timed restart. It reads two fixed snapshots plus
-four library directories into private custody, without a flash writer or native
-application execution. Nothing acquired is made executable on the host. To continue
-directly to installation, keep USB connected in the exited RAM session while
-building the kit. If stopping here, follow the command's manual restart guidance;
-native startup can change settings and invalidate the saved snapshot. The corrected consolidated reader
-and rebuilt boot chain completed a supervised read-only run on the existing
-owner unit, including native UI/USB return. This does not establish a pristine
-stock installation or whole-firmware recovery.
-
-The final offline check reconstructs the ordered raw frames, checks the saved
-completion marker, compares every private corpus file and metadata record, and
-revalidates both backup receipts. It then resolves the native library closure
-from ELF SONAME metadata without host symlinks or native execution. It refuses
-modified, missing, extra or permissively stored inputs before kit preparation.
-
-## Build the private kit
-
-The experimental stock-kit builder constructs nine commissioning replacements,
-three disjoint connectivity/time replacements, and matching restore images from
-this acquisition. It refuses an existing or partial Hearth installation; this
-is not an upgrade command. The complete public workflow still needs a measured
-stock-unit installation and restore before stable release. See the
-[builder guide](development/firmware-kit.md) for validation limits.
-
-```sh
-.venv/bin/python -m installer.cli build-kit \
-  --session private/my-install --sources build/installer-sources \
-  --reader-build build/installer-reader --build build/my-kit --output private/my-kit
-.venv/bin/python -m installer.cli check-kit --kit private/my-kit
-```
-
-Keep all output private, including the originals, commissioning bundle and native
-libraries. A kit from another unit, an old executed profile, a missing restore
-image or a changed source recipe is refused. Do not delete failed attempts to
-make their paths reusable.
-
-For the explicitly supervised experimental installation:
-
-```sh
-.venv/bin/python -m installer.cli install-kit --kit private/my-kit --disk /dev/sdX
-```
-
-The current low-level writer/ACL profile uses physical USB port1-1; the doctor
-shows the observed port. Other ports need a separately reviewed scoped profile,
-not global USB or block-device write permissions.
-
-The tool checks the intake identity, prepared credential, CA/CRL, endpoint and
-both profile pairs. In native USB mode it re-reads the current identity; an
-acquisition-to-install RAM handoff requires the completed acquisition evidence.
-It prompts READY before each RAM boot. Keep the display detached from the
-base and USB connected. When the loader is scanning, hold the ring for10seconds,
-release, then press/release once.
-
-After RAM tests and real-file read-only preflight pass, a separate INSTALL prompt
-permits one persistent write. Enter aborts. The nine-file phase must finish and
-verify before the separate three-file phase can start. Each phase gets its own
-READY and INSTALL confirmations. Stay in RAM between phases and follow the
-loader's prompt for the next button sequence. No automatic retry occurs. Restart
-only when the checked result explicitly reports safe_to_restart. A failed or
-uncertain post-write session needs recovery review with USB retained.
-
-## Selected-file restoration
-
-```sh
-.venv/bin/python -m installer.cli check-kit --kit private/my-kit --for-restore
-.venv/bin/python -m installer.cli restore-kit --kit private/my-kit --disk /dev/sdX
-```
-
-This restores the three network files first, then the nine commissioning files,
-with separate READY/RESTORE confirmations and exact journal/original-byte checks.
-Expired HA certificate metadata does not prevent restoring originals. Changed
-source recipes, unknown current bytes or used profiles still stop the operation.
-An incomplete installation requires review of its saved results before selecting
-the explicit `--phase cleanup` or `--phase commissioning` recovery scope.
-
-These are exact selected-file recovery images, not a general uninstall or
-whole-firmware recovery tool. Later native configuration changes can invalidate
-the original settings comparison. Do not bypass that refusal or overwrite current
-HVAC configuration with an old snapshot. Preserve the entire private kit and its
-pinned source version for recovery.
-
-After successful native startup, connect normal Wi-Fi on the appropriate base,
-verify fresh HA readings, and perform supervised equipment validation before
-claiming a completed installation. Never use an unattended first heat call.
+See [undo and recovery](recovery.md).

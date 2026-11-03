@@ -5,7 +5,7 @@ probe](../probe/README.md) for the owner's Display-2.6 unit. It is not firmware
 acquisition, backup, recovery, deployment or HVAC control. It has passed offline
 build/integrity checks and one supervised physical boot. The master reported
 256 MiB NAND, 128 KiB erase blocks, 2 KiB pages and 64-byte OOB with flags zero.
-The protected-status registration guard passed. Normal Nest USB mode returned after the owner reported ready; see the [measurement record](../../docs/research/nand-geometry-2026-10-30.md).
+The protected-status registration guard passed. Normal Nest USB mode returned after the owner reported ready; see the [measurement record](../../docs/development/history/research/nand-geometry-2026-10-30.md).
 
 The experiment initializes NAND to obtain seven master-device sysfs attributes:
 name, type, flags, size, erase size, page size and OOB size. It does not read NAND
@@ -53,7 +53,7 @@ The custom kernel can hang/reset or affect power/battery behavior. Native contro
 is absent while it runs. Keep the display on USB, detached from the unwired base.
 Notify the owner before execution under the existing device-work authorization.
 Never flash this kernel; persistent modifications remain behind the
-[backup/recovery gates](../../docs/hardware.md).
+[backup/recovery gates](../../docs/development/history/hardware-gates.md).
 
 ## Offline build and checks
 

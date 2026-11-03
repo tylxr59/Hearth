@@ -1,115 +1,101 @@
-# Current development status
+# Current status
 
-The owner requires a normal setup run from beginning to end, without continuation
-commands. The development source removes `--continue-prepared`, `--continue-cleanup`
-and the prepared-session module. Published0.10.2 remains immutable. Recovery tools
-for a reviewed failed write remain separate from fresh installation.
+_Last updated 2026-11-03. Keep this page short and current. Dated detail goes
+in [history](history/), and lasting facts go in [findings](findings.md)._
 
-## Current unit and next hardware step
+## Device state right now
 
-The Gen2 Display-2.6 remains on primary5.9.4-5. Its HVAC base is wired to actual
-oil/baseboard heat; the display is detached on USB. The latest commissioning9
-stock-return transaction reported all nine targets restored with no transaction,
-rollback, journal, cleanup, unmount or protection errors. Its final readback failed
-(diagnostic21, verified0, safe_to_restart0). The command exited. The subsequent audit independently verified the stock
-return; the owner confirmed the native home icon and normal Nest USB was
-independently observed. The display is charging on USB. No loader is armed.
-Cleanup3 never committed or mounted writable.
+| | |
+| --- | --- |
+| Unit | Gen 2, Display-2.6, primary firmware 5.9.4-5 (the only measured target) |
+| Where it is | Display **detached**, on USB to the dev PC, charging, in **native (stock UI) mode** |
+| HVAC base | **Wired to real oil/baseboard heat.** Never assume an unwired base when it's reattached |
+| Last on-base state | Heat 63 °F, Eco off, empty schedule, heating idle (owner confirmed) |
+| Loader | **None armed** |
+| Flash contents | Stock files, independently verified (see below). Native home icon and normal USB confirmed |
+| On-base stock UI | Not yet re-checked |
 
-The fresh preflight-only diagnostic exited0, sealed/protected, with no writes.
-It measured RAM free50,913,280 bytes and root0 available13,201,408 against the
-copy-based update requirement19,534,505. The root cause is flash space, not RAM.
-A saved corrected NAND view contains one old restored network4 archive
-(5,822,879 file bytes); all four originals match the earlier preserved host backup.
-No archive has been deleted or reused on hardware.
+**Authorised now:** local code, docs, packaging, tests, commits and pushes.
+**Not authorised:** HA Core restarts, persistent device writes, arming a loader,
+or intentional HVAC calls. Each needs fresh owner approval.
 
-The commissioning-only stock return ran once under explicit owner authorization.
-Its failed final result remains unchanged. The subsequent write-disabled audit
-exited0: all active original bytes, existence/mode/ownership and NONE encoding
-match; exact archive inventory, seven backup fingerprints, two absences and the
-restored journal match. Only archived original0 has mixed NONE/ZLIB fragments
-(mask65), explaining the strict archive-encoding refusal. No additional flash
-write occurred. This independent review clears native restart, while the original
-writer remains incomplete. Native on-base stock UI remains unchecked.
+## Last hardware events (newest first)
 
-The first audit launch refused before any loader/output creation because the
-host compared the capsule's named archive layout to an integer. The corrected
-mapping is regression-tested; a fresh profile/reproduction/source archive was
-used for the single actual audit boot. Both preparations remain private.
-Codec reporting does not loosen the production NONE/ZERO acceptance gate;
-normal-flow handling of native-recompressed archive originals still needs work.
+1. **Commissioning-only stock return** (after step 3) ran once. All nine files
+   were restored (restored mask 511) with zero transaction, rollback, journal or
+   seal errors, but its own final verify failed (diagnostic 21: `verified 0`,
+   `safe_to_restart 0`). **Preserve that result unchanged.** A separate
+   read-only audit then verified every active original's bytes, metadata and
+   NONE encoding. The refusal came from archived rollback original 0, which
+   contains mixed NONE/ZLIB fragments (mask 65). No extra write was needed.
+   Independent review cleared the native restart.
+2. **Cleanup3 resource preflight** refused before commit (diagnostic 40). A
+   follow-up no-write diagnostic measured refusal 42: 13,201,408 bytes available
+   on root0 against 19,534,505 required. The cause is flash space, not RAM.
+   There was zero program/erase activity.
+3. **Commissioning9** installed and verified through the public wizard.
+4. A fresh **full-NAND archive** passed both raw/OOB passes and offline checks,
+   with zero uncorrectable chunks and four matching-but-unclassified chunks per
+   pass. One old restored network4 rollback archive (5,822,879 bytes) remains on
+   flash. Its four originals match the host backups, and deleting it is **not**
+   authorised.
+5. An **earlier legacy stock return** (network4 + core9) had the same kind of
+   failure: its final readback failed with diagnostic 21, while independent
+   audits verified all active files. That failure came from compressed archived
+   copies 0, 6 and 8. Its report also stays unchanged.
 
-## Normal-flow storage work
+Do not re-run any attempted phase or executed profile. Original reports, profiles
+and source snapshots are kept under `private/`. The ignored local handoff note
+has private detail.
 
-An explicit prototype can share exact existing original inodes into a new
-plan-specific rollback archive. It requires a fully restored, plan-named four-file
-journal; complete original hashes, ownership/modes/attributes and exact reference
-identities/counts. The old archive's bytes, names and journal remain in place.
-The candidate staging, intent journal, atomic rename, rollback and NONE/ZERO
-audits remain enforced. The ordinary copy-based path is unchanged.
+## Recent development (released in v0.11.0)
 
-The allocation bound for this mode is replacement staging plus one largest
-rollback temporary plus the existing2MiB reserve, because originals already
-occupy flash. The ordinary3-times-total reserve and restore largest-plus4MiB
-reserve remain unchanged. Twenty additional synthetic shared-original cases cover
-identity/tampering refusals, incomplete staging, uncertain renames and restoration;
-the same sources compile for ARM. Shared-original hardware writes are unmeasured.
+- **Combined capacity preflight.** The wizard runs a no-commit space check
+  covering both phases before either write. Only an exited, sealed, zero-write
+  success unlocks phase 1.
+- **Shared-original rollback.** Hardlinks exact existing original inodes from a
+  restored old archive instead of copying them, which cuts the space needed to
+  staging + largest temp + 2 MiB. This is nominated from the checked NAND
+  view, and all device-side checks still run.
+- **Continuation commands removed.** Setup is one normal run from start to
+  finish.
+- **Friendlier wizard output.** `installer/ui.py` was added for formatted steps,
+  prompts and summaries.
 
-The normal kit now nominates candidates from the checked full-NAND root0 view.
-The bounded original parser checks record/data CRCs, versioned directory entries,
-restored journal, exact archive names and full original contents. Ambiguous or
-unsupported data refuses sharing. A nomination is never permission to reuse:
-all native inode/link/ownership/encoding/hash checks still run on the device.
+A fresh shared/capacity preflight profile and its restore reference are
+prepared and reproduce (10 artifacts), but they have **not been executed**. The
+next optional hardware step is one owner-ready, no-commit run of that preflight.
 
-The wizard now runs a no-commit combined-capacity profile before either write.
-It reserves all root0 core staging plus128KiB, in addition to the network budget;
-core's separate user-config/backup preflight remains enforced. The reservation is
-bound into the checked ARM binary. Only exited, sealed, zero-write successful
-capacity evidence with matching acquisition custody admits the first writer.
-A failure starts neither phase. No user-facing continuation path was reintroduced.
+**Unmeasured:** shared-original writes, handling of native-recompressed archive
+originals, the cleanup3 writer, the custom-NTP writer and the full
+stock-to-HA wizard.
 
-A fresh no-commit shared/capacity profile and matching restore reference are
-checked; all ten artifacts reproduce. The extra core reservation is216,202 bytes.
-This preparation used existing preserved inputs for a development preflight,
-not a completed fresh-user run. No loader was armed and no device attempt occurred.
-The next optional hardware step is one owner-ready no-commit preflight of this
-path. Shared-original writes, native-recompressed archive handling and the full
-stock-to-HA normal wizard remain unverified. Do not advertise them as measured.
+## Published
 
-The owner is handing repository cleanup to Claude. Leave the Nest in native USB
-stock-file state. The extracted download contains development-source updates for
-this reviewed preparation, with prior exact source snapshots retained privately;
-it is not a pristine published0.10.2 download. Do not rerun old executed profiles.
-Private handoff details are in the ignored local handoff note.
+**v0.11.0** (experimental, ordinary GitHub release, so the HACS default picks
+it) is the first release with:
 
-## Published delivery and validation
+- the combined capacity preflight and shared-original rollback;
+- the formatted wizard;
+- the computed `hearth-nest-installer.zip` (renamed from
+  `hearth-installer-source.zip`);
+- HA-sized brand icons.
 
-Experimental0.10.2 fixes source-only recovery ZIP creation. Its HACS integration
-and installer assets/checksums were downloaded and matched tested source; CI and
-hassfest pass, and installed HACS selection methods choose the ordinary release.
-The owner's HA entry/bundle were created successfully during the fresh wizard.
-No agent HA Core restart or live HA deployment occurred during this storage work.
-Use HACS for delivery and obtain fresh approval for another agent Core restart.
+The owner plans a start-to-end test of it on their own HA and Nest. Until that
+test reports back, everything under "Unmeasured" above stays unmeasured.
 
-The current combined suite passes1,878 tests with five optional skips, including
-the enabled pinned BCH checks. Static checks pass. The network-isolated real
-HA2026.10.4 sandbox passes24 native control round trips and the separate-process
-admin onboarding/address/bundle exchange. Shared/capacity ARM compilation and
-fresh private profile reproduction pass; hardware validation is still pending.
+v0.10.2 is the previous release. The owner's v0.10.1 onboarding created an HA
+entry and a matching private bundle. Don't recreate that entry or the old
+profile yourself, and don't deploy over the HACS install by hand. Deliver
+through HACS only.
 
-Previously measured: local telemetry, targets63→62→63F, Eco on/off, future schedule
-entry/readback/empty-week restoration, local weather/time correction, full raw/OOB
-archive with matching corrected views and read-only acquisition handoff. Four
-matching chunks per NAND pass remain unclassified, with zero uncorrectable chunks.
-Selected-file restoration and native UI return have been measured. Whole-chip
-restoration, hardware power-loss recovery, intentional heating, cooling/fan and
-other models/firmware remain unverified.
+## Validation snapshot
 
-The earlier Nov3 legacy stock-return writer's incomplete readback report remains
-unchanged: independent snapshots and inode audits verified all active originals,
-isolating that old failure to compressed archived copies. Preserve the independent
-verification rather than relabelling the original report successful.
+About 1,900 tests pass, with five optional skips. Static checks pass. The
+network-isolated HA 2026.10.4 sandbox passes 24 native control round trips plus
+the onboarding exchange. Shared/capacity ARM compilation and private profile
+reproduction pass.
 
-Canonical sources remain `backend/`, `custom_components/hearth/`, `installer/`,
-`provisioning/`, `firmware/` and `tools/nand_archive/`. See the
-[release checklist](roadmap.md); older investigation belongs in [history](history/).
+What has been measured on hardware and what hasn't is listed in
+[compatibility](../compatibility.md). Open release gates are in the
+[roadmap](roadmap.md).

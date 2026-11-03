@@ -1,9 +1,9 @@
 # Fixed-plan experimental JFFS2 file writer
 
 This is an experimental installer/recovery path for one privately reviewed Gen 2
-primary/5.9.4-5 plan. One [persistent installation](../../docs/research/file-install-result-2026-10-31.md)
+primary/5.9.4-5 plan. One [persistent installation](../../docs/development/history/research/file-install-result-2026-10-31.md)
 passed exact readback/native USB return but exposed a UI startup stall. The later
-[selected-file restoration](../../docs/research/file-restore-result-2026-10-31.md)
+[selected-file restoration](../../docs/development/history/research/file-restore-result-2026-10-31.md)
 passed original-byte readback; stock UI recovery is pending. Whole-firmware and
 hardware power-loss recovery remain unverified.
 It preserves native HVAC code; this does not validate physical HVAC operation.

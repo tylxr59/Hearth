@@ -333,3 +333,37 @@ def test_root_udev_helper_never_comes_from_user_path(monkeypatch, tmp_path, faul
     )
     with pytest.raises(Invalid, match="root-managed"):
         wizard.usb_access(tmp_path, lambda _: "USB ACCESS")
+
+
+@pytest.mark.parametrize(
+    ("release", "expected"),
+    (
+        ('ID=ubuntu\nID_LIKE=debian\nPRETTY_NAME="Ubuntu 24.04"', "sudo apt install"),
+        ('ID=cachyos\nID_LIKE=arch\nPRETTY_NAME="CachyOS"', "sudo pacman -S --needed"),
+        ('ID=fedora\nPRETTY_NAME="Fedora 43"', "sudo dnf install"),
+        ('ID=plan9\nPRETTY_NAME="Other"', None),
+    ),
+)
+def test_missing_tools_get_a_distribution_hint_but_nothing_is_installed(
+    tmp_path, release, expected
+):
+    path = tmp_path / "os-release"
+    path.write_text(release)
+    _, family = wizard.os_release(path)
+    hint = wizard.install_hint(["mtype", "setfacl", "libusb", "cc"], family)
+    if expected is None:
+        assert hint is None
+    else:
+        assert hint.startswith(expected) and "mtools" in hint and "acl" in hint
+    assert wizard.os_release(tmp_path / "missing") == ("Linux", None)
+
+
+def test_wizard_output_is_plain_when_captured(capsys):
+    from installer import ui
+
+    ui.step(2, 7, "Build")
+    ui.box("Ready to write", ["line"])
+    ui.Progress("Reading").update(55)
+    shown = capsys.readouterr().out
+    assert "\033[" not in shown
+    assert "Step 2 of 7" in shown and "Reading: 55%" in shown

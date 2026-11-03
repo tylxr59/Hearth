@@ -51,6 +51,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-        # HACS hides GitHub prereleases by default. These are experimental0.x
+        # HACS hides GitHub prereleases by default. These are experimental 0.x
         # releases, but must be ordinary GitHub releases for the default ZIP path.
-        run: gh release create "$GITHUB_REF_NAME" release/* --verify-tag --latest --generate-notes --title "Hearth $GITHUB_REF_NAME — Experimental preview"
+        # The asset table in RELEASE-NOTES.md is prepended to GitHub's generated
+        # changelog. release.json and the notes are build metadata, not assets.
+        run: gh release create "$GITHUB_REF_NAME" release/hearth.zip release/hearth-nest-installer.zip release/SHA256SUMS --verify-tag --latest --notes-file release/RELEASE-NOTES.md --generate-notes --title "Hearth $GITHUB_REF_NAME — Experimental preview"

@@ -3,8 +3,8 @@
 This is an experimental diagnostic for the owner's Display-2.6 / 5.9.4-5 unit.
 The first attempt produced no TLS cases; its launch-permission defect was corrected.
 The second supervised RAM run completed all 18 expected cases and returned to
-native startup. See [the measured result](../../docs/research/tls-probe-result-2026-10-30.md)
-and [the preserved first attempt](../../docs/research/tls-probe-attempt-2026-10-30.md).
+native startup. See [the measured result](../../docs/development/history/research/tls-probe-result-2026-10-30.md)
+and [the preserved first attempt](../../docs/development/history/research/tls-probe-attempt-2026-10-30.md).
 It is not installable firmware, a recovery procedure or an HVAC controller.
 
 The custom Linux profile has MTD, block storage, physical network devices and

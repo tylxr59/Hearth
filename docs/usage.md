@@ -1,69 +1,87 @@
-# Use Hearth
+# Using Hearth
 
-The climate card exposes only modes supported by reported equipment and allowed
-by enrollment. Missing capability flags do not default to support. Heating/Idle
-is derived from native operating flags, not a comparison between room and target.
+Once set up, your Nest appears in Home Assistant as a **Hearth Thermostat**
+device, with a climate entity, sensors and, where your Nest supports them,
+settings entities.
 
-Temperature targets are stored in native Celsius. HA converts for display, using
-dial-appropriate precision. Acknowledged targets may be labelled assumed until a
-native value report arrives. Later native values take precedence.
+## Climate card
+
+- **Modes.** Only the modes your equipment actually reports are offered. A
+  heat-only system shows Off and Heat.
+- **Heating / Idle.** This comes from the Nest's own operating flags, not from
+  comparing room temperature with the target.
+- **Target temperature.** The Nest stores targets in Celsius, and HA converts
+  them for display. Right after you change it, the target may show as
+  *assumed*: the Nest has accepted the command but hasn't reported the value
+  back yet. The Nest's own report always wins.
 
 ## Eco
 
-Eco controls native manual Eco. None stops manual Eco; it does not disable the
-thermostat's automatic Eco behavior. A fresh native mode can confirm the command.
-Existing limits remain unchanged unless the separate paired-bound action is used.
+The Eco preset turns the Nest's manual Eco mode on or off. Choosing **None**
+ends manual Eco, but it doesn't disable the Nest's automatic Eco behaviour. Your
+Eco temperature limits stay as they are unless you use the separate **Set eco
+temperature bounds** action.
 
-## Schedules
+## Weekly schedules
 
-Use Developer tools → Actions → Hearth: Read weekly schedule. The returned
-seven-day week uses explicit Celsius;0–6 are Monday–Sunday. An apparently empty
-native schedule may still contain continuation records. Preserve those records.
+Schedules use Home Assistant actions (**Developer tools → Actions**):
 
-Replace weekly schedule requires the full desired week, explicit temperature
-unit and the revision obtained by reading. Hearth syncs a private backup first,
-rechecks enrollment/revision, then queues one replacement. A stale revision refuses.
-Read again after applying; do not repeatedly submit an old action.
+1. Run **Hearth: Read weekly schedule**. It returns all seven days in Celsius
+   (0 = Monday … 6 = Sunday) and a **revision** number.
+2. Run **Hearth: Replace weekly schedule** with the full week you want, the
+   temperature unit and that revision.
 
-Sources describe the actual evidence:
+Hearth saves a private backup of the current schedule before it replaces
+anything. If the schedule changed since you read it, the revision won't match
+and the replace is refused. Read it again and retry with the new revision.
 
-- `device`: validated native week received in this run.
-- `pending`: requested week, not yet acknowledged.
-- `acknowledged`: exact written version was returned in client subscription metadata.
-- `cache`: known configuration restored from disk without current freshness.
-- `unconfirmed`: a request expired without acknowledgement; investigate before editing.
+An empty-looking schedule can still contain hidden continuation entries. Keep
+them when you edit.
 
-An acknowledgement is distinct from an explicit full native-week echo. Current
-Gen2 replacement and original restoration have been physically verified.
+The schedule's `source` tells you how fresh it is:
 
-## Device configuration
+| Source | Meaning |
+| --- | --- |
+| `device` | Read from the Nest during this session |
+| `pending` | Your change is queued and the Nest hasn't confirmed it yet |
+| `acknowledged` | The Nest confirmed it received that exact version |
+| `cache` | Loaded from disk at startup and not refreshed yet |
+| `unconfirmed` | A change expired without confirmation. Read again before editing |
 
-Switches, numbers and selects expose reported learning, Early-On, Sunblock,
-filter, display and equipment settings. No value is invented for missing fields.
-Equipment-affecting entities start disabled. The Set device settings action can
-change an allowlisted group atomically in one native bucket; safety/equipment
-changes require an HA administrator and `confirm_equipment_changes: true`. Temperatures use Celsius.
-Fresh per-field baselines and appropriate reported fan/heat-pump/hot-water support
-are required. A cached value alone cannot authorize a new setting.
-
-PIN hashes are write-only inputs to the explicit advanced action; they are never
-included in the reported cache or normal entity attributes. Hearth does not invent
-an undocumented native PIN hashing algorithm.
+Replacing and restoring a schedule has been verified on a real Gen 2.
 
 ## Weather
 
-Select a weather entity in Hearth's Configure options. For the native IPv4 fetcher,
-set the fallback postal/country to the actual configured location. Hearth adapts
-HA current weather and forecasts into native responses; no separate weather
-subscription is required. Unavailable HA weather remains unavailable rather than
-inventing observations.
+The Nest shows outdoor weather from any HA weather entity you choose:
 
+1. Go to **Settings → Devices & services → Hearth → Configure**.
+2. Pick a weather entity.
+3. Set the fallback **postal code** and **country** to your actual location.
+   The Nest's fallback weather lookup uses these.
 
-## Optional diagnostics
+If the weather entity is unavailable, the Nest sees no weather. Hearth never
+makes up observations.
 
-Enable diagnostic entities in the device's entity list for battery voltage,
-Wi-Fi signal, filter runtime/replacement, outdoor temperature, Sunblock/Early-On
-activity and heat-pump readiness. Battery is shown as reported voltage rather than
-an invented battery percentage. Time to target is converted from a native epoch
-into minutes remaining; absent values stay unknown. Zero outdoor temperature is
-preserved. These diagnostics do not change thermostat or equipment settings.
+## Device settings
+
+Switches, numbers and selects appear for settings your Nest actually reports:
+learning, Early-On, Sunblock, filter reminders, display and equipment options.
+Missing fields stay hidden or unknown.
+
+- **Equipment-affecting entities start disabled.** Enable them yourself in the
+  entity settings if you need them.
+- The **Set device settings** action changes a group of settings at once.
+  Safety and equipment changes need an HA administrator and
+  `confirm_equipment_changes: true`. Temperatures are in Celsius.
+- Lock PIN hashes are write-only. They're never stored or shown.
+
+Settings have automated test coverage, but not every field has been tried on
+real hardware. See [what's tested](compatibility.md) and the
+[full settings list](development/device-settings.md).
+
+## Diagnostics
+
+Optional diagnostic entities are disabled by default. Enable them from the
+device page: battery voltage, Wi-Fi signal, filter runtime, outdoor
+temperature, Sunblock/Early-On activity, heat-pump readiness and time to
+target. They're read-only and never change thermostat settings.

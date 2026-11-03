@@ -41,7 +41,7 @@ Public hash API/ownership references are [pinned](sources.json), not vendored.
 The actual native callbacks/comparator were inspected independently; no
 source/binary-correspondence claim is made from an upstream API reference.
 
-The [observed result](../../docs/research/settings-compat-result-2026-10-31.md)
+The [observed result](../../docs/development/history/research/settings-compat-result-2026-10-31.md)
 validates the exact diagnostic build; earlier default LLD builds crashed during
 relocation and remain unvalidated. Remaining gates include application startup/integration,
 other credential log paths, actual permissions, two-key credential transactions,
@@ -64,7 +64,7 @@ measurement; the older observed build does not validate these additions. The
 extended synthetic RAM diagnostic has 36 cases. No file installer or production
 native application integration is established by this correction.
 
-The subsequent supervised [36-case result](../../docs/research/settings-permissions-result-2026-10-31.md)
+The subsequent supervised [36-case result](../../docs/development/history/research/settings-permissions-result-2026-10-31.md)
 now validates the exact GNU-linked instrumented privacy candidate on synthetic
 RAM files, with native USB return. This supersedes the preparation-only status
 above. No standalone/full application, persistent installation or flash claim.

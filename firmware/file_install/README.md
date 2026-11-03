@@ -59,7 +59,7 @@ journal inspection and restoration are implemented and host-tested, as detailed
 below. Actual after-reboot device recovery, native application shutdown/health,
 writer-bound backup receipts and kernel integration, and actual JFFS2
 write/restore remain unimplemented or unmeasured. Hardware use requires those pieces,
-a concrete reviewed capsule and advance owner notification under docs/hardware.md.
+a concrete reviewed capsule and advance owner notification under docs/development/history/hardware-gates.md.
 No whole-firmware recovery or HVAC claim follows from host filesystem tests.
 
 The separate [snapshot reader](../file_snapshot/README.md) now shares the fixed
@@ -96,5 +96,5 @@ journals/metadata, absence with/without intent, and failed-then-retried restore.
 These simulate process interruption, not actual power loss. A separate fresh
 91-case RAM profile is prepared: 36 settings, 32 transaction and 23 recovery
 cases (the positive extended-attribute fixture remains host-only). All 91 cases subsequently passed on ARM RAM, including the 23 recovery cases;
-see the [result](../../docs/research/file-recovery-result-2026-10-31.md). Persistent
+see the [result](../../docs/development/history/research/file-recovery-result-2026-10-31.md). Persistent
 JFFS2 restoration remains unverified.

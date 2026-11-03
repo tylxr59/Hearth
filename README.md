@@ -4,138 +4,138 @@
 
 <h1 align="center">Hearth</h1>
 
-<p align="center">Keep your Nest thermostat. Bring its connected features home to Home Assistant.</p>
+<p align="center"><b>Your Nest thermostat, controlled from Home Assistant. No Google cloud.</b></p>
 
 <p align="center">
-  <a href="https://github.com/tylxr59/Hearth/releases"><img alt="Releases" src="https://img.shields.io/github/v/release/tylxr59/Hearth?include_prereleases"></a>
+  <a href="https://github.com/tylxr59/Hearth/releases"><img alt="Release" src="https://img.shields.io/github/v/release/tylxr59/Hearth?include_prereleases"></a>
   <a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/badge/license-MIT-97ca00"></a>
   <a href="https://github.com/tylxr59/Hearth/actions"><img alt="Checks" src="https://github.com/tylxr59/Hearth/actions/workflows/check.yml/badge.svg"></a>
 </p>
 
 <p align="center">
-  <a href="#-features">Features</a> · <a href="#-quick-start">Quick start</a> ·
-  <a href="#-usage">Usage</a> · <a href="#-troubleshooting">Troubleshooting</a>
+  <a href="#-quick-start">Quick start</a> ·
+  <a href="docs/installation.md">Install guide</a> ·
+  <a href="docs/usage.md">Using it</a> ·
+  <a href="docs/troubleshooting.md">Troubleshooting</a> ·
+  <a href="docs/compatibility.md">What's tested</a>
 </p>
 
 ---
 
-Hearth connects a modified Nest Learning Thermostat directly to Home Assistant
-through its native local HTTPS protocol. The thermostat keeps its own display,
-schedule engine and equipment-control logic. Your HA installation supplies the
-connected controls, readings and weather.
+Google has stopped cloud support for older Nest Learning Thermostats. Hearth
+keeps yours useful. A one-time USB setup points the thermostat at **your own
+Home Assistant** instead of Google's servers, and it talks to HA directly over
+your local network using the Nest's own protocol.
 
-<p align="center"><img src="assets/screenshot.png" alt="Hearth temperature, humidity and target readings in Home Assistant" width="720"></p>
+The Nest keeps doing what it's good at: its display, dial, schedule and the
+logic that actually runs your heating all stay exactly as they were. Hearth just
+replaces the cloud end.
 
-> [!NOTE]
-> **Experimental preview.** Real Gen2 telemetry, target changes, Eco and weekly
-> schedule replacement/restoration are verified. Actual equipment switching and
-> unattended outage behavior still need validation. The source-built USB reader
-> is measured; the complete stock install/restore kit now builds offline, but
-> still needs a supervised stock-device measurement. This is not a stable v1 release.
+<p align="center"><img src="assets/screenshot.png" alt="Hearth thermostat card in Home Assistant showing temperature, humidity and target" width="720"></p>
 
-## 🎯 Features
+> [!WARNING]
+> **Experimental preview.** Hearth works on the developer's own thermostat, but
+> the full setup from a stock Nest hasn't been tested end to end yet, and
+> restoring the whole flash chip has never been tested. Only try this if you're
+> comfortable being an early tester. See [what's tested](docs/compatibility.md).
 
-| Feature | What it does |
+## ✨ What you get
+
+| | |
 | --- | --- |
-| Native HA integration | Climate controls, temperature and humidity through local HTTPS |
-| Eco and weekly schedules | Native presets, full-week readback, checked replacement and backups |
-| Weather and time | Uses an HA weather entity; local endpoint and chosen time source |
-| Device settings | Learning, Early-On, Sunblock, display and equipment configuration, gated by reported support |
-| Local operation | Retains Nest's native UI and control loops |
-| Guided USB workflow | Identity/bundle checks, protected preflight, explicit install decision and paired restore |
+| 🌡️ **Climate control** | Mode, target temperature and current temperature/humidity in HA |
+| 🌿 **Eco mode** | Turn the Nest's Eco preset on and off |
+| 📅 **Weekly schedules** | Read and replace the Nest's own schedule, with automatic backups |
+| ⛅ **Weather** | The Nest's outdoor weather comes from any HA weather entity you pick |
+| 🕐 **Your time server** | Point the Nest's clock at NIST or your own NTP server |
+| ⚙️ **Device settings** | Learning, Early-On, Sunblock, display and more, shown only when your Nest reports them |
+| 🏠 **Fully local** | The Nest talks only to your Home Assistant. No account, no cloud |
+| ↩️ **Undo** | Setup saves a full flash backup and lets you put the original files back |
 
-New settings have automated protocol coverage. Their presence in the UI does not
-mean every field or equipment configuration has been physically tested. See the
-[compatibility matrix](docs/compatibility.md).
+## ✅ Will it work with my Nest?
 
-## 📋 Requirements
+Right now Hearth supports exactly one combination, because it's the only one
+that has been tested on real hardware:
 
-- Nest Learning Thermostat Gen2, reported `Display-2.6`, primary firmware `5.9.4-5`.
-- Home Assistant Core2026.10.4 (the tested version) and a network path from the Nest to HA.
-- A Linux computer and data-capable USB cable for thermostat installation.
-- Python3.12+, rootless Podman and the [listed build prerequisites](docs/installation.md#guided-setup).
-  The wizard prepares the private bundle and per-device kit.
+- **Nest Learning Thermostat 2nd generation**
+- Display **Display-2.6**, software **5.9.4-5**
+  (on the Nest: **Settings → Technical info**)
+
+Gen 1, Gen 3 and other software versions are not supported yet. Heating control
+has been verified. Cooling, fan and emergency heat have only been tested in simulation.
+
+## 📋 What you need
+
+- **Home Assistant** with [HACS](https://hacs.xyz/). Tested on HA 2026.10.
+- **A Linux computer** for the one-time USB setup, with Python 3.12+ and Podman.
+  The wizard checks for everything else and tells you exactly what to install.
+- **A USB data cable** (charge-only cables won't work).
+- About **7 GB of free disk space** and roughly **an hour**, mostly unattended.
 
 ## 🚀 Quick start
 
-For a supported stock thermostat, download and extract
-`hearth-installer-source.zip` from the latest experimental release, connect the
-display by USB with its base detached, and run:
+1. Download **`hearth-nest-installer.zip`** from the
+   [latest release](https://github.com/tylxr59/Hearth/releases) and extract it.
+   It unpacks into its own `hearth-nest-installer-<version>` folder. (Releases
+   up to v0.10.2 called it `hearth-installer-source.zip`.) The other file,
+   `hearth.zip`, is the HA integration, and HACS downloads it for you.
+2. Take the Nest display off its wall base and plug it into your Linux computer
+   by USB.
+3. Open a terminal in the extracted folder and run:
 
-```sh
-python3 provision.py
-```
+   ```sh
+   python3 provision.py
+   ```
 
-The wizard explains how to install Hearth through HACS, reads the USB identity,
-offers HA addresses, saves originals and builds the checked install/restore kit.
-The **0.10.2 experimental preview** additionally saves full raw NAND/OOB and ECC
-data views before installation and adds `python3 provision.py --restore` for a
-saved installation. The backup and read-only acquisition handoff are measured.
-Whole-chip restoration remains unverified.
+The wizard walks you through everything: installing Hearth in Home Assistant,
+backing up the thermostat, building a kit made just for your unit, and
+installing it. It asks before every write. The full walkthrough is in the
+[install guide](docs/installation.md).
 
-It asks before each device write. Its optional time-server prompt defaults to
-`time.nist.gov` and updates both native time sources. See the
-[setup guide and current hardware limits](docs/installation.md#guided-setup).
-The combined stock-device flow is still experimental and needs hardware validation.
+To undo it later, run `python3 provision.py --restore` from the same folder.
 
-For an already commissioned thermostat, add
-`https://github.com/tylxr59/Hearth` to **HACS → Custom repositories**, category
-**Integration**, download Hearth and restart HA. Existing profiles can be added
-under **Settings → Devices & services**. HACS manages the integration; the wizard
-handles the separate USB operation.
+### Already set up?
 
-## 🧭 Usage
+If your Nest already has Hearth installed, you only need the HA side. In HACS,
+open the three-dot menu, choose **Custom repositories**, add
+`https://github.com/tylxr59/Hearth` as an **Integration**, download Hearth and
+restart Home Assistant.
 
-Use the Hearth climate card for supported modes, target temperature and Eco.
-Configuration entities expose reported settings; equipment-specific options are
-initially disabled and require supported baselines. Select an existing HA weather
-entity in Hearth's options. Schedule actions preserve a private backup before a
-revision-checked replacement.
+## 📚 Documentation
 
-[Controls and schedules](docs/usage.md) · [Installation](docs/installation.md) ·
-[Compatibility](docs/compatibility.md) · [Recovery](docs/recovery.md)
-
-## 🩺 Troubleshooting
-
-| Symptom | What to check |
+| Guide | What's in it |
 | --- | --- |
-| Unavailable readings | Power, Wi-Fi, thermostat-facing HA address and local HTTPS reachability |
-| A setting is unavailable | The Nest must report that field and the required equipment capability |
-| A target is labelled assumed | A protocol acknowledgement arrived; an explicit native value echo has not |
-| Schedule revision changed | Read the latest week before replacing it; do not retry an old action |
-| Installer refuses a kit | Check model, firmware, identity, exact originals and matching restore profile |
+| [Install guide](docs/installation.md) | Requirements, running the wizard, HACS |
+| [Using Hearth](docs/usage.md) | Controls, Eco, schedules, weather, settings |
+| [Troubleshooting](docs/troubleshooting.md) | Common problems and fixes |
+| [Undo and recovery](docs/recovery.md) | Putting the original files back |
+| [What's tested](docs/compatibility.md) | Exactly what has and hasn't been verified |
+| [Security and privacy](docs/security.md) | Network isolation and what to keep private |
+| [Advanced CLI](docs/advanced-cli.md) | Running each setup step by hand |
 
-See [troubleshooting](docs/troubleshooting.md). Never unplug during a persistent
-write or assume a failed session is safe to reboot.
-
-## 👋 Development
+## 🛠️ Contributing
 
 ```sh
 python3 -m venv .venv
 .venv/bin/pip install --require-hashes -r requirements-dev.lock
-make test
-make check
+make test && make check
 ```
 
-[Contributor guide](docs/development.md) · [Release checklist](docs/development/roadmap.md) ·
-[Research archive](docs/research/) · [Report an issue](https://github.com/tylxr59/Hearth/issues)
-
-## 📦 Releases
-
-The [release workflow](.github/workflows/release.yml) builds a self-contained
-`hearth.zip`, a public installer-source archive and checksums from a matching
-version tag. Development builds do not update HA or flash a thermostat.
+Start with the [developer guide](docs/development/README.md). AI coding agents
+should read [AGENTS.md](AGENTS.md) first. Bugs and questions go to
+[issues](https://github.com/tylxr59/Hearth/issues). Never attach your private
+setup folder, logs or serial number.
 
 ## 🤝 Acknowledgements
 
-[NLE](https://github.com/codykociemba/NoLongerEvil-SelfHosted) provides the pinned
-native-protocol reference. Hearth's transport and settings implementations are
-original. [NestDFUAttack](https://github.com/exploiteers/NestDFUAttack) and the OMAP
-loader projects underpin the reviewed RAM-boot research. See
-[licensing and provenance](THIRD_PARTY.md).
+[NoLongerEvil](https://github.com/codykociemba/NoLongerEvil-SelfHosted) is the
+reference for the Nest's native protocol. Hearth's code is an original
+implementation. [NestDFUAttack](https://github.com/exploiteers/NestDFUAttack)
+and the OMAP loader projects made the USB boot research possible. Details are in
+[THIRD_PARTY.md](THIRD_PARTY.md).
 
 ## 📃 License
 
-Hearth uses the [MIT License](LICENSE), except the standalone offline NAND ECC
-verifier, which is GPL-2.0-only. Referenced components retain their own licenses. Proprietary Nest firmware, per-device keys
-and owner recovery images are not included in releases.
+[MIT](LICENSE), except the standalone offline NAND ECC verifier, which is
+GPL-2.0-only. Third-party components keep their own licenses. Releases never
+include Nest firmware, per-device keys or anyone's backups.

@@ -4,10 +4,10 @@ This original diagnostic runs the original settings library and the
 [storage candidate](../settings_compat/README.md) in separate unprivileged processes
 in one RAM boot. The first attempt completed the original baseline but the
 candidate crashed before its first case; see the
-[attempt record](../../docs/research/settings-compat-attempt-2026-10-31.md).
+[attempt record](../../docs/development/history/research/settings-compat-attempt-2026-10-31.md).
 A phase-marker attempt reproduced the startup crash before any candidate marker.
 The GNU-linked build subsequently passed all 29 cases on target; see the
-[observed result](../../docs/research/settings-compat-result-2026-10-31.md). Neither nlclient/osm nor real settings,
+[observed result](../../docs/development/history/research/settings-compat-result-2026-10-31.md). Neither nlclient/osm nor real settings,
 credentials, production networking or flash filesystems are used.
 
 It repeats the twelve measured I/O cases for each variant (24 cases), then tests
@@ -107,7 +107,7 @@ log checks and completion. Older reports are historical and do not satisfy this
 expanded contract. Existing stdout/stderr/report bounds remain unchanged; measured
 old rows plus conservative new-row allowances fit the per-child 8 KiB budget.
 
-The prepared privacy comparison subsequently [passed all 36 cases](../../docs/research/settings-permissions-result-2026-10-31.md)
+The prepared privacy comparison subsequently [passed all 36 cases](../../docs/development/history/research/settings-permissions-result-2026-10-31.md)
 once using source 68edfb9/profile-v2, with loader/collector zero and native USB
 return. That executed profile/result must be preserved and never reused.
 

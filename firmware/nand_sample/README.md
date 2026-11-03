@@ -1,7 +1,7 @@
 # Experimental bounded raw NAND sample
 
 This profile is a separate diagnostic experiment for the owner's Display-2.6,
-after the [geometry test](../../docs/research/nand-geometry-2026-10-30.md) observed
+after the [geometry test](../../docs/development/history/research/nand-geometry-2026-10-30.md) observed
 256 MiB NAND, 128 KiB erase blocks, 2 KiB pages and 64-byte OOB. It passed offline
 build/integrity checks and host tests. Its first actual upload reached binary
 streaming but the host rejected translated tty bytes. The corrected binary-tty
@@ -44,7 +44,7 @@ read-only interface do not prove absence of persistent effects throughout the
 boot chain. Experimental RAM/NAND execution can hang/reset or affect power.
 Keep the display detached from the unwired base and on USB. Notify the owner
 before execution under the existing device-work authorization. No flashing,
-HVAC operation or restoration is included; preserve [the pre-write gates](../../docs/hardware.md).
+HVAC operation or restoration is included; preserve [the pre-write gates](../../docs/development/history/hardware-gates.md).
 
 ## Transport and private storage
 
