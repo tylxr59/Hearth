@@ -130,7 +130,55 @@ def receive(fd, deadline, session, output):
     raise TimeoutError("snapshot/log diagnostic incomplete; preserve private evidence")
 
 
-def run(root, output=None, *, execute=False):
+def sealed_restore_entry(previous):
+    """Read-only RAM handoff from an exited, sealed restore readback failure."""
+    from firmware.file_writer import protocol
+    from firmware.file_writer import run as writer
+
+    previous = private_path(previous)
+    execution = json.loads(private_read(previous / "execution.json", 65536))
+    result = protocol.validate_result(private_read(previous / "result.json", 16384), 2)
+    observed = json.loads(private_read(previous / "observed.json", 65536))
+    if (
+        json.loads(private_read(previous / "finished.json", 65536)) != {"host_command_exited": True}
+        or observed != {"execution": execution, "result": result}
+        or any(
+            result.get(k) != v
+            for k, v in {
+                "action": 2,
+                "initial_error": 0,
+                "commit_received": 1,
+                "stage_error": 0,
+                "window_opened": 1,
+                "rw_attempted": 3,
+                "transaction_called": 1,
+                "error": 0,
+                "rollback_error": 0,
+                "journal_error": 0,
+                "cleanup_error": 0,
+                "attempted": 511,
+                "restored": 511,
+                "committed": 0,
+                "release_error": 0,
+                "unmount_errors": 0,
+                "seal_error": 0,
+                "verified": 0,
+                "safe_to_restart": 0,
+                "complete": 0,
+                "phase": 2,
+                "protected": 1,
+                "failed": 0,
+                "marker": 0,
+            }.items()
+        )
+    ):
+        raise ValueError("exact exited sealed restore readback failure required")
+    _, binding = writer.checked_pair(execution["profile"], execution["recovery"])
+    writer.require_entry(binding, previous)
+    return {"status": "sealed-restore-to-protected-readonly-diagnostic", "flash_writes": False}
+
+
+def run(root, output=None, *, execute=False, recover_from=None):
     root = private_path(root)
     result = check(root)
     if not execute:
@@ -140,7 +188,10 @@ def run(root, output=None, *, execute=False):
     output = private_path(output)
     if output.exists() or output.is_symlink() or output.parent.stat().st_mode & 0o077:
         raise ValueError("fresh owner-only diagnostic output required")
-    require_native("1-1")
+    if recover_from is None:
+        require_native("1-1")
+    else:
+        sealed_restore_entry(recover_from)
     record = json.loads(private_read(root / "profile.json", 65536))
     session = bytes.fromhex(record["session"])
     output.mkdir(mode=0o700)
@@ -155,6 +206,9 @@ def run(root, output=None, *, execute=False):
         json.dumps(
             {
                 "profile": str(root),
+                "recover_from": str(private_path(recover_from))
+                if recover_from is not None
+                else None,
                 "session": session.hex(),
                 "profile_sha256": hashlib.sha256(
                     private_read(root / "profile.json", 65536)

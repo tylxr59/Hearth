@@ -140,3 +140,17 @@ Stock-return offline validation:1,738 host tests pass with five optional skips;
 static checks and the pinned real HA sandbox pass (24 native round trips plus
 admin onboarding). Both fresh core/network restore profiles pass the full check
 and reproduce every artifact. They remain unused, with no loader armed.
+
+On-device stock return: network4 restored and verified. Core9 passed72 RAM checks
+and exact preflight, then reported restored511 with no transaction/cleanup errors.
+Its final readback failed (verified0, safe_to_restart0, diagnostic21); gate is
+sealed/protected and command exited. Keep the display in powered RAM mode; do not
+start native firmware. A fresh protected read-only diagnostic is prepared, with
+20 focused tests and all eight artifacts reproduced. Its explicit RAM entry
+requires the exact exited sealed failure and checked prior custody. No diagnostic
+loader is armed yet.
+
+The owner requests full NAND backup as the pre-install recovery archive. Planned
+provisioning must preserve raw data/OOB, ECC and bad-block metadata plus validated
+readable originals. A capture alone does not validate full-chip restoration;
+routine recovery should remain scoped until boot-critical restoration is measured.
