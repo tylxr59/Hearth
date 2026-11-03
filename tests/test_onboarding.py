@@ -180,7 +180,14 @@ def test_unexpected_flow_never_posts_identity_or_creates_profile(setup, fault):
         client.initial["data_schema"].append({"name": "unreviewed_field"})
     with pytest.raises(Invalid):
         onboard.onboard("http://10.0.0.12:8123", "token", session, info(), client=client)
-    assert len(client.calls) == 1
+    # The identity is never posted. A valid dialog this run opened is closed;
+    # an abort or unsafe flow ID is never addressed.
+    closes = (
+        [("DELETE", onboard.FLOW + "/flow1")]
+        if fault in ("existing_profile", "wrong_schema")
+        else []
+    )
+    assert client.calls == [(onboard.FLOW, {"handler": "hearth"}), *closes]
 
 
 @pytest.mark.parametrize("fault", ("serial", "origin", "server_refusal"))
@@ -288,8 +295,37 @@ def test_explicit_sudo_flag_wraps_only_the_fixed_readonly_mtype_command(monkeypa
     assert len(calls) == 2
 
 
-def test_leftover_ha_profile_gets_a_clear_message():
-    from installer import onboard
+@pytest.mark.parametrize("fault", ("leftover_profile", "interrupted", "bad_address"))
+def test_refusal_after_ha_opens_a_dialog_always_closes_it(setup, fault):
+    session, client = setup
+    if fault == "leftover_profile":
+        client.initial = form() | {"data_schema": []}
+        ask, expected = (lambda _: pytest.fail("must refuse before asking")), Invalid
+    elif fault == "interrupted":
 
-    with pytest.raises(Invalid, match=r"config/\.storage/hearth"):
-        onboard.choices({"data_schema": []})
+        def ask(_):
+            raise KeyboardInterrupt
+
+        expected = KeyboardInterrupt
+    else:
+        ask, expected = (lambda _: "http://public.example"), Invalid
+    with pytest.raises(expected) as caught:
+        onboard.onboard("http://10.0.0.12:8123", "t", session, info(), ask=ask, client=client)
+    if fault == "leftover_profile":
+        assert "config/.storage/hearth" in str(caught.value)
+    assert client.calls[-1] == ("DELETE", onboard.FLOW + "/flow1")
+    assert not (session / "commissioning.zip").exists()
+
+
+@pytest.mark.parametrize(
+    ("reason", "message"),
+    (("already_in_progress", "restart Home Assistant"), ("already_configured", "Remove it")),
+)
+def test_ha_aborts_get_plain_guidance_without_a_flow_to_close(setup, reason, message):
+    session, client = setup
+    client.initial = {"handler": "hearth", "type": "abort", "reason": reason, "flow_id": "x"}
+    with pytest.raises(Invalid, match=message):
+        onboard.onboard(
+            "http://10.0.0.12:8123", "t", session, info(), ask=lambda _: "", client=client
+        )
+    assert client.calls == [(onboard.FLOW, {"handler": "hearth"})]

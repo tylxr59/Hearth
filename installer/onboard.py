@@ -81,26 +81,16 @@ def choices(form):
     return list(dict.fromkeys(endpoint(value) for value in values))
 
 
-def onboard(ha_url, token, session, info, *, target=None, ask=input, client=None):
-    identity = device_info(info)
-    session = private_path(session)
-    if session.exists() or not session.parent.is_dir() or session.parent.stat().st_mode & 0o077:
-        raise Invalid("fresh session beneath an owner-only private directory required")
-    if target is not None:
-        target = endpoint(target)
-    client = HAClient(ha_url, token) if client is None else client
-    session.mkdir(mode=0o700)
-    save(session, "identity.json", encode(identity))
-    form = client.flow(FLOW, {"handler": "hearth"})
-    save(session, "onboarding-form.json", encode(form))
-    flow_id = form.get("flow_id")
-    if (
-        form.get("type") != "form"
-        or form.get("step_id") != "user"
-        or not isinstance(flow_id, str)
-        or not re.fullmatch(r"[A-Za-z0-9_-]{1,128}", flow_id)
-    ):
-        raise Invalid("fresh user setup required; close any open Hearth setup dialog first")
+def _cancel(client, flow_id):
+    """Best-effort close of the HA dialog this run opened."""
+    try:
+        client.request("DELETE", FLOW + "/" + flow_id)
+    except (OSError, ValueError):
+        pass
+
+
+def _choose(form, target, ask):
+    """Pick the thermostat-facing endpoint from HA's offered local addresses."""
     options = choices(form)
     if target is None:
         ui.section("Which address should the Nest use to reach Home Assistant?")
@@ -121,11 +111,51 @@ def onboard(ha_url, token, session, info, *, target=None, ask=input, client=None
         else:
             target = endpoint(answer)
     ui.ok(f"The Nest will connect to Home Assistant at {target}.")
+    return target
+
+
+def onboard(ha_url, token, session, info, *, target=None, ask=input, client=None):
+    identity = device_info(info)
+    session = private_path(session)
+    if session.exists() or not session.parent.is_dir() or session.parent.stat().st_mode & 0o077:
+        raise Invalid("fresh session beneath an owner-only private directory required")
+    if target is not None:
+        target = endpoint(target)
+    client = HAClient(ha_url, token) if client is None else client
+    session.mkdir(mode=0o700)
+    save(session, "identity.json", encode(identity))
+    form = client.flow(FLOW, {"handler": "hearth"})
+    save(session, "onboarding-form.json", encode(form))
+    flow_id = form.get("flow_id")
+    if form.get("type") == "abort" and form.get("reason") == "already_in_progress":
+        raise Invalid(
+            "Home Assistant already has a Hearth setup dialog open, possibly left by an "
+            "earlier attempt. Close it, or restart Home Assistant to clear it, then run "
+            "setup again."
+        )
+    if form.get("type") == "abort" and form.get("reason") == "already_configured":
+        raise Invalid(
+            "Hearth is already set up in Home Assistant. Remove it there first for a fresh install."
+        )
     if (
-        ask(ui.prompt("Type SETUP to add Hearth to Home Assistant", "[Enter = cancel]")).strip()
-        != "SETUP"
+        form.get("type") != "form"
+        or form.get("step_id") != "user"
+        or not isinstance(flow_id, str)
+        or not re.fullmatch(r"[A-Za-z0-9_-]{1,128}", flow_id)
     ):
-        client.request("DELETE", FLOW + "/" + flow_id)
+        raise Invalid("fresh user setup required; close any open Hearth setup dialog first")
+    try:
+        target = _choose(form, target, ask)
+        confirmed = (
+            ask(ui.prompt("Type SETUP to add Hearth to Home Assistant", "[Enter = cancel]")).strip()
+            == "SETUP"
+        )
+    except BaseException:
+        # Never leave HA holding an open dialog: it blocks every later attempt.
+        _cancel(client, flow_id)
+        raise
+    if not confirmed:
+        _cancel(client, flow_id)
         save(
             session,
             "onboarding-cancelled.json",
