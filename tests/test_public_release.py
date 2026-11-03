@@ -93,3 +93,4 @@ def test_hacs_and_installer_archives_reproduce_without_private_material(tmp_path
     publish = next(line for line in workflow.splitlines() if "run: gh release create " in line)
     assert "--prerelease" not in publish and "--latest" in publish
     assert "Experimental preview" in publish
+    assert "needs: [package, hassfest]" in workflow

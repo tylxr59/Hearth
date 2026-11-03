@@ -1,10 +1,14 @@
 {
   "date": "2026-11-02",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "scope": "Local address suggestions and PC-side USB identity handoff to authenticated HA setup",
   "host_tests_passed": 1642,
   "optional_tests_skipped": 5,
   "make_check": "passed",
+  "pinned_hassfest": "zero invalid integrations",
+  "unpublished_0_8_0_release_cancelled_for_translation_url_rule": true,
+  "translation_help_url_placeholder_verified_through_real_ha_api": true,
+  "release_publish_requires_hassfest": true,
   "real_ha": {
     "version": "2026.10.4",
     "network": "isolated container, loopback only",

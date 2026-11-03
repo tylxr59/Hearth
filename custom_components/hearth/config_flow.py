@@ -11,7 +11,7 @@ from homeassistant import config_entries
 from ._backend.commissioning import create_profile
 from ._backend.native_weather import query_location
 from ._backend.validation import Invalid
-from .const import DOMAIN
+from .const import DOMAIN, SETUP_GUIDE_URL
 from .onboarding import async_origins
 from .profile import PROFILE_ERRORS, load_profile
 
@@ -64,7 +64,12 @@ class HearthConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 }
             )
         )
-        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
+        return self.async_show_form(
+            step_id="user",
+            data_schema=schema,
+            errors=errors,
+            description_placeholders={"setup_guide_url": SETUP_GUIDE_URL},
+        )
 
 
 class HearthOptionsFlow(config_entries.OptionsFlow):

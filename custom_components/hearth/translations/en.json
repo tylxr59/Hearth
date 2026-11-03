@@ -4,7 +4,7 @@
     "step": {
       "user": {
         "title": "Connect your local Nest thermostat",
-        "description": "For automatic setup, close this dialog and run `hearth onboard` on the computer connected to your Nest by USB. The installer reads its device ID and completes HA setup. [USB setup guide](https://github.com/tylxr59/Hearth/blob/main/docs/installation.md#automatic-usb-onboarding). For manual setup, choose HA's address on the thermostat's network and enter the USB-read device ID. Existing profiles are preserved.",
+        "description": "For automatic setup, close this dialog and run `hearth onboard` on the computer connected to your Nest by USB. The installer reads its device ID and completes HA setup. [USB setup guide]({setup_guide_url}). For manual setup, choose HA's address on the thermostat's network and enter the USB-read device ID. Existing profiles are preserved.",
         "data": {
           "origin": "Thermostat-facing HTTPS endpoint",
           "device_id": "Thermostat device ID"

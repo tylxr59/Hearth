@@ -65,7 +65,7 @@ under **Settings → Devices & services**. For fresh setup, the
 [USB onboarding command](docs/installation.md#automatic-usb-onboarding) reads the
 device ID, offers HA's local addresses, creates the integration entry and saves
 the private commissioning bundle. Tagged releases provide `hearth.zip`; select
-the experimental **v0.8.0** through HACS's normal download flow.
+the experimental **v0.8.1** through HACS's normal download flow.
 
 For a stock thermostat, start with the supported-device and firmware-kit
 requirements in that guide. The USB tools can inspect the device without writing:

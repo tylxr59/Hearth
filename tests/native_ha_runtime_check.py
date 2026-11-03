@@ -1538,6 +1538,9 @@ print(json.dumps(result))
         assert (session / "commissioning.zip").is_file()
         assert all(token.encode() not in p.read_bytes() for p in session.iterdir())
         saved_form = json.loads((session / "onboarding-form.json").read_bytes())
+        assert saved_form["description_placeholders"]["setup_guide_url"].endswith(
+            "#automatic-usb-onboarding"
+        )
         assert saved_form["data_schema"][0]["selector"]["select"]["options"] == [
             "https://10.0.0.12:8443",
             "https://192.168.50.2:8443",
