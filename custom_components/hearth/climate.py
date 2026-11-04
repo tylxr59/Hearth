@@ -30,7 +30,8 @@ class HearthClimate(ClimateEntity):
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_min_temp = 10
     _attr_max_temp = 30
-    _attr_target_temperature_step = 0.5
+    # No fixed step: HA's default is 1 degree in Fahrenheit and 0.5 in Celsius,
+    # matching the whole-degree values the Nest dial can display.
     # HA's generic turn_on chooses a mode. Require an explicit supported mode.
     _enable_turn_on_off_backwards_compatibility = False
 

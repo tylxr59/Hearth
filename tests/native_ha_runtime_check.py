@@ -315,6 +315,8 @@ async def check(root, profile):
                 "cool",
                 "heat_cool",
             }
+            # No fixed step: HA picks whole degrees for Fahrenheit, like the dial.
+            assert "target_temp_step" not in hass.states.get(climate_id).attributes
             from custom_components.hearth._backend.api import NATIVE
 
             native = entry.runtime_data.app[NATIVE]
