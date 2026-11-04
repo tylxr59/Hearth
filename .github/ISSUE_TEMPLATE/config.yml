@@ -1,0 +1,4 @@
+contact_links:
+  - name: Report a security problem
+    url: https://github.com/tylxr59/Hearth/security/advisories/new
+    about: Please report vulnerabilities privately, not in a public issue.

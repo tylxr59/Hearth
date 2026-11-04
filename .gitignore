@@ -6,3 +6,13 @@ __pycache__/
 private/
 build/
 *.egg-info/
+/dist/
+
+# Editor and OS files
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Local secrets
+.env

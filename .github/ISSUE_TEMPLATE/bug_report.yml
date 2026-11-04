@@ -1,0 +1,57 @@
+name: Bug report
+description: Something isn't working as expected.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Never post** your private setup folder, `commissioning.zip`, raw logs,
+        the thermostat's serial number or any tokens. Hearth's **Download
+        diagnostics** file in Home Assistant is safe to share. Report security
+        problems through a security advisory instead of an issue.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Where did it happen?
+      options:
+        - Setup wizard
+        - Undo / restore
+        - Home Assistant integration
+        - Something else
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: For the setup wizard, include the step number and the message it printed.
+      placeholder: |
+        1.
+        2.
+        3.
+  - type: input
+    id: version
+    attributes:
+      label: Hearth version
+      placeholder: v0.12.0
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Home Assistant version, Linux distro (for the wizard), and the Nest's model and software version.
+      placeholder: |
+        Home Assistant 2026.10
+        Fedora 43
+        Nest Gen 2, Display-2.6, software 5.9.4-5
+  - type: textarea
+    id: logs
+    attributes:
+      label: Diagnostics or screenshots
+      description: Hearth's diagnostics download, or screenshots. Remove serial numbers, tokens, IP addresses and other private details first.
