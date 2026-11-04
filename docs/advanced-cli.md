@@ -101,7 +101,7 @@ nine settings, trust and startup files, then three network/time files) and
 matching restore images for each group. It's tied to this one thermostat, its
 originals and its HA bundle. A kit from another unit, a kit that has already
 been used or a changed source recipe is refused. See
-[firmware kit internals](development/firmware-kit.md).
+[internals](development/internals.md#what-the-installer-writes).
 
 ## Install
 

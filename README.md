@@ -17,7 +17,7 @@
   <a href="docs/installation.md">Install guide</a> ·
   <a href="docs/usage.md">Using it</a> ·
   <a href="docs/troubleshooting.md">Troubleshooting</a> ·
-  <a href="docs/compatibility.md">What's tested</a>
+  <a href="docs/technical.md#whats-tested">What's tested</a>
 </p>
 
 ---
@@ -37,7 +37,7 @@ replaces the cloud end.
 > **Experimental preview.** Hearth works on the developer's own thermostat, but
 > the full setup from a stock Nest hasn't been tested end to end yet, and
 > restoring the whole flash chip has never been tested. Only try this if you're
-> comfortable being an early tester. See [what's tested](docs/compatibility.md).
+> comfortable being an early tester. See [what's tested](docs/technical.md#whats-tested).
 
 ## ✨ What you get
 
@@ -111,8 +111,7 @@ restart Home Assistant.
 | [Using Hearth](docs/usage.md) | Controls, Eco, schedules, weather, settings |
 | [Troubleshooting](docs/troubleshooting.md) | Common problems and fixes |
 | [Undo and recovery](docs/recovery.md) | Putting the original files back |
-| [What's tested](docs/compatibility.md) | Exactly what has and hasn't been verified |
-| [Security and privacy](docs/security.md) | Network isolation and what to keep private |
+| [Technical info](docs/technical.md) | How it works, what's tested, security and privacy |
 | [Advanced CLI](docs/advanced-cli.md) | Running each setup step by hand |
 
 ## 🛠️ Contributing

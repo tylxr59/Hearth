@@ -12,7 +12,7 @@ Setting up Hearth involves two pieces:
 > This is an **experimental preview**. The wizard has safety checks at every
 > step, but the complete stock-to-Home-Assistant install hasn't been tested end
 > to end yet, and restoring the whole flash chip has never been tested. See
-> [what's tested](compatibility.md).
+> [what's tested](technical.md#whats-tested).
 
 ## 1. Check your thermostat
 
@@ -66,7 +66,7 @@ HA's own plain-HTTP port is reachable from the thermostat's network. A
 TLS-only HA frontend isn't supported by the wizard yet.
 
 Keep the thermostat on a trusted or isolated network, and never expose it or
-port 8443 to the internet. [Security and privacy](security.md) has more.
+port 8443 to the internet. [Security and privacy](technical.md#security-and-privacy) has more.
 
 ## 4. Run the setup wizard
 

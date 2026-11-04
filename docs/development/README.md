@@ -1,7 +1,8 @@
 # Developer guide
 
 Read [AGENTS.md](../../AGENTS.md) (the safety rules) and [status](status.md)
-before changing anything that can reach a real thermostat.
+before changing anything that can reach a real thermostat. How Hearth works,
+and the hardware facts behind it, are in [internals](internals.md).
 
 ## Setup and checks
 
@@ -34,7 +35,7 @@ Use a fresh `build/` name each time.
 | `tests/` | pytest suite, plus C fault fixtures that ship as writer compiler inputs |
 | `provision.py` | Entry point inside the released installer ZIP |
 | `docs/` | User docs at the top level, developer docs in `docs/development/` |
-| `homeassistant/`, `Dockerfile`, `tools/package_addon.py` | **Retired** laboratory add-on and MQTT backend. Kept for tests and history. Don't revive it |
+| `homeassistant/`, `Dockerfile`, `tools/package_addon.py` | **Retired** laboratory add-on and MQTT backend. Kept for tests. Don't revive it |
 
 ### `firmware/`
 
@@ -58,8 +59,10 @@ re-run an executed profile.
 | `scratch_test/`, `nand_ecc_sample/`, `encoding_audit/` | Standalone diagnostics, not in the install path |
 | `harden.py`, `prepare.py` | Shared offline preparation helpers |
 
-Every subproject has a README, and most link to their dated result in the
-[history archive](history/).
+Each subproject's code and `profile.py` are its documentation. How the pieces
+fit together is in [internals](internals.md). The old per-component READMEs and
+dated lab notes are in the
+[history archive](https://github.com/tylxr59/Hearth/tree/history-archive-2026-11/docs/development/history).
 
 ## Rules that matter
 
@@ -72,7 +75,8 @@ Every subproject has a README, and most link to their dated result in the
   [references](references/upstreams.json) and `THIRD_PARTY.md`.
 - **Keep evidence types apart.** Simulation, reference-code agreement and
   real-hardware results are different claims. Update
-  [compatibility](../compatibility.md) only when the evidence changes.
+  [what's tested](../technical.md#whats-tested) only when the evidence
+  changes.
 - **Never weaken a gate** (source/plan binding, custody, exact-original
   comparison, encoding audit, typed confirmations) to make something pass.
 - **Private material stays in `private/` and `build/`** (both git-ignored):
@@ -126,19 +130,46 @@ present.
 publish a stable v1 or advertise a turnkey installer until the
 [release checklist](roadmap.md) is closed.
 
-## Where things are documented
+## Documentation
 
-Read the [documentation style guide](documentation.md) before writing docs.
+There are only a few docs, and each has one job:
 
-- [status.md](status.md): the current device state and next steps. Keep it
-  short and current.
-- [findings.md](findings.md): established facts about the hardware, firmware
-  and protocol.
-- [firmware-kit.md](firmware-kit.md): how the per-device kit is built and
-  checked.
-- [architecture/](architecture/): decision records.
-- [history/](history/): the dated lab notebook. Add new dated results there
-  and summarise anything still relevant into `findings.md`.
+| File | Holds | Write for |
+| --- | --- | --- |
+| `README.md`, `docs/*.md` | What users do: install, use, fix, undo, and what's tested | A technical generalist, comfortable with a terminal and HA |
+| `AGENTS.md` | Rules for agents, plus a one-paragraph state summary | Agents |
+| [status.md](status.md) | Device state now, what's authorised, what's next, what's unmeasured | Whoever touches the hardware next |
+| [internals.md](internals.md) | How Hearth works and lasting hardware/protocol facts | Developers |
+| [roadmap.md](roadmap.md) | Release gates, as checkboxes | Developers |
+| [device-settings.md](device-settings.md) | Every setting field and its bounds | Developers and curious users |
+
+Keep the user guide file names (`installation`, `usage`, `troubleshooting`,
+`recovery`). Released wizards link to them.
+
+**How to write them:**
+
+- **Users:** lead with the action, then why. Use plain words: "the Nest
+  restarts into setup mode", not "RAM boot"; "the wizard checks every file it
+  wrote", not "readback". No dates or internal history. Say each limit once,
+  plainly. Safety steps are concrete ("Keep USB connected. Don't restart the
+  Nest.").
+- **Status:** replace, never append. Keep the latest few hardware events,
+  newest first. Release history lives in the release notes.
+- **Internals:** present-tense facts, no stories ("in this session",
+  "later"). There are no dated notes in the repo any more. Put a hardware
+  result's details in the commit message, and link existing evidence through
+  the history archive tag.
+- **Evidence words**, everywhere: ✅ verified on hardware (say on what, and
+  which step passed), 🧪 automated/simulated only, ❌ not tested. A successful
+  write is not a working install, and an acknowledgement is not a confirmed
+  value. When evidence changes, update `docs/technical.md` in the same change.
+- **Format:** GitHub-flavoured Markdown, one `#` title, sentence-case headings,
+  about 80 columns, relative links that resolve, backticks for code, paths and
+  typed answers. Space between number and unit ("5 MiB"), thousands separators
+  (13,217,792 bytes). One or two callouts per page at most.
+- **Privacy:** no serial numbers, device IDs, credentials, owner IP addresses,
+  native bytes, binary hashes or kit contents. Use placeholders like
+  `YOUR_HA_IP` and `/dev/sdX`. Strip metadata from images.
 
 Brand assets: `assets/logo.png` (README) and
 `custom_components/hearth/brand/icon.png` (served locally by HA). Both have

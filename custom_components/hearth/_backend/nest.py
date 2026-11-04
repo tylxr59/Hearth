@@ -1,7 +1,8 @@
 """Experimental, deliberately partial adapter for observed NLE bucket shapes.
 
 No pairing simulation, timestamp reconciliation or power-management claims.
-Never auto-enable on a real device. See docs/development/history/laboratory-protocol.md.
+Never auto-enable on a real device. Background: docs/development/history/laboratory-protocol.md
+at the history-archive-2026-11 tag.
 """
 
 from .validation import Invalid

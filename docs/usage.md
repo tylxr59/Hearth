@@ -76,7 +76,7 @@ Missing fields stay hidden or unknown.
 - Lock PIN hashes are write-only. They're never stored or shown.
 
 Settings have automated test coverage, but not every field has been tried on
-real hardware. See [what's tested](compatibility.md) and the
+real hardware. See [what's tested](technical.md#whats-tested) and the
 [full settings list](development/device-settings.md).
 
 ## Diagnostics

@@ -1,8 +1,8 @@
 # Current status
 
-_Last updated 2026-11-04. Keep this page short and current. Dated detail goes
-in [history](history/), lasting facts go in [findings](findings.md) and
-release history goes in the release notes._
+_Last updated 2026-11-04. Keep this page short and current: replace, never
+append. Lasting facts go in [internals](internals.md), and release history goes
+in the release notes._
 
 ## Device state right now
 
@@ -29,21 +29,22 @@ owner approval.
   matching saved HA profile was restored and its missing entry registered. The
   owner reattached the display and confirmed the normal dial and readings. No
   HA Core restart and no HVAC call.
-  [Repair and final check](history/research/ha-profile-repair-2026-11-03.md).
+  [Repair and final check][ha-profile-repair-2026-11-03].
 - **Combined install passed** from a manual boot: zero-write capacity check,
   then both separately approved file groups, each complete, readback- and
   encoding-verified and safe to restart, with zero failed NAND operations.
-  [Result](history/research/combined-install-success-2026-11-03.md).
+  [Result][combined-install-success-2026-11-03].
 - **Live acquisition passed** after offline extraction refused a
   checksum-invalid `settings.config` fragment on a fresh backup.
-  [Refusal](history/research/handoff-extraction-refusal-2026-11-03.md) ·
-  [acquisition](history/research/handoff-live-acquisition-2026-11-03.md).
+  [Refusal][handoff-extraction-refusal-2026-11-03] ·
+  [acquisition][handoff-live-acquisition-2026-11-03].
 - **Backup-to-install restart** completed the successor transfer without a ring
   press, then the supervisor stopped before readiness (rootfs bind mounts). It
   was corrected and not retried.
-  [Result](history/research/backup-install-handoff-result-2026-11-03.md).
+  [Result][backup-install-handoff-result-2026-11-03].
 
-Older events are in [history/research](history/research/).
+Older events are in the
+[history archive](https://github.com/tylxr59/Hearth/tree/history-archive-2026-11/docs/development/history/research).
 
 ## Released
 
@@ -74,4 +75,10 @@ network-isolated HA 2026.10.4 sandbox passes 24 native control round trips plus
 the onboarding exchange.
 
 What has been measured on hardware is listed in
-[compatibility](../compatibility.md).
+[what's tested](../technical.md#whats-tested).
+
+[ha-profile-repair-2026-11-03]: https://github.com/tylxr59/Hearth/blob/history-archive-2026-11/docs/development/history/research/ha-profile-repair-2026-11-03.md
+[combined-install-success-2026-11-03]: https://github.com/tylxr59/Hearth/blob/history-archive-2026-11/docs/development/history/research/combined-install-success-2026-11-03.md
+[handoff-extraction-refusal-2026-11-03]: https://github.com/tylxr59/Hearth/blob/history-archive-2026-11/docs/development/history/research/handoff-extraction-refusal-2026-11-03.md
+[handoff-live-acquisition-2026-11-03]: https://github.com/tylxr59/Hearth/blob/history-archive-2026-11/docs/development/history/research/handoff-live-acquisition-2026-11-03.md
+[backup-install-handoff-result-2026-11-03]: https://github.com/tylxr59/Hearth/blob/history-archive-2026-11/docs/development/history/research/backup-install-handoff-result-2026-11-03.md

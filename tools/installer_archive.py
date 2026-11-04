@@ -48,7 +48,8 @@ DOCUMENTS = (
     "docs/advanced-cli.md",
     "docs/troubleshooting.md",
     "docs/recovery.md",
-    "docs/development/firmware-kit.md",
+    "docs/technical.md",
+    "docs/development/internals.md",
 )
 TOKEN = re.compile(r"[\w./-]+")
 INCLUDE = re.compile(r'^\s*#\s*include\s+"([^"]+)"', re.MULTILINE)

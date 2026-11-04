@@ -31,6 +31,7 @@ Never share `private/`: it contains your thermostat's credential.
 - `docs/installation.md`: full install guide
 - `docs/troubleshooting.md`: common problems
 - `docs/recovery.md`: undo and recovery
+- `docs/technical.md`: how it works, what's tested, security and privacy
 - `docs/advanced-cli.md`: running each step by hand
 
 Online: https://github.com/tylxr59/Hearth

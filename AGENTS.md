@@ -8,8 +8,7 @@ changes.
 
 **A real thermostat wired to real heating is attached to this project.** Read
 [docs/development/status.md](docs/development/status.md) before any work, and
-the relevant source before changing it. Older material under
-`docs/development/history/` is an archive, not current status.
+the relevant source before changing it.
 
 ## Live hardware: hard rules
 
@@ -105,17 +104,19 @@ python -m tools.check_native_ha build/<fresh-name> --engine podman   # pinned, n
 
 ## Documentation conventions
 
-Follow the [documentation style guide](docs/development/documentation.md)
-before adding or changing any `.md` file. In short:
+Follow [how to write docs](docs/development/README.md#documentation) before
+adding or changing any `.md` file. In short:
 
 - **User docs** (`README.md`, `docs/*.md`): plain language for a technical
-  generalist. Lead with what to do. No internal jargon, codes or dates.
+  generalist. Lead with what to do. No internal jargon, codes or dates. Keep
+  the file names, because released wizards link to them.
 - **Developer docs**: [status](docs/development/status.md) is short and
-  current (replace, never append). [findings](docs/development/findings.md)
-  holds lasting facts, not stories. [roadmap](docs/development/roadmap.md)
-  holds the release gates.
-- **New dated results** go in `docs/development/history/research/` (plus
-  `validation/` for JSON records). Then update status and, if lasting, findings,
-  in the same change. Never append dated diaries to this file or to user docs.
+  current (replace, never append). [internals](docs/development/internals.md)
+  holds how Hearth works and lasting facts, not stories.
+  [roadmap](docs/development/roadmap.md) holds the release gates.
+- **New hardware results:** summarise them in status (replacing the oldest
+  event) and the commit message, add lasting facts to internals, and keep raw
+  evidence in `private/`. There are no dated notes in the repo. The old ones
+  are at the `history-archive-2026-11` tag.
 - Keep hardware, simulation and not-tested claims separate, and keep
-  [compatibility](docs/compatibility.md) in step with the evidence.
+  [what's tested](docs/technical.md#whats-tested) in step with the evidence.
