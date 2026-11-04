@@ -1,4 +1,4 @@
-# Restartable full-backup reader (handoff unmeasured on hardware)
+# Restartable full-backup reader
 
 This private profile uses the unchanged, checked full-NAND reader kernel. Its
 raw external newc filesystem contains one original static ARM init and the
@@ -31,7 +31,11 @@ the archive's existing kernel, identity, capture, quality and source receipts.
 Existing archives are not re-labelled or admitted by bypassing source checks.
 Legacy non-restartable backups retain their manual handoff path.
 
-Host C fault tests and synthetic real-PTY loader tests pass. A fresh public-source
-kernel and a private wrapper compile and pass offline checks. **The full backup
-kernel's restart, successor image loading, combined install and restore have not
-yet been measured together.** No loader was armed during implementation.
+Host C fault tests and synthetic real-PTY loader tests pass. On the measured Gen
+2, the reader's software restart and the successor loader's transfer completed
+without a ring press. That run's combined image then stopped before readiness,
+and the supervisor was corrected; see the
+[handoff result](../../docs/development/history/research/backup-install-handoff-result-2026-11-03.md).
+The corrected combined image later passed from a manual boot. **The automatic
+restart followed by a completed combined install, and restore, have not been
+measured together.**

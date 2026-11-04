@@ -1,6 +1,13 @@
 # Licensing and provenance
 
-Hearth's original source is MIT licensed (see LICENSE). This does not grant rights to any Nest firmware. The host runtime contains no NLE, Valetudo or proprietary firmware implementation. The separate experimental RAM probe now compiles GPL kernel/bootloader sources and a patched GPL native USB loader into ignored local build outputs; no third-party executable or proprietary root is committed or included in source releases. Small protocol identifiers and behavioral observations inform independently written code. Initial sources retained in `/tmp` were not executed or committed.
+Hearth's original source is MIT licensed (see LICENSE). This does not grant
+rights to any Nest firmware. The host runtime contains no NLE, Valetudo or
+proprietary firmware implementation. The separate experimental RAM probe now
+compiles GPL kernel/bootloader sources and a patched GPL native USB loader into
+ignored local build outputs; no third-party executable or proprietary root is
+committed or included in source releases. Small protocol identifiers and
+behavioral observations inform independently written code. Initial sources
+retained in `/tmp` were not executed or committed.
 
 ## References
 
@@ -20,59 +27,72 @@ or proprietary executable is copied into the HA integration or source release.
 | Google Nest 5.9.4 x-loader | 9b7bb7281b715544e6f5201390d8dac416a4a494 | GPL notices/COPYING in the published source; retain complete corresponding source/notices for any later redistribution. | Compiled locally for the model-specific RAM probe; no binary committed or published. |
 | ajb142/omap_loader (also grant-h) | dc0758f91a4698054b0629a05f1b38b9b8b13de3 | GPL-2.0-or-later in source; LICENSE.md contains GPLv2. | Source reviewed, patched and compiled locally. Checked-in patch and combined C sanitizer harness are GPL-2.0-or-later. No upstream full source or executable vendored. |
 
-[upstreams.json](docs/development/references/upstreams.json) includes URLs, revisions and individual hashes for reproducible inspection. [binary-inventory.json](docs/development/references/binary-inventory.json) identifies NLE prebuilts without redistributing them. No source-to-prebuilt correspondence, signature chain, vendor authenticity or legal permission is asserted by matching a Git blob or SHA-256. Any future firmware input must be lawfully obtained by the owner, independently identified and kept out of source/releases.
+[upstreams.json](docs/development/references/upstreams.json) includes URLs,
+revisions and individual hashes for reproducible inspection.
+[binary-inventory.json](docs/development/references/binary-inventory.json)
+identifies NLE prebuilts without redistributing them. No source-to-prebuilt
+correspondence, signature chain, vendor authenticity or legal permission is
+asserted by matching a Git blob or SHA-256. Any future firmware input must be
+lawfully obtained by the owner, independently identified and kept out of
+source/releases.
 
 [The probe inputs](firmware/probe/inputs.json) additionally pin Google's source,
-the historical CodeSourcery compiler mirror/archive and the reviewed host loader.
-The compiler archive is used only inside a rootless build container, not installed
-or executed directly on the host. It contains components with their own licenses;
-no independent signature verification or source reconstruction is established.
-It is not redistributed. The probe builder's pinned Ubuntu image and packages
-have separate licenses and unresolved OS vulnerability coverage. Preserve the
-generated source archives, patch, build configuration and notices alongside any
-later owner-approved binary transfer; a SHA manifest is not GPL compliance by itself.
+the historical CodeSourcery compiler mirror/archive and the reviewed host
+loader. The compiler archive is used only inside a rootless build container, not
+installed or executed directly on the host. It contains components with their
+own licenses; no independent signature verification or source reconstruction is
+established. It is not redistributed. The probe builder's pinned Ubuntu image
+and packages have separate licenses and unresolved OS vulnerability coverage.
+Preserve the generated source archives, patch, build configuration and notices
+alongside any later owner-approved binary transfer; a SHA manifest is not GPL
+compliance by itself.
 
 The host-loader patch now also adapts Doug Brown's GPL reliability changes from
 `dougg3/omap_loader` revision `a33d75376f56f54285cdf6933e312b856146593b`
 ([upstream PR #7](https://github.com/grant-h/omap_loader/pull/7)). The original
-base pin is unchanged; both revisions and source hashes are retained in the locks.
+base pin is unchanged; both revisions and source hashes are retained in the
+locks.
 
 The separate `firmware/nand_metadata/readonly.h` is original GPL-2.0-or-later
 code combined with the same pinned Linux driver. Its configuration recipe
-modifies generated sources only; no kernel source or binary is vendored. Original
-standalone geometry userspace, host parser and build tooling are MIT licensed.
-The GPLv2 text accompanies the probe sources; preserve the combined source and
-notices for any later authorized binary redistribution.
+modifies generated sources only; no kernel source or binary is vendored.
+Original standalone geometry userspace, host parser and build tooling are MIT
+licensed. The GPLv2 text accompanies the probe sources; preserve the combined
+source and notices for any later authorized binary redistribution.
 
 The separate `firmware/nand_sample/sample.h` and combined synthetic kernel
-harness are original GPL-2.0-or-later code using those same pinned Linux interfaces.
-Original standalone sample framing/userspace and host/build tooling are MIT.
-No third-party binary, full kernel source or private capture is added to Git.
+harness are original GPL-2.0-or-later code using those same pinned Linux
+interfaces. Original standalone sample framing/userspace and host/build tooling
+are MIT. No third-party binary, full kernel source or private capture is added
+to Git.
 
 Offline NAND analysis additionally used public `python-bchlib` 2.1.3 source
 (GPL-2.0), with sdist/file SHA-256 pinned in
-[the analysis source lock](docs/development/references/bchlib-2.1.3.json). Only standalone public
-BCH C code was compiled on the host; no Python package was installed and no
-proprietary firmware was executed. The source/library remains under ignored
-build/, is not vendored or redistributed, and is not a product runtime dependency.
+[the analysis source lock](docs/development/references/bchlib-2.1.3.json). Only
+standalone public BCH C code was compiled on the host; no Python package was
+installed and no proprietary firmware was executed. The source/library remains
+under ignored build/, is not vendored or redistributed, and is not a product
+runtime dependency.
 
 The optional static-review workflow uses the owner's installed Ghidra 12.1.2 DEV
 and Java 27. Only original `tools/ghidra/HearthStaticReview.java` is included;
 Ghidra, its projects and proprietary decompilations are not bundled. Public
 OpenSSL 1.0.2h/curl 7.49.1 reference files are pinned in
-[the native TLS source record](docs/development/references/native-tls-source-pins.json), retained
-under ignored build/, and neither vendored nor executed as target firmware.
+[the native TLS source record](docs/development/references/native-tls-source-pins.json),
+retained under ignored build/, and neither vendored nor executed as target
+firmware.
 
-The separate original firmware/tls_probe/ diagnostic reuses the same pinned
-GPL kernel and validated boot stages. Its generated kernel recipe removes the
-OMAP hardware-clock synchronization selections for this RAM-only experiment;
-the unchanged native firmware is not patched by that recipe. Original helper,
-packaging and observation source is MIT. Installed Clang/LLD compile only original
-code with generated public ABI stubs; those stubs are not included on target.
-Version-matched public curl/glibc API/startup references are pinned in
+The separate original firmware/tls_probe/ diagnostic reuses the same pinned GPL
+kernel and validated boot stages. Its generated kernel recipe removes the OMAP
+hardware-clock synchronization selections for this RAM-only experiment; the
+unchanged native firmware is not patched by that recipe. Original helper,
+packaging and observation source is MIT. Installed Clang/LLD compile only
+original code with generated public ABI stubs; those stubs are not included on
+target. Version-matched public curl/glibc API/startup references are pinned in
 [the TLS probe source record](firmware/tls_probe/sources.json), retained under
-ignored build/ and not vendored. Recovered libraries, the private review candidate,
-synthetic private keys and the prepared image stay private and are not redistributed.
+ignored build/ and not vendored. Recovered libraries, the private review
+candidate, synthetic private keys and the prepared image stay private and are
+not redistributed.
 
 The separate original firmware/settings_probe/ diagnostic reuses those validated
 private kernel/bootstrap and unchanged native-library inputs, without carrying
@@ -85,75 +105,107 @@ a source/binary-correspondence claim for the recovered native NSPR library.
 
 ## Runtime dependencies
 
-Full versions and package metadata: [python-dependencies.json](docs/development/references/python-dependencies.json). Hash-locked distributions: requirements.lock. Runtime directly uses aiohttp (Apache-2.0 AND MIT) and paho-mqtt (EPL-2.0 OR BSD-3-Clause per distribution metadata; retain notices when distributing). Transitives include aiohappyeyeballs (PSF-2.0), aiosignal/frozenlist/multidict/propcache/yarl (Apache-2.0), attrs (MIT) idna (BSD-3-Clause) and conditional typing_extensions (PSF-2.0); see each distribution's license files for authoritative terms. Metadata inventory is not a substitute for retaining the installed licenses. No dependencies are vendored.
+Full versions and package metadata:
+[python-dependencies.json](docs/development/references/python-dependencies.json).
+Hash-locked distributions: requirements.lock. Runtime directly uses aiohttp
+(Apache-2.0 AND MIT) and paho-mqtt (EPL-2.0 OR BSD-3-Clause per distribution
+metadata; retain notices when distributing). Transitives include
+aiohappyeyeballs (PSF-2.0), aiosignal/frozenlist/multidict/propcache/yarl
+(Apache-2.0), attrs (MIT) idna (BSD-3-Clause) and conditional typing_extensions
+(PSF-2.0); see each distribution's license files for authoritative terms.
+Metadata inventory is not a substitute for retaining the installed licenses. No
+dependencies are vendored.
 
-Python container base is official `python:3.13.16-slim`, pinned by manifest digest in Dockerfile. It includes CPython (PSF license) and Debian/system packages with their own licenses and sources; Docker's upstream digest is an integrity pin, not a vulnerability clearance. MQTT integration tests use official eclipse-mosquitto 2.0.22 pinned by digest in tests/test_broker.py; it is a development-only download, not bundled firmware. Mosquitto has its own EPL/EDL licensing terms. OpenSSL and Docker are development tools supplied by the host.
+Python container base is official `python:3.13.16-slim`, pinned by manifest
+digest in Dockerfile. It includes CPython (PSF license) and Debian/system
+packages with their own licenses and sources; Docker's upstream digest is an
+integrity pin, not a vulnerability clearance. MQTT integration tests use
+official eclipse-mosquitto 2.0.22 pinned by digest in tests/test_broker.py; it
+is a development-only download, not bundled firmware. Mosquitto has its own
+EPL/EDL licensing terms. OpenSSL and Docker are development tools supplied by
+the host.
 
-The wheel build backend setuptools 84.2.1 (MIT) is separately hash-pinned in requirements-build.lock and scanned. Development tools (pytest, pytest-asyncio, Hypothesis, Ruff, Bandit, pip-audit and transitives) are version/hash pinned in requirements-dev.lock. CI uses pinned checkout action source; runner OS/toolchain itself is not a reproducible build image. Release tooling creates a source tar and manifests without uploads or publication.
+The wheel build backend setuptools 84.2.1 (MIT) is separately hash-pinned in
+requirements-build.lock and scanned. Development tools (pytest, pytest-asyncio,
+Hypothesis, Ruff, Bandit, pip-audit and transitives) are version/hash pinned in
+requirements-dev.lock. CI uses pinned checkout action source; runner
+OS/toolchain itself is not a reproducible build image. Release tooling creates a
+source tar and manifests without uploads or publication.
 
 ## Firmware retention policy
 
-Future owner-specific images must retain nlclient, osm where necessary, kernel/drivers, backplate MCU firmware, calibration and essential power services until individually understood. Their proprietary status and outdated dependencies remain risks, even when all host code is open. Preserve required notices and obtain applicable permissions before redistribution. Private development does not erase third-party license obligations. No firmware license conclusions are inferred from open-source kernel availability.
+Future owner-specific images must retain nlclient, osm where necessary,
+kernel/drivers, backplate MCU firmware, calibration and essential power services
+until individually understood. Their proprietary status and outdated
+dependencies remain risks, even when all host code is open. Preserve required
+notices and obtain applicable permissions before redistribution. Private
+development does not erase third-party license obligations. No firmware license
+conclusions are inferred from open-source kernel availability.
 
 The original firmware/settings_compat/ candidate and settings_compat_probe/ use
 only reviewed ABI identifiers/behavior, generated public link stubs and the same
-private native libraries for a diagnostic comparison. No decompiled implementation
-or proprietary binary patch is included. Public NSPR hash references are pinned in
-firmware/settings_compat/sources.json and remain under ignored build/. Original
-host fixtures use the installed host NSPR (not firmware); its headers/library are
-not bundled. The candidate, instrumentation, adapters and tests are MIT licensed.
-This adds no redistribution permission for native libraries or a deployable image.
+private native libraries for a diagnostic comparison. No decompiled
+implementation or proprietary binary patch is included. Public NSPR hash
+references are pinned in firmware/settings_compat/sources.json and remain under
+ignored build/. Original host fixtures use the installed host NSPR (not
+firmware); its headers/library are not bundled. The candidate, instrumentation,
+adapters and tests are MIT licensed. This adds no redistribution permission for
+native libraries or a deployable image.
 
 The optional storage-lab historical-linker comparison uses GNU ld 2.18.50 in the
-existing CodeSourcery builder described above, without bundling its executable or
-linking firmware on the host. GNU ld is GPL-3.0; no third-party implementation is
-copied into the original candidate. Additional public glibc 2.19 relocation
-references are pinned in docs/development/references/glibc-relocation-2.19.json and remain
-uncompiled reference inputs under ignored build/.
+existing CodeSourcery builder described above, without bundling its executable
+or linking firmware on the host. GNU ld is GPL-3.0; no third-party
+implementation is copied into the original candidate. Additional public glibc
+2.19 relocation references are pinned in
+docs/development/references/glibc-relocation-2.19.json and remain uncompiled
+reference inputs under ignored build/.
 
-The original controller-metadata extension under firmware/nand_contract/ combines
-with the same pinned GPL kernel and retains its read-only guards. Its kernel
-header is GPL-2.0-or-later; the syscall-only userspace is original MIT code. An
-exact-source-checked patch normalizes only the legacy compile metadata generator's
-time/user/host/domain, and Kconfig omits timestamps. No additional upstream
-implementation, proprietary bytes or toolchain executable is bundled.
+The original controller-metadata extension under firmware/nand_contract/
+combines with the same pinned GPL kernel and retains its read-only guards. Its
+kernel header is GPL-2.0-or-later; the syscall-only userspace is original MIT
+code. An exact-source-checked patch normalizes only the legacy compile metadata
+generator's time/user/host/domain, and Kconfig omits timestamps. No additional
+upstream implementation, proprietary bytes or toolchain executable is bundled.
 
 The normal-ECC sample under firmware/nand_ecc_sample/ reuses the same pinned GPL
-NAND source and original read-only/framing helpers. Its kernel header and synthetic
-host guard fixture are GPL-2.0-or-later; userspace/framing/host collection are
-original project code. Preserved firmware references/captures remain private and
-are never compiled into the diagnostic or executed on the host.
+NAND source and original read-only/framing helpers. Its kernel header and
+synthetic host guard fixture are GPL-2.0-or-later; userspace/framing/host
+collection are original project code. Preserved firmware references/captures
+remain private and are never compiled into the diagnostic or executed on the
+host.
 
-The experimental firmware/scratch_test/ recovery test uses original GPL-2.0-or-later
-transaction/kernel-adapter code and an original synthetic NAND harness; its
-standalone supervisor, framing, independent mathematical BCH4 encoder and host
-tooling are MIT. Only original code and trusted host OpenSSL run in host tests.
-Seven synthetic encoder vectors were independently compared against the already
-pinned public bchlib 2.1.3; no bchlib implementation is copied into the encoder.
-Its separately sealed RAM kernel uses the same pinned GPL kernel and toolchain.
-The actual adapter I/O functions and supervisor control flow run only against
-original host simulators in tests; no owner firmware is executed or included,
-and no deployable whole-firmware recovery image is implemented.
+The experimental firmware/scratch_test/ recovery test uses original
+GPL-2.0-or-later transaction/kernel-adapter code and an original synthetic NAND
+harness; its standalone supervisor, framing, independent mathematical BCH4
+encoder and host tooling are MIT. Only original code and trusted host OpenSSL
+run in host tests. Seven synthetic encoder vectors were independently compared
+against the already pinned public bchlib 2.1.3; no bchlib implementation is
+copied into the encoder. Its separately sealed RAM kernel uses the same pinned
+GPL kernel and toolchain. The actual adapter I/O functions and supervisor
+control flow run only against original host simulators in tests; no owner
+firmware is executed or included, and no deployable whole-firmware recovery
+image is implemented.
 
 The settings privacy follow-up additionally references the pinned public NSPR
 private/pprio.h native-handle declaration, without copying its implementation.
 Its required ARM native exports were checked separately. The RAM permission
 measurement uses syscall/layout constants reviewed in the already pinned Linux
-ARM stat header; no third-party stat implementation or firmware runs on the host.
+ARM stat header; no third-party stat implementation or firmware runs on the
+host.
 
-The file transaction core, Linux adapter, startup editor and combined RAM lab are
-original MIT code. Public ARM Linux syscall/flag/stat layout references from the
-already pinned kernel are recorded in firmware/file_install/sources.json; no
+The file transaction core, Linux adapter, startup editor and combined RAM lab
+are original MIT code. Public ARM Linux syscall/flag/stat layout references from
+the already pinned kernel are recorded in firmware/file_install/sources.json; no
 third-party file-write implementation is copied. Original host filesystem tests
 and trusted host-only preload/exec fixtures run under installed host tools. No
 proprietary ARM firmware runs on the development host. Private RAM images reuse
 the same retained native runtime libraries and GPL bootstrap/kernel; no new
 redistribution permission or complete source/binary correspondence is asserted.
 
-The fixed-plan writer under firmware/file_writer/ uses original MIT orchestration,
-framing, supervisor and host tooling. Its original kernel adapter is
-GPL-2.0-or-later when combined with the pinned Linux driver; the policy core is
-MIT. Critical public kernel source identities are pinned in its sources.json.
+The fixed-plan writer under firmware/file_writer/ uses original MIT
+orchestration, framing, supervisor and host tooling. Its original kernel adapter
+is GPL-2.0-or-later when combined with the pinned Linux driver; the policy core
+is MIT. Critical public kernel source identities are pinned in its sources.json.
 The exact-source-checked JFFS2 remount correction modifies the same GPL source.
 No additional upstream implementation or proprietary bytes are redistributed.
 
@@ -162,22 +214,24 @@ sequence policy and warm-reset experiment are original MIT code. JFFS2 layout,
 RTIME behavior, implicit-root handling and the ordinary OMAP Linux reset path
 were checked against the pinned NestDFUAttack kernel sources recorded in
 `docs/development/references/upstreams.json`. No additional implementation was
-copied. The sequence adapter remains GPL-2.0-or-later when linked into Linux,
-as with the existing writer adapter. All reconstructed native bytes stay private.
+copied. The sequence adapter remains GPL-2.0-or-later when linked into Linux, as
+with the existing writer adapter. All reconstructed native bytes stay private.
 
-The startup diagnostic's static syscall supervisor, bounded read-only tree reader,
-framing and host tests are original MIT code. It reuses the unchanged pinned GPL
-snapshot kernel with a raw newc external initramfs; no additional runtime library
-or upstream implementation is copied. Acquired native logs/settings stay private.
+The startup diagnostic's static syscall supervisor, bounded read-only tree
+reader, framing and host tests are original MIT code. It reuses the unchanged
+pinned GPL snapshot kernel with a raw newc external initramfs; no additional
+runtime library or upstream implementation is copied. Acquired native
+logs/settings stay private.
 
 The separate offline verifier in `tools/nand_archive/bch.py` and `verify.py` is
-GPL-2.0-only. It uses public bchlib 2.1.3's generic BCH implementation (Ivan Djelic,
-Parrot S.A.; GPL-2.0-only). The source archive and individual source/license hashes
-are pinned in `tools/nand_archive/bch-input.json`; the standalone verifier is
-built locally and invoked as a separate process. Upstream source/binaries are not
-vendored in the public installer archive. Preserve the upstream COPYING file
-with the local build; the GPL text also ships at `firmware/probe/COPYING.GPL-2.0`.
-This is an offline installer analysis tool, not a Home Assistant dependency.
+GPL-2.0-only. It uses public bchlib 2.1.3's generic BCH implementation (Ivan
+Djelic, Parrot S.A.; GPL-2.0-only). The source archive and individual
+source/license hashes are pinned in `tools/nand_archive/bch-input.json`; the
+standalone verifier is built locally and invoked as a separate process. Upstream
+source/binaries are not vendored in the public installer archive. Preserve the
+upstream COPYING file with the local build; the GPL text also ships at
+`firmware/probe/COPYING.GPL-2.0`. This is an offline installer analysis tool,
+not a Home Assistant dependency.
 
 The restartable backup init and host handoff supervisor are original MIT code.
 They reuse Hearth's own canonical NAND exporter and the unchanged pinned GPL

@@ -1,10 +1,12 @@
 # Private native TLS RAM experiment
 
 This is an experimental diagnostic for the owner's Display-2.6 / 5.9.4-5 unit.
-The first attempt produced no TLS cases; its launch-permission defect was corrected.
-The second supervised RAM run completed all 18 expected cases and returned to
-native startup. See [the measured result](../../docs/development/history/research/tls-probe-result-2026-10-30.md)
-and [the preserved first attempt](../../docs/development/history/research/tls-probe-attempt-2026-10-30.md).
+The first attempt produced no TLS cases; its launch-permission defect was
+corrected. The second supervised RAM run completed all 18 expected cases and
+returned to native startup. See
+[the measured result](../../docs/development/history/research/tls-probe-result-2026-10-30.md)
+and
+[the preserved first attempt](../../docs/development/history/research/tls-probe-attempt-2026-10-30.md).
 It is not installable firmware, a recovery procedure or an HVAC controller.
 
 The custom Linux profile has MTD, block storage, physical network devices and
@@ -12,7 +14,8 @@ RTC drivers disabled. Its only network interface is loopback. The OMAP Kconfig
 automatically selected hardware-clock synchronization even with RTC_CLASS off;
 the separate TLS recipe removes exactly those two selections and verifies that
 GENERIC_CMOS_UPDATE stays disabled after oldconfig. The test sets a synthetic
-**RAM** wall clock to 2030-01-01; it does not provide trusted product time bootstrap.
+**RAM** wall clock to 2030-01-01; it does not provide trusted product time
+bootstrap.
 
 The previously reviewed x-loader/U-Boot stages still initialize hardware and
 have not been proven write-free or power-safe. Keep the display detached from
@@ -23,23 +26,24 @@ persistent modification. A successful matrix is not a restoration/HVAC test.
 
 ## What runs
 
-An original static ARM PID 1 mounts only virtual filesystems, configures loopback,
-sets the test clock, and waits for one fixed USB start token. It runs two bounded
-instances of the original test helper as UID/GID 65534. There is no shell or raw
-command receiver. Each helper loads the recovered curl/OpenSSL dependencies and
-either the original web-service library or the separately reviewed private
-default-callback candidate. Neither nlclient nor osm, native settings, actual
-credentials, calibration or backplate firmware is included.
+An original static ARM PID 1 mounts only virtual filesystems, configures
+loopback, sets the test clock, and waits for one fixed USB start token. It runs
+two bounded instances of the original test helper as UID/GID 65534. There is no
+shell or raw command receiver. Each helper loads the recovered curl/OpenSSL
+dependencies and either the original web-service library or the separately
+reviewed private default-callback candidate. Neither nlclient nor osm, native
+settings, actual credentials, calibration or backplate firmware is included.
 
 The helper starts a local TLS 1.2 server and client at 127.0.0.1:8443, using
 synthetic keys/certificates/CRLs. Every request uses the native curl/OpenSSL
 libraries and the actual native SSL-context hook, with peer/hostname checking
 enabled. Separate processes prevent cross-variant library reuse. The parent
 enforces deadlines, caches results in RAM and repeats a fixed result frame.
-Successful or failed frames are retained privately by the collector, never echoed
-as raw library output. The supervisor records loopback/clock setup, pre-exec
-syscall failures, both child wait statuses and bounded hex-encoded stderr. Success
-requires successful setup and both zero statuses as well as all TLS case rows. Setup diagnostics contain only bounded loader errors.
+Successful or failed frames are retained privately by the collector, never
+echoed as raw library output. The supervisor records loopback/clock setup,
+pre-exec syscall failures, both child wait statuses and bounded hex-encoded
+stderr. Success requires successful setup and both zero statuses as well as all
+TLS case rows. Setup diagnostics contain only bounded loader errors.
 
 `passed` means the observed result matched the case expectation. The original
 callback is deliberately expected to accept its known invalid-time/CRL cases;
@@ -61,34 +65,38 @@ Curl 7.49.1 uses error 51 for hostname mismatch and 60 for certificate-chain
 verification failures. Timeouts, connection errors, missing files, malformed
 results or missing cases cannot count as successful certificate rejection.
 
-This test does **not** invoke the full native fetch class, native startup/config,
-credential installation, pairing, transport subscriptions or physical control.
-Its explicit curl options model the previously reviewed setup, but do not prove
-every native networking path, cipher policy or operational trust configuration.
+This test does **not** invoke the full native fetch class, native
+startup/config, credential installation, pairing, transport subscriptions or
+physical control. Its explicit curl options model the previously reviewed setup,
+but do not prove every native networking path, cipher policy or operational
+trust configuration.
 
 ## Build and privacy separation
 
 Only public source enters the rootless kernel builder. The existing pinned
-Ubuntu/probe-builder image, Linux source archive and validated bootstrap artifacts
-are reused; see [the heartbeat profile](../probe/README.md) for provenance and
-compiler-authenticity limits. The separate profile does not weaken its gates.
+Ubuntu/probe-builder image, Linux source archive and validated bootstrap
+artifacts are reused; see [the heartbeat profile](../probe/README.md) for
+provenance and compiler-authenticity limits. The separate profile does not
+weaken its gates.
 
-Installed host Clang/LLD cross-compile the original helper and PID 1. Tiny public
-ABI stub libraries satisfy the helper's link-time libc/libdl imports; those stubs
-are never executed and are **not** packed into the device image. No recovered
-firmware is used as a compiler/link input or executed on the host. The original
-ARM startup follows the version-matched glibc ABI. Public reference URLs/hashes
-are in [sources.json](sources.json); reference files stay under ignored build/.
+Installed host Clang/LLD cross-compile the original helper and PID 1. Tiny
+public ABI stub libraries satisfy the helper's link-time libc/libdl imports;
+those stubs are never executed and are **not** packed into the device image. No
+recovered firmware is used as a compiler/link input or executed on the host. The
+original ARM startup follows the version-matched glibc ABI. Public reference
+URLs/hashes are in [sources.json](sources.json); reference files stay under
+ignored build/.
 
 The private packager verifies library bytes against the private acquisition
 report and resolves their dependency closure without following firmware links.
 It verifies the candidate against its separate private one-word review record,
-and verifies synthetic fixture hashes after host OpenSSL baseline checks.
-It packs regular library aliases, the two original helpers and only the listed
-test fixtures. The synthetic server key belongs to UID 65534 in RAM; CA private
-keys remain on the host. No links or block devices are allowed in the archive. The dynamic loader identified
-by PT_INTERP must have execute permission (0555); ordinary DSOs remain 0444.
-The host-kernel regression checks this distinction with trusted host binaries.
+and verifies synthetic fixture hashes after host OpenSSL baseline checks. It
+packs regular library aliases, the two original helpers and only the listed test
+fixtures. The synthetic server key belongs to UID 65534 in RAM; CA private keys
+remain on the host. No links or block devices are allowed in the archive. The
+dynamic loader identified by PT_INTERP must have execute permission (0555);
+ordinary DSOs remain 0444. The host-kernel regression checks this distinction
+with trusted host binaries.
 
 The boot image is a two-component legacy uImage: the bounded ARM zImage plus a
 gzip newc RAM filesystem. The pinned U-Boot source supports this form and passes
@@ -98,10 +106,11 @@ decompression, exact archive inventory/permissions, source recipes and hashes
 are checked before device access. If the external root does not start, the
 built-in fixed heartbeat is detected as a failure rather than a TLS success.
 
-All generated images, libraries, fixture keys, Ghidra exports and captures belong
-under ignored owner-only `private/`. **Never publish or upload that image.**
-Only original tooling/source, public reference hashes and sanitized research
-belong in Git. Preserve raw capture inputs and earlier failed artifacts.
+All generated images, libraries, fixture keys, Ghidra exports and captures
+belong under ignored owner-only `private/`. **Never publish or upload that
+image.** Only original tooling/source, public reference hashes and sanitized
+research belong in Git. Preserve raw capture inputs and earlier failed
+artifacts.
 
 Public build staging:
 
@@ -135,11 +144,12 @@ port 1-1, then waits for the owner to perform the reviewed manual restart while
 the loader is waiting. Use a PTY for immediate loader output. Do not start it
 before the owner is ready for that timing-sensitive action.
 
-The collector sends only `BEGIN_TLS_TEST_V1` after the ready marker and writes
-a fresh mode-0600 `tls-result.jsonl` under the private profile. There is no
+The collector sends only `BEGIN_TLS_TEST_V1` after the ready marker and writes a
+fresh mode-0600 `tls-result.jsonl` under the private profile. There is no
 automatic boot retry. After success or failure, manually restart with the loader
 exited: hold for about ten seconds (the screen may already be black), release,
-then press/release once and confirm native startup. Do not reconnect the base for this test.
+then press/release once and confirm native startup. Do not reconnect the base
+for this test.
 
 Host regression checks cover profile boundaries, exact clock-selection patching,
 result forgery/timeout rejection, serial fragmentation/fixed-token behavior,

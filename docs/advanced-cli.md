@@ -10,7 +10,7 @@ available as `hearth <command>`) in a development checkout. Run
 `--help` on any command for every option.
 
 > [!IMPORTANT]
-> The same safety rules apply here as in the wizard: each loader profile runs
+> The same safety rules apply here as in the wizard: each USB boot step runs
 > **once**, nothing is retried automatically, and every write asks for its own
 > confirmation. Never delete a failed attempt's folder so you can reuse its path.
 
@@ -25,7 +25,7 @@ available as `hearth <command>`) in a development checkout. Run
 | Check a bundle against a Nest | `setup --bundle ZIP --info PLIST --session DIR` | No |
 | Fetch pinned sources | `sources --output DIR` | No |
 | Build the read-only reader | `build-reader --sources DIR --output DIR --profile DIR` | No |
-| Read the original files | `acquire --session DIR --profile DIR --disk /dev/sdX` | Read-only RAM boot |
+| Read the original files | `acquire --session DIR --profile DIR --disk /dev/sdX` | Read-only USB boot |
 | Verify what was read | `check-inputs --session DIR` | No |
 | Build your kit | `build-kit --session DIR --sources DIR --reader-build DIR --build DIR --output DIR` | No |
 | Check a kit | `check-kit --kit DIR [--for-restore]` | No |
@@ -39,7 +39,7 @@ available as `hearth <command>`) in a development checkout. Run
 ```sh
 python3 -m installer.cli doctor
 python3 -m installer.cli identify --disk /dev/sdX            # add --show-device-id to print the serial
-python3 -m installer.cli onboard --ha-url http://HA_IP:8123 --session private/my-install
+python3 -m installer.cli onboard --ha-url http://YOUR_HA_IP:8123 --session private/my-install
 ```
 
 `onboard` is described in the
@@ -51,7 +51,7 @@ read-only `sudo mtype`, or save `Technical Info.plist` yourself and pass
 To fetch the commissioning bundle for an existing HA entry:
 
 ```sh
-python3 -m installer.cli download --ha-url https://YOUR_HA --output private/commissioning.zip
+python3 -m installer.cli download --ha-url https://YOUR_HA_IP --output private/commissioning.zip
 ```
 
 This calls `/api/hearth/commissioning` with a hidden HA admin token. It refuses
@@ -79,11 +79,11 @@ python3 -m installer.cli check-inputs --session private/my-install
 - `check-inputs` rebuilds every saved frame and checks the files and receipts.
   It refuses anything modified, missing or extra.
 
-To go straight on to installing, keep USB connected in the RAM session.
+To go straight on to installing, keep USB connected and don't restart the Nest.
 Otherwise, follow the command's restart instructions. Native startup can change
 settings, which makes the saved snapshot stale.
 
-The wizard also takes a full NAND backup before this step
+The wizard also takes a full flash backup before this step
 (`installer/nand_backup.py`). Running these steps by hand doesn't include that
 backup.
 
@@ -96,10 +96,11 @@ python3 -m installer.cli build-kit --session private/my-install \
 python3 -m installer.cli check-kit --kit private/my-kit
 ```
 
-The kit has a read-only space check, two install phases (nine settings, trust
-and startup files, then three network/time files) and matching restore images.
-It's tied to this one thermostat, its originals and its HA bundle. A kit from
-another unit, an executed profile or a changed source recipe is refused. See
+The kit holds one install image (a free-space check, then two groups of files:
+nine settings, trust and startup files, then three network/time files) and
+matching restore images for each group. It's tied to this one thermostat, its
+originals and its HA bundle. A kit from another unit, a kit that has already
+been used or a changed source recipe is refused. See
 [firmware kit internals](development/firmware-kit.md).
 
 ## Install
@@ -108,14 +109,17 @@ another unit, an executed profile or a changed source recipe is refused. See
 python3 -m installer.cli install-kit --kit private/my-kit --disk /dev/sdX
 ```
 
-1. Space check. Read-only, no commit possible.
-2. Phase 1: nine files. `READY` arms the loader, you press the ring, the RAM
-   tests and a read-only preflight run, then `INSTALL` writes.
-3. Phase 2: three files. Same as phase 1. It starts only if phase 1 completed
-   and verified.
+Everything runs in one USB boot:
 
-Stay in RAM between phases. Restart only once the result reports
-`safe_to_restart`. Only USB port **1-1** is supported for now.
+1. Answer `y` to start, then press the ring when told.
+2. Free-space check for both groups. Read-only, nothing can be written.
+3. First group: nine files. The tool checks the originals on the Nest, then
+   `INSTALL` writes them and every file is checked.
+4. Second group: three files. Same as the first. It starts only if the first
+   group was written and verified.
+
+Restart the Nest only when the tool says it's safe to. Only USB port **1-1**
+is supported for now.
 
 ## Restore
 
@@ -125,7 +129,7 @@ python3 -m installer.cli restore-kit --kit private/my-kit --disk /dev/sdX
 ```
 
 The three network files are restored first, then the nine others. Each part
-gets its own preflight and `RESTORE` prompt. `--phase cleanup` and
+gets its own read-only check and `RESTORE` prompt. `--phase cleanup` and
 `--phase commissioning` exist to recover an install that stopped partway. Use
 them only after the saved reports have been reviewed. The tool never guesses
 which one is right. See [undo and recovery](recovery.md).

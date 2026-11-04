@@ -1,19 +1,21 @@
 # Fixed-plan experimental JFFS2 file writer
 
 This is an experimental installer/recovery path for one privately reviewed Gen 2
-primary/5.9.4-5 plan. One [persistent installation](../../docs/development/history/research/file-install-result-2026-10-31.md)
-passed exact readback/native USB return but exposed a UI startup stall. The later
+primary/5.9.4-5 plan. One
+[persistent installation](../../docs/development/history/research/file-install-result-2026-10-31.md)
+passed exact readback/native USB return but exposed a UI startup stall. The
+later
 [selected-file restoration](../../docs/development/history/research/file-restore-result-2026-10-31.md)
 passed original-byte readback; stock UI recovery is pending. Whole-firmware and
-hardware power-loss recovery remain unverified.
-It preserves native HVAC code; this does not validate physical HVAC operation.
-The owner must receive advance notice before persistent work, including the
-unverified whole-firmware recovery and power-loss limits.
+hardware power-loss recovery remain unverified. It preserves native HVAC code;
+this does not validate physical HVAC operation. The owner must receive advance
+notice before persistent work, including the unverified whole-firmware recovery
+and power-loss limits.
 
-The build requires the private nine-file capsule, its separate reviewed plan pin,
-retained native libc/interpreter and pinned public kernel/toolchain. No proprietary
-bytes, credentials, generated images or binary hashes belong in Git. Do not use
-upstream installers or make the USB diagnostic disk writable.
+The build requires the private nine-file capsule, its separate reviewed plan
+pin, retained native libc/interpreter and pinned public kernel/toolchain. No
+proprietary bytes, credentials, generated images or binary hashes belong in Git.
+Do not use upstream installers or make the USB diagnostic disk writable.
 
 ## Sequence and boundaries
 
@@ -31,35 +33,36 @@ upstream installers or make the USB diagnostic disk writable.
 4. `run boot` defaults to offline checks. Execution requires
    `--execute-writer-preflight`, fresh private output, matching checked restore
    image, native-mode preflight and one owner-timed restart. No automatic retry.
-5. The supervisor runs 56 synthetic file/recovery RAM cases and awaits the host's
-   scoped ACK. The host requires every case, zero child status and no diagnostics
-   or discarded diagnostic bytes before acknowledging.
+5. The supervisor runs 56 synthetic file/recovery RAM cases and awaits the
+   host's scoped ACK. The host requires every case, zero child status and no
+   diagnostics or discarded diagnostic bytes before acknowledging.
 6. The root action mounts the real filesystems read-only and checks selected
-   original bytes/metadata, plan and protection state. A mismatch never authorizes
-   the old plan. When possible it preserves a fresh nine-file read-only snapshot
-   in this same session for offline review and a new capsule.
-7. Successful preflight emits READY and waits up to 600 seconds. The host records
-   that pause and requires a separate local decision. `run decide` has distinct
-   `--execute-persistent-file-install` and `--execute-persistent-file-restore`
-   switches, or `--abort 1`/`--abort 2`. It requires a live matching execution and
-   repeats image/capsule/backup checks. **Never issue commit before advance
-   notification and owner timing readiness.** Expiration is not permission.
-   Commit is durably recorded before its first USB byte; incomplete transfer is
-   uncertain and never automatically retried.
+   original bytes/metadata, plan and protection state. A mismatch never
+   authorizes the old plan. When possible it preserves a fresh nine-file
+   read-only snapshot in this same session for offline review and a new capsule.
+7. Successful preflight emits READY and waits up to 600 seconds. The host
+   records that pause and requires a separate local decision. `run decide` has
+   distinct `--execute-persistent-file-install` and
+   `--execute-persistent-file-restore` switches, or `--abort 1`/`--abort 2`. It
+   requires a live matching execution and repeats image/capsule/backup checks.
+   **Never issue commit before advance notification and owner timing
+   readiness.** Expiration is not permission. Commit is durably recorded before
+   its first USB byte; incomplete transfer is uncertain and never automatically
+   retried.
 8. The exact commit allows repeated preflight, one-use kernel gate opening and
    writable remount. Even a failed writable remount may have started filesystem
-   metadata/GC writes. Each bounded NAND operation checks protection, temporarily
-   lifts WP and restores/checks it before returning. Erase callbacks wait until WP
-   is restored and the device mutex released.
-9. The transaction preserves originals and its plan-bound journal, replaces files
-   in fixed order and rolls back on modeled errors. Handles close and both
-   filesystems unmount **before** sealing gate/WP. Read-only remount verifies exact
-   expected contents/modes, followed by another unmount. Complete requires all
-   transaction, cleanup, protection and readback evidence to agree.
+   metadata/GC writes. Each bounded NAND operation checks protection,
+   temporarily lifts WP and restores/checks it before returning. Erase callbacks
+   wait until WP is restored and the device mutex released.
+9. The transaction preserves originals and its plan-bound journal, replaces
+   files in fixed order and rolls back on modeled errors. Handles close and both
+   filesystems unmount **before** sealing gate/WP. Read-only remount verifies
+   exact expected contents/modes, followed by another unmount. Complete requires
+   all transaction, cleanup, protection and readback evidence to agree.
 
 The legacy kernel correction changes JFFS2's RO-compatible-feature remount check
-to examine the requested flags. Unknown RO-compatible nodes must block a writable
-remount; the correction does not force writable mounting.
+to examine the requested flags. Unknown RO-compatible nodes must block a
+writable remount; the correction does not force writable mounting.
 
 ## Failure handling
 
@@ -68,29 +71,31 @@ contradictory write result. Review private evidence before restarting. Do not
 default to native startup after an uncertain transaction.
 
 Prepare the restore image before installation. An explicitly reviewed
-`--recover-from PRIVATE_ATTEMPT` entry accepts only restore action, matching plan
-and custody, an exited recorded persistent attempt and known RAM USB identity.
-It permits the supervised RAM-to-ROM restart without requiring native startup.
-It rejects already-active ROM and does not retry uploads. Restore still inspects
-the journal/current files read-only before awaiting its own persistent commit.
-Whole-firmware, hardware power-loss and damaged-JFFS2 recovery remain unverified.
+`--recover-from PRIVATE_ATTEMPT` entry accepts only restore action, matching
+plan and custody, an exited recorded persistent attempt and known RAM USB
+identity. It permits the supervised RAM-to-ROM restart without requiring native
+startup. It rejects already-active ROM and does not retry uploads. Restore still
+inspects the journal/current files read-only before awaiting its own persistent
+commit. Whole-firmware, hardware power-loss and damaged-JFFS2 recovery remain
+unverified.
 
 Evidence is exclusive, owner-only and retained. Reports are CRC framed and bound
-to exact plan, backup receipt and action. CRC checks transport integrity; it does
-not defend against a malicious USB peer. Owner control of PC/device and reviewed
-images remains a trust assumption.
+to exact plan, backup receipt and action. CRC checks transport integrity; it
+does not defend against a malicious USB peer. Owner control of PC/device and
+reviewed images remains a trust assumption.
 
 ## Snapshot handoff
 
 Stock startup may serialize unchanged settings values into different bytes. Do
-not relax exact originals or keep cycling through native startup. After a completed
-zero-write changed-file run, `--handoff-from PRIVATE_ATTEMPT` permits one fresh,
-owner-timed RAM-to-ROM install preflight. It requires all 56 prior selftests,
-matching saved execution/result, no decision files, sealed WP, zero write/remount
-counters, verified snapshot custody, and an exact byte match between the new
-capsule's source frame and that prior capture. Only the known RAM USB identity is
-accepted; native mode and already-active ROM are refused. This is an explicit
-new supervised boot, never an automatic retry or persistent commit.
+not relax exact originals or keep cycling through native startup. After a
+completed zero-write changed-file run, `--handoff-from PRIVATE_ATTEMPT` permits
+one fresh, owner-timed RAM-to-ROM install preflight. It requires all 56 prior
+selftests, matching saved execution/result, no decision files, sealed WP, zero
+write/remount counters, verified snapshot custody, and an exact byte match
+between the new capsule's source frame and that prior capture. Only the known
+RAM USB identity is accepted; native mode and already-active ROM are refused.
+This is an explicit new supervised boot, never an automatic retry or persistent
+commit.
 
 
 Recommissioning after the successful original-file compression recovery must
@@ -99,29 +104,32 @@ preserve the existing archive. New capsules may explicitly select
 uses `.hearth-rollback-` followed by the plan ID. Legacy capsules retain their
 original bytes and archive location. A collision refuses the new install; a
 restore cannot select another plan's archive. The current RAM gate requires all
-72 cases, including legacy-archive preservation, collision and wrong-plan refusal.
-The earlier 69-case measurement does not satisfy this new gate.
+72 cases, including legacy-archive preservation, collision and wrong-plan
+refusal. The earlier 69-case measurement does not satisfy this new gate.
 
 A completed protected startup diagnostic can supply the next fresh capsule via
-`--handoff-from-snapshot PRIVATE_ATTEMPT`. This checks the protected source profile,
-execution/session binding, exact capture and backup custody, and current RAM USB
-identity. It does not grant persistent-write permission. It avoids another native
-startup changing settings between capture and the separate installation preflight.
-The owner still performs one reviewed restart into the new loader; there is no
-automatic retry. Keep the old archive and all historical private evidence intact.
+`--handoff-from-snapshot PRIVATE_ATTEMPT`. This checks the protected source
+profile, execution/session binding, exact capture and backup custody, and
+current RAM USB identity. It does not grant persistent-write permission. It
+avoids another native startup changing settings between capture and the separate
+installation preflight. The owner still performs one reviewed restart into the
+new loader; there is no automatic retry. Keep the old archive and all historical
+private evidence intact.
 
 ## Exact observed native settings during stock return
 
-An explicit restore-only helper may include a separately preserved current settings
-file from a custody-verified acquisition. This does not replace the original plan,
-original backup, journal or ordinary current-file checks. The additional candidate
-applies only to settings target7 and requires exact bytes and original metadata;
-all other targets retain their strict checks. Install/reencode profiles cannot use
-this admission. The existing RAM recovery cases exercise unknown-settings refusal,
-exact observation acceptance, changed-observation refusal and original restoration.
+An explicit restore-only helper may include a separately preserved current
+settings file from a custody-verified acquisition. This does not replace the
+original plan, original backup, journal or ordinary current-file checks. The
+additional candidate applies only to settings target 7 and requires exact bytes
+and original metadata; all other targets retain their strict checks.
+Install/reencode profiles cannot use this admission. The existing RAM recovery
+cases exercise unknown-settings refusal, exact observation acceptance,
+changed-observation refusal and original restoration.
 
-The measured owner's legacy network4 update overlaps commissioning target8. Its
-new guarded RAM handoff requires the complete sealed network restore, exact plans,
-custody, preserved library source and proof that network original3 is commissioning
-replacement8. This path is separate from the public disjoint cleanup3 workflow.
-It does not authorize a whole-NAND restore or erase the user's settings implicitly.
+The measured owner's legacy network4 update overlaps commissioning target 8. Its
+new guarded RAM handoff requires the complete sealed network restore, exact
+plans, custody, preserved library source and proof that network original 3 is
+commissioning replacement 8. This path is separate from the public disjoint
+cleanup3 workflow. It does not authorize a whole-NAND restore or erase the
+user's settings implicitly.

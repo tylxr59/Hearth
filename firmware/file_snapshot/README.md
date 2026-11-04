@@ -57,7 +57,7 @@ Future supervised PTY execution explicitly requires
 Do not run without owner restart readiness and advance experimental-RAM notice.
 The native USB preflight is required and an exclusive fsynced execution marker
 prevents profile reuse. No automatic boot retry. Keep USB connected and the base
-detached; after command exit perform the full ten-second hold/release/single-press
-and confirm the home icon and normal USB separately. Preserve failed output.
-Never flash this image. Whole boot-chain power/hardware effects and recovery
-remain unverified despite the protected filesystem design.
+detached; after command exit perform the full ten-second
+hold/release/single-press and confirm the home icon and normal USB separately.
+Preserve failed output. Never flash this image. Whole boot-chain power/hardware
+effects and recovery remain unverified despite the protected filesystem design.

@@ -12,14 +12,14 @@ passed capacity and both installs with separate owner approvals; see the
 The complete reduced-boot wizard remains unmeasured end to end.
 
 The supervisor runs the existing original bootstraps as children in fixed
-chroots. Libraries use RAM hardlinks. Opaque network originals move from the outer
-RAM directory to capacity and then cleanup using rename, preserving their
-required link count of one. The pinned kernel rejects rootfs bind mounts. Each bootstrap still runs its
-synthetic checks, each action still
-checks its original files on the thermostat, and each writer still needs a
-separate owner `INSTALL` decision. A host-validated, durably saved successful
-result permits one plan/receipt-bound terminal acknowledgement, then the child
-exits. Refusals, cancellations and unknown states never advance.
+chroots. Libraries use RAM hardlinks. Opaque network originals move from the
+outer RAM directory to capacity and then cleanup using rename, preserving their
+required link count of one. The pinned kernel rejects rootfs bind mounts. Each
+bootstrap still runs its synthetic checks, each action still checks its original
+files on the thermostat, and each writer still needs a separate owner `INSTALL`
+decision. A host-validated, durably saved successful result permits one
+plan/receipt-bound terminal acknowledgement, then the child exits. Refusals,
+cancellations and unknown states never advance.
 
 The combined kernel initializes three distinct write windows once. Its capacity
 slot cannot write. A sealed capacity slot with zero operations may select the

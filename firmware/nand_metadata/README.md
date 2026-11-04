@@ -1,18 +1,20 @@
 # Experimental NAND geometry-only RAM kernel
 
-This separate profile extends the successfully observed [RAM heartbeat
-probe](../probe/README.md) for the owner's Display-2.6 unit. It is not firmware
-acquisition, backup, recovery, deployment or HVAC control. It has passed offline
-build/integrity checks and one supervised physical boot. The master reported
-256 MiB NAND, 128 KiB erase blocks, 2 KiB pages and 64-byte OOB with flags zero.
-The protected-status registration guard passed. Normal Nest USB mode returned after the owner reported ready; see the [measurement record](../../docs/development/history/research/nand-geometry-2026-10-30.md).
+This separate profile extends the successfully observed
+[RAM heartbeat probe](../probe/README.md) for the owner's Display-2.6 unit. It
+is not firmware acquisition, backup, recovery, deployment or HVAC control. It
+has passed offline build/integrity checks and one supervised physical boot. The
+master reported 256 MiB NAND, 128 KiB erase blocks, 2 KiB pages and 64-byte OOB
+with flags zero. The protected-status registration guard passed. Normal Nest USB
+mode returned after the owner reported ready; see the
+[measurement record](../../docs/development/history/research/nand-geometry-2026-10-30.md).
 
 The experiment initializes NAND to obtain seven master-device sysfs attributes:
-name, type, flags, size, erase size, page size and OOB size. It does not read NAND
-contents or OOB bytes. The reported master geometry is not the stock partition
-map. No shell, command receiver, native userspace, credentials, network, storage
-filesystem or flash character/block interface is present. The original no-MTD
-heartbeat profile and its verifier remain unchanged.
+name, type, flags, size, erase size, page size and OOB size. It does not read
+NAND contents or OOB bytes. The reported master geometry is not the stock
+partition map. No shell, command receiver, native userspace, credentials,
+network, storage filesystem or flash character/block interface is present. The
+original no-MTD heartbeat profile and its verifier remain unchanged.
 
 ## Write-path review
 
@@ -28,10 +30,10 @@ All source references below refer to NestDFU revision
 - `drivers/mtd/nand/nand_base.c` clears low chip-option bits during ID probing.
   `NAND_ROM` must therefore be set afterward, before `nand_scan_tail` assigns
   the MTD capability flags. It produces `MTD_CAP_ROM` (zero).
-- After scan-tail, the guard selects chip 0, reads `NAND_CMD_STATUS`, and requires
-  `NAND_STATUS_WP` to be clear, using the same interpretation as `nand_check_wp`.
-  It deselects the chip afterward. If protection is not reported, registration
-  aborts and the host must not accept a geometry result.
+- After scan-tail, the guard selects chip 0, reads `NAND_CMD_STATUS`, and
+  requires `NAND_STATUS_WP` to be clear, using the same interpretation as
+  `nand_check_wp`. It deselects the chip afterward. If protection is not
+  reported, registration aborts and the host must not accept a geometry result.
 - Before MTD registration, write, panic-write, OOB-write, erase, bad-block mark,
   OTP write/lock, device lock/unlock and vectored-write callbacks are replaced
   with `-EROFS` stubs. Both MTD and chip bad-block-mark callbacks are blocked;
@@ -42,15 +44,16 @@ All source references below refer to NestDFU revision
   capability flags; the explicit unlock callback is also denied.
 
 The source guard [configure.py](configure.py) requires the exact reviewed OMAP
-driver SHA-256 before patching. [readonly.h](readonly.h) is original GPL-compatible
-guard code; see the [GPL notice/text](../probe/COPYING.GPL-2.0) and
-[THIRD_PARTY.md](../../THIRD_PARTY.md). Other original standalone files are MIT.
+driver SHA-256 before patching. [readonly.h](readonly.h) is original
+GPL-compatible guard code; see the [GPL notice/text](../probe/COPYING.GPL-2.0)
+and [THIRD_PARTY.md](../../THIRD_PARTY.md). Other original standalone files are
+MIT.
 
 These are layered source/configuration safeguards, not proof that no persistent
 change can occur throughout the boot chain. The reused x-loader/U-Boot stages
-still initialize NAND and other hardware. No destructive write test was run.
-The custom kernel can hang/reset or affect power/battery behavior. Native control
-is absent while it runs. Keep the display on USB, detached from the unwired base.
+still initialize NAND and other hardware. No destructive write test was run. The
+custom kernel can hang/reset or affect power/battery behavior. Native control is
+absent while it runs. Keep the display on USB, detached from the unwired base.
 Notify the owner before execution under the existing device-work authorization.
 Never flash this kernel; persistent modifications remain behind the
 [backup/recovery gates](../../docs/development/history/hardware-gates.md).
@@ -58,7 +61,8 @@ Never flash this kernel; persistent modifications remain behind the
 ## Offline build and checks
 
 Use the pinned sources, isolated rootless builder, and already validated base
-artifacts described in the heartbeat probe README. Staging refuses existing paths:
+artifacts described in the heartbeat probe README. Staging refuses existing
+paths:
 
 ```sh
 .venv/bin/python -m firmware.nand_metadata.stage \
@@ -73,8 +77,8 @@ podman run --rm --network none --cap-drop all \
 sh FRESH_GEOMETRY_BUILD/boot.sh
 ```
 
-Finalization checks source guards and exported artifacts against the actual build
-tree and proven base bootstrap bytes. The unsigned local manifest pins six
+Finalization checks source guards and exported artifacts against the actual
+build tree and proven base bootstrap bytes. The unsigned local manifest pins six
 artifacts, seven host helpers and current recipes. The staged checker verifies
 strict configuration, static ARM init, image CRCs, bounded decompression and the
 exact six-entry minimal initramfs. Its dry run never opens USB. Initial staging
@@ -91,14 +95,15 @@ correct ECC/OOB interpretation.
 ## Supervised execution — one geometry result
 
 The prepared local build is `build/nand-geometry-20261030`. The callback review
-caught and corrected this kernel's non-const OTP-write signature before execution;
-the initial build log is preserved separately. The final build has no warnings
-in the Hearth guard. Historical upstream kernel/config warnings remain.
+caught and corrected this kernel's non-const OTP-write signature before
+execution; the initial build log is preserved separately. The final build has no
+warnings in the Hearth guard. Historical upstream kernel/config warnings remain.
 
-The first host launch stopped before USB access because staging had not preserved
-the native loader executable bit. Staging now preserves modes and finalization
-rejects a non-executable loader. No device restart or transfer occurred in that
-launch. The prior manifest is preserved alongside the corrected one locally.
+The first host launch stopped before USB access because staging had not
+preserved the native loader executable bit. Staging now preserves modes and
+finalization rejects a non-executable loader. No device restart or transfer
+occurred in that launch. The prior manifest is preserved alongside the corrected
+one locally.
 
 The explicit execution flag is `--execute-read-only-nand-metadata`. Start only
 from normal native USB mode on physical port `1-1`, after advance risk notice,

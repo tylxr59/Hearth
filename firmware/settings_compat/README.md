@@ -1,9 +1,10 @@
 # Experimental native storage correction
 
 Original ARM compatibility code for the privately reviewed Display-2.6 / 5.9.4-5
-library. **Uninstalled; the exact GNU-linked build passed its 29-case synthetic RAM matrix.** This is not an installer,
-HVAC controller, replacement firmware or recovery procedure. Use only in the
-separate [synthetic RAM comparison](../settings_compat_probe/README.md).
+library. **Uninstalled; the exact GNU-linked build passed its 29-case synthetic
+RAM matrix.** This is not an installer, HVAC controller, replacement firmware or
+recovery procedure. Use only in the separate
+[synthetic RAM comparison](../settings_compat_probe/README.md).
 
 The implementation keeps the original native writer and serialization:
 
@@ -21,57 +22,64 @@ The implementation keeps the original native writer and serialization:
   existing entries and inputs aliasing old strings are handled without leaks.
   A runtime allocator/comparator guard delegates unrecognized table contracts to
   the original operation, preserving unknown configuration implementations.
-- Value-bearing component logs within a writer call are suppressed on that thread.
-  Failures emit a static status-only notice. The allocation replacement emits no
-  key/value error messages. An ARM assembly tail stub forwards unrelated variadic
-  logs with their original registers, stack and return address.
+- Value-bearing component logs within a writer call are suppressed on that
+  thread. Failures emit a static status-only notice. The allocation replacement
+  emits no key/value error messages. An ARM assembly tail stub forwards
+  unrelated variadic logs with their original registers, stack and return
+  address.
 
-The object adapter has compile-time ARM32 checks and a separately required private
-ABI review. It uses the reviewed field offsets and native allocation/locking APIs;
-it does not alter calibration, services, controls or binary bytes. Startup symbol
-binding fails if required symbols are unavailable. This is startup-only preload
-experimentation, not a supported late-injection or production fallback mechanism.
+The object adapter has compile-time ARM32 checks and a separately required
+private ABI review. It uses the reviewed field offsets and native
+allocation/locking APIs; it does not alter calibration, services, controls or
+binary bytes. Startup symbol binding fails if required symbols are unavailable.
+This is startup-only preload experimentation, not a supported late-injection or
+production fallback mechanism.
 
-Host checks use original fixtures and the installed **host** NSPR under ASan/UBSan.
-They cover file replacement blocking, retry, unrelated descriptors, nested and
-concurrent writers, allocation/hash failure, ownership, input aliases and callback
-lifetimes. No recovered firmware is linked or executed on the host. Clang/LLD
-compile only original code with generated ABI stubs; those stubs are never packed.
-Public hash API/ownership references are [pinned](sources.json), not vendored.
-The actual native callbacks/comparator were inspected independently; no
-source/binary-correspondence claim is made from an upstream API reference.
+Host checks use original fixtures and the installed **host** NSPR under
+ASan/UBSan. They cover file replacement blocking, retry, unrelated descriptors,
+nested and concurrent writers, allocation/hash failure, ownership, input aliases
+and callback lifetimes. No recovered firmware is linked or executed on the host.
+Clang/LLD compile only original code with generated ABI stubs; those stubs are
+never packed. Public hash API/ownership references are [pinned](sources.json),
+not vendored. The actual native callbacks/comparator were inspected
+independently; no source/binary-correspondence claim is made from an upstream
+API reference.
 
-The [observed result](../../docs/development/history/research/settings-compat-result-2026-10-31.md)
+The
+[observed result](../../docs/development/history/research/settings-compat-result-2026-10-31.md)
 validates the exact diagnostic build; earlier default LLD builds crashed during
-relocation and remain unvalidated. Remaining gates include application startup/integration,
-other credential log paths, actual permissions, two-key credential transactions,
-serialized-value limits, trusted TLS/time configuration, same-unit restoration and
-physical bench validation. This correction alone cannot establish secure
-commissioning or legacy-library safety. Keep all installed/native originals intact.
+relocation and remain unvalidated. Remaining gates include application
+startup/integration, other credential log paths, actual permissions, two-key
+credential transactions, serialized-value limits, trusted TLS/time
+configuration, same-unit restoration and physical bench validation. This
+correction alone cannot establish secure commissioning or legacy-library safety.
+Keep all installed/native originals intact.
 
 ## Owner-only settings writes (prepared, unmeasured)
 
 The current source adds a narrow permission correction after the earlier 29-case
-result. The exact temporary file opened within a native writer call requests only
-owner permission bits. After opening, the actual NSPR native handle is restricted
-to 0600 before serialization; this covers a pre-existing permissive temporary
-file. Failure closes it and returns through the original open-error path, with
-dirty-state retry preserved. Other opens and the process umask are unchanged.
+result. The exact temporary file opened within a native writer call requests
+only owner permission bits. After opening, the actual NSPR native handle is
+restricted to 0600 before serialization; this covers a pre-existing permissive
+temporary file. Failure closes it and returns through the original open-error
+path, with dirty-state retry preserved. Other opens and the process umask are
+unchanged.
 
-Required native-handle and fchmod exports were checked privately. The public NSPR
-handle declaration is pinned in sources.json. The new build needs its own target
-measurement; the older observed build does not validate these additions. The
-extended synthetic RAM diagnostic has 36 cases. No file installer or production
-native application integration is established by this correction.
+Required native-handle and fchmod exports were checked privately. The public
+NSPR handle declaration is pinned in sources.json. The new build needs its own
+target measurement; the older observed build does not validate these additions.
+The extended synthetic RAM diagnostic has 36 cases. No file installer or
+production native application integration is established by this correction.
 
-The subsequent supervised [36-case result](../../docs/development/history/research/settings-permissions-result-2026-10-31.md)
+The subsequent supervised
+[36-case result](../../docs/development/history/research/settings-permissions-result-2026-10-31.md)
 now validates the exact GNU-linked instrumented privacy candidate on synthetic
 RAM files, with native USB return. This supersedes the preparation-only status
 above. No standalone/full application, persistent installation or flash claim.
 
 A later combined session independently validated all 36 cases for the exact GNU
-standalone build without phase tracing. Its separate file-helper dispatch failed,
-so that aggregate run is not a combined pass. Original global failure and derived
-storage-component evaluation remain private and distinct. Full native application
-and physical filesystem integration are still unverified. See the dated file
-commissioning attempt note for scope.
+standalone build without phase tracing. Its separate file-helper dispatch
+failed, so that aggregate run is not a combined pass. Original global failure
+and derived storage-component evaluation remain private and distinct. Full
+native application and physical filesystem integration are still unverified. See
+the dated file commissioning attempt note for scope.

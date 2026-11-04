@@ -2,7 +2,8 @@
 
 Protocol field names are taken from the pinned NLE command contract; code is
 original. Bounds below are Hearth validation choices, not claims of measured
-support on every model. Values must already have fresh validated native baselines.
+support on every model. Values must already have fresh validated native
+baselines.
 
 | Field | Type / constraint | Equipment confirmation |
 | --- | --- | --- |
@@ -45,4 +46,5 @@ Fan, heat-pump and hot-water fields require their corresponding reported
 capabilities. Paired safety/lock temperatures must remain ordered and fresh.
 Controls expire and are never persisted or replayed. State stays reported-only.
 
-Reference: [NLE command contract](https://github.com/codykociemba/NoLongerEvil-SelfHosted/blob/bca8781012639c1cefc4a08c103fc892158fb630/src/nolongerevil/routes/control/command.py).
+Reference:
+[NLE command contract](https://github.com/codykociemba/NoLongerEvil-SelfHosted/blob/bca8781012639c1cefc4a08c103fc892158fb630/src/nolongerevil/routes/control/command.py).

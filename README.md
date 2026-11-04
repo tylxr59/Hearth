@@ -61,8 +61,10 @@ that has been tested on real hardware:
 - Display **Display-2.6**, software **5.9.4-5**
   (on the Nest: **Settings → Technical info**)
 
-Gen 1, Gen 3 and other software versions are not supported yet. Heating control
-has been verified. Cooling, fan and emergency heat have only been tested in simulation.
+Gen 1, Gen 3 and other software versions are not supported yet. Readings,
+target temperature, Eco and schedules work on a real heating system, but
+switching the heating on and off from HA hasn't been tested yet. Cooling, fan
+and emergency heat have only been tested in simulation.
 
 ## 📋 What you need
 

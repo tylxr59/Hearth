@@ -93,7 +93,7 @@ flash, where you type `INSTALL`, so it can't happen by accident:
 | 3. Full backup | Copies the Nest's entire flash twice and cross-checks the copies | Answer `y`, press the ring when told | ~25 min |
 | 4. Save originals | Extracts original files from the verified full backup. If any can't be read with certainty, offers to read them from the Nest instead | Answer `y`; a ring press only if it reads from the Nest | 2 min |
 | 5. Build kit | Builds install and undo images for *your* unit only | Confirm HA's HTTP port (Enter = 8123) | ~5 min |
-| 6. Install | One RAM boot checks space and runs both install phases | Answer `y` to start; press the ring only if told; type `INSTALL` before each write | 5 min |
+| 6. Install | One USB boot checks free space and installs both parts | Answer `y` to start; press the ring only if told; type `INSTALL` before each write | 5 min |
 | 7. Finish | Restart the Nest, refit it to the base, check HA | Confirm readings appear | 5 min |
 
 Times are rough estimates. A live status line shows the current stage, the
@@ -107,10 +107,10 @@ first backup boot always needs a ring press. A failed transfer stops without
 retry. If the Nest stops answering before the install starts, the wizard says
 so, nothing is written, and you can check the cable and try once more.
 
-**Why back up twice?** NAND flash has normal bit-level noise, so two raw reads
-never match byte for byte. After error correction, both passes must match
-exactly. That cross-check is how the wizard knows the backup is real data, not
-a one-off glitch, without ever having to restore it.
+**Why back up twice?** The Nest's flash memory has normal bit-level noise, so
+two raw reads never match byte for byte. After error correction, both passes
+must match exactly. That cross-check is how the wizard knows the backup is real
+data, not a one-off glitch, without ever having to restore it.
 
 ### Pressing the ring
 

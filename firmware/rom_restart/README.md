@@ -40,8 +40,9 @@ python -m firmware.rom_restart.run private/<fresh-profile> private/<fresh-output
 ```
 
 On the measured Gen 2, the corrected RAM image successfully exposed USB ROM
-after one software restart without another ring press. A successor image was
-not loaded, so automatic wizard handoff remains unmeasured and disabled. See the
+after one software restart without another ring press. This experiment never
+loads a successor image. The wizard's automatic handoff is implemented
+separately in [`nand_handoff/`](../nand_handoff/README.md). See the
 [result](../../docs/development/history/research/rom-warm-restart-success-2026-11-03.md).
 
 The first approved load timed out before readiness because its RAM filesystem
@@ -49,5 +50,6 @@ was gzip-compressed while the protected kernel disables RD_GZIP. No restart
 token was sent. Packaging now uses raw newc, matching the acquisition reader.
 The original failed attempt and successful corrected profile are preserved.
 Neither may be reused. Host serial cleanup is now fixed and observations are
-saved before cleanup; the latest fresh profile with those host fixes is unexecuted.
-See the [attempt record](../../docs/development/history/research/rom-warm-restart-attempt-2026-11-03.md).
+saved before cleanup; the latest fresh profile with those host fixes is
+unexecuted. See the
+[attempt record](../../docs/development/history/research/rom-warm-restart-attempt-2026-11-03.md).

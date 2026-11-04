@@ -9,7 +9,7 @@ before changing anything that can reach a real thermostat.
 python3 -m venv .venv
 .venv/bin/pip install --require-hashes -r requirements-dev.lock
 
-make test        # pytest (~1,900 tests)
+make test        # pytest (~2,000 tests)
 make check       # integration sync check, ruff lint+format, bandit
 make audit       # pip-audit against the lock files
 .venv/bin/python -m tools.check_native_ha build/<fresh-name> --engine podman
@@ -47,13 +47,14 @@ re-run an executed profile.
 | --- | --- |
 | `probe/` | Base Display-2.6 RAM-boot kernel and loader recipe; everything builds on it |
 | `nand_capture/` | Whole-chip read-only NAND backup (wizard step 3) |
-| `acquisition/` | Snapshot encodings and custody checks; standalone read-only acquisition remains available. Wizard step 4 reconstructs inputs offline via `installer/nand_inputs.py` |
-| `install_sequence/` | One RAM boot for capacity, commissioning and cleanup; unmeasured on hardware |
-| `rom_restart/` | Separate unexecuted warm-reset experiment; never enabled by normal setup |
+| `nand_handoff/` | Restartable backup reader: after the backup, restarts the Nest into the install without a ring press (wizard steps 3 to 6). The restart and transfer passed on hardware; the full path has not |
+| `acquisition/` | Snapshot encodings and custody checks. Wizard step 4 reconstructs inputs offline via `installer/nand_inputs.py`, and falls back to this live read-only reader if extraction refuses |
+| `install_sequence/` | One RAM boot for capacity, commissioning and cleanup (wizard step 6); passed on hardware |
+| `rom_restart/` | Standalone warm-restart experiment that first showed a software restart reaches USB ROM; not used by normal setup |
 | `file_writer/` | Fixed-plan JFFS2 writer: nine-file commissioning phase and its restore |
 | `network_writer/` | Three-file connectivity/time phase, capacity preflight and restore |
 | `file_install/`, `file_reencode/`, `network_update/` | Transaction, encoding and data contracts the writers compile in |
-| `nand_*`, `file_snapshot/`, `network_*`, `settings_*`, `startup_diagnostic/`, `tls_probe/`, `file_install_probe/` | Earlier diagnostics whose kernels, sources or profile code the writers reuse |
+| `nand_contract/`, `nand_metadata/`, `nand_sample/`, `file_snapshot/`, `network_*`, `settings_*`, `startup_diagnostic/`, `tls_probe/`, `file_install_probe/` | Earlier diagnostics whose kernels, sources or profile code the writers reuse |
 | `scratch_test/`, `nand_ecc_sample/`, `encoding_audit/` | Standalone diagnostics, not in the install path |
 | `harden.py`, `prepare.py` | Shared offline preparation helpers |
 
@@ -99,9 +100,10 @@ Every subproject has a README, and most link to their dated result in the
 `RELEASE-NOTES.md`, which explains each asset, becomes the top of the release
 body. `release.json` is build metadata. Neither is uploaded as an asset.
 
-The installer's contents are **computed**: `python -m tools.installer_archive
-x --list` prints them. The selection starts from `provision.py` and
-`installer/*.py`, then repeats until nothing new is found:
+The installer's contents are **computed**:
+`python -m tools.installer_archive x --list` prints them. The selection starts
+from `provision.py` and `installer/*.py`, then repeats until nothing new is
+found:
 
 - it follows Python imports;
 - it includes whole `firmware/<component>` and `tools/<component>` directories

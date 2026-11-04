@@ -103,6 +103,6 @@ Generation is a user claim, **not** detection or verification. See [local setup]
 - [Threat model](security/threat-model.md), [audit](security/audit.md), [network policy](security/network.md)
 - [HAOS installation and upgrades](../../../homeassistant/DOCS.md)
 - [Hardware validation and recovery gates](hardware-gates.md)
-- [Licensing and provenance](../../../THIRD_PARTY.md), [remaining work](TODO.md)
+- [Licensing and provenance](../../../THIRD_PARTY.md), [remaining work](laboratory-roadmap.md)
 
 Research references: [NLE thermostat](https://github.com/codykociemba/NoLongerEvil-Thermostat), [backend](https://github.com/codykociemba/NoLongerEvil-SelfHosted), [HA add-on](https://github.com/codykociemba/NoLongerEvil-HomeAssistant), [Valetudo](https://github.com/Hypfer/Valetudo). Exact revisions and individual source hashes are recorded; moving branches are not build inputs.
