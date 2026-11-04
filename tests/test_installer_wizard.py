@@ -112,6 +112,27 @@ def test_single_wizard_routes_selected_time_and_keeps_tokens_out_of_artifacts(se
     ]
 
 
+@pytest.mark.parametrize("accept", (True, False))
+def test_refused_offline_extraction_offers_live_reader_only_with_owner_consent(
+    setup, monkeypatch, accept
+):
+    _, _, calls = setup
+    previous = wizard.Worker.run
+
+    def run(self, op, **kw):
+        result = previous(self, op, **kw)
+        return {"offline_refused": True} if op == "acquire" else result
+
+    monkeypatch.setattr(wizard.Worker, "run", run)
+    if accept:
+        ask = answers("", "", "", "http://10.0.0.12:8123", "y", "y", "y", "8123", "", "y")
+    else:
+        ask = answers("", "", "", "http://10.0.0.12:8123", "y", "y", "")
+    assert wizard.run(ask=ask, secret=lambda _: "hidden-token") == 0
+    expected = ["prepare", "nand", "acquire"]
+    assert [op for op, _ in calls] == (expected + ["acquire-live", "kit"] if accept else expected)
+
+
 def test_declining_acquisition_never_arms_reader_or_writer(setup):
     _, _, calls = setup
     assert (
@@ -526,3 +547,196 @@ def test_zero_write_space_refusal_tells_the_owner_to_restart_normally(setup, mon
     assert "don't restart the Nest" not in stop and "Keep USB connected" not in stop
     folder = next(private.iterdir())
     assert json.loads((folder / "wizard-stopped.json").read_bytes())["phase"] == "space-check"
+
+
+def test_automatic_handoff_scanning_does_not_ask_for_another_ring_press(
+    tmp_path, monkeypatch, capsys
+):
+    folder = _session(tmp_path, monkeypatch)
+    script = (
+        "import json,sys,time; from pathlib import Path; "
+        "r=json.loads(Path(sys.argv[1]).read_bytes()); "
+        "print('[+] scanning for USB device matching 0451:d00e...',flush=True); time.sleep(.3); "
+        "Path(r['session'],'sequence-worker-result.json').write_text('{\"complete\": true}')"
+    )
+    _fake_worker(monkeypatch, script)
+    assert wizard.Worker(folder, tmp_path / "build").run(
+        "sequence", entry={"handoff_from_backup": "checked-backup"}
+    )["complete"]
+    shown = capsys.readouterr().out
+    assert "Leave the ring untouched" in shown
+    assert "hold the ring" not in shown.lower() and "The loader is waiting now" not in shown
+
+
+@pytest.fixture
+def worker_session(tmp_path, monkeypatch):
+    from firmware.file_writer.run import encode, save
+    from tools import elf_review
+
+    tmp_path.chmod(0o700)
+    monkeypatch.setattr(elf_review, "PRIVATE", tmp_path)
+    session = tmp_path / "session"
+    session.mkdir(mode=0o700)
+    names = iter(range(100))
+
+    def request(op):
+        name = f"{op}-{next(names)}-request.json"
+        save(
+            session,
+            name,
+            encode({"operation": op, "session": str(session), "build": str(tmp_path / "b")}),
+        )
+        return session / name
+
+    return session, request
+
+
+def test_worker_records_offline_refusal_and_gates_live_reader(worker_session, monkeypatch):
+    from firmware.acquisition import run as acquisition
+    from installer import nand_inputs, wizard_worker
+
+    session, request = worker_session
+    live, bound = [], []
+    monkeypatch.setattr(
+        acquisition, "run", lambda root, output, **k: live.append((root, output, k))
+    )
+    monkeypatch.setattr(wizard_worker, "bind_acquisition", lambda *a: bound.append(a[1]))
+    # Never a live boot without a recorded offline refusal.
+    with pytest.raises(ValueError):
+        wizard_worker.work(request("acquire-live"))
+    assert live == []
+
+    def refuse(_session):
+        raise ValueError("complete inode without extended attributes required")
+
+    monkeypatch.setattr(nand_inputs, "extract", refuse)
+    wizard_worker.work(request("acquire"))
+    result = json.loads((session / "acquire-worker-result.json").read_bytes())
+    assert result["offline_refused"] is True and result["flash_writes"] is False
+    assert bound == []
+    wizard_worker.work(request("acquire-live"))
+    assert live == [
+        (
+            session / "reader",
+            session / "acquisition",
+            {"execute": True, "handoff_from_nand": session / "nand"},
+        )
+    ]
+    assert bound == ["execution.json"]
+
+
+def test_worker_refusal_after_partial_output_is_not_a_fallback(worker_session, monkeypatch):
+    from installer import nand_inputs, wizard_worker
+
+    session, request = worker_session
+
+    def partial(session):
+        (session / "acquisition").mkdir(mode=0o700)
+        raise ValueError("late failure")
+
+    monkeypatch.setattr(nand_inputs, "extract", partial)
+    with pytest.raises(ValueError, match="late failure"):
+        wizard_worker.work(request("acquire"))
+    assert not (session / "nand-inputs-refused.json").exists()
+
+
+@pytest.mark.parametrize(
+    ("result", "result_flag", "phase", "shown", "hidden"),
+    (
+        (
+            {"zero_write_cancel": True},
+            None,
+            "install-cancelled",
+            "before anything was written",
+            "don't restart the Nest",
+        ),
+        (
+            {"partial_install_safe": True},
+            None,
+            "install-partial",
+            "provision.py --restore",
+            "don't restart the Nest",
+        ),
+        (
+            {},
+            None,
+            "install",
+            "Installation did not finish",
+            "safe to restart",
+        ),
+    ),
+)
+def test_combined_install_stops_explain_what_was_written(
+    setup, monkeypatch, capsys, result, result_flag, phase, shown, hidden
+):
+    _, private, _ = setup
+    monkeypatch.setattr(wizard.workflow, "install", lambda *a, **kw: {"complete": False} | result)
+    ask = answers("", "", "", "http://10.0.0.12:8123", "y", "y", "8123")
+    assert wizard.run(ask=ask, secret=lambda _: "hidden-token") == 1
+    stop = capsys.readouterr().out.split("Setup stopped")[-1]
+    assert shown in stop and hidden not in stop
+    folder = next(private.iterdir())
+    assert json.loads((folder / "wizard-stopped.json").read_bytes())["phase"] == phase
+
+
+def test_unstarted_combined_install_is_reported_as_safe(setup, monkeypatch, capsys):
+    _, private, _ = setup
+
+    def refuse(*a, **kw):
+        raise wizard.workflow.NotStarted("The install did not start. Nothing was written.")
+
+    monkeypatch.setattr(wizard.workflow, "install", refuse)
+    ask = answers("", "", "", "http://10.0.0.12:8123", "y", "y", "8123")
+    assert wizard.run(ask=ask, secret=lambda _: "hidden-token") == 1
+    stop = capsys.readouterr().out.split("Setup stopped")[-1]
+    assert "Nothing was written" in stop and "safe to restart normally" in stop
+    assert "don't restart the Nest" not in stop
+    folder = next(private.iterdir())
+    assert json.loads((folder / "wizard-stopped.json").read_bytes())["phase"] == (
+        "install-not-started"
+    )
+
+
+def _stage(output, name, commit):
+    from firmware.file_writer.run import encode, save
+
+    (output / name).mkdir(parents=True, mode=0o700)
+    if commit is not None:
+        save(output / name, "decision.json", encode({"execution": {}, "commit": commit}))
+
+
+@pytest.mark.parametrize(
+    ("completed", "failed", "commit", "safe", "flag"),
+    (
+        ([], "commissioning", False, True, "zero_write_cancel"),
+        ([], "commissioning", True, True, None),
+        ([], "commissioning", None, True, None),
+        ([], "commissioning", False, False, None),
+        (["commissioning"], "cleanup", False, True, "partial_install_safe"),
+        (["commissioning"], "cleanup", True, True, None),
+        (["commissioning"], "cleanup", False, False, None),
+    ),
+)
+def test_sequence_outcome_flags_only_proven_owner_cancels(
+    tmp_path, monkeypatch, capsys, completed, failed, commit, safe, flag
+):
+    from tools import elf_review
+
+    tmp_path.chmod(0o700)
+    monkeypatch.setattr(elf_review, "PRIVATE", tmp_path)
+    output = tmp_path / "install-combined"
+    output.mkdir(mode=0o700)
+    _stage(output, failed, commit)
+    row = {
+        "complete": False,
+        "completed_phases": completed,
+        "failed_stage": failed,
+        "safe_to_restart": safe,
+    }
+    result = wizard.sequence_outcome(output, row)
+    flags = {"zero_write_cancel", "partial_install_safe"} & set(result)
+    assert flags == ({flag} if flag else set())
+    shown = " ".join(capsys.readouterr().out.split())
+    assert ("is installed and verified" in shown) is bool(completed)
+    if flag is None:
+        assert "do not restart the Nest" in shown

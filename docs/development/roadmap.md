@@ -22,18 +22,21 @@ Hearth stays on `0.x` experimental releases until every box below is checked.
       1 MiB) on hardware, including a guided restore after install.
 - [ ] Recover flash space: write native-supported ZLIB instead of NONE (never
       LZO), with writer-kernel and encoding-audit changes and a measurement.
-- [ ] Fewer ring presses. Today: backup, originals, space check, phase 1,
-      phase 2, then a final restart is six presses. Options, best first:
-      (1) a supervised test of whether a software reset from the RAM kernel
-      re-enters ROM USB boot without the ring; (2) derive originals from the
-      NAND backup offline (device preflight still verifies exact bytes);
-      (3) fold the space check into phase 1's preflight; (4) one writer boot for
-      both phases.
+- [ ] Complete the reduced-boot wizard end to end. Software restart and
+      successor transfer are measured, and capacity plus both installs passed
+      in one RAM boot. Archive extraction refused a damaged duplicate settings
+      fragment on a later archive; that install used live acquisition instead.
+- [ ] Resolve archive-only extraction of damaged duplicate settings fragments:
+      check the pinned JFFS2 fragment-selection rules, compare reconstruction
+      against the protected live capture's exact bytes and metadata, and add
+      regression tests. Keep refusals for ambiguity, gaps and damaged required
+      data, and retain all device-side verification gates. Use the separate
+      read-only acquisition boot when safe reconstruction cannot be established.
 - [ ] Run the complete source-built wizard on a **pristine stock** unit: full
       backup, both install phases, HA readings, then the full restore. (The offline
       composed build and profile reproduction already pass.)
-- [ ] Measure a passing combined capacity preflight and shared-original writes
-      on hardware (a refusal by 30 KB was measured on 2026-11-03).
+- [x] Measure a passing combined capacity preflight and shared-original writes
+      on hardware (both phases passed in one boot on 2026-11-03).
 - [ ] Handle natively recompressed archive originals without loosening the
       NONE/ZERO gate.
 - [ ] Support USB ports other than the measured **1-1**, through scoped rules

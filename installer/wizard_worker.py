@@ -11,6 +11,28 @@ from installer.ui import stage
 from tools.elf_review import private_path
 
 
+def bind_acquisition(session, receipt, limit):
+    """Bind the original files to this setup's identity and bundle, then inspect them."""
+    from installer.corpus import inspect
+
+    execution = json.loads(private_read(session / "acquisition" / receipt, limit))
+    save(
+        session / "acquisition",
+        "intake-binding.json",
+        encode(
+            {
+                "format": "hearth-acquisition-session-v1",
+                "identity": json.loads(private_read(session / "identity.json", 65536)),
+                "bundle_sha256": hashlib.sha256(
+                    private_read(session / "commissioning.zip", 65536)
+                ).hexdigest(),
+                "session": execution["session"],
+            }
+        ),
+    )
+    inspect(session / "acquisition")
+
+
 def work(request):
     row = json.loads(private_read(request, 16384))
     session = private_path(row["session"])
@@ -30,6 +52,11 @@ def work(request):
 
         stage(3, 5, "Building the flash backup reader")
         build_nand(build / "sources", build / "reader", build / "nand-reader")
+        from firmware.nand_handoff.profile import build as build_handoff
+
+        build_handoff(
+            build / "nand-reader", build / "nand-handoff", session / "nand-handoff-reader"
+        )
         stage(4, 5, "Building the backup checker")
         build_bch(build / "nand-bch")
         stage(5, 5, "Saving a copy of this installer for restores")
@@ -43,33 +70,47 @@ def work(request):
     elif operation == "nand":
         from installer.nand_backup import run
 
-        result = run(session, build / "nand-reader", build / "nand-bch/compiled/libbch.so")
+        result = run(
+            session,
+            build / "nand-reader",
+            build / "nand-bch/compiled/libbch.so",
+            handoff_profile=session / "nand-handoff-reader",
+        )
     elif operation == "acquire":
-        from firmware.acquisition.run import run
-        from installer.corpus import inspect
+        from installer.nand_inputs import extract
 
+        stage(1, 2, "Extracting original files from the verified full backup")
+        try:
+            result = extract(session)
+        except ValueError as exc:
+            # A refusal before any output exists leaves the protected live
+            # reader as the owner's choice. Anything later is not a refusal.
+            if (session / "acquisition").exists():
+                raise
+            result = {
+                "offline_refused": True,
+                "reason": str(exc)[:200],
+                "device_executed": False,
+                "flash_writes": False,
+            }
+            save(session, "nand-inputs-refused.json", encode(result))
+        else:
+            stage(2, 2, "Checking original files and native libraries")
+            bind_acquisition(session, "nand-inputs.json", 4096)
+    elif operation == "acquire-live":
+        from firmware.acquisition.run import run
+
+        # Fallback only: the offline extraction refused without output.
+        refused = json.loads(private_read(session / "nand-inputs-refused.json", 4096))
+        if refused.get("offline_refused") is not True or (session / "acquisition").exists():
+            raise ValueError("live reader is only a fallback after a refused offline extraction")
         result = run(
             session / "reader",
             session / "acquisition",
             execute=True,
             handoff_from_nand=session / "nand",
         )
-        execution = json.loads(private_read(session / "acquisition/execution.json", 65536))
-        save(
-            session / "acquisition",
-            "intake-binding.json",
-            encode(
-                {
-                    "format": "hearth-acquisition-session-v1",
-                    "identity": json.loads(private_read(session / "identity.json", 65536)),
-                    "bundle_sha256": hashlib.sha256(
-                        private_read(session / "commissioning.zip", 65536)
-                    ).hexdigest(),
-                    "session": execution["session"],
-                }
-            ),
-        )
-        inspect(session / "acquisition")
+        bind_acquisition(session, "execution.json", 65536)
     elif operation == "kit":
         from installer.kit import build as make_kit
 
@@ -82,11 +123,16 @@ def work(request):
             probe_port=row["probe_port"],
             ntp_server=row["ntp_server"],
         )
-    elif operation in ("capacity", "commissioning", "cleanup"):
+    elif operation in ("capacity", "commissioning", "cleanup", "sequence"):
         from firmware.file_writer import run as core
         from installer.workflow import network_engine
 
-        engine = core if operation == "commissioning" else network_engine()
+        if operation == "sequence":
+            from firmware.install_sequence import run as sequence
+
+            engine = sequence
+        else:
+            engine = core if operation == "commissioning" else network_engine()
         result = engine.run(
             private_path(row["profile"]),
             private_path(row["recovery"]),

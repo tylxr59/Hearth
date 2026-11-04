@@ -104,7 +104,10 @@ def observe(port="1-1", seconds=300, capture=None, *, receive_fn=None):
                 return (receive_fn or receive)(fd, deadline, capture)
             finally:
                 if previous is not None:
-                    with contextlib.suppress(OSError):
+                    # Some Python versions expose termios.error separately
+                    # from OSError. A completed reboot can remove this tty
+                    # before cleanup; do not discard its received result.
+                    with contextlib.suppress(OSError, termios.error):
                         termios.tcsetattr(fd, termios.TCSANOW, previous)
                 os.close(fd)
         time.sleep(0.1)

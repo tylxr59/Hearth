@@ -124,6 +124,7 @@ def package(
     preflight_only=False,
     shared_archive=None,
     capacity_reserve=0,
+    sequence_child=False,
 ):
     if type(preflight_only) is not bool or (preflight_only and action != 1):
         raise ValueError("preflight-only mode is an explicit install-scope diagnostic")
@@ -151,6 +152,7 @@ def package(
         preflight_only=preflight_only,
         shared_archive=shared_archive,
         capacity_reserve=capacity_reserve,
+        sequence_child=sequence_child,
     )
     files = {
         n: read_build(Path(kernel_build) / "artifacts" / n, MAX_IMAGE)
@@ -186,6 +188,7 @@ def package(
         "device_executed": False,
         "action": action,
         "targets": bound["target_count"],
+        **({"sequence_child": True} if sequence_child else {}),
         **({"preflight_only": True} if preflight_only else {}),
         **({"capacity_reserve": capacity_reserve} if capacity_reserve else {}),
         **(
@@ -279,6 +282,10 @@ def check(output):
     if any(sha(d) != record["files"][n] for n, d in files.items()):
         raise ValueError("network artifact changed")
     capacity_marker = b"HNSPACE1" + struct.pack("<II", reserve, reserve ^ 0xFFFFFFFF)
+    if type(record.get("sequence_child", False)) is not bool or (
+        (b"HFW_DONE" in files["file-action"]) != record.get("sequence_child", False)
+    ):
+        raise ValueError("matching terminal child handshake required")
     if capacity_marker not in files["file-action"]:
         raise ValueError("compiled capacity reservation differs")
     if shared is not None and shared["packed"] not in files["file-action"]:

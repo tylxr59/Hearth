@@ -138,7 +138,7 @@ def main():
     driver.write_text(patch_driver(saved.read_text()))
     target = driver.parent / "hearth-file-writer"
     target.mkdir(exist_ok=True)
-    for name in ("core.c", "core.h", "io.h", "adapter.h", "binding.h"):
+    for name in ("core.c", "core.h", "io.h", "adapter.h", "sequence.h", "binding.h"):
         shutil.copyfile(Path("/work") / name, target / name)
 
 

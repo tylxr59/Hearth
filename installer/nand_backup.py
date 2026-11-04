@@ -47,6 +47,19 @@ def check(session):
     ) != {"host_command_exited": True}:
         raise ValueError("matching completed whole NAND session required")
     profile.check(execution["profile"])
+    if "handoff_profile" in execution:
+        from firmware.nand_handoff.profile import check as check_handoff
+
+        handoff = private_path(execution["handoff_profile"])
+        check_handoff(handoff)
+        handoff_record = json.loads(read(handoff / "profile.json", 65536))
+        if (
+            handoff != session / "nand-handoff-reader"
+            or handoff_record["base"] != execution["profile"]
+            or digest(handoff / "profile.json") != execution["handoff_manifest_sha256"]
+            or json.loads(read(handoff / "execution-started.json", 65536)) != execution
+        ):
+            raise ValueError("same executed restartable backup reader required")
     if execution["profile_manifest_sha256"] != digest(
         Path(execution["profile"]) / "probe-manifest.json"
     ):
@@ -118,17 +131,26 @@ def require_handoff(root, session):
         raise ValueError("known exited full-read RAM mode required")
 
 
-def run(session, reader, library):
+def run(session, reader, library, *, handoff_profile=None):
     session = private_path(session)
     reader = Path(reader).absolute()
     library = checked_library(library)
     profile.check(reader)
+    if handoff_profile is not None:
+        from firmware.nand_handoff.profile import check as check_handoff
+
+        handoff_profile = private_path(handoff_profile)
+        check_handoff(handoff_profile)
+        row = json.loads(read(handoff_profile / "profile.json", 65536))
+        if handoff_profile != session / "nand-handoff-reader" or row["base"] != str(reader):
+            raise ValueError("same-session full-read handoff profile required")
     require_native("1-1")
     root = session / "nand"
     if (
         root.exists()
         or (session / "nand-reader-executed.json").exists()
         or (reader / "execution-started.json").exists()
+        or (handoff_profile is not None and (handoff_profile / "execution-started.json").exists())
     ):
         raise ValueError("fresh whole NAND archive required; no retry")
     if shutil.disk_usage(session).free < 2 * 131072 * 2112 + 2 * 268435456 + 64 * 1048576:
@@ -141,15 +163,22 @@ def run(session, reader, library):
         "analysis_recipes": analysis_recipes(),
         "source_sha256": digest(session / "installer-source.zip"),
     }
+    if handoff_profile is not None:
+        execution |= {
+            "handoff_profile": str(handoff_profile),
+            "handoff_manifest_sha256": digest(handoff_profile / "profile.json"),
+        }
     save(root, "execution.json", encode(execution))
     save(session, "nand-reader-executed.json", encode(execution))
     save(reader, "execution-started.json", encode(execution))
+    if handoff_profile is not None:
+        save(handoff_profile, "execution-started.json", encode(execution))
     print(
         "PROTECTED FULL NAND BACKUP: two fixed raw/OOB passes, followed by offline ECC verification. No writer or native app. Keep USB connected and base detached.",
         flush=True,
     )
     print("Waiting up to 90 seconds for the reviewed manual ROM restart.", flush=True)
-    artifacts = reader / "artifacts"
+    artifacts = (reader if handoff_profile is None else handoff_profile) / "artifacts"
     subprocess.run(  # nosec B603
         [
             str(artifacts / "omap_loader"),

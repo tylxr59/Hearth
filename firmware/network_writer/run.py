@@ -49,6 +49,10 @@ def require_entry(binding, previous=None, *, sysfs=Path("/sys/bus/usb/devices"))
         raise ValueError("direct RAM recovery is restore-only")
     previous = private_path(previous)
     execution = json.loads(private_read(previous / "execution.json", 65536))
+    if execution.get("stage") == "cleanup":
+        from firmware.install_sequence.run import require_recovery
+
+        return require_recovery(binding, previous, sysfs=sysfs)
     ended = json.loads(private_read(previous / "finished.json", 65536))
     sending = json.loads(private_read(previous / "decision-sending.json", 65536))
     if (
@@ -90,6 +94,8 @@ def boot(
         }
     if output is None:
         raise ValueError("fresh private execution output required")
+    if record.get("sequence_child"):
+        raise ValueError("child action requires the fixed install sequence supervisor")
     output = private_path(output)
     if (
         output.exists()

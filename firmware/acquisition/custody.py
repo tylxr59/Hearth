@@ -29,6 +29,11 @@ def verify(root):
     root = private_path(root)
     if not root.is_dir() or stat.S_IMODE(root.stat().st_mode) != 0o700:
         raise ValueError("owner-only acquisition directory required")
+    from_nand = (root / "nand-inputs.json").exists()
+    if from_nand:
+        from installer.nand_inputs import verify as verify_nand
+
+        verify_nand(root)
     frame = read(root / "capture.bin", codec.MAX_PAYLOAD + 56)
     if len(frame) < 48:
         raise ValueError("complete acquisition snapshot required")
@@ -51,7 +56,11 @@ def verify(root):
         or record["symlinks_created"] is not False
         or record["executables_run_on_host"] is not False
         or record["source"]
-        != "protected root0/user-config view; native active root separately observed"
+        != (
+            "checked full NAND archive; offline root0/user-config reconstruction"
+            if from_nand
+            else "protected root0/user-config view; native active root separately observed"
+        )
     ):
         raise ValueError("original acquisition metadata required")
     rows = []

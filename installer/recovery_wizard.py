@@ -92,6 +92,20 @@ def run(*, ask=input):
                 "red",
             )
             return 1
+        if outcome.get("nothing_to_restore"):
+            ui.box(
+                "Nothing to restore",
+                [
+                    "The install never wrote to the Nest, so its original files are unchanged.",
+                    (
+                        "If the Nest is still in USB mode, restart it: hold the ring for 10 "
+                        "seconds, let go, then press it once more."
+                    ),
+                    "Keep your private folder and this Hearth source folder.",
+                ],
+                "green",
+            )
+            return 0
         ui.box(
             "Original files restored",
             [

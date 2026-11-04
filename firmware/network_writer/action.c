@@ -12,6 +12,7 @@
 #define hearth_capsule_changes hn_changes
 #define hearth_capsule_count HEARTH_TARGET_COUNT
 #include "binding.h"
+#include "../file_writer/finish.h"
 #ifdef HEARTH_NETWORK_SHARED_BACKUPS
 #include "shared-plan.h"
 #endif
@@ -273,7 +274,13 @@ int main(void)
     for(i=0;i<8;i++) report[length++]=(unsigned char)"HFW_END1"[i];
     for(;;) {
         int status=hearth_cached_transmit_step(&sending,tty,(const char *)report,length,transmit);
-        if(status==HEARTH_TRANSMIT_DONE) { long delay[2]={1,0};nanosleep(delay,0); }
+        if(status==HEARTH_TRANSMIT_DONE) {
+#ifdef HEARTH_SEQUENCE_CHILD
+            if(hfw_finish(tty,!initial&&result.safe_to_restart&&
+                (result.complete||HEARTH_PREFLIGHT_ONLY))) return 0;
+#endif
+            long delay[2]={1,0};nanosleep(delay,0);
+        }
         else pause_short();
     }
 }

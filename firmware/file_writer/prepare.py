@@ -23,6 +23,7 @@ RECIPES = (
     "firmware/file_writer/io.h",
     "firmware/file_writer/adapter.h",
     "firmware/file_writer/encoding.h",
+    "firmware/file_writer/sequence.h",
     "firmware/file_writer/configure.py",
     "firmware/file_writer/prepare.py",
     "provisioning/file_capsule.py",
@@ -46,12 +47,12 @@ def pin_read(pin):
     return result
 
 
-def binding(capsule, pin):
+def binding(capsule, pin, *, sequence=None):
     expected = pin_read(pin)
     file_capsule.check(capsule, expected_plan=expected)
     receipt = json.loads((Path(capsule) / "backup/receipt.json").read_text())
     receipt_digest = bytes.fromhex(receipt["manifest_sha256"])
-    return (
+    ordinary = (
         "/* Private exact plan and durable host custody binding. */\n"
         "static const unsigned char hearth_expected_plan[32]={"
         + ",".join(str(value) for value in expected)
@@ -60,10 +61,15 @@ def binding(capsule, pin):
         + ",".join(str(value) for value in receipt_digest)
         + "};\n"
     )
+    if sequence is None:
+        return ordinary
+    from firmware.install_sequence.binding import header
+
+    return ordinary + header(sequence, capsule, pin)
 
 
-def prepare(nestdfu, xloader, loader, base, output, capsule, pin):
-    bound = binding(capsule, pin)
+def prepare(nestdfu, xloader, loader, base, output, capsule, pin, *, sequence=None):
+    bound = binding(capsule, pin, sequence=sequence)
     output = Path(output)
     snapshot.prepare(nestdfu, xloader, loader, base, output)
     output.chmod(0o700)
@@ -79,7 +85,7 @@ def prepare(nestdfu, xloader, loader, base, output, capsule, pin):
         record["recipes"][name] = digest(ROOT / name)
         if name not in record["host_files"]:
             record["host_files"].append(name)
-    for name in ("core.c", "core.h", "io.h", "adapter.h"):
+    for name in ("core.c", "core.h", "io.h", "adapter.h", "sequence.h"):
         shutil.copyfile(ROOT / "firmware/file_writer" / name, output / name)
     (output / "binding.h").write_text(bound)
     (output / "binding.h").chmod(0o600)
@@ -103,6 +109,8 @@ def prepare(nestdfu, xloader, loader, base, output, capsule, pin):
     record["binding_sha256"] = digest(output / "binding.h")
     record["capsule"] = str(Path(capsule).resolve())
     record["pin"] = str(Path(pin).resolve())
+    if sequence is not None:
+        record["sequence"] = str(Path(sequence).absolute())
     (output / "writer-kernel-preparation.json").write_text(
         json.dumps(record, sort_keys=True, indent=2) + "\n"
     )
@@ -123,7 +131,10 @@ def finalize(output, base):
     for name, expected in record["recipes"].items():
         if digest(ROOT / name) != expected or digest(output / name) != expected:
             raise ValueError("writer recipe changed; stage a fresh build")
-    if binding(record["capsule"], record["pin"]) != (output / "binding.h").read_text():
+    if (
+        binding(record["capsule"], record["pin"], sequence=record.get("sequence"))
+        != (output / "binding.h").read_text()
+    ):
         raise ValueError("writer backup binding changed")
     kernel = output / "src/Dev/linux"
     driver = kernel / "drivers/mtd/nand/omap2.c"
@@ -151,7 +162,7 @@ def finalize(output, base):
         (output / "root/init", output / "artifacts/probe-init"),
         (ROOT / "firmware/file_writer/encoding.h", kernel / "fs/jffs2/hearth-encoding.h"),
     ]
-    for name in ("core.c", "core.h", "io.h", "adapter.h", "binding.h"):
+    for name in ("core.c", "core.h", "io.h", "adapter.h", "sequence.h", "binding.h"):
         pairs.append((output / name, driver.parent / "hearth-file-writer" / name))
         if name != "binding.h":
             pairs.append((output / name, ROOT / "firmware/file_writer" / name))

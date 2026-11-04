@@ -23,6 +23,13 @@ Unless stated otherwise, every fact here was measured on **one unit**.
 [device-intake](history/research/device-intake-2026-10-30.md) ·
 [acquisition-review](history/research/acquisition-review-2026-10-30.md)
 
+- A normal Linux warm reset from the protected RAM image exposed OMAP USB ROM
+  without another ring press on the measured Gen 2. One run observed ROM at
+  about 0.6 seconds, ROM disconnection at 4.2 seconds, and native USB at 11.5
+  seconds. A subsequent backup-to-successor transfer completed without a ring
+  press; that first supervisor stopped before readiness. The corrected
+  supervisor later passed both writes in a separate fresh manual boot. See [warm-restart result](history/research/rom-warm-restart-success-2026-11-03.md).
+
 ## NAND
 
 - 256 MiB NAND with 2048 × 128 KiB erase blocks, 2 KiB pages and 64-byte OOB
@@ -73,6 +80,22 @@ Unless stated otherwise, every fact here was measured on **one unit**.
 - Shared-original rollback reuses an exact restored archive's inodes instead of
   copying. The combined no-commit capacity preflight checks both phases before
   either writes.
+- Original-file custody can also be reconstructed offline from the checked full
+  NAND archive. These host-encoded snapshots carry separate archive provenance;
+  their free-space statistics are unknown. Device-side original-byte and live
+  resource checks remain mandatory. A preserved data-view parser exercise
+  reconstructed all fixed records and 126 library/executable files; this is
+  not a hardware pass of the new provisioning flow.
+- A fresh combined capacity check and both install phases passed in one RAM
+  boot with separate owner approvals. Capacity reported 13,201,408 bytes free
+  against 12,461,733 required and zero writes. Commissioning and cleanup both
+  passed byte/encoding verification, with no failed NAND operations. Selected
+  restore profiles were built but not executed in this session. See the
+  [combined result](history/research/combined-install-success-2026-11-03.md).
+- Archive-only extraction can conservatively refuse an inode containing a
+  checksum-invalid fragment even when valid duplicates exist. One live archive
+  exhibited this for settings.config. The gate remains unchanged; a separate
+  protected live acquisition supplied the successful install.
 - A settings file can re-serialise differently while holding identical
   values, which invalidates an exact-original snapshot. Never loosen the byte
   comparison. Take a fresh snapshot instead.

@@ -8,18 +8,104 @@ in [history](history/), and lasting facts go in [findings](findings.md)._
 | | |
 | --- | --- |
 | Unit | Gen 2, Display-2.6, primary firmware 5.9.4-5 (the only measured target) |
-| Where it is | Display **detached**, on USB to the dev PC. After the 0.11.1 space refusal it was in sealed RAM mode (`safe_to_restart 1`, zero writes); the owner was advised to restart it normally. Confirm native mode before the next run |
+| Where it is | Display **reattached to the wired base** by the owner after the verified install. Normal temperature dial and fresh HA readings confirmed by the owner and read-only HA observation |
 | HVAC base | **Wired to real oil/baseboard heat.** Never assume an unwired base when it's reattached |
 | Last on-base state | Heat 63 °F, Eco off, empty schedule, heating idle (owner confirmed) |
-| Loader | **None armed** |
-| Flash contents | Stock files, independently verified (see below). Native home icon and normal USB confirmed |
-| On-base stock UI | Not yet re-checked |
+| Loader | Combined loader completed; host exited; no loader armed |
+| Flash contents | Commissioning9 and cleanup3 installed; both readback and encoding verified. Recovery archives retained |
+| On-base UI | Normal dial confirmed after installation; no intentional HVAC test performed |
 
 **Authorised now:** local code, docs, packaging, tests, commits and pushes.
 **Not authorised:** HA Core restarts, persistent device writes, arming a loader,
 or intentional HVAC calls. Each needs fresh owner approval.
 
+## Local provisioning work (unreleased)
+
+The capacity check and both install phases **passed in one RAM boot** with
+separate owner write approvals. Both groups passed readback and encoding audits;
+the host exited and the final report says safe to restart. Native USB returned after the normal restart, detached on USB. HA checks confirmed a missing entry and active profile. The owner approved
+restoring an exact matching saved profile unchanged and registering its entry.
+HA now reports loaded; its live bundle matches this Nest and native TLS passes
+from the HA network. After owner-approved reattachment, HA received fresh
+temperature/humidity with no authentication rejections or pending control
+intents. The owner confirmed the normal dial and HA readings. See the [combined result](history/research/combined-install-success-2026-11-03.md).
+
+Automatic backup-to-successor transfer without a ring press was measured in an
+earlier attempt; its supervisor failed before readiness and was corrected.
+Archive extraction passed on the first fresh archive, but later refused a
+checksum-invalid settings fragment despite valid duplicates. This successful
+install used a separate protected live acquisition and a manual combined boot.
+The complete reduced-boot wizard path is not yet measured end to end. No safety
+gate was weakened. The existing commissioning bundle and all archives are
+preserved. Bundle matching did not establish that the HA entry still exists.
+
+Follow-up host changes (unmeasured on hardware; no device action):
+
+- If offline extraction refuses before creating output, the wizard records the
+  refusal and offers the existing protected live reader (one owner-confirmed
+  ring boot). The install then uses the measured manual combined boot. A
+  refusal after output exists is not treated as a fallback.
+- Before any one-use marker, the combined install checks read-only that the
+  backup reader still sends its exact readiness line. A silent reader asks the
+  owner whether to check again and otherwise stops as "not started", with the kit
+  unused. This adds a second host open of the reader tty; the device side is
+  unchanged.
+- Wizard results now distinguish an owner cancel with zero writes, a safe
+  partial install (commissioning verified, cleanup cancelled) and an unknown
+  failure. Restore reports "nothing to restore" when a combined kit never sent a
+  write and no standalone attempt evidence exists.
+
 ## Last hardware events (newest first)
+
+- **On-base return and HA readings confirmed:** after explicit owner approval,
+  the matching saved HA profile was restored and its missing entry registered.
+  The owner reattached the display and confirmed the normal dial and readings.
+  Read-only HA observation confirmed fresh temperature/humidity and device
+  availability, with no authentication rejections or pending control intents.
+  No HA Core restart or intentional HVAC call. See the
+  [repair and final check](history/research/ha-profile-repair-2026-11-03.md).
+
+- **Combined install passed:** capacity passed with zero writes, then both
+  separately approved file groups completed in the same RAM boot. Each reported
+  complete/readback/encoding/safe-to-restart success, zero transaction errors
+  and zero failed NAND operations. No restore or HVAC action was run. See the
+  [result](history/research/combined-install-success-2026-11-03.md).
+
+- **Live acquisition passed:** one fresh owner-approved read-only boot captured
+  both fixed snapshots and four library groups (134 private files). Fresh
+  combined kit and standalone restores built and checked. Existing HA entry
+  preserved. This supplied the subsequent successful combined install. See the
+  [result](history/research/handoff-live-acquisition-2026-11-03.md).
+
+- **Backup accepted, extraction refused:** a new fresh two-pass capture passed
+  corrected-data, spare-area and ECC quality gates. The offline original-file
+  extractor refused a checksum-invalid `settings.config` fragment despite
+  valid duplicate fragments. No handoff or write followed. A separate fresh
+  protected live acquisition subsequently passed. See the [result](history/research/handoff-extraction-refusal-2026-11-03.md).
+
+- **Fresh backup refused:** both passes completed, corrected data matched and
+  neither pass had uncorrectable chunks, but one bit differed in one ECC spare
+  byte. The exact-OOB gate refused. No extraction, successor loader, restart
+  token or installer write followed. Evidence is preserved; no automatic retry.
+  The corrected supervisor subsequently passed in a fresh combined install. See the
+  [refusal](history/research/handoff-backup-refusal-2026-11-03.md).
+
+- **Backup-to-install handoff:** fresh two-pass archive accepted; originals
+  extracted offline; software restart and successor transfer completed without
+  another ring press. Supervisor timed out before capacity selftest or either
+  write decision. The legacy kernel rejects rootfs bind mounts. RAM hardlinks
+  and renames replace them; no flash policy was changed. Original evidence is
+  preserved, with no retry. See the [result](history/research/backup-install-handoff-result-2026-11-03.md).
+
+- **Warm restart reached ROM:** one fresh owner-approved PTY boot, exact RAM
+  readiness, one software restart, ROM then native USB confirmed by the host
+  journal. No successor loader, installer write, HVAC call or retry. Host exited;
+  originals and the serial-cleanup error remain preserved. See the
+  [result](history/research/rom-warm-restart-success-2026-11-03.md).
+
+- **Warm-restart test load:** one approved PTY boot, transfer complete, then
+  readiness timeout. No restart token or intentional write. Host exited; USB
+  was still in protected RAM mode at that point. See [attempt and correction](history/research/rom-warm-restart-attempt-2026-11-03.md).
 
 0. **v0.11.1 public wizard run.** Steps 1–5 passed: HA onboarding, reader build,
    full-NAND backup, acquisition and kit with a shared-original nomination. The
@@ -28,8 +114,8 @@ or intentional HVAC calls. Each needs fresh owner approval.
    Analysis and the margin change (shared install 2 → 1.25 MiB, restore
    4 → 1 MiB) are in
    [capacity-preflight-result](history/research/capacity-preflight-result-2026-11-03.md).
-   That session's HA entry exists. A fresh run needs it removed and
-   `/config/.storage/hearth` moved aside.
+   That session's HA entry exists and is preserved by reusing its matching
+   current commissioning bundle; do not recreate it.
 1. **Commissioning-only stock return** (after step 3) ran once. All nine files
    were restored (restored mask 511) with zero transaction, rollback, journal or
    seal errors, but its own final verify failed (diagnostic 21: `verified 0`,
@@ -71,15 +157,26 @@ has private detail.
 - **Friendlier wizard output.** `installer/ui.py` was added for formatted steps,
   prompts and summaries.
 
-A fresh shared/capacity preflight profile and its restore reference are
-prepared and reproduce (10 artifacts), but they have **not been executed**. The
-next optional hardware step is one owner-ready, no-commit run of that preflight.
+All attempted profiles remain single-use evidence. Fresh standalone restore
+profiles are checked but unexecuted. Do not start a restore without explicit
+scope/recovery approval and fresh loader readiness.
 
-**Unmeasured:** shared-original writes, handling of native-recompressed archive
-originals, the cleanup3 writer, the custom-NTP writer and the full
-stock-to-HA wizard.
+**Unmeasured:** combined guided restore, handling of native-recompressed archive
+originals, the complete reduced-boot stock-to-HA wizard, whole-firmware recovery,
+and power-loss recovery.
 
 ## Published
+
+**v0.12.0** (experimental) ships the combined install: one RAM boot runs the
+space check and both file groups, with a separate `INSTALL` for each write.
+The wizard saves originals from the verified backup and restarts the Nest
+from the backup reader into the install without another ring press. If that
+extraction refuses, it offers the protected live reader followed by a manual
+combined boot. That fallback route is the one measured on hardware. The
+automatic backup-to-install route has **not** run end to end. The release also
+adds the read-only readiness check before a kit is consumed, per-group stop
+messages and "nothing to restore". The HA integration is unchanged apart from
+its version.
 
 **v0.11.2** lowers the JFFS2 space margins from measured overhead (shared
 install 1.25 MiB, restore 1 MiB). It explains a zero-write space refusal with
@@ -110,7 +207,7 @@ through HACS only.
 
 ## Validation snapshot
 
-About 1,900 tests pass, with five optional skips. Static checks pass. The
+1,975 tests pass, with seven optional skips. Static checks pass. The
 network-isolated HA 2026.10.4 sandbox passes 24 native control round trips plus
 the onboarding exchange. Shared/capacity ARM compilation and private profile
 reproduction pass.

@@ -94,7 +94,7 @@ def test_installer_separate_decision_only_after_preflight(tmp_path, monkeypatch,
         decisions.append(commit)
         event.set()
 
-    answers = iter(["READY", answer])
+    answers = iter(["y", answer])
     engine = SimpleNamespace(
         checked_pair=lambda *a: ({}, SimpleNamespace(action=1)), run=run, decide=decide
     )
@@ -114,7 +114,7 @@ def test_installer_uncertain_result_never_tells_user_to_restart(tmp_path, monkey
 
     engine = SimpleNamespace(checked_pair=lambda *a: ({}, SimpleNamespace(action=1)), run=run)
     result = execute(
-        tmp_path / "p", tmp_path / "r", tmp_path / "out", ask=lambda _: "READY", engine=engine
+        tmp_path / "p", tmp_path / "r", tmp_path / "out", ask=lambda _: "y", engine=engine
     )
     assert result["safe_to_restart"] is False and result["error_type"] == "OSError"
 

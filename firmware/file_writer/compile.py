@@ -16,6 +16,7 @@ from provisioning.file_capsule import check as check_capsule
 ROOT = Path(__file__).resolve().parents[2]
 SOURCES = (
     "firmware/file_writer/abi.h",
+    "firmware/file_writer/finish.h",
     "firmware/file_writer/action.c",
     "firmware/file_writer/bootstrap.c",
     "firmware/file_writer/lifecycle.c",
@@ -92,7 +93,9 @@ def source_hashes():
     return {name: sha((ROOT / name).read_bytes()) for name in SOURCES}
 
 
-def compile_helpers(output, capsule, pin, *, restore_observation=None):
+def compile_helpers(output, capsule, pin, *, restore_observation=None, sequence_child=False):
+    if type(sequence_child) is not bool:
+        raise ValueError("explicit child-action purpose required")
     output, capsule = Path(output).resolve(), Path(capsule).resolve()
     plan = pin_read(pin)
     check_capsule(capsule, expected_plan=plan)
@@ -147,6 +150,7 @@ def compile_helpers(output, capsule, pin, *, restore_observation=None):
             + entry
             + [
                 "-DHEARTH_FILE_ACTION=" + str(action),
+                *(["-DHEARTH_SEQUENCE_CHILD"] if sequence_child else []),
                 *(
                     ["-DHEARTH_RESTORE_SETTINGS"]
                     if action == 2 and restore_observation is not None
@@ -212,6 +216,8 @@ def compile_helpers(output, capsule, pin, *, restore_observation=None):
     }
     if restore_observation is not None:
         record["restore_observation"] = restore_observation
+    if sequence_child:
+        record["sequence_child"] = True
     path = output / "helpers.json"
     path.write_text(json.dumps(record, sort_keys=True, indent=2) + "\n")
     for path in output.iterdir():

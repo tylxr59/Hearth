@@ -54,6 +54,9 @@ EXECUTION_LIBRARY_RECIPES = {
     "firmware/acquisition/custody.py",
     "firmware/acquisition/codec.py",
     "firmware/acquisition/run.py",
+    "installer/nand_inputs.py",
+    "installer/archive_discovery.py",
+    "installer/nand_backup.py",
 }
 
 
@@ -132,7 +135,7 @@ def kernel_check(root):
         read_build(driver.with_suffix(".hearth-original"), 65536).decode()
     ):
         raise ValueError("writer kernel driver changed")
-    for name in ("core.c", "core.h", "io.h", "adapter.h"):
+    for name in ("core.c", "core.h", "io.h", "adapter.h", "sequence.h"):
         if (
             read_build(driver.parent / "hearth-file-writer" / name, 65536)
             != (ROOT / "firmware/file_writer" / name).read_bytes()
@@ -145,7 +148,9 @@ def kernel_check(root):
         raise ValueError("initial protection source changed")
     if (
         read_build(driver.parent / "hearth-file-writer/binding.h", 65536)
-        != prepare.binding(provenance["capsule"], provenance["pin"]).encode()
+        != prepare.binding(
+            provenance["capsule"], provenance["pin"], sequence=provenance.get("sequence")
+        ).encode()
     ):
         raise ValueError("kernel host custody binding changed")
     sources = json.loads((ROOT / "firmware/file_writer/sources.json").read_text())
@@ -431,6 +436,7 @@ def package(kernel_root, base, helpers, capsule, pin, output, action):
         "recipes": recipes(),
         "files": {name: sha(data) for name, data in files.items()},
         "root_inventory": inventory(entries),
+        **({"sequence_child": True} if compiled.get("sequence_child") else {}),
     }
     if admission is not None:
         record["restore_observation"] = admission
@@ -470,6 +476,8 @@ def check(root):
     blobs = {name: private_read(root / "artifacts" / name, MAX_ROOT) for name in FILES}
     if any(sha(data) != record["files"][name] for name, data in blobs.items()):
         raise ValueError("file-action artifact changed")
+    if type(record.get("sequence_child", False)) is not bool:
+        raise ValueError("explicit child-action purpose required")
     for name in ("kernel.config", "x-load-gen2.bin", "u-boot.bin", "omap_loader"):
         if blobs[name] != kernel_files[name]:
             raise ValueError("file-action bootstrap changed")
@@ -494,6 +502,7 @@ def check(root):
     if (
         compiled["source_sha256"] != compile.source_hashes()
         or compiled["files"] != record["helpers_files"]
+        or compiled.get("sequence_child", False) != record.get("sequence_child", False)
         or compiled["plan"] != plan.hex()
         or compiled["binding_sha256"]
         != sha(prepare.binding(record["capsule"], record["pin"]).encode())

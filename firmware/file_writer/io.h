@@ -10,7 +10,13 @@
 #define HFW_PART_COUNT 2
 #endif
 static DEFINE_MUTEX(hfw_mutex);
+#ifdef HEARTH_INSTALL_SEQUENCE
+#include "sequence.h"
+static struct hf_sequence hfw_sequence;
+#define hfw_window (hfw_sequence.windows[hfw_sequence.selected])
+#else
 static struct hf_window hfw_window;
+#endif
 static struct mtd_info *hfw_master,*hfw_parts[HFW_PART_COUNT];
 static int (*hfw_saved_write)(struct mtd_info *,loff_t,size_t,size_t *,const u_char *);
 static int (*hfw_saved_erase)(struct mtd_info *,struct erase_info *);
@@ -111,6 +117,13 @@ static int hfw_run(struct hfw_request *r,enum hf_operation operation,unsigned in
 {
     int result;
     if(r->mtd!=hfw_master) return -ENODEV;
+#ifdef HEARTH_INSTALL_SEQUENCE
+    if(hfw_sequence.selected==0) return -EROFS;
+    if(hfw_sequence.selected==2&&
+       ((unsigned long long)r->offset<12ULL*1048576||
+        (unsigned long long)r->offset>=58ULL*1048576||
+        length>58ULL*1048576-(unsigned long long)r->offset)) return -EROFS;
+#endif
     result=hf_run(&hfw_window,&hfw_io,r,operation,(unsigned long long)r->offset,length,r);
     if(hfw_window.phase==HF_SEALED) hfw_flags_readonly();
     return result ? -EIO : 0;

@@ -32,12 +32,13 @@ def check(output, *, for_restore=False):
         "cleanup_plan",
         "restore_order",
         "review_only",
-    }:
+    } | ({"single_boot"} if "single_boot" in record else set()):
         raise ValueError("fixed stock-kit manifest required")
     if (
         record["format"] != FORMAT
         or record["restore_order"] != ["cleanup", "commissioning"]
         or type(record["review_only"]) is not bool
+        or ("single_boot" in record and record["single_boot"] is not True)
     ):
         raise ValueError("fixed disjoint install/restore order required")
     session = private_path(record["session"])
@@ -87,6 +88,10 @@ def check(output, *, for_restore=False):
         ):
             raise ValueError("combined pre-write capacity check must match both kit phases")
     replacements.check(output / "replacements", session, for_restore=for_restore)
+    if record.get("single_boot") and not for_restore:
+        from firmware.install_sequence.profile import check as check_sequence
+
+        check_sequence(output / "install-sequence")
     return {
         "status": "private-stock-install-restore-kit-checked",
         "commissioning_targets": 9,
@@ -122,7 +127,7 @@ def build(
         "build-started.json",
         encode({"device_executed": False, "persistent_actions": False}),
     )
-    stage(1, 5, "Preparing the replacement files")
+    stage(1, 6, "Preparing the replacement files")
     replacements.prepare(
         session,
         build / "storage-shim",
@@ -139,21 +144,21 @@ def build(
     libraries = session / "acquisition"
     log = build / "build.log"
     core = build / "commissioning-kernel"
-    stage(2, 5, "Building the phase 1 boot image")
+    stage(2, 6, "Building the phase 1 boot image")
     core_kernel.prepare(
         cache / "nestdfu", cache / "xloader", cache / "loader", reader / "probe", core, capsule, pin
     )
     reader_build.command(reader_build.container("podman", reader_build.IMAGE, core), log)
     core_kernel.finalize(core, reader / "probe")
     helpers = build / "commissioning-helpers"
-    stage(3, 5, "Packaging phase 1 install and restore images")
+    stage(3, 6, "Packaging phase 1 install and restore images")
     core_compile.compile_helpers(helpers, capsule, pin)
     for action, name in ((1, "install"), (2, "restore")):
         core_profile.package(
             core, libraries, helpers, capsule, pin, output / ("commissioning-" + name), action
         )
     network = build / "cleanup-kernel"
-    stage(4, 5, "Building the phase 2 boot image")
+    stage(4, 6, "Building the phase 2 boot image")
     cleanup_kernel.stage(
         reader / "probe", reader / "protected", cleanup, backup, cleanup_pin, network
     )
@@ -162,7 +167,7 @@ def build(
     from installer.archive_discovery import discover
     from installer.capacity import root_reserve
 
-    stage(5, 5, "Packaging phase 2 images and the space check")
+    stage(5, 6, "Packaging phase 2 images and the space check")
     candidate = discover(session)
     shared_archive = None
     if candidate is not None:
@@ -193,6 +198,60 @@ def build(
         shared_archive=shared_archive,
         capacity_reserve=root_reserve(capsule, pin),
     )
+    from firmware.install_sequence.profile import package as sequence_package
+
+    stage(6, 6, "Building the combined install image")
+    save(
+        output,
+        "sequence-binding.json",
+        encode(
+            {
+                "format": "hearth-install-sequence-binding-v1",
+                "cleanup": str(cleanup),
+                "backup": str(backup),
+                "pin": str(cleanup_pin),
+            }
+        ),
+    )
+    sequence_kernel = build / "sequence-kernel"
+    core_kernel.prepare(
+        cache / "nestdfu",
+        cache / "xloader",
+        cache / "loader",
+        reader / "probe",
+        sequence_kernel,
+        capsule,
+        pin,
+        sequence=output / "sequence-binding.json",
+    )
+    reader_build.command(reader_build.container("podman", reader_build.IMAGE, sequence_kernel), log)
+    core_kernel.finalize(sequence_kernel, reader / "probe")
+    sequence_helpers = build / "sequence-commissioning-helpers"
+    core_compile.compile_helpers(sequence_helpers, capsule, pin, sequence_child=True)
+    core_profile.package(
+        core, libraries, sequence_helpers, capsule, pin, output / "sequence-commissioning", 1
+    )
+    for name, diagnostic, reserve in (
+        ("capacity", True, root_reserve(capsule, pin)),
+        ("cleanup", False, 0),
+    ):
+        cleanup_profile.package(
+            network,
+            libraries,
+            cleanup,
+            backup,
+            cleanup_pin,
+            build / ("sequence-" + name + "-helpers"),
+            output / ("sequence-" + name),
+            action=1,
+            preflight_only=diagnostic,
+            shared_archive=shared_archive,
+            capacity_reserve=reserve,
+            sequence_child=True,
+        )
+    sequence_package(
+        output, sequence_kernel, build / "sequence-supervisor", output / "install-sequence"
+    )
     core_record = json.loads(read(pin, 4096))
     cleanup_record = json.loads(read(cleanup_pin, 4096))
     save(
@@ -209,6 +268,7 @@ def build(
                 "cleanup_plan": cleanup_record["plan"],
                 "restore_order": ["cleanup", "commissioning"],
                 "review_only": review_only,
+                "single_boot": True,
             }
         ),
     )

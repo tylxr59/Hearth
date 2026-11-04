@@ -9,7 +9,11 @@ from installer import workflow
 def flow(tmp_path, monkeypatch):
     root = tmp_path / "kit"
     root.mkdir()
+    (root / "kit.json").write_text("{}")
+    monkeypatch.setattr(workflow, "read", lambda p, limit: p.read_bytes())
     session = tmp_path / "session"
+    (session / "nand").mkdir(parents=True)
+    (session / "nand/execution.json").write_text("{}")
     calls = []
     from installer import nand_backup
 
@@ -150,3 +154,28 @@ def test_failed_capacity_never_starts_either_write_phase(flow, value):
     assert not result["complete"] and result["completed_phases"] == []
     assert [c[0] for c in calls] == ["capacity-preflight"]
     assert not (root / "commissioning-outcome.json").exists()
+
+
+@pytest.mark.parametrize("evidence", (None, "unwritten", "install-cleanup"))
+def test_single_boot_restore_without_any_write_reports_nothing_to_restore(
+    flow, monkeypatch, evidence
+):
+    from firmware.install_sequence import run as sequence
+
+    root, _, calls, runner = flow
+    (root / "kit.json").write_text('{"single_boot":true}')
+    attempted = []
+    monkeypatch.setattr(sequence, "attempted_stages", lambda kit: attempted.append(kit) or [])
+    if evidence == "unwritten":
+        (root / "install-combined").mkdir()
+    elif evidence:
+        (root / evidence).mkdir()
+    if evidence == "install-cleanup":
+        with pytest.raises(ValueError, match="needs review"):
+            workflow.restore(root, "/unused", runner=runner)
+    else:
+        result = workflow.restore(root, "/unused", runner=runner)
+        assert result["complete"] and result["nothing_to_restore"]
+        assert result["restored_phases"] == []
+    assert calls == []
+    assert attempted == ([root] if evidence == "unwritten" else [])

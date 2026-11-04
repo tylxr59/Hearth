@@ -14,6 +14,33 @@ from installer.bundle import device_info, read_bundle
 from tools.elf_review import private_path
 
 
+class NotStarted(ValueError):
+    """Refused before any loader, token or one-use marker: the Nest is unchanged."""
+
+
+def await_backup_reader(previous, ask):
+    """Read-only reader check; only the owner decides whether to look again."""
+    from installer import ram_handoff
+
+    while True:
+        try:
+            return ram_handoff.await_ready(previous)
+        except (TimeoutError, OSError) as exc:
+            ui.warn(
+                "The Nest isn't answering over USB from its backup mode. Nothing has been "
+                "started, sent or written, and the install kit is still unused."
+            )
+            ui.say(
+                "Check that the USB cable is still plugged in and the display is still off "
+                "its base. Don't restart the Nest."
+            )
+            if not ui.confirm(ask, "Check the connection again?"):
+                raise NotStarted(
+                    "The Nest stopped answering from its backup mode, so the install did "
+                    "not start. Nothing was written to the Nest."
+                ) from exc
+
+
 def identity(sysfs=Path("/sys/bus/usb/devices")):
     usb = sysfs / "1-1"
     result = tuple((usb / name).read_text().strip() for name in ("idVendor", "idProduct"))
@@ -92,6 +119,41 @@ def install(root, disk, *, ask=input, runner=None):
     fresh(root, "cleanup-restore", root / "restore-cleanup")
     fresh(root, "commissioning-restore", root / "restore-commissioning")
     fresh(root, "commissioning-install", first)
+    manifest = json.loads(read(root / "kit.json", 65536))
+    if manifest.get("single_boot"):
+        from firmware.install_sequence import run as sequence
+
+        if mode != "ram":
+            raise NotStarted(
+                "The Nest has left the USB mode it was in after the backup, so the install "
+                "can't continue from this session. Nothing was written to the Nest."
+            )
+        profile, output = root / "install-sequence", root / "install-combined"
+        if output.exists() or (profile / "execution-started.json").exists():
+            raise ValueError("one-use combined install already attempted; no retry")
+        ui.section("Install: space check, Home Assistant setup and local connectivity")
+        entry = {"handoff_from_acquisition": session / "acquisition"}
+        backup_execution = json.loads(read(session / "nand/execution.json", 65536))
+        # A separate live acquisition has replaced the backup RAM endpoint.
+        # Only offline extraction leaves that endpoint available to restart.
+        if (
+            "handoff_profile" in backup_execution
+            and (session / "acquisition/nand-inputs.json").exists()
+        ):
+            entry["handoff_from_backup"] = session / "nand"
+            # Before the runner's arm prompt: a reset or unplugged Nest is
+            # reported plainly instead of consuming the one-use kit.
+            await_backup_reader(session / "nand", ask)
+        return runner(
+            profile,
+            root,
+            output,
+            ask=ask,
+            engine=sequence,
+            entry=entry,
+            restart_after=True,
+            backup_session=session,
+        )
     record, binding = core.checked_pair(
         root / "commissioning-install", root / "commissioning-restore"
     )
@@ -181,10 +243,47 @@ def restore(root, disk, *, phase="all", ask=input, runner=None, sudo_read=False)
     if phase in ("all", "commissioning"):
         fresh(root, "commissioning-restore", root / "restore-commissioning")
     completed = []
-    if phase in ("all", "cleanup"):
+    sequence_attempts = None
+    if json.loads(read(root / "kit.json", 65536)).get("single_boot"):
+        from firmware.install_sequence.run import attempted_stages
+
+        started = (root / "install-combined").exists() or (
+            root / "install-sequence/execution-started.json"
+        ).exists()
+        sequence_attempts = attempted_stages(root) if started else []
+        if not sequence_attempts:
+            # Conclude "unchanged" only without any standalone attempt evidence.
+            if any(
+                (root / name).exists()
+                for name in (
+                    "install-commissioning",
+                    "install-cleanup",
+                    "check-capacity",
+                    "commissioning-install/execution-started.json",
+                    "cleanup-install/execution-started.json",
+                    "capacity-preflight/execution-started.json",
+                )
+            ):
+                raise ValueError("standalone install evidence needs review; no automatic restore")
+            ui.ok(
+                "The install never sent a write to the Nest, so its original files are "
+                "unchanged. There is nothing to restore."
+            )
+            return {
+                "complete": True,
+                "restored_phases": [],
+                "nothing_to_restore": True,
+                "automatic_retry": False,
+            }
+    if phase in ("all", "cleanup") and (
+        sequence_attempts is None or "cleanup" in sequence_attempts
+    ):
         output = root / "restore-cleanup"
         fresh(root, "cleanup-restore", output)
-        entry = {"recover_from": root / "install-cleanup"} if mode == "ram" else {}
+        prior = root / (
+            "install-combined/cleanup" if sequence_attempts is not None else "install-cleanup"
+        )
+        entry = {"recover_from": prior} if mode == "ram" else {}
         ui.section("Restore part 1 of 2: original network files (three files)")
         row = runner(
             root / "cleanup-restore",
@@ -202,7 +301,9 @@ def restore(root, disk, *, phase="all", ask=input, runner=None, sudo_read=False)
             return {"complete": False, "restored_phases": [], "automatic_retry": False}
         completed.append("cleanup")
         mode = "ram"
-    if phase in ("all", "commissioning"):
+    if phase in ("all", "commissioning") and (
+        sequence_attempts is None or "commissioning" in sequence_attempts
+    ):
         output = root / "restore-commissioning"
         fresh(root, "commissioning-restore", output)
         entry = {}
@@ -214,7 +315,12 @@ def restore(root, disk, *, phase="all", ask=input, runner=None, sudo_read=False)
                 chain.cleanup_restore_to_commissioning(record, binding, root / "restore-cleanup")
                 entry = {"handoff_from_cleanup_restore": root / "restore-cleanup"}
             else:
-                entry = {"recover_from": root / "install-commissioning"}
+                prior = root / (
+                    "install-combined/commissioning"
+                    if sequence_attempts is not None
+                    else "install-commissioning"
+                )
+                entry = {"recover_from": prior}
         ui.section("Restore part 2 of 2: original settings, trust and startup files (nine files)")
         row = runner(
             root / "commissioning-restore",

@@ -12,8 +12,18 @@ IMPORT_SET = set(IMPORTS) | {"strstr", "memcpy", "malloc", "free", "mmap", "munm
 
 
 def compile_helpers(
-    output, plan, backup, pin, *, preflight_only=False, shared_archive=None, capacity_reserve=0
+    output,
+    plan,
+    backup,
+    pin,
+    *,
+    preflight_only=False,
+    shared_archive=None,
+    capacity_reserve=0,
+    sequence_child=False,
 ):
+    if type(sequence_child) is not bool:
+        raise ValueError("explicit child-action purpose required")
     if type(preflight_only) is not bool:
         raise ValueError("explicit preflight-only mode required")
     from installer.capacity import checked_reserve
@@ -96,6 +106,7 @@ def compile_helpers(
             + entry
             + [
                 "-DHEARTH_NETWORK_ADAPTER",
+                *(["-DHEARTH_SEQUENCE_CHILD"] if sequence_child else []),
                 *(["-DHEARTH_PREFLIGHT_ONLY=1"] if preflight_only else []),
                 f"-DHEARTH_CAPACITY_RESERVE={capacity_reserve}U",
                 f"-DHEARTH_FILE_MASK={(1 << target_count) - 1}U",

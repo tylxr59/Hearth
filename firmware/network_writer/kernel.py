@@ -112,7 +112,7 @@ def stage(source_build, base, plan, backup, pin, output):
         while parent != output:
             (parent / "__init__.py").touch(exist_ok=True)
             parent = parent.parent
-    for name in ("core.c", "core.h", "io.h", "adapter.h"):
+    for name in ("core.c", "core.h", "io.h", "adapter.h", "sequence.h"):
         shutil.copyfile(ROOT / "firmware/file_writer" / name, output / name)
     (output / "binding.h").write_bytes(bound)
     (output / "binding.h").chmod(0o600)
@@ -148,6 +148,7 @@ def stage(source_build, base, plan, backup, pin, output):
                 "core.h",
                 "io.h",
                 "adapter.h",
+                "sequence.h",
             )
         },
     }
@@ -196,7 +197,7 @@ def verify_sources(output):
         driver.with_suffix(".hearth-original").read_text()
     ):
         raise ValueError("root0-only writer driver differs")
-    for name in ("core.c", "core.h", "io.h", "adapter.h", "binding.h"):
+    for name in ("core.c", "core.h", "io.h", "adapter.h", "sequence.h", "binding.h"):
         if (output / name).read_bytes() != (
             driver.parent / "hearth-file-writer" / name
         ).read_bytes():

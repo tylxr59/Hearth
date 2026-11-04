@@ -50,7 +50,7 @@ def collected_files(decoder):
     return files
 
 
-def preserve_inputs(output, decoder):
+def preserve_inputs(output, decoder, *, from_nand=False):
     files = collected_files(decoder)
     root = output / "corpus"
     root.mkdir(mode=0o700)
@@ -99,7 +99,11 @@ def preserve_inputs(output, decoder):
             {
                 "format": "hearth-private-installer-inputs-v1",
                 "files": index,
-                "source": "protected root0/user-config view; native active root separately observed",
+                "source": (
+                    "checked full NAND archive; offline root0/user-config reconstruction"
+                    if from_nand
+                    else "protected root0/user-config view; native active root separately observed"
+                ),
                 "symlinks_created": False,
                 "executables_run_on_host": False,
             }

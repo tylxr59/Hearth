@@ -370,3 +370,67 @@ def test_comparison_boot_stops_offline_before_any_device_action(tmp_path, flag, 
     ]
     if existing:
         assert (profile / "compat-result.jsonl").read_text() == "preserve"
+
+
+@pytest.mark.parametrize("receive_error", (False, True))
+def test_serial_disconnect_during_cleanup_preserves_received_result_or_original_error(
+    tmp_path, monkeypatch, receive_error
+):
+    import os
+    import termios
+
+    usb = tmp_path / "usb/1-1"
+    usb.mkdir(parents=True)
+    (usb / "idVendor").write_text("0525")
+    (usb / "idProduct").write_text("a4a7")
+    interface = usb / "interface"
+    interface.mkdir()
+    tty = tmp_path / "tty/ttyACM99"
+    tty.mkdir(parents=True)
+    (tty / "device").symlink_to(interface, target_is_directory=True)
+    actual_path = Path
+    monkeypatch.setattr(
+        observe,
+        "Path",
+        lambda p: (
+            tmp_path / "usb"
+            if str(p) == "/sys/bus/usb/devices"
+            else tmp_path / "tty"
+            if str(p) == "/sys/class/tty"
+            else actual_path(p)
+        ),
+    )
+    real_open = os.open
+    opened = []
+
+    def open_device(path, flags, *args, **kwargs):
+        if path == "/dev/ttyACM99":
+            fd = real_open("/dev/null", os.O_RDWR)
+            opened.append(fd)
+            return fd
+        return real_open(path, flags, *args, **kwargs)
+
+    monkeypatch.setattr(observe.os, "open", open_device)
+    monkeypatch.setattr(observe.termios, "tcgetattr", lambda _: [0, 0, 0, 0, 0, 0, [0] * 32])
+    settings = []
+
+    def set_attributes(*args):
+        settings.append(args)
+        if len(settings) == 2:
+            raise termios.error(5, "Input/output error")
+
+    monkeypatch.setattr(observe.termios, "tcsetattr", set_attributes)
+
+    def receive(*args):
+        if receive_error:
+            raise ValueError("original receive failure")
+        return {"nonce_verified": True, "rom_usb_observed": True}
+
+    if receive_error:
+        with pytest.raises(ValueError, match="original receive failure"):
+            observe.observe(seconds=1, receive_fn=receive)
+    else:
+        assert observe.observe(seconds=1, receive_fn=receive)["rom_usb_observed"] is True
+    assert len(settings) == 2 and len(opened) == 1
+    with pytest.raises(OSError):
+        os.fstat(opened[0])

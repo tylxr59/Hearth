@@ -50,9 +50,10 @@ the relevant source before changing it. Older material under
 | | Deleting anything on the device |
 
 Current device state, recent hardware results and the next optional step are in
-[status](docs/development/status.md). In short: the display is detached, on USB
-in native mode, no loader is armed, and the stock files have been
-independently verified. Leave it that way.
+[status](docs/development/status.md). In short: the owner reattached the display
+to its wired heating base after the verified combined install. The normal dial
+and fresh HA readings are confirmed, and no loader is armed. Keep the current
+settings unchanged; intentional HVAC calls still need fresh owner approval.
 
 ## Source rules
 

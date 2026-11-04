@@ -9,6 +9,7 @@
 #include "../settings_compat_probe/transmit.h"
 #include "capsule.h"
 #include "binding.h"
+#include "finish.h"
 #ifdef HEARTH_RESTORE_SETTINGS
 #if HEARTH_FILE_ACTION != 2
 #error "Observed settings are restricted to explicit original restoration"
@@ -300,6 +301,9 @@ int main(void)
         count=part==0?snapshot_size:part==1?kernel_log_size:length;
         int status=hearth_cached_transmit_step(&sending,tty,(const char *)bytes,count,transmit);
         if(status==HEARTH_TRANSMIT_DONE) {
+#ifdef HEARTH_SEQUENCE_CHILD
+            if(part==2&&hfw_finish(tty,result.complete&&result.safe_to_restart&&c.encoding_verified)) return 0;
+#endif
             if(part<2) part++;
             else { long delay[2]={1,0};part=0;nanosleep(delay,0); }
         }

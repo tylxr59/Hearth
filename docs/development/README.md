@@ -47,7 +47,9 @@ re-run an executed profile.
 | --- | --- |
 | `probe/` | Base Display-2.6 RAM-boot kernel and loader recipe; everything builds on it |
 | `nand_capture/` | Whole-chip read-only NAND backup (wizard step 3) |
-| `acquisition/` | Read-only snapshot of the original files and libraries (wizard step 4) |
+| `acquisition/` | Snapshot encodings and custody checks; standalone read-only acquisition remains available. Wizard step 4 reconstructs inputs offline via `installer/nand_inputs.py` |
+| `install_sequence/` | One RAM boot for capacity, commissioning and cleanup; unmeasured on hardware |
+| `rom_restart/` | Separate unexecuted warm-reset experiment; never enabled by normal setup |
 | `file_writer/` | Fixed-plan JFFS2 writer: nine-file commissioning phase and its restore |
 | `network_writer/` | Three-file connectivity/time phase, capacity preflight and restore |
 | `file_install/`, `file_reencode/`, `network_update/` | Transaction, encoding and data contracts the writers compile in |

@@ -38,6 +38,19 @@ instead of overwriting** your current setup. That's deliberate. Don't try to
 work around it. Open an [issue](https://github.com/tylxr59/Hearth/issues)
 instead. Never attach your private files.
 
+## If you cancelled an install write
+
+- **Cancelled at the first `INSTALL` prompt:** nothing was written. Restart the
+  Nest normally. A later `provision.py --restore` reports that there is nothing
+  to restore.
+- **Cancelled at the second `INSTALL` prompt:** the first group (Home Assistant
+  settings, trust and startup files) is installed and verified, and the second
+  group (connectivity check and time server) is not. The wizard says when the
+  Nest is safe to restart. To undo the installed group, run
+  `python3 provision.py --restore`. It restores only what was written.
+
+If the wizard didn't say it was safe to restart, follow the next section.
+
 ## If setup or restore stopped partway
 
 1. **Keep USB connected.** Don't restart the Nest.

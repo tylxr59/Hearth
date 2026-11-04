@@ -157,6 +157,14 @@ MIT. Critical public kernel source identities are pinned in its sources.json.
 The exact-source-checked JFFS2 remount correction modifies the same GPL source.
 No additional upstream implementation or proprietary bytes are redistributed.
 
+The NAND input reconstruction, fixed install-sequence supervisor, one-use
+sequence policy and warm-reset experiment are original MIT code. JFFS2 layout,
+RTIME behavior, implicit-root handling and the ordinary OMAP Linux reset path
+were checked against the pinned NestDFUAttack kernel sources recorded in
+`docs/development/references/upstreams.json`. No additional implementation was
+copied. The sequence adapter remains GPL-2.0-or-later when linked into Linux,
+as with the existing writer adapter. All reconstructed native bytes stay private.
+
 The startup diagnostic's static syscall supervisor, bounded read-only tree reader,
 framing and host tests are original MIT code. It reuses the unchanged pinned GPL
 snapshot kernel with a raw newc external initramfs; no additional runtime library
@@ -170,3 +178,8 @@ built locally and invoked as a separate process. Upstream source/binaries are no
 vendored in the public installer archive. Preserve the upstream COPYING file
 with the local build; the GPL text also ships at `firmware/probe/COPYING.GPL-2.0`.
 This is an offline installer analysis tool, not a Home Assistant dependency.
+
+The restartable backup init and host handoff supervisor are original MIT code.
+They reuse Hearth's own canonical NAND exporter and the unchanged pinned GPL
+read-only kernel. No additional upstream implementation or native firmware is
+copied; fresh nonces and all per-device artifacts remain private.

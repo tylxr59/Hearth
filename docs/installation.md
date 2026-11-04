@@ -91,13 +91,21 @@ flash, where you type `INSTALL`, so it can't happen by accident:
 | 1. Home Assistant | Installs Hearth via HACS and creates the HA entry | Follow the HACS steps, restart HA, paste a temporary access token | 5 min |
 | 2. Build reader | Builds a small read-only USB boot tool in Podman | Nothing | ~10 min |
 | 3. Full backup | Copies the Nest's entire flash twice and cross-checks the copies | Answer `y`, press the ring when told | ~25 min |
-| 4. Save originals | Reads the files Hearth will change | Answer `y`, press the ring when told | 2 min |
+| 4. Save originals | Extracts original files from the verified full backup. If any can't be read with certainty, offers to read them from the Nest instead | Answer `y`; a ring press only if it reads from the Nest | 2 min |
 | 5. Build kit | Builds install and undo images for *your* unit only | Confirm HA's HTTP port (Enter = 8123) | ~5 min |
-| 6. Install | Space check, then two install phases | Answer `y` to start each part; type `INSTALL` to write | 5 min |
+| 6. Install | One RAM boot checks space and runs both install phases | Answer `y` to start; press the ring only if told; type `INSTALL` before each write | 5 min |
 | 7. Finish | Restart the Nest, refit it to the base, check HA | Confirm readings appear | 5 min |
 
 Times are rough estimates. A live status line shows the current stage, the
 elapsed time and, during the backup, a percentage.
+
+The combined install has passed on a thermostat after reading the originals
+from the Nest, with a ring press to start the install. When the originals come
+from the backup instead, the wizard restarts the Nest into the install by
+itself. That automatic path hasn't yet run start to finish on a thermostat. The
+first backup boot always needs a ring press. A failed transfer stops without
+retry. If the Nest stops answering before the install starts, the wizard says
+so, nothing is written, and you can check the cable and try once more.
 
 **Why back up twice?** NAND flash has normal bit-level noise, so two raw reads
 never match byte for byte. After error correction, both passes must match

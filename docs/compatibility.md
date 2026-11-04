@@ -16,12 +16,15 @@ All real-hardware results come from one unit: a **Gen 2, Display-2.6, software
 | Weekly heat schedule | ✅ Replace, read back, backup and restore of the original | A real timed schedule change; other modes |
 | Weather from HA | ✅ Nest requests served, timezone correct | Every forecast field on the Nest's screen |
 | Local time | ✅ Corrected local time on the Nest | — |
-| Choosing your own time server | 🧪 Built and host-tested | Running the wizard's time-server writer on a real Nest |
+| Choosing your own time server | ✅ Writer completed and passed readback/encoding checks | Confirm time-service behaviour after reboot |
 | Device settings | 🧪 Automated and HA-sandbox tests | Each field on a real unit |
 | Actually switching the furnace on/off | ❌ Not tested | A supervised heating cycle |
 | Cooling, fan, ranges, emergency heat | 🧪 Simulation only | Suitable real equipment |
 | Power cut / HA outage behaviour | 🧪 No-replay tests | A real outage and return |
 | Full flash backup | ✅ Two passes, cross-checked offline | — |
+| Originals extracted from the full backup | ✅ Worked on one real backup; a later backup refused one damaged settings fragment, so the wizard now falls back to reading from the Nest | An install that uses backup-extracted originals |
+| Space check and both install phases in one RAM boot | ✅ Capacity and both separately approved installs passed in one boot | Guided restore; complete reduced-boot wizard |
+| Return to USB boot mode without pressing the ring | ✅ Software restart and successor loader transfer without another ring press | Successor readiness and completed install |
 | Saved-file restore | ✅ Back to the stock home screen | — |
 | Full-chip restore | ❌ Not tested, no tool for it | — |
 | Full wizard on a stock Nest | ❌ Not run end to end | One supervised stock install and restore |

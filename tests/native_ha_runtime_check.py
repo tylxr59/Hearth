@@ -1516,7 +1516,7 @@ data=json.load(sys.stdin)
 elf_review.PRIVATE=Path(data['private_root'])
 result=onboard('http://127.0.0.1:18812',data['token'],data['session'],
                base64.b64decode(data['info']),target='https://127.0.0.1:18444',
-               ask=lambda _: 'SETUP')
+               ask=lambda _: 'y')
 print(json.dumps(result))
 """
             process = await asyncio.create_subprocess_exec(

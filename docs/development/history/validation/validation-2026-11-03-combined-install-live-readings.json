@@ -1,0 +1,16 @@
+{
+  "date": "2026-11-03",
+  "owner_confirmed_reattached_to_wired_base": true,
+  "owner_confirmed_normal_dial": true,
+  "owner_confirmed_ha_readings": true,
+  "device_available": true,
+  "fresh_temperature_and_humidity": true,
+  "last_native_request_age_seconds": 9.7,
+  "authentication_rejections": {},
+  "pending_control_intents": {},
+  "intentional_hvac_commands_sent": false,
+  "ha_core_restart_performed": false,
+  "saved_ha_profile_restored_with_owner_approval": true,
+  "same_installed_commissioning_credentials": true,
+  "whole_firmware_recovery_verified": false
+}

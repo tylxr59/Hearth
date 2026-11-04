@@ -267,3 +267,35 @@ def test_full_backup_handoff_accepts_only_its_same_intake_and_exited_ram(
             nand_backup.require_handoff(session / "nand", session)
     with pytest.raises(ValueError):
         nand_backup.require_handoff(session / "other", session)
+
+
+@pytest.mark.parametrize("fault", (None, "base", "manifest", "execution", "location"))
+def test_restartable_reader_is_bound_to_exact_backup_execution(archive, monkeypatch, fault):
+    from firmware.file_writer.run import encode, save
+    from firmware.nand_handoff import profile as handoff
+
+    monkeypatch.setattr(handoff, "check", lambda _: None)
+    root = archive / "nand"
+    execution = json.loads((root / "execution.json").read_bytes())
+    reader = archive / ("other-reader" if fault == "location" else "nand-handoff-reader")
+    reader.mkdir(mode=0o700)
+    save(
+        reader,
+        "profile.json",
+        encode({"base": "another base" if fault == "base" else execution["profile"]}),
+    )
+    execution |= {
+        "handoff_profile": str(reader),
+        "handoff_manifest_sha256": nand_backup.digest(reader / "profile.json"),
+    }
+    (root / "execution.json").write_bytes(encode(execution))
+    save(reader, "execution-started.json", encode({} if fault == "execution" else execution))
+    if fault == "manifest":
+        (reader / "profile.json").write_bytes(
+            encode({"base": execution["profile"], "changed": True})
+        )
+    if fault:
+        with pytest.raises(ValueError, match="same executed restartable"):
+            nand_backup.check(archive)
+    else:
+        assert nand_backup.check(archive)["passes"] == 2

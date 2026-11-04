@@ -241,19 +241,57 @@ def zero_write_refusal(row, result):
     )
 
 
+def declined_write(stage):
+    """True only when this stage's saved decision is the owner's explicit cancel."""
+    try:
+        decision = json.loads(private_read(stage / "decision.json", 65536))
+    except (OSError, ValueError):
+        return False
+    return isinstance(decision, dict) and decision.get("commit") is False
+
+
+def sequence_outcome(output, result):
+    """Explain a combined install result group by group, without guessing."""
+    if workflow.complete(result):
+        ui.ok("Both file groups verified, and the Nest is safe to restart.")
+        return result
+    failed = result.get("failed_stage")
+    declined = failed in ("commissioning", "cleanup") and declined_write(output / failed)
+    safe = result.get("safe_to_restart") is True
+    if failed == "commissioning" and declined and safe:
+        ui.ok("You cancelled before anything was written. The Nest is safe to restart.")
+        return result | {"zero_write_cancel": True}
+    if "commissioning" in result.get("completed_phases", []):
+        ui.warn(
+            "The first group (Home Assistant settings, trust and startup files) is "
+            "installed and verified."
+        )
+        if failed == "cleanup" and declined and safe:
+            ui.warn(
+                "You cancelled the second group (connectivity check and time server) "
+                "before it wrote anything, so setup is only partly done."
+            )
+            return result | {"partial_install_safe": True}
+        ui.fail("The second group (connectivity check and time server) did not finish.")
+    ui.fail("Keep USB connected and do not restart the Nest until its report has been reviewed.")
+    return result
+
+
 WORK_LABELS = {
     "prepare": "Building the USB reader",
     "nand": "Preparing the backup loader",
-    "acquire": "Preparing the file reader",
+    "acquire": "Saving the original files from the backup",
+    "acquire-live": "Preparing the file reader",
     "kit": "Building your install kit",
     "capacity": "Preparing the space check",
     "commissioning": "Preparing phase 1",
     "cleanup": "Preparing phase 2",
+    "sequence": "Preparing the combined install image",
 }
 # Shown once the loader reports that the Nest's boot ROM answered.
 CONNECTED_LABELS = {
     "nand": "Nest connected, starting the backup",
-    "acquire": "Nest connected, reading the original files",
+    "acquire-live": "Nest connected, reading the original files",
     "capacity": "Nest connected, checking free space",
     "commissioning": "Nest connected, running safety checks",
     "cleanup": "Nest connected, running safety checks",
@@ -335,6 +373,14 @@ class Worker:
             return True
 
         def preflight_ready():
+            if operation == "sequence" and engine is not None:
+                root = Path(values["output"])
+                return any(
+                    (root / name / "preflight.json").exists()
+                    and not (root / name / "decision.json").exists()
+                    and not (root / name / "finished.json").exists()
+                    for name in ("commissioning", "cleanup")
+                )
             return (
                 engine is not None
                 and not decided
@@ -386,17 +432,35 @@ class Worker:
                         scan_seen = True
                         status.clear()
                         ui.blank()
-                        ui.action("The loader is waiting now. " + RESTART)
-                        ui.muted(
-                            "Keep USB plugged in and the display off its base. The wizard "
-                            "continues by itself once the Nest connects (within 90 seconds)."
+                        automatic = operation == "sequence" and "handoff_from_backup" in values.get(
+                            "entry", {}
                         )
-                        status.set_label("Waiting for the Nest to restart")
+                        if automatic:
+                            ui.action(
+                                "The next loader is waiting. Leave the ring untouched; the wizard will request the software restart."
+                            )
+                            status.set_label("Waiting for the automatic restart")
+                        else:
+                            ui.action("The loader is waiting now. " + RESTART)
+                            ui.muted(
+                                "Keep USB plugged in and the display off its base. The wizard "
+                                "continues by itself once the Nest connects (within 90 seconds)."
+                            )
+                            status.set_label("Waiting for the Nest to restart")
                     if not connected and b"ROM boot command transferred" in pending:
                         connected = True
                         status.set_label(CONNECTED_LABELS.get(operation, "Nest connected"))
                     if preflight_ready():
                         status.clear()
+                        if operation == "sequence":
+                            cleanup_ready = (
+                                Path(values["output"]) / "cleanup/preflight.json"
+                            ).exists()
+                            ui.say(
+                                "This write changes three network files: connectivity checks and time server."
+                                if cleanup_ready
+                                else "The space check passed. This write changes nine settings, trust and startup files."
+                            )
                         self._confirm_write(values, binding, engine, cancelled)
                         decided = True
                     if process.poll() is not None and not open_stream:
@@ -463,14 +527,21 @@ class Worker:
         engine = core if engine is None else engine
         _, binding = engine.checked_pair(profile, recovery)
         capacity = profile.name == "capacity-preflight"
+        sequence = profile.name == "install-sequence"
         operation = (
-            "capacity"
+            "sequence"
+            if sequence
+            else "capacity"
             if capacity
             else "cleanup"
             if binding.action == 1 and "cleanup" in profile.name
             else "commissioning"
         )
-        if capacity:
+        if sequence:
+            ui.say(
+                "One boot checks space, then installs the two file groups. Each write needs INSTALL."
+            )
+        elif capacity:
             ui.say(
                 "First, a read-only check that there is enough free flash space for "
                 "the whole install. Nothing is written in this check."
@@ -497,6 +568,19 @@ class Worker:
             entry={k: str(v) for k, v in (entry or {}).items()},
             **({"backup_session": str(backup_session)} if backup_session is not None else {}),
         )
+        if sequence and result.get("failed_stage") == "capacity":
+            row = space_report(Path(output) / "capacity")
+            refused = zero_write_refusal(row, result)
+            if row.get("space_required") and row.get("space_available") is not None:
+                ui.fail(
+                    f"The install needs {row['space_required']:,} bytes of free flash "
+                    f"and the Nest reports {row['space_available']:,}."
+                )
+            if refused:
+                ui.fail("The space check refused before any write; the Nest is safe to restart.")
+            return result | {"capacity_zero_write_refusal": refused}
+        if sequence:
+            return sequence_outcome(Path(output), result)
         if capacity:
             if result.get("preflight_passed") is True and result.get("safe_to_restart") is True:
                 ui.ok("There is enough space. Stay connected; the first phase is next.")
@@ -536,6 +620,9 @@ PHASES = {
     "kit": "building your install kit",
     "install": "installation",
     "space-check": "the free-space check",
+    "install-not-started": "the install (it did not start)",
+    "install-cancelled": "the install (cancelled, nothing written)",
+    "install-partial": "the install (partly installed)",
     "verify": "the final check",
 }
 
@@ -748,17 +835,33 @@ def run(*, ask=input, secret=getpass.getpass):
         phase = "acquire"
         ui.step(4, TOTAL, "Save the original files")
         ui.say(
-            "Next, Hearth reads the individual files it will change, so they can be "
-            "checked and put back later. Don't restart the Nest yourself; wait for the "
-            "ring prompt."
+            "Hearth now saves the individual original files from your verified full "
+            "backup on this computer. This step needs no ring press or device boot. "
+            "Keep USB connected."
         )
-        if not ui.confirm(ask, "Read the original files now?"):
+        if not ui.confirm(ask, "Save the original files from the backup now?"):
             ui.warn(
                 "Stopped. Your full backup is saved. Keep USB connected until this "
                 "window has closed, then restart the Nest normally."
             )
             return 0
-        worker.run("acquire")
+        if worker.run("acquire").get("offline_refused"):
+            ui.warn(
+                "Some original files in the backup couldn't be read with certainty, so "
+                "Hearth won't use them. The backup is still saved and nothing was written."
+            )
+            ui.say(
+                "Hearth can read the original files directly from the Nest instead. This "
+                "is one more read-only boot, and the wizard tells you when to press the "
+                "ring. Keep USB connected and the display off its base."
+            )
+            if not ui.confirm(ask, "Read the original files from the Nest now?"):
+                ui.warn(
+                    "Stopped. Your full backup is saved and nothing was written. Keep USB "
+                    "connected until this window has closed, then restart the Nest normally."
+                )
+                return 0
+            worker.run("acquire-live")
         ui.ok("Original files saved.")
 
         phase = "kit"
@@ -781,12 +884,30 @@ def run(*, ask=input, secret=getpass.getpass):
         phase = "install"
         ui.step(6, TOTAL, "Install")
         ui.say(
-            "There are three parts: a read-only space check, then two install phases. "
-            "Each one asks you first, and nothing is written until you type INSTALL."
+            "One boot checks free space and runs both install phases. "
+            "Each write asks you first, and nothing is written until you type INSTALL."
         )
-        result = workflow.install(folder / "kit", disk, ask=ask, runner=worker.writer)
+        try:
+            result = workflow.install(folder / "kit", disk, ask=ask, runner=worker.writer)
+        except workflow.NotStarted as exc:
+            phase = "install-not-started"
+            raise Invalid(str(exc) + " It is safe to restart normally: " + RESTART) from exc
         save(folder, "wizard-install-result.json", encode(result))
         if not result.get("complete"):
+            if result.get("zero_write_cancel"):
+                phase = "install-cancelled"
+                raise Invalid(
+                    "You cancelled the install before anything was written. Restart the "
+                    "Nest normally: " + RESTART
+                )
+            if result.get("partial_install_safe"):
+                phase = "install-partial"
+                raise Invalid(
+                    "Hearth is only partly installed. The Nest is safe to restart: "
+                    + RESTART
+                    + " To undo the installed group, run python3 provision.py --restore "
+                    f"(see {DOCS}recovery.md)."
+                )
             if result.get("capacity_zero_write_refusal"):
                 phase = "space-check"
                 raise Invalid(

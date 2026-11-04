@@ -14,6 +14,7 @@ from backend.validation import Invalid
 from firmware.file_writer import run as writer
 from firmware.harden import client_config
 from firmware.tls_probe.package import private_read
+from installer import ui
 from installer.bundle import device_info, read_bundle
 from provisioning.intake import MAX_INFO_BYTES, usb_inventory
 from provisioning.native_settings import assigned_credentials
@@ -88,7 +89,7 @@ def execute(
     print(
         "Detach the display from its base; keep USB connected. Whole-firmware recovery is unverified."
     )
-    if ask("Type READY to arm one RAM preflight: ").strip() != "READY":
+    if not ui.confirm(ask, "Arm one supervised RAM preflight?"):
         return {"cancelled": True, "device_executed": False}
     result, failures = [], []
 
@@ -100,13 +101,27 @@ def execute(
 
     thread = threading.Thread(target=worker, daemon=False)
     thread.start()
-    print(
-        "When the loader says scanning: hold the ring for 10 seconds, release, then press/release once."
-    )
+    if "handoff_from_backup" in (entry or {}):
+        ui.say(
+            "The successor loader will wait before the software restart. Leave the ring untouched."
+        )
+    else:
+        print(
+            "When the loader says scanning: hold the ring for 10 seconds, release, then press/release once."
+        )
     decided = False
+    sequence = _record.get("format") == "hearth-one-boot-install-v1"
+
+    def ready():
+        if sequence:
+            return engine.pending_stage(output) is not None
+        return not decided and (output / "preflight.json").exists()
+
     try:
         while thread.is_alive():
-            if not decided and (output / "preflight.json").exists():
+            if ready():
+                if sequence:
+                    ui.say("Ready to write the " + engine.pending_stage(output) + " files.")
                 phrase = "RESTORE" if restore else "INSTALL"
                 print(
                     "RAM checks and real-file preflight passed. The next decision writes NAND. Keep USB connected."
@@ -125,7 +140,7 @@ def execute(
                 decided = True
             thread.join(0.2)
     except (KeyboardInterrupt, EOFError):
-        if not decided and (output / "preflight.json").exists():
+        if ready():
             engine.decide(output, commit=False, expected_action=binding.action)
         print("Waiting for the bounded device session to exit; keep USB connected.")
         thread.join()

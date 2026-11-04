@@ -48,6 +48,7 @@ class Binding:
             b"HFW_ACK1",
             b"HFW_RUN1",
             b"HFW_STOP",
+            b"HFW_DONE",
         ):
             raise ValueError("unknown fixed file-action message")
         return magic + self.plan + self.receipt + struct.pack("<I", self.action)

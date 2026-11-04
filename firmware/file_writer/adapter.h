@@ -46,9 +46,23 @@ static ssize_t hfw_store(struct device *dev,struct device_attribute *attr,const 
     if(length==72&&!memcmp(buffer,"HFWOPEN1",8)&&!hfw_shape(hfw_master)) {
         result=hf_open(&hfw_window,(const unsigned char *)buffer+8,
                        (const unsigned char *)buffer+40,hearth_wp_is_asserted(hfw_master));
-        if(!result) for(i=0;i<HFW_PART_COUNT;i++) hfw_parts[i]->flags|=MTD_WRITEABLE;
+        if(!result) for(i=0;i<HFW_PART_COUNT;i++) {
+#ifdef HEARTH_INSTALL_SEQUENCE
+            if(!hfw_sequence.selected) { hfw_flags_readonly();result=-EROFS;break; }
+            if(hfw_sequence.selected==2&&i) continue;
+#endif
+            hfw_parts[i]->flags|=MTD_WRITEABLE;
+        }
     } else if(length==8&&!memcmp(buffer,"HFWCLOSE",8)) {
         hfw_flags_readonly();result=hf_close(&hfw_window,&hfw_io,&r);
+#ifdef HEARTH_INSTALL_SEQUENCE
+    } else if(length==72&&!memcmp(buffer,"HFWNEXT1",8)&&!hfw_shape(hfw_master)) {
+        int unmounted=1;
+        for(i=0;i<HFW_PART_COUNT;i++)
+            if(hfw_parts[i]->usecount!=1||hfw_parts[i]->flags&MTD_WRITEABLE) unmounted=0;
+        result=hf_sequence_next(&hfw_sequence,(const unsigned char *)buffer+8,
+            (const unsigned char *)buffer+40,hearth_wp_is_asserted(hfw_master),unmounted);
+#endif
     }
     mutex_unlock(&hfw_mutex);return result ? -EIO : length;
 }
@@ -60,7 +74,11 @@ static int hfw_save(struct mtd_info *mtd)
     hfw_master=mtd;hfw_saved_write=mtd->write;hfw_saved_erase=mtd->erase;
     hfw_saved_oob=mtd->write_oob;hfw_saved_read=mtd->read;
     hfw_saved_read_oob=mtd->read_oob;hfw_saved_bad=mtd->block_isbad;hfw_saved_sync=mtd->sync;
+#ifdef HEARTH_INSTALL_SEQUENCE
+    hf_sequence_init(&hfw_sequence,hearth_sequence_plans,hearth_sequence_receipts);
+#else
     hf_init(&hfw_window,hearth_expected_plan,hearth_expected_receipt);
+#endif
     return 0;
 }
 static int hfw_install(struct mtd_info *mtd)

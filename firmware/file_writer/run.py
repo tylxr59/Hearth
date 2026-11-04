@@ -84,6 +84,10 @@ def require_entry(binding, recover_from=None, *, sysfs=Path("/sys/bus/usb/device
         raise ValueError("RAM recovery entry is restricted to restore or original reencoding")
     previous = private_path(recover_from)
     execution = json.loads(private_read(previous / "execution.json", 65536))
+    if execution.get("stage") in ("commissioning", "cleanup"):
+        from firmware.install_sequence.run import require_recovery
+
+        return require_recovery(binding, previous, sysfs=sysfs)
     ended = json.loads(private_read(previous / "finished.json", 65536))
     sending = json.loads(private_read(previous / "decision-sending.json", 65536))
     if (
@@ -331,7 +335,12 @@ def receive(
         chunk = os.read(fd, 65536)
         if not chunk:
             raise OSError("USB report interface disconnected")
-        for kind, payload in decoder.feed(chunk):
+        try:
+            events = decoder.feed(chunk)
+        except ValueError:
+            save(output, "invalid-input.bin", chunk)
+            raise
+        for kind, payload in events:
             reply = session.event(kind, payload)
             if reply is not None:
                 write_token(fd, reply)
@@ -409,6 +418,8 @@ def run(
     record, binding = checked_pair(root, recovery)
     if not execute:
         return {"status": "paired-install-restore-offline-checked", "device_executed": False}
+    if record.get("sequence_child"):
+        raise ValueError("child action requires the fixed install sequence supervisor")
     if output is None:
         raise ValueError("fresh private output required")
     output = private_path(output)

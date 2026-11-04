@@ -23,6 +23,19 @@ def acquisition_install(record, binding, previous, *, sysfs=Path("/sys/bus/usb/d
     if binding.action != 1:
         raise ValueError("acquisition handoff is install-only")
     previous = private_path(previous)
+    if (previous / "nand-inputs.json").exists():
+        from installer.nand_backup import require_handoff
+
+        decoder, _ = custody.verify(previous)
+        if private_read(previous / "capture.bin", protocol.MAX_SNAPSHOT + 56) != private_read(
+            private_path(record["capsule"]) / "capture.bin", protocol.MAX_SNAPSHOT + 56
+        ) or decoder.session != bytes.fromhex(
+            json.loads(private_read(previous / "nand-inputs.json", 4096))["session"]
+        ):
+            raise ValueError("commissioning capsule differs from checked NAND originals")
+        require_handoff(previous.parent / "nand", previous.parent)
+        ram(sysfs)
+        return {"status": "verified-nand-inputs-install-handoff", "native_startup_required": False}
     execution = json.loads(private_read(previous / "execution.json", 65536))
     source = private_path(execution["profile"])
     check_acquisition(source)
