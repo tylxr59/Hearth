@@ -48,8 +48,9 @@ Older events are in the
 
 ## Released
 
-**v0.12.0** (experimental) is the latest release. It ships the combined install
-and the live-reader fallback. There's no unreleased code since then.
+**v0.13.0** (experimental) is the latest release. The wizard finds the Nest on
+any USB port (only 1-1 is measured on hardware), and HA no longer forces a 0.5°
+target step. There's no unreleased code since then.
 
 ## What's next
 
