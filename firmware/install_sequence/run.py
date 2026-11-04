@@ -11,6 +11,7 @@ from firmware.file_writer import run as shared
 from firmware.file_writer.session import Session
 from firmware.install_sequence import profile
 from firmware.network_writer.session import NetworkSession
+from firmware.probe import port as usb_port
 from firmware.settings_compat_probe.observe import observe
 from firmware.tls_probe.package import private_read
 from installer.capacity import passed
@@ -155,6 +156,8 @@ def boot(
             subprocess.run(
                 [
                     str(artifacts / "omap_loader"),
+                    "-P",
+                    usb_port.current(),
                     "-f",
                     str(artifacts / "x-load-gen2.bin"),
                     "-f",
@@ -256,7 +259,7 @@ def boot(
                 "whole_firmware_recovery": "unverified",
             }
 
-        result = observe("1-1", 120, receive_fn=collect)
+        result = observe(usb_port.current(), 120, receive_fn=collect)
         shared.save(output, "observed.json", shared.encode(result))
         return result
     finally:

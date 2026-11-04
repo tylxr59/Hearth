@@ -13,6 +13,7 @@ import zlib
 from pathlib import Path
 
 from firmware.file_snapshot.prepare import RECIPES, ROOT, digest
+from firmware.probe import port as usb_port
 from firmware.probe.observe import require_native
 from firmware.settings_compat_probe.observe import observe
 from provisioning import file_backup
@@ -117,7 +118,7 @@ def run(build, output=None, *, execute=False):
     output = private_path(output)
     if output.exists() or output.is_symlink() or output.parent.stat().st_mode & 0o077:
         raise ValueError("fresh owner-only private output required")
-    require_native("1-1")
+    require_native(usb_port.current())
     output.mkdir(mode=0o700)
     marker = build / "execution-started"
     fd = os.open(marker, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
@@ -142,6 +143,8 @@ def run(build, output=None, *, execute=False):
     subprocess.run(  # nosec B603
         [
             str(artifacts / "omap_loader"),
+            "-P",
+            usb_port.current(),
             "-f",
             str(artifacts / "x-load-gen2.bin"),
             "-f",
@@ -163,7 +166,7 @@ def run(build, output=None, *, execute=False):
     def receive(fd_in, deadline, _capture):
         return receive_frame(fd_in, deadline, session, output / "capture.bin")
 
-    records = observe("1-1", 300, receive_fn=receive)
+    records = observe(usb_port.current(), 300, receive_fn=receive)
     scope = {
         "session": session,
         "plan": hashlib.sha256(

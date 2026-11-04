@@ -15,6 +15,7 @@ from firmware.file_writer import protocol
 from firmware.file_writer import run as shared
 from firmware.network_writer.profile import check
 from firmware.network_writer.session import NetworkSession
+from firmware.probe import port as usb_port
 from firmware.probe.observe import require_native
 from firmware.settings_compat_probe.observe import observe
 from firmware.tls_probe.package import private_read
@@ -44,7 +45,7 @@ def checked_pair(root, recovery):
 
 def require_entry(binding, previous=None, *, sysfs=Path("/sys/bus/usb/devices")):
     if previous is None:
-        return require_native("1-1", sysfs=sysfs)
+        return require_native(usb_port.current(), sysfs=sysfs)
     if binding.action != 2:
         raise ValueError("direct RAM recovery is restore-only")
     previous = private_path(previous)
@@ -64,7 +65,7 @@ def require_entry(binding, previous=None, *, sysfs=Path("/sys/bus/usb/devices"))
     _, prior = checked_pair(execution["profile"], execution["recovery"])
     if (prior.plan, prior.receipt) != (binding.plan, binding.receipt):
         raise ValueError("recovery plan/receipt differs")
-    usb = sysfs / "1-1"
+    usb = sysfs / usb_port.current()
     if ((usb / "idVendor").read_text().strip(), (usb / "idProduct").read_text().strip()) not in (
         ("0525", "a4a7"),
         ("0525", "a4a6"),
@@ -148,6 +149,8 @@ def boot(
         subprocess.run(
             [
                 str(a / "omap_loader"),
+                "-P",
+                usb_port.current(),
                 "-f",
                 str(a / "x-load-gen2.bin"),
                 "-f",
@@ -182,7 +185,7 @@ def boot(
                 ready_message=f"All{cases} RAM checks and {record.get('targets', 4)} real-file/resource preflights passed. Paused before writes; waiting for separate local commit/abort.",
             )
 
-        row = observe("1-1", 120, receive_fn=collect)
+        row = observe(usb_port.current(), 120, receive_fn=collect)
         return {
             **({"preflight_passed": capacity_passed(row)} if record.get("preflight_only") else {}),
             "status": "network-file-action-observed",

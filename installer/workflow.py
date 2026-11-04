@@ -9,6 +9,7 @@ from firmware.file_writer import chain
 from firmware.file_writer import run as core
 from firmware.file_writer.run import encode, save
 from firmware.network_writer import run as cleanup
+from firmware.probe import port as usb_port
 from installer import kit, ui
 from installer.bundle import device_info, read_bundle
 from tools.elf_review import private_path
@@ -42,7 +43,7 @@ def await_backup_reader(previous, ask):
 
 
 def identity(sysfs=Path("/sys/bus/usb/devices")):
-    usb = sysfs / "1-1"
+    usb = sysfs / usb_port.current()
     result = tuple((usb / name).read_text().strip() for name in ("idVendor", "idProduct"))
     if result == ("2464", "0002"):
         return "native"

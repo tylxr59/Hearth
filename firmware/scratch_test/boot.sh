@@ -19,7 +19,7 @@ echo 'Fresh private backup required before one synthetic page program, one erase
 echo 'Power loss or a hardware/tool fault can leave this only unit damaged; firmware recovery remains unverified.'
 echo 'Keep USB power connected and the display detached from the unwired base. No HVAC connection.'
 echo 'Waiting up to 90 seconds for the owner-timed manual restart into ROM mode.'
-if timeout 90 "$work/artifacts/omap_loader" \
+if timeout 90 "$work/artifacts/omap_loader" -P 1-1 \
     -f "$work/artifacts/x-load-gen2.bin" \
     -f "$work/artifacts/u-boot.bin" -a 0x80100000 \
     -f "$work/artifacts/uImage" -a 0x80a00000 -j 0x80100000; then

@@ -7,13 +7,14 @@ from pathlib import Path
 from firmware.acquisition import custody
 from firmware.acquisition.profile import check as check_acquisition
 from firmware.file_writer import protocol
+from firmware.probe import port as usb_port
 from firmware.tls_probe.package import private_read
 from provisioning import file_backup, network_backup
 from tools.elf_review import private_path
 
 
 def ram(sysfs):
-    usb = sysfs / "1-1"
+    usb = sysfs / usb_port.current()
     identity = tuple((usb / name).read_text().strip() for name in ("idVendor", "idProduct"))
     if identity not in (("0525", "a4a7"), ("0525", "a4a6")):
         raise ValueError("known exited RAM session required; no native startup or stale ROM")

@@ -5,7 +5,8 @@ from pathlib import Path
 from backend.validation import Invalid
 
 
-def native_disk(sysfs=Path("/sys/class/block"), devices=Path("/dev")):
+def native_disk(sysfs=Path("/sys/class/block"), devices=Path("/dev"), *, port=None):
+    """The Nest's diagnostic disk; with ``port``, only a disk on that USB port."""
     matches = []
     for node in sorted(sysfs.iterdir()):
         if (node / "partition").exists():
@@ -18,7 +19,7 @@ def native_disk(sysfs=Path("/sys/class/block"), devices=Path("/dev")):
                 )
             except (OSError, UnicodeError):
                 continue
-            if identity == ("2464", "0002"):
+            if identity == ("2464", "0002") and port in (None, parent.name):
                 matches.append(devices / node.name)
             break  # The closest USB identity owns this block device.
     if len(matches) != 1:

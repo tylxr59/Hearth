@@ -119,7 +119,7 @@ you pick under Hearth's **Configure** options.
 
 | Symptom | Fix |
 | --- | --- |
-| "No Nest found in normal mode on USB port 1-1" | Use a **data** cable, plug into the port Linux calls `1-1`, and wait for the Nest to finish booting |
+| "No Nest found over USB" | Use a **data** cable (charge-only cables don't work) and wait for the Nest to finish booting. Any USB port works, and the wizard finds it |
 | Setup stopped partway | Keep USB connected, don't restart the Nest, keep the private folder and don't run the wizard again. See [recovery](docs/recovery.md#if-setup-or-restore-stopped-partway) |
 | No readings in HA | Check the Nest can reach HA on port **8443** and HA's HTTP port (8123) |
 

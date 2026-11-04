@@ -6,9 +6,9 @@ import os
 import select
 import subprocess  # nosec B404
 import time
-from pathlib import Path
 
 from firmware.file_writer.run import encode, save, write_token
+from firmware.probe import port as usb_port
 from firmware.probe.observe import require_native
 from firmware.rom_restart import profile
 from firmware.settings_compat_probe.observe import observe
@@ -24,7 +24,7 @@ def run(root, output, *, ask=input):
         raise ValueError("owner-supervised PTY required")
     if output.exists() or (root / "execution-started.json").exists():
         raise ValueError("fresh one-use profile and private output required")
-    require_native("1-1")
+    require_native(usb_port.current())
     ui.say(
         "This experiment boots a read-only RAM image, then tries one normal Linux warm restart without a ring press. It may return to stock startup instead of USB boot mode. Stock startup can write its usual settings/logs; whole-firmware and power-loss recovery remain unverified. Keep the display detached from its wired HVAC base and USB connected."
     )
@@ -43,6 +43,8 @@ def run(root, output, *, ask=input):
         subprocess.run(
             [
                 str(a / "omap_loader"),
+                "-P",
+                usb_port.current(),
                 "-f",
                 str(a / "x-load-gen2.bin"),
                 "-f",
@@ -86,7 +88,7 @@ def run(root, output, *, ask=input):
             save(output, "restart-sent.json", encode({"once": True}))
             end = time.monotonic() + 30
             saw_disconnect = False
-            usb = Path("/sys/bus/usb/devices/1-1")
+            usb = usb_port.SYSFS / usb_port.current()
             while time.monotonic() < end:
                 try:
                     identity = tuple(
@@ -126,7 +128,7 @@ def run(root, output, *, ask=input):
             save(output, "device-observation.json", encode(result))
             return result
 
-        result = observe("1-1", 120, receive_fn=collect_and_preserve)
+        result = observe(usb_port.current(), 120, receive_fn=collect_and_preserve)
         save(output, "observed.json", encode(result))
         return result
     finally:

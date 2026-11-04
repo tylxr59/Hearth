@@ -18,6 +18,7 @@ from pathlib import Path
 
 from backend.validation import Invalid
 from firmware.file_writer.run import encode, save
+from firmware.probe import port as usb_port
 from firmware.tls_probe.package import private_read
 from installer import discovery, onboard, ui, workflow
 from installer.bundle import device_info, read_bundle
@@ -138,12 +139,39 @@ def prerequisites():
     require_engine()
 
 
+def usb_rules(port, uid, acl):
+    """The exact rule text for one user and one physical USB port."""
+    return (
+        f'ACTION=="add", SUBSYSTEM=="usb", ENV{{DEVTYPE}}=="usb_device", KERNEL=="{port}", '
+        f'ATTR{{idVendor}}=="0451", ATTR{{idProduct}}=="d00e", MODE="0600", '
+        f'RUN+="{acl} -m u:{uid}:rw $env{{DEVNAME}}"\n'
+        f'ACTION=="add", SUBSYSTEM=="tty", KERNEL=="ttyACM[0-9]*", KERNELS=="{port}", '
+        f'ATTRS{{idVendor}}=="0525", ATTRS{{idProduct}}=="a4a7", MODE="0600", '
+        f'RUN+="{acl} -m u:{uid}:rw $env{{DEVNAME}}"\n'
+    ).encode()
+
+
+def previous_port(existing, uid, acl):
+    """The port of an unmodified Hearth rule for this user, or None."""
+    match = re.match(
+        rb'ACTION=="add", SUBSYSTEM=="usb", ENV\{DEVTYPE\}=="usb_device", KERNEL=="([^"]+)"',
+        existing,
+    )
+    if match is None:
+        return None
+    port = match[1].decode("ascii", "replace")
+    if not usb_port.valid(port) or usb_rules(port, uid, acl) != existing:
+        return None
+    return port
+
+
 def usb_access(folder, ask=input):
-    """Explicitly install a root-managed rule for current UID and measured USB port."""
+    """Explicitly install a root-managed rule for current UID and the Nest's USB port."""
     from installer.workflow import identity
 
     if identity() != "native":
         raise Invalid("Connect a single Nest in its normal USB mode before starting.")
+    port = usb_port.current()
     # udev executes RUN as root: never trust a user-controlled PATH executable.
     acl = Path("/usr/bin/setfacl")
     if (
@@ -154,46 +182,54 @@ def usb_access(folder, ask=input):
     ):
         raise Invalid("The USB rule requires the root-managed /usr/bin/setfacl executable.")
     uid = os.getuid()
-    rules = (
-        f'ACTION=="add", SUBSYSTEM=="usb", ENV{{DEVTYPE}}=="usb_device", KERNEL=="1-1", '
-        f'ATTR{{idVendor}}=="0451", ATTR{{idProduct}}=="d00e", MODE="0600", '
-        f'RUN+="{acl} -m u:{uid}:rw $env{{DEVNAME}}"\n'
-        f'ACTION=="add", SUBSYSTEM=="tty", KERNEL=="ttyACM[0-9]*", KERNELS=="1-1", '
-        f'ATTRS{{idVendor}}=="0525", ATTRS{{idProduct}}=="a4a7", MODE="0600", '
-        f'RUN+="{acl} -m u:{uid}:rw $env{{DEVNAME}}"\n'
-    ).encode()
+    rules = usb_rules(port, uid, acl)
     target = Path("/etc/udev/rules.d/70-hearth-wizard.rules")
     if target.is_symlink():
         raise Invalid("The USB rule must not be a symlink.")
+    old = None
     if target.exists():
         stat = target.lstat()
-        if (
-            target.is_symlink()
-            or stat.st_uid != 0
-            or stat.st_mode & 0o022
-            or target.read_bytes() != rules
-        ):
+        existing = target.read_bytes()
+        if existing == rules and stat.st_uid == 0 and not stat.st_mode & 0o022:
+            return
+        old = previous_port(existing, uid, acl)
+        if old is None or stat.st_uid != 0 or stat.st_mode & 0o022:
             raise Invalid(
                 "An existing Hearth USB rule differs; review it rather than replacing it."
             )
-        return
-    ui.box(
-        "One-time USB permission",
-        [
-            (
-                "To talk to the Nest while it is in boot mode, Linux needs a permission "
-                "rule for USB port 1-1."
-            ),
-            f"It is saved to {target} and applies to your user account only.",
-            (
-                "It does not give anything write access to your disks. sudo will ask "
-                "for your computer's password."
-            ),
-        ],
-        "cyan",
-    )
-    if not ui.confirm(ask, "Add the USB rule now?"):
-        raise Invalid("USB access setup cancelled; no loader started.")
+    if old is not None:
+        ui.box(
+            "USB permission for a different port",
+            [
+                f"Your Hearth USB rule is for port {old}, but the Nest is on port {port}.",
+                f"Hearth can replace the rule in {target} so it covers port {port} instead.",
+                "It still applies to your user account only. sudo will ask for your password.",
+            ],
+            "cyan",
+        )
+        if not ui.confirm(ask, f"Replace the USB rule with one for port {port}?"):
+            raise Invalid(
+                f"USB access setup cancelled; no loader started. Plug the Nest into port {old} "
+                "to use the existing rule."
+            )
+    else:
+        ui.box(
+            "One-time USB permission",
+            [
+                (
+                    "To talk to the Nest while it is in boot mode, Linux needs a permission "
+                    f"rule for the USB port it's plugged into (port {port})."
+                ),
+                f"It is saved to {target} and applies to your user account only.",
+                (
+                    "It does not give anything write access to your disks. sudo will ask "
+                    "for your computer's password."
+                ),
+            ],
+            "cyan",
+        )
+        if not ui.confirm(ask, "Add the USB rule now?"):
+            raise Invalid("USB access setup cancelled; no loader started.")
     source = folder / "70-hearth-wizard.rules"
     save(folder, source.name, rules)
     subprocess.run(  # nosec B603 B607
@@ -686,8 +722,8 @@ def overview():
     ui.bullets(
         [
             (
-                "Take the display off its wall base and plug it into this computer by USB "
-                "(port 1-1). Use a data cable, not a charge-only one."
+                "Take the display off its wall base and plug it into this computer by USB. "
+                "Any port works. Use a data cable, not a charge-only one."
             ),
             "Have Home Assistant open in a browser, with an admin account.",
             "Allow about 7 GB of free disk space, and roughly an hour. Most of it runs unattended.",
@@ -697,6 +733,44 @@ def overview():
         "Your saved files can be put back with python3 provision.py --restore. "
         "A full-chip restore has not been verified yet, so this is still experimental."
     )
+
+
+def find_nest(sysfs=usb_port.SYSFS):
+    """Find the one Nest in normal mode and keep this session on its USB port."""
+    try:
+        port = usb_port.discover(sysfs, modes=("native",))
+    except usb_port.Ambiguous as exc:
+        raise Invalid(
+            f"{str(exc)[0].upper()}{str(exc)[1:]}. Hearth only works with one Nest "
+            "connected at a time."
+        ) from None
+    except usb_port.NotFound:
+        found = usb_port.candidates(sysfs)
+        if "rom" in found.values() or "ram" in found.values():
+            raise Invalid(
+                "The Nest is connected, but it's still in a boot mode from an earlier run. "
+                f"{RESTART} Wait for it to finish starting up, then run the wizard again."
+            ) from None
+        raise Invalid(
+            "No Nest found over USB. Use a data cable (charge-only cables don't work), "
+            "and wait for the Nest to finish starting up."
+        ) from None
+    except ValueError:
+        raise Invalid(
+            "The Nest is connected, but it's still in a boot mode from an earlier run. "
+            f"{RESTART} Wait for it to finish starting up, then run the wizard again."
+        ) from None
+    usb_port.pin(port)
+    ui.ok(f"Found your Nest on USB port {port}.")
+    if not usb_port.measured(port):
+        ui.warn(
+            f"Hearth has only been tested on hardware with the Nest on USB port "
+            f"{usb_port.MEASURED}. Port {port} should work the same way, but it isn't "
+            "tested yet. Keep the Nest on this port until the wizard finishes."
+        )
+    else:
+        ui.muted("Keep the Nest on this port until the wizard finishes.")
+    return port
 
 
 def run(*, ask=input, secret=getpass.getpass):
@@ -718,18 +792,16 @@ def run(*, ask=input, secret=getpass.getpass):
         ui.section("Checking this computer and your thermostat")
         prerequisites()
         ui.ok("All required tools are installed.")
-        disk = discovery.native_disk()
+        port = find_nest()
+        disk = discovery.native_disk(port=port)
         try:
             mode = workflow.identity()
         except (OSError, ValueError):
-            raise Invalid(
-                "No Nest found in normal mode on USB port 1-1. Plug it into that port "
-                "and wait for it to finish starting up."
-            ) from None
+            mode = None
         if mode != "native":
             raise Invalid(
-                "No Nest found in normal mode on USB port 1-1. Plug it into that port "
-                "and wait for it to finish starting up."
+                f"The Nest on USB port {port} isn't in normal mode any more. Wait for it "
+                "to finish starting up, then run the wizard again."
             )
         from installer.cli import inspect_disk
 

@@ -48,6 +48,7 @@ All real-hardware results come from one unit: a **Gen 2, Display-2.6, software
 | Going from the backup straight into the install without pressing the ring | ✅ The Nest restarted and the install was sent without a ring press | The install starting and finishing after that restart |
 | Saved-file restore | ✅ Back to the stock home screen | — |
 | Full-chip restore | ❌ Not tested, no tool for it | — |
+| Any USB port (the wizard finds the Nest itself) | ✅ The port the test unit uses; 🧪 automated tests for others, including ports behind a hub | A real run on another port and behind a hub |
 | Full wizard on a stock Nest | ❌ Not run end to end | One supervised stock install and restore |
 | Other models / software / Gen 1 / Gen 3 | ❌ Not supported | Their own measured profiles |
 
@@ -91,7 +92,7 @@ contain firmware, keys or anyone's backups.
 - The commissioning bundle contains the thermostat's credential and HA's
   *public* CA/CRL, never HA's private keys.
 - The setup wizard runs as your normal user. It uses sudo only for a USB rule
-  limited to your account and port 1-1, and optionally for one read-only
+  limited to your account and the one USB port the Nest is on, and optionally for one read-only
   `mtype` read. It never grants write access to disks.
 - Every flash write needs a typed confirmation and is checked against your
   saved originals first.

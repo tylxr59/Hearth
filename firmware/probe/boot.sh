@@ -15,7 +15,7 @@ echo 'EXPERIMENTAL RAM BOOT: not a flash backup or verified recovery procedure.'
 echo 'Keep the display detached from its unwired base. No HVAC connection.'
 python3 "$work/observe.py" --port 1-1 --require-native
 echo 'Waiting up to 90 seconds for ROM mode; use the reviewed manual restart.'
-if timeout 90 "$work/artifacts/omap_loader" \
+if timeout 90 "$work/artifacts/omap_loader" -P 1-1 \
     -f "$work/artifacts/x-load-gen2.bin" \
     -f "$work/artifacts/u-boot.bin" -a 0x80100000 \
     -f "$work/artifacts/uImage" -a 0x80a00000 -j 0x80100000; then

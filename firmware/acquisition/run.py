@@ -10,6 +10,7 @@ import time
 
 from firmware.acquisition import codec, profile
 from firmware.file_writer.run import encode, save
+from firmware.probe import port as usb_port
 from firmware.probe.observe import require_native
 from firmware.settings_compat_probe.observe import observe
 from firmware.tls_probe.package import private_read
@@ -174,7 +175,7 @@ def run(root, output=None, *, execute=False, handoff_from_nand=None):
     if output.exists() or output.parent.stat().st_mode & 0o077:
         raise ValueError("fresh owner-only acquisition output required")
     if handoff_from_nand is None:
-        require_native("1-1")
+        require_native(usb_port.current())
     else:
         from installer.nand_backup import require_handoff
 
@@ -221,6 +222,8 @@ def run(root, output=None, *, execute=False, handoff_from_nand=None):
         subprocess.run(
             [
                 str(a / "omap_loader"),
+                "-P",
+                usb_port.current(),
                 "-f",
                 str(a / "x-load-gen2.bin"),
                 "-f",
@@ -241,7 +244,7 @@ def run(root, output=None, *, execute=False, handoff_from_nand=None):
         def capture(fd, deadline, _capture):
             return receive(fd, deadline, session, output)
 
-        result = observe("1-1", 180, receive_fn=capture)
+        result = observe(usb_port.current(), 180, receive_fn=capture)
         save(output, "observed.json", encode(result))
         return result
     finally:

@@ -8,9 +8,11 @@ import termios
 import time
 from pathlib import Path
 
+from firmware.probe import port as usb_port
+
 
 def observe(receive):
-    usb = Path("/sys/bus/usb/devices/1-1")
+    usb = usb_port.SYSFS / usb_port.current()
     deadline = time.monotonic() + 1200
     while time.monotonic() < deadline:
         try:
@@ -46,4 +48,4 @@ def observe(receive):
                         termios.tcsetattr(fd, termios.TCSANOW, previous)
                 os.close(fd)
         time.sleep(0.1)
-    raise TimeoutError("full raw capture interface not observed on port 1-1")
+    raise TimeoutError("full raw capture interface not observed on the Nest's USB port")

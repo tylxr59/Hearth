@@ -24,7 +24,7 @@ def select_kit(ask=input):
 
 def run(*, ask=input):
     from installer.cli import inspect_disk
-    from installer.wizard import prerequisites, usb_access
+    from installer.wizard import find_nest, prerequisites, usb_access
 
     ui.banner(
         "Hearth restore",
@@ -47,7 +47,12 @@ def run(*, ask=input):
     )
     ui.section("Before you start")
     ui.bullets(
-        ["Take the display off its wall base and plug it into this computer by USB (port 1-1)."]
+        [
+            (
+                "Take the display off its wall base and plug it into this computer by USB. "
+                "Any port works."
+            )
+        ]
     )
     try:
         prerequisites()
@@ -63,7 +68,7 @@ def run(*, ask=input):
             "to protect them. If an earlier write was interrupted, stop here and ask for "
             "help instead of guessing."
         )
-        disk = discovery.native_disk()
+        disk = discovery.native_disk(port=find_nest())
         sudo_read = False
         try:
             inspect_disk(disk)

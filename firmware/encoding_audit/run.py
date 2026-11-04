@@ -13,6 +13,7 @@ from pathlib import Path
 from firmware.encoding_audit import profile
 from firmware.file_snapshot.run import END, MAGIC, MAX_PAYLOAD, decode
 from firmware.file_writer.run import encode, save
+from firmware.probe import port as usb_port
 from firmware.settings_compat_probe.observe import observe
 from firmware.startup_diagnostic.profile import check as check_diagnostic
 from firmware.tls_probe.package import private_read
@@ -187,7 +188,7 @@ def run(root, output, previous, capsule, pin, *, execute=False, from_restore=Fal
     prior, binding = checked_pair(prior_execution["profile"], prior_execution["recovery"])
     if prior["capsule"] != str(capsule) or prior["pin"] != str(pin):
         raise ValueError("same restored originals required")
-    usb = Path("/sys/bus/usb/devices/1-1")
+    usb = usb_port.SYSFS / usb_port.current()
     if tuple((usb / n).read_text().strip() for n in ("idVendor", "idProduct")) not in (
         ("0525", "a4a7"),
         ("0525", "a4a6"),
@@ -230,6 +231,8 @@ def run(root, output, previous, capsule, pin, *, execute=False, from_restore=Fal
     subprocess.run(  # nosec B603
         [
             str(artifacts / "omap_loader"),
+            "-P",
+            usb_port.current(),
             "-f",
             str(artifacts / "x-load-gen2.bin"),
             "-f",
@@ -247,7 +250,7 @@ def run(root, output, previous, capsule, pin, *, execute=False, from_restore=Fal
         timeout=90,
     )
     result = observe(
-        "1-1",
+        usb_port.current(),
         180,
         receive_fn=lambda fd, deadline, _: receive(
             fd, deadline, session, output, require_backups=True

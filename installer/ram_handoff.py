@@ -11,6 +11,7 @@ from pathlib import Path
 
 from firmware.file_writer.run import encode, save, write_token
 from firmware.nand_handoff import profile
+from firmware.probe import port as usb_port
 from firmware.settings_compat_probe.observe import observe
 from firmware.tls_probe.package import MAX_IMAGE, private_read, sha
 from installer import ui
@@ -24,6 +25,8 @@ def loader_args(artifacts):
     artifacts = Path(artifacts)
     return [
         str(artifacts / "omap_loader"),
+        "-P",
+        usb_port.current(),
         "-f",
         str(artifacts / "x-load-gen2.bin"),
         "-f",
@@ -185,7 +188,11 @@ def await_ready(previous, *, seconds=20):
     one-use profiles, so a disconnected or reset Nest never uses up a kit.
     """
     _, nonce = _source(previous)
-    observe("1-1", seconds, receive_fn=lambda fd, deadline, _c: _wait_nonce(fd, deadline, nonce))
+    observe(
+        usb_port.current(),
+        seconds,
+        receive_fn=lambda fd, deadline, _c: _wait_nonce(fd, deadline, nonce),
+    )
     return {"backup_reader_ready": True, "restart_sent": False}
 
 
@@ -204,4 +211,4 @@ def load(artifacts, output, previous, *, recheck):
         )
         return transfer(fd, nonce, artifacts, output, source)
 
-    return observe("1-1", 20, receive_fn=ready)
+    return observe(usb_port.current(), 20, receive_fn=ready)

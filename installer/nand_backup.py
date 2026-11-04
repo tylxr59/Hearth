@@ -9,6 +9,7 @@ from pathlib import Path
 from firmware.acquisition.custody import read
 from firmware.file_writer.run import encode, save
 from firmware.nand_capture import profile, receiver, serial
+from firmware.probe import port as usb_port
 from firmware.probe.observe import require_native
 from tools.elf_review import private_path
 from tools.nand_archive.build import checked_library, digest
@@ -123,7 +124,7 @@ def require_handoff(root, session):
     if root != session / "nand":
         raise ValueError("same intake whole NAND archive required")
     check(session)
-    usb = Path("/sys/bus/usb/devices/1-1")
+    usb = usb_port.SYSFS / usb_port.current()
     if tuple((usb / n).read_text().strip() for n in ("idVendor", "idProduct")) not in (
         ("0525", "a4a7"),
         ("0525", "a4a6"),
@@ -144,7 +145,7 @@ def run(session, reader, library, *, handoff_profile=None):
         row = json.loads(read(handoff_profile / "profile.json", 65536))
         if handoff_profile != session / "nand-handoff-reader" or row["base"] != str(reader):
             raise ValueError("same-session full-read handoff profile required")
-    require_native("1-1")
+    require_native(usb_port.current())
     root = session / "nand"
     if (
         root.exists()
@@ -182,6 +183,8 @@ def run(session, reader, library, *, handoff_profile=None):
     subprocess.run(  # nosec B603
         [
             str(artifacts / "omap_loader"),
+            "-P",
+            usb_port.current(),
             "-f",
             str(artifacts / "x-load-gen2.bin"),
             "-f",

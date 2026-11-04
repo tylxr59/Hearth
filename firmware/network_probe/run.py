@@ -13,6 +13,7 @@ import zlib
 
 from backend.validation import loads
 from firmware.network_probe.profile import check
+from firmware.probe import port as usb_port
 from firmware.probe.observe import require_native
 from firmware.settings_compat_probe.observe import observe
 from firmware.startup_diagnostic.run import save
@@ -133,7 +134,7 @@ def run(root, output=None, *, execute=False):
     output = private_path(output)
     if output.exists() or output.is_symlink() or output.parent.stat().st_mode & 0o077:
         raise ValueError("fresh owner-only output required")
-    require_native("1-1")
+    require_native(usb_port.current())
     record = json.loads(private_read(root / "profile.json", 65536))
     session = bytes.fromhex(record["session"])
     output.mkdir(mode=0o700)
@@ -164,6 +165,8 @@ def run(root, output=None, *, execute=False):
     subprocess.run(
         [
             str(a / "omap_loader"),
+            "-P",
+            usb_port.current(),
             "-f",
             str(a / "x-load-gen2.bin"),
             "-f",
@@ -184,7 +187,7 @@ def run(root, output=None, *, execute=False):
     def collect(fd, deadline, _capture):
         return receive(fd, deadline, session, output)
 
-    row = observe("1-1", 240, receive_fn=collect)
+    row = observe(usb_port.current(), 240, receive_fn=collect)
     save(output, "report.json", (json.dumps(row, indent=2) + "\n").encode())
     if not successful(row):
         raise ValueError("network RAM checks or real-file preflight refused")

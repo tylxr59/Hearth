@@ -7,9 +7,16 @@ from aiohttp.test_utils import TestClient, TestServer
 from backend.api import create_app
 from backend.core import Core
 from backend.registry import Registry
+from firmware.probe import port as usb_port
 
 SERIAL = "02AA01AB501203EQ"
 OTHER = "02AA01AB501203ER"
+
+
+@pytest.fixture(autouse=True)
+def pinned_usb_port(monkeypatch):
+    """Fixture sysfs trees use port 1-1; never discover the real host's USB bus."""
+    monkeypatch.setattr(usb_port, "_pinned", "1-1")
 
 
 @pytest.fixture

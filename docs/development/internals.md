@@ -101,7 +101,10 @@ refused.
 - Hearth's RAM kernels report back over a USB gadget serial interface
   (`0525:a4a7`).
 - The ROM stalls at the length word unless the host loader is **paced**. The
-  measured loader and udev rule are scoped to physical port **1-1**.
+  loader and udev rule are scoped to one physical port: `firmware/probe/port.py`
+  finds the single Nest in sysfs, pins that port for the process, and passes it
+  to the loader as a required `-P`. Only **1-1** is measured. The 1-1 rule bytes
+  are unchanged from earlier releases. Lab `boot.sh` probes stay on `-P 1-1`.
 - Never pick a generation from USB IDs alone. Gen 1 needs its own profile.
 
 Evidence: [usb-handshake-2026-10-30] · [device-intake-2026-10-30] ·

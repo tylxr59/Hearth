@@ -40,7 +40,9 @@ Hearth stays on `0.x` experimental releases until every box below is checked.
 - [ ] Handle natively recompressed archive originals without loosening the
       NONE/ZERO gate.
 - [ ] Support USB ports other than the measured **1-1**, through scoped rules
-      only.
+      only. Discovery, the per-port rule and the loader's required `-P` are
+      done. Still open: one hardware run on another root port and one behind a
+      hub.
 - [ ] An uninstall that preserves the current native configuration. Exact
       initial-settings restore must keep refusing unknown edits.
 - [ ] Restore that works without the original build folder (portable

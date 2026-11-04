@@ -12,9 +12,12 @@
 | --- | --- |
 | "Some tools this wizard needs are missing" | Run the install command it prints, then start the wizard again |
 | "Run this wizard as your normal user" | Don't use `sudo python3 provision.py`. The wizard asks for sudo itself when it needs it |
-| "No Nest found in normal mode on USB port 1-1" | Use a **data** cable. Plug into the port Linux calls `1-1` (usually the first root port; `lsusb -t` shows it). Wait for the Nest to finish booting |
+| "No Nest found over USB" | Use a **data** cable (charge-only cables don't work). Any USB port works. Wait for the Nest to finish booting |
+| "More than one possible Nest is connected" | Unplug every Nest but one. Hearth sets up one at a time |
+| "Still in a boot mode from an earlier run" | Hold the ring **10 seconds**, let go, then press once. Wait for the normal screen, then start again |
+| "The Nest moved from USB port … to …" | Plug it back into the port the wizard found at the start, and keep it there until the wizard finishes |
 | "Your account can't read the Nest's info file" | Answer `y` to allow one read-only `sudo mtype` |
-| Asked for a USB permission rule | Answer `y`. This adds a rule just for your user on port 1-1. It doesn't grant disk write access |
+| Asked for a USB permission rule | Answer `y`. This adds a rule just for your user on the port the Nest is plugged into. It doesn't grant disk write access. If you move the Nest to another port later, the wizard offers to update the rule |
 | HA step says "fresh user setup required" | Close any open Hearth dialog in HA, and make sure no Hearth entry already exists |
 | HA step says HA "still has a saved Hearth profile" | Removing the integration keeps `config/.storage/hearth`. Move it aside (for example `mv /config/.storage/hearth /config/hearth-profile-backup`) and run setup again. Don't delete it, because it holds the old credential |
 | Home Assistant address refused | Use the full address with port, e.g. `http://YOUR_HA_IP:8123`. Plain HTTP must be a private IP |

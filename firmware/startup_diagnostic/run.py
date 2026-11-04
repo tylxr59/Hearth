@@ -12,6 +12,7 @@ import time
 import zlib
 
 from firmware.file_snapshot.run import END, MAGIC, MAX_PAYLOAD, decode
+from firmware.probe import port as usb_port
 from firmware.probe.observe import require_native
 from firmware.settings_compat_probe.observe import observe
 from firmware.startup_diagnostic.profile import check
@@ -189,7 +190,7 @@ def run(root, output=None, *, execute=False, recover_from=None):
     if output.exists() or output.is_symlink() or output.parent.stat().st_mode & 0o077:
         raise ValueError("fresh owner-only diagnostic output required")
     if recover_from is None:
-        require_native("1-1")
+        require_native(usb_port.current())
     else:
         sealed_restore_entry(recover_from)
     record = json.loads(private_read(root / "profile.json", 65536))
@@ -225,6 +226,8 @@ def run(root, output=None, *, execute=False, recover_from=None):
     subprocess.run(  # nosec B603
         [
             str(artifacts / "omap_loader"),
+            "-P",
+            usb_port.current(),
             "-f",
             str(artifacts / "x-load-gen2.bin"),
             "-f",
@@ -245,7 +248,7 @@ def run(root, output=None, *, execute=False, recover_from=None):
     def collect(fd, deadline, _capture):
         return receive(fd, deadline, session, output)
 
-    records, logs = observe("1-1", 300, receive_fn=collect)
+    records, logs = observe(usb_port.current(), 300, receive_fn=collect)
     scope = {
         "session": session,
         "plan": hashlib.sha256(

@@ -8,7 +8,7 @@
 #include <assert.h>
 
 static int usb_calls, packet, write_calls;
-static uint8_t fake_bus = 1, fake_ports[2] = {1, 1};
+static uint8_t fake_bus = 1, fake_ports[8] = {1, 1};
 static int fake_depth = 1;
 static int rom_mode, rom_stage, rom_offset, fail_length, settle_delays;
 static useconds_t last_delay;
@@ -124,7 +124,7 @@ int LIBUSB_CALL __wrap_libusb_bulk_transfer(libusb_device_handle *handle,
 
 int main(void)
 {
-    char *argv[] = {"loader", "-f", "/hearth-test-nonexistent-input",
+    char *argv[] = {"loader", "-P", "1-1", "-f", "/hearth-test-nonexistent-input",
         "-f", "/hearth-test-nonexistent-input", "-a", "0x80100000",
         "-f", "/hearth-test-nonexistent-input", "-a", "0x80a00000",
         "-j", "0x80100000", NULL};
@@ -138,6 +138,23 @@ int main(void)
     struct arg_state args = {.files = files, .numFiles = 2,
         .jumpTarget = 0x80100000};
 
+    char *no_port[] = {"loader", "-f", "/hearth-test-nonexistent-input", NULL};
+    char *bad_port[] = {"loader", "-P", "1-1.", "-f", "/hearth-test-nonexistent-input", NULL};
+    const char *rejected[] = {"", "1", "1-", "0-1", "1-0", "-1", "1-1.", "1-1..2", "1-a",
+        "256-1", "1-256", "1-1.1.1.1.1.1.1.1", "1-1 ", " 1-1", "1-01", "01-1"};
+    size_t i;
+
+    /* No port selected: never match anything, and main refuses before USB. */
+    assert(!hearth_target_port(NULL));
+    assert(upstream_main(3, no_port) == 1);
+    optind = 1;
+    assert(upstream_main(5, bad_port) == 1);
+    optind = 1;
+    assert(usb_calls == 0);
+    for (i = 0; i < sizeof(rejected) / sizeof(*rejected); i++)
+        assert(!hearth_parse_port(rejected[i]));
+
+    assert(hearth_parse_port("1-1"));
     assert(hearth_target_port(NULL));
     fake_bus = 2;
     assert(!hearth_target_port(NULL));
@@ -148,7 +165,24 @@ int main(void)
     fake_ports[0] = 2;
     assert(!hearth_target_port(NULL));
     fake_ports[0] = 1;
-    assert(upstream_main(13, argv) == 1);
+
+    /* A discovered port behind a hub matches only its exact path. */
+    assert(hearth_parse_port("3-2.4"));
+    fake_bus = 3;
+    fake_depth = 2;
+    fake_ports[0] = 2;
+    fake_ports[1] = 4;
+    assert(hearth_target_port(NULL));
+    fake_ports[1] = 3;
+    assert(!hearth_target_port(NULL));
+    fake_depth = 1;
+    assert(!hearth_target_port(NULL));
+    assert(hearth_parse_port("3-2"));
+    assert(hearth_target_port(NULL));
+    fake_bus = 1;
+    fake_ports[0] = fake_ports[1] = 1;
+
+    assert(upstream_main(15, argv) == 1);
     assert(usb_calls == 0);
     memset(first_payload, 0xa5, sizeof(first_payload));
     rom_mode = 1;

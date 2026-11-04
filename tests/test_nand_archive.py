@@ -251,12 +251,8 @@ def test_full_backup_handoff_accepts_only_its_same_intake_and_exited_ram(
     usb.mkdir()
     for name, value in zip(("idVendor", "idProduct"), identity, strict=True):
         (usb / name).write_text(value)
-    original_path = nand_backup.Path
-    monkeypatch.setattr(
-        nand_backup,
-        "Path",
-        lambda value: usb if value == "/sys/bus/usb/devices/1-1" else original_path(value),
-    )
+    (tmp_path / "1-1").symlink_to(usb)
+    monkeypatch.setattr(nand_backup.usb_port, "SYSFS", tmp_path)
     checked = []
     monkeypatch.setattr(nand_backup, "check", lambda root: checked.append(root))
     if identity == ("0525", "a4a7"):

@@ -118,8 +118,9 @@ Everything runs in one USB boot:
 4. Second group: three files. Same as the first. It starts only if the first
    group was written and verified.
 
-Restart the Nest only when the tool says it's safe to. Only USB port **1-1**
-is supported for now.
+Restart the Nest only when the tool says it's safe to. The tools find the
+Nest on whichever USB port it's plugged into. Keep it on that port until the
+step finishes.
 
 ## Restore
 

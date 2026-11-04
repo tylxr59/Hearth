@@ -11,6 +11,7 @@ import time
 
 from firmware.network_snapshot.profile import check
 from firmware.network_snapshot.protocol import FAILURE, MAGIC, MAX_PAYLOAD, decode
+from firmware.probe import port as usb_port
 from firmware.probe.observe import require_native
 from firmware.settings_compat_probe.observe import observe
 from firmware.startup_diagnostic.run import save
@@ -78,7 +79,7 @@ def run(root, output=None, *, execute=False):
     output = private_path(output)
     if output.exists() or output.is_symlink() or output.parent.stat().st_mode & 0o077:
         raise ValueError("fresh owner-only output required")
-    require_native("1-1")
+    require_native(usb_port.current())
     record = json.loads(private_read(root / "profile.json", 65536))
     session = bytes.fromhex(record["session"])
     output.mkdir(mode=0o700)
@@ -110,6 +111,8 @@ def run(root, output=None, *, execute=False):
     subprocess.run(  # nosec B603
         [
             str(artifacts / "omap_loader"),
+            "-P",
+            usb_port.current(),
             "-f",
             str(artifacts / "x-load-gen2.bin"),
             "-f",
@@ -130,7 +133,7 @@ def run(root, output=None, *, execute=False):
     def collect(fd, deadline, _capture):
         return receive_frame(fd, deadline, session, output / "capture.bin")
 
-    snapshot = observe("1-1", 300, receive_fn=collect)
+    snapshot = observe(usb_port.current(), 300, receive_fn=collect)
     preserve(output / "backup", snapshot)
     verify(output / "backup", snapshot)
     summary = {

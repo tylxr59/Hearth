@@ -15,6 +15,7 @@ from pathlib import Path
 
 from firmware.file_writer import profile, protocol
 from firmware.file_writer.session import Session
+from firmware.probe import port as usb_port
 from firmware.probe.observe import require_native
 from firmware.settings_compat_probe.observe import observe
 from firmware.tls_probe.package import private_read
@@ -77,7 +78,7 @@ def write_token(fd, token):
 
 def require_entry(binding, recover_from=None, *, sysfs=Path("/sys/bus/usb/devices")):
     if recover_from is None:
-        return require_native("1-1", sysfs=sysfs)
+        return require_native(usb_port.current(), sysfs=sysfs)
     # Avoid starting potentially partial native files after an interrupted write.
     # Accept only known RAM mode and a matching exited persistent attempt.
     if binding.action not in (2, 3):
@@ -99,7 +100,7 @@ def require_entry(binding, recover_from=None, *, sysfs=Path("/sys/bus/usb/device
     _, prior = checked_pair(execution["profile"], execution["recovery"])
     if (prior.plan, prior.receipt) != (binding.plan, binding.receipt):
         raise ValueError("recovery custody differs from interrupted attempt")
-    usb = sysfs / "1-1"
+    usb = sysfs / usb_port.current()
     identity = ((usb / "idVendor").read_text().strip(), (usb / "idProduct").read_text().strip())
     if identity not in (("0525", "a4a7"), ("0525", "a4a6")):
         raise ValueError("known failed-session RAM mode required; no stale ROM or automatic retry")
@@ -164,7 +165,7 @@ def require_snapshot_handoff(record, binding, previous, *, sysfs=Path("/sys/bus/
         "native_root": "root0",
     }
     file_backup.verify(previous / "changed-files-backup", records, **scope)
-    usb = sysfs / "1-1"
+    usb = sysfs / usb_port.current()
     identity = ((usb / "idVendor").read_text().strip(), (usb / "idProduct").read_text().strip())
     if identity not in (("0525", "a4a7"), ("0525", "a4a6")):
         raise ValueError("known snapshot RAM mode required; no native restart or stale ROM")
@@ -217,7 +218,7 @@ def require_snapshot_source(record, binding, previous, *, sysfs=Path("/sys/bus/u
         ).digest(),
         native_root="root0",
     )
-    usb = sysfs / "1-1"
+    usb = sysfs / usb_port.current()
     identity = ((usb / "idVendor").read_text().strip(), (usb / "idProduct").read_text().strip())
     if identity not in (("0525", "a4a7"), ("0525", "a4a6")):
         raise ValueError(
@@ -284,7 +285,7 @@ def require_readonly_resume(record, binding, previous, *, sysfs=Path("/sys/bus/u
         )
     ):
         raise ValueError("matching complete sealed zero-write refusal required")
-    usb = sysfs / "1-1"
+    usb = sysfs / usb_port.current()
     identity = ((usb / "idVendor").read_text().strip(), (usb / "idProduct").read_text().strip())
     if identity not in (("0525", "a4a7"), ("0525", "a4a6")):
         raise ValueError("known sealed repair RAM mode required; no stale ROM or native reboot")
@@ -503,6 +504,8 @@ def run(
         subprocess.run(  # nosec B603
             [
                 str(artifacts / "omap_loader"),
+                "-P",
+                usb_port.current(),
                 "-f",
                 str(artifacts / "x-load-gen2.bin"),
                 "-f",
@@ -523,7 +526,7 @@ def run(
         def capture(fd, _deadline, _capture):
             return receive(fd, output, binding, execution, lambda: checked_pair(root, recovery))
 
-        result = observe("1-1", 120, receive_fn=capture)
+        result = observe(usb_port.current(), 120, receive_fn=capture)
         return {
             "status": "file-action-observed",
             "action": record["action"],

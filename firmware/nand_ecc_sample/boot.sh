@@ -17,7 +17,7 @@ python3 "$work/serial_observe.py" --port 1-1 --require-native
 echo 'EXPERIMENTAL NORMAL-ECC NAND SAMPLE: two reads of a fixed root0 block; private reference comparison.'
 echo 'Hardware WP required. Not a backup or recovery. Keep detached from the unwired base, on USB.'
 echo 'Waiting up to 90 seconds for ROM mode; use the reviewed manual restart.'
-if timeout 90 "$work/artifacts/omap_loader" \
+if timeout 90 "$work/artifacts/omap_loader" -P 1-1 \
     -f "$work/artifacts/x-load-gen2.bin" \
     -f "$work/artifacts/u-boot.bin" -a 0x80100000 \
     -f "$work/artifacts/uImage" -a 0x80a00000 -j 0x80100000; then
