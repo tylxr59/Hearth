@@ -126,6 +126,8 @@ publish a stable v1 or advertise a turnkey installer until the
 
 ## Where things are documented
 
+Read the [documentation style guide](documentation.md) before writing docs.
+
 - [status.md](status.md): the current device state and next steps. Keep it
   short and current.
 - [findings.md](findings.md): established facts about the hardware, firmware

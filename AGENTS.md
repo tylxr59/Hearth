@@ -105,14 +105,17 @@ python -m tools.check_native_ha build/<fresh-name> --engine podman   # pinned, n
 
 ## Documentation conventions
 
+Follow the [documentation style guide](docs/development/documentation.md)
+before adding or changing any `.md` file. In short:
+
 - **User docs** (`README.md`, `docs/*.md`): plain language for a technical
-  generalist. Lead with what to do, and keep internal jargon (diagnostic codes,
-  profile names) out.
-- **Developer docs** (`docs/development/`): [status](docs/development/status.md)
-  (short and current), [findings](docs/development/findings.md) (lasting facts),
-  [roadmap](docs/development/roadmap.md) (release gates).
+  generalist. Lead with what to do. No internal jargon, codes or dates.
+- **Developer docs**: [status](docs/development/status.md) is short and
+  current (replace, never append). [findings](docs/development/findings.md)
+  holds lasting facts, not stories. [roadmap](docs/development/roadmap.md)
+  holds the release gates.
 - **New dated results** go in `docs/development/history/research/` (plus
-  `validation/` for JSON records). Then update status and, if lasting, findings.
-  Don't append dated diaries to this file or to the user docs.
-- Keep [compatibility](docs/compatibility.md) in step with the evidence:
-  hardware, simulation and not-tested are separate claims.
+  `validation/` for JSON records). Then update status and, if lasting, findings,
+  in the same change. Never append dated diaries to this file or to user docs.
+- Keep hardware, simulation and not-tested claims separate, and keep
+  [compatibility](docs/compatibility.md) in step with the evidence.

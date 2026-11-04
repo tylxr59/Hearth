@@ -17,6 +17,7 @@
 | Doc | For |
 | --- | --- |
 | [Developer guide](development/README.md) | Repo layout, checks, releases |
+| [Documentation style guide](development/documentation.md) | How to write and where to put docs |
 | [Current status](development/status.md) | Device state, what's done, what's next |
 | [Findings](development/findings.md) | Hardware and protocol facts we've established |
 | [Release checklist](development/roadmap.md) | Gates before a stable v1 |
