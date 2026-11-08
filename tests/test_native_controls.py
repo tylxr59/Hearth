@@ -277,6 +277,7 @@ def test_manager_control_diagnostics_are_bounded_and_value_free(native):
         "delivery_receipts",
         "pending",
         "requests",
+        "field_reports",
         "last_request_age",
         "baseline_fields",
         "feature_baselines",

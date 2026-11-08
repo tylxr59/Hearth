@@ -29,6 +29,10 @@ HEAT = {
 }
 COOL = {"hvac_ac_state", "hvac_cool_x2_state", "hvac_cool_x3_state"}
 OUTPUTS = HEAT | COOL | {"hvac_fan_state"}
+REPORT_FIELDS = {
+    "device": ("current_temperature", "current_humidity"),
+    "shared": ("current_temperature", "target_temperature", MODE_FIELD),
+}
 
 
 @dataclass
@@ -67,6 +71,7 @@ class NativeControls(NativeTelemetry):
         self.schedules = ScheduleState(self)
         self.requests = {}
         self.last_request = {}
+        self.field_reports = {}
         self.notify = lambda _ident: None
         self._local_users = {}
         self._local_user_offered = set()
@@ -89,6 +94,7 @@ class NativeControls(NativeTelemetry):
             self.restored_fields.pop(ident, None)
             self.requests.pop(ident, None)
             self.last_request.pop(ident, None)
+            self.field_reports.pop(ident, None)
             self._local_users.pop(ident, None)
             self._local_user_offered.discard(ident)
             self._local_user_acknowledged.discard(ident)
@@ -370,6 +376,7 @@ class NativeControls(NativeTelemetry):
                 for op, i in self.intents.get(ident, {}).items()
             },
             "requests": dict(self.requests.get(ident, {})),
+            "field_reports": self.field_report_view(ident),
             "last_request_age": max(0, round(self.core.clock() - self.last_request[ident], 1))
             if ident in self.last_request
             else None,
@@ -405,6 +412,36 @@ class NativeControls(NativeTelemetry):
                 "fan": device is not None and "fan_timer_timeout" in device.fingerprints,
             },
         }
+
+    def field_report_view(self, ident):
+        """Fixed field names and process-local freshness, without sensor values."""
+        self._records_for(ident)
+        result = {}
+        for kind, fields in REPORT_FIELDS.items():
+            values = self.reported.get(ident, {}).get(kind, {}).get("values", {})
+            for name in fields:
+                source = (kind, name)
+                observed = self.field_reports.get(ident, {}).get(source, {})
+                result[f"{kind}.{name}"] = {
+                    "source": "unknown"
+                    if name not in values
+                    else "cache"
+                    if source in self.restored_fields.get(ident, set())
+                    else "device",
+                    "received": observed.get("received", 0),
+                    "accepted": observed.get("accepted", 0),
+                    "last_received_age": max(
+                        0, round(self.core.clock() - observed["last_received"], 1)
+                    )
+                    if "last_received" in observed
+                    else None,
+                    "last_accepted_age": max(
+                        0, round(self.core.clock() - observed["last_accepted"], 1)
+                    )
+                    if "last_accepted" in observed
+                    else None,
+                }
+        return result
 
     def capabilities(self, ident):
         self._records_for(ident)
@@ -762,6 +799,20 @@ class NativeControls(NativeTelemetry):
         }
         previous_home = self.home_key(ident)
         response = super().apply(ident, body, subscription=subscription)
+        # Record only successfully validated requests. Conditional refusals are
+        # not protocol errors, so expose their received/accepted difference.
+        for key, kind, value, _, _, _ in objects:
+            if value is None:
+                continue
+            for name in REPORT_FIELDS.get(kind, ()):
+                if name not in value:
+                    continue
+                observed = self.field_reports.setdefault(ident, {}).setdefault((kind, name), {})
+                observed["received"] = min(observed.get("received", 0) + 1, 2147483647)
+                observed["last_received"] = self.core.clock()
+                if key in accepted:
+                    observed["accepted"] = min(observed.get("accepted", 0) + 1, 2147483647)
+                    observed["last_accepted"] = self.core.clock()
         if subscription:
             self.schedules.observe_metadata(ident, objects)
         for key, kind, value, _, _, _ in objects:

@@ -31,7 +31,7 @@ All real-hardware results come from one unit: a **Gen 2, Display-2.6, software
 
 | Feature | Real Nest | Still to do |
 | --- | --- | --- |
-| Temperature/humidity readings in HA | ✅ Working | Multi-day reliability |
+| Temperature/humidity readings in HA | Earlier live updates verified; current readings remain stale after HA restarts | Diagnose missing fresh reports and verify agreement with the dial |
 | Target temperature changes | ✅ 63 → 62 → 63 °F confirmed on the dial | The Nest reporting the new value back to HA |
 | Eco on/off | ✅ Confirmed on the device | Other configurations |
 | Weekly heat schedule | ✅ Replace, read back, backup and restore of the original | A real timed schedule change; other modes |

@@ -51,6 +51,11 @@ original; sources and licences are recorded in
   defers 15 s normally and 60 s while confirming an initial pending update.
 - A reported-only cache of allowlisted values lives in an owner-only file. It
   never marks a device available or restores pending intents.
+- Native connection activity can mark a device available while sensor fields
+  remain cached. Diagnostics distinguish each fixed sensor/control field's
+  source, received and accepted counts, and ages since reports in this process.
+  Conditional refusals count as received but not accepted; they are not protocol
+  rejections. These counters contain no readings and are never restored from disk.
 
 ## What the installer writes
 
