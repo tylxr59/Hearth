@@ -30,8 +30,11 @@ owner approval.
   restarts. Native subscriptions continue with no recorded protocol rejections;
   waking the display did not refresh the readings. The saved device bucket has
   no competing current-temperature field, so simulated cross-bucket masking
-  does not explain this snapshot. The cause remains unconfirmed. Evidence is
-  private; no thermostat settings changed.
+  does not explain this snapshot. v0.13.1 was installed through the built-in
+  Marketplace and loaded with one owner-approved HA Core restart. After the
+  Nest reconnected, diagnostics recorded no temperature or humidity reports
+  received, rather than reports received and refused. The cause remains
+  unconfirmed. Evidence is private; no thermostat settings changed.
 - **HA entry repaired, on-base readings confirmed.** With owner approval, the
   matching saved HA profile was restored and its missing entry registered. The
   owner reattached the display and confirmed the normal dial and readings. No
