@@ -51,9 +51,10 @@ the relevant source before changing it.
 Current device state, recent hardware results and the next optional step are in
 [status](docs/development/status.md). In short: the owner reattached the display
 to its wired heating base after the verified combined install. The normal dial
-works, but HA's current temperature and humidity remain cached despite active
-native subscriptions. v0.13.1 diagnostics are installed through Marketplace;
-one approved HA Core restart was used, and no loader is armed. Keep the current
+works. A supervised Nest menu restart restored fresh HA sensor reports and
+agreement with the dial after readings stayed cached across HA restarts.
+v0.13.1 diagnostics are installed through Marketplace; one approved HA Core
+restart was used, and no loader is armed. Keep the current
 settings unchanged; intentional HVAC calls still need fresh owner approval.
 
 ## Source rules

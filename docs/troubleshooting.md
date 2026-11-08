@@ -43,7 +43,7 @@ If it stopped during **step 6 (Install)**:
 | Problem | Fix |
 | --- | --- |
 | No readings / entities unavailable | Check the Nest has power and Wi-Fi. Check it can reach HA on port **8443** (HTTPS) and HA's HTTP port (8123), especially across VLANs |
-| Readings stopped after an HA restart | Wake the Nest by pressing the ring once. It should reconnect without a reboot |
+| Readings stopped after an HA restart | Wake the Nest by pressing the ring once. Check the readings afterward: the connection can recover while temperatures remain old |
 | Current temperature stays unchanged or disagrees with the Nest | Compare the Nest and HA at the same time, then download Hearth diagnostics. A connected device can still have old readings. Report the current and target temperatures separately; keep settings unchanged while investigating |
 | Target shows as "assumed" | The Nest accepted the command but hasn't reported the new value back yet. Its report wins when it arrives |
 | A setting entity is missing or unknown | Your Nest doesn't report that field, or your equipment doesn't support it. Hearth never guesses |

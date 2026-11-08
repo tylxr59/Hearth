@@ -56,6 +56,11 @@ original; sources and licences are recorded in
   source, received and accepted counts, and ages since reports in this process.
   Conditional refusals count as received but not accepted; they are not protocol
   rejections. These counters contain no readings and are never restored from disk.
+- On the measured Gen 2, native subscriptions can resume after an HA restart
+  without fresh temperature or humidity uploads. A supervised normal-menu Nest
+  restart restores uploads and agreement between HA and the dial in one test,
+  with the original thermostat settings preserved. This is a measured recovery,
+  not a diagnosed cause or a guarantee of reliable reporting after HA restarts.
 
 ## What the installer writes
 

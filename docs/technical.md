@@ -31,7 +31,7 @@ All real-hardware results come from one unit: a **Gen 2, Display-2.6, software
 
 | Feature | Real Nest | Still to do |
 | --- | --- | --- |
-| Temperature/humidity readings in HA | Earlier live updates verified; current readings remain stale after HA restarts | Diagnose missing fresh reports and verify agreement with the dial |
+| Temperature/humidity readings in HA | ✅ Fresh reports and agreement with the dial restored by one supervised Nest menu restart after stale readings | Find why uploads stopped; multi-day reliability |
 | Target temperature changes | ✅ 63 → 62 → 63 °F confirmed on the dial | The Nest reporting the new value back to HA |
 | Eco on/off | ✅ Confirmed on the device | Other configurations |
 | Weekly heat schedule | ✅ Replace, read back, backup and restore of the original | A real timed schedule change; other modes |
@@ -41,7 +41,7 @@ All real-hardware results come from one unit: a **Gen 2, Display-2.6, software
 | Device settings | 🧪 Automated and HA-sandbox tests | Each field on a real unit |
 | Actually switching the furnace on/off | ❌ Not tested | A supervised heating cycle |
 | Cooling, fan, ranges, emergency heat | 🧪 Simulation only | Suitable real equipment |
-| Power cut / HA outage behaviour | 🧪 No-replay tests | A real outage and return |
+| Power cut / HA outage behaviour | HA restart reconnected, but fresh readings needed a Nest menu restart; 🧪 command replay protection tested in simulation | Reliable fresh readings after HA restarts; real power loss |
 | Full flash backup | ✅ Two passes, cross-checked offline | — |
 | Originals extracted from the full backup | ✅ Worked on one real backup; a later backup refused one damaged settings fragment, so the wizard now falls back to reading from the Nest | An install that uses backup-extracted originals |
 | Free-space check and both install parts in one USB boot | ✅ Passed, with a separate `INSTALL` for each part | Undo through the wizard after this kind of install; the full wizard start to finish |

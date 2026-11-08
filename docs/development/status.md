@@ -9,9 +9,9 @@ in the release notes._
 | | |
 | --- | --- |
 | Unit | Gen 2, Display-2.6, primary firmware 5.9.4-5 (the only measured target) |
-| Where it is | Display **reattached to the wired base** by the owner. Normal dial; HA sensor readings are stale |
+| Where it is | Display **reattached to the wired base** by the owner. Normal dial; fresh HA readings restored by a supervised menu restart |
 | HVAC base | **Wired to real oil/baseboard heat.** Never assume an unwired base when it's reattached |
-| Last on-base state | Owner confirms Heat 65 °F target and 69 °F current. HA shows cached 76 °F and idle; no intentional HVAC test |
+| Last on-base state | Owner and fresh HA report agree: Heat 65 °F target, 67 °F current, Eco off, idle. Original settings unchanged; no intentional HVAC test |
 | Loader | None armed. The last host exited |
 | Flash contents | Commissioning9 and cleanup3 installed, both readback- and encoding-verified |
 | On flash, keep | One old restored network4 rollback archive (5,822,879 bytes). Deleting it is **not** authorised |
@@ -25,16 +25,16 @@ owner approval.
 
 ## Last hardware events (newest first)
 
-- **Stale sensor reports investigated read-only.** HA history contains earlier
-  sensor updates, but current temperature and humidity remain cached after HA
-  restarts. Native subscriptions continue with no recorded protocol rejections;
-  waking the display did not refresh the readings. The saved device bucket has
-  no competing current-temperature field, so simulated cross-bucket masking
-  does not explain this snapshot. v0.13.1 was installed through the built-in
-  Marketplace and loaded with one owner-approved HA Core restart. After the
-  Nest reconnected, diagnostics recorded no temperature or humidity reports
-  received, rather than reports received and refused. The cause remains
-  unconfirmed. Evidence is private; no thermostat settings changed.
+- **Fresh readings restored by a supervised Nest menu restart.** After an
+  owner-approved single menu restart on the wired base, the owner and fresh HA
+  reports agree on current and target temperatures. The owner confirms the
+  original Heat, target, Eco-off and idle state are unchanged. Before that,
+  waking the display and an approved HA Core restart left readings cached
+  despite active subscriptions. v0.13.1 diagnostics, installed through
+  Marketplace, recorded no sensor reports received until the Nest restarted;
+  the resulting temperature and humidity reports were accepted without
+  rejections. The cause and long-term reliability remain unconfirmed. Evidence
+  is private; no HA control commands or firmware writes were performed.
 - **HA entry repaired, on-base readings confirmed.** With owner approval, the
   matching saved HA profile was restored and its missing entry registered. The
   owner reattached the display and confirmed the normal dial and readings. No
@@ -60,8 +60,9 @@ on HA 2026.11.
 
 ## What's next
 
-First, deploy the sensor-report diagnostics through HACS and determine why
-fresh readings stopped. HA Core restarts need fresh owner approval each time.
+Observe reporting reliability and determine why sensor uploads stopped across
+HA restarts. Diagnostics are deployed; a supervised Nest menu restart restored
+fresh reports once. HA Core restarts need fresh owner approval each time.
 
 The optional hardware steps each need fresh owner approval and a fresh profile:
 
